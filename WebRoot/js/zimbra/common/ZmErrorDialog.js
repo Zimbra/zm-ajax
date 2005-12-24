@@ -1,25 +1,27 @@
 /*
-***** BEGIN LICENSE BLOCK *****
-Version: ZAPL 1.1
-
-The contents of this file are subject to the Zimbra AJAX Public License Version 1.1 ("License");
-You may not use this file except in compliance with the License. You may obtain a copy of the
-License at http://www.zimbra.com/license
-
-Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
-ANY KIND, either express or implied. See the License for the specific language governing rights
-and limitations under the License.
-
-The Original Code is: Zimbra AJAX Toolkit.
-
-The Initial Developer of the Original Code is Zimbra, Inc.
-Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
-All Rights Reserved.
-Contributor(s): ______________________________________.
-
-***** END LICENSE BLOCK *****
-*/
-
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: ZPL 1.1
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Web Client
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
 /**
 * Creates an error dialog which basically means it will have a "Report" button
 * @constructor
@@ -31,7 +33,7 @@ function ZmErrorDialog(parent, appCtxt, msgs) {
 	if (arguments.length === 0) {return;}
 
 	this._appCtxt = appCtxt;
-	// go ahead and cache the navigator info now (since it should never change)		
+	// go ahead and cache the navigator and subject info now (since it should never change)		
 	this._strNav = this._getNavigatorInfo();
 	this._subjPfx = this._getSubjectPrefix();
 
@@ -40,7 +42,7 @@ function ZmErrorDialog(parent, appCtxt, msgs) {
 	DwtMessageDialog.call(this, parent, null, null, [reportButton, detailButton]);
 
 	// setup the detail button
-	this._detailCell = Dwt.getDomObj(this.getDocument(), this._detailCellId);
+	this._detailCell = document.getElementById(this._detailCellId);
 	var detailBtn = this._button[ZmErrorDialog.DETAIL_BUTTON];
 	detailBtn.setImage("SelectPullDownArrow");
 	// arrow icon is too big so hack it to fit (instead of adding new image)
@@ -49,7 +51,7 @@ function ZmErrorDialog(parent, appCtxt, msgs) {
 
 	// Set style on report button
 	var reportBtn = this._button[ZmErrorDialog.REPORT_BUTTON];
-	reportBtn.getHtmlElement().style.width = "75px";
+	reportBtn.getHtmlElement().style.width = "100px";
 
 	this.registerCallback(ZmErrorDialog.REPORT_BUTTON, this._reportCallback, this);
 	this.registerCallback(ZmErrorDialog.DETAIL_BUTTON, this._showDetail, this);
@@ -59,13 +61,12 @@ ZmErrorDialog.prototype = new DwtMessageDialog;
 ZmErrorDialog.prototype.constructor = ZmErrorDialog;
 
 
+
 // Consts
 
 ZmErrorDialog.REPORT_BUTTON = ++DwtDialog.LAST_BUTTON;
 ZmErrorDialog.DETAIL_BUTTON = ++DwtDialog.LAST_BUTTON;
-
-ZmErrorDialog.REPORT_URL = "http://www.zimbra.com/e/";
-
+ZmErrorDialog.REPORT_URL = "//www.zimbra.com/e/";
 
 // Public methods
 
@@ -126,21 +127,24 @@ function() {
 		   "<tr><td><textarea readonly rows='10'>" + this._detailStr + "</textarea></td></tr></table>";
 };
 
-ZmErrorDialog.prototype._getNavigatorInfo = function() {
+ZmErrorDialog.prototype._getNavigatorInfo = 
+function() {
 	var strNav = new Array();
 	var idx = 0;
 	
-	// Add the url the user has used to connect
-	strNav[idx++] = "href: " + location.href + "\n";
+	// Add the url
+	strNav[idx++] = "\n\n" + "href: " + location.href + "\n";
 
 	for (var i in navigator) {
+		// Skip functions
+		if(typeof navigator[i] == "function") {continue;}
 		strNav[idx++] = i + ": " + navigator[i] + "\n";
 	}
-
 	return strNav.join("");
 };
 
-ZmErrorDialog.prototype._getSubjectPrefix = function() {
+ZmErrorDialog.prototype._getSubjectPrefix = 
+function() {
 	var strSubj = new Array();
 	var idx = 0;
 	
@@ -169,31 +173,36 @@ ZmErrorDialog.prototype._getSubjectPrefix = function() {
 	} else {
 		strSubj[idx++] = "UNK ";
 	}
+	strSubj[idx++] = this._appCtxt.get(ZmSetting.CLIENT_VERSION) + " ";
 	return strSubj.join("");
 };
 
-ZmErrorDialog.prototype._getUserPrefs = function() {
+ZmErrorDialog.prototype._getUserPrefs = 
+function() {
+	var currSearch = this._appCtxt.getCurrentSearch();
 	var strPrefs = new Array();
 	var idx = 0;
 
+	// Add username and current search
+	strPrefs[idx++] = "\n\n" + "username: " + this._appCtxt.get(ZmSetting.USERNAME) + "\n";
+	if (currSearch) {
+		strPrefs[idx++] = "currentSearch: " + currSearch.query + "\n";
+	}
 	for (var i in ZmSetting.INIT) {
 		if (ZmSetting.INIT[i][0]) {
 			strPrefs[idx++] = ZmSetting.INIT[i][0] + ": " + ("" + ZmSetting.INIT[i][3]) + "\n";
 		}
 	}
-	// add the user name at the end
-	strPrefs[idx++] = "username: " + this._appCtxt.getUsername() + "\n";
-	strPrefs[idx++] = "currentSearch: " + this._appCtxt.getCurrentSearch().query + "\n";
-
 	return strPrefs.join("");
 };
 
 // Callbacks
 
-ZmErrorDialog.prototype._reportCallback = function() {
+ZmErrorDialog.prototype._reportCallback =
+function() {
 	// iframe initialization - recreate iframe if IE and reuse if FF
-	if (this._iframe == null || AjxEnv.isIE) {
-		this._iframe = this.getDocument().createElement("iframe");
+	if (!this._iframe || AjxEnv.isIE) {
+		this._iframe = document.createElement("iframe");
 		this._iframe.style.width = this._iframe.style.height = 0;
 		this._iframe.style.visibility = "hidden";
 
@@ -204,13 +213,19 @@ ZmErrorDialog.prototype._reportCallback = function() {
 	var strPrefs = this._getUserPrefs();
 	var formId = Dwt.getNextId();
 
+		
 	// generate html form for submission via POST
 	var html = new Array();
 	var idx = 0;
 	var subject = this._subjPfx + this._detailStr.substring(0,40);
+	var scheme = (location.protocol == 'https:') ? "https:" : "http:";
 	html[idx++] = "<html><head></head><body>";
-	html[idx++] = "<form id='" + formId + "' method='POST' action='" + ZmErrorDialog.REPORT_URL + "'>";
-	html[idx++] = "<textarea name='details'>" + this._detailStr + "</textarea>";
+	html[idx++] = "<form id='" + formId + "' method='POST' action='" + scheme + ZmErrorDialog.REPORT_URL + "'>";
+	html[idx++] = "<textarea name='details'>" + this._detailStr;
+	html[idx++] = "version - " + this._appCtxt.get(ZmSetting.CLIENT_VERSION) + "\n";
+	html[idx++] = "release - " + this._appCtxt.get(ZmSetting.CLIENT_RELEASE) + "\n";
+	html[idx++] = "date - " + this._appCtxt.get(ZmSetting.CLIENT_DATETIME);
+	html[idx++] = "</textarea>";
 	html[idx++] = "<textarea name='navigator'>" + this._strNav + "</textarea>";
 	html[idx++] = "<textarea name='prefs'>" + strPrefs + "</textarea>";
 	html[idx++] = "<textarea name='subject'>" + subject + "</textarea>";
@@ -232,7 +247,8 @@ ZmErrorDialog.prototype._reportCallback = function() {
 };
 
 // Displays the detail text
-ZmErrorDialog.prototype._showDetail = function() {
+ZmErrorDialog.prototype._showDetail = 
+function() {
 	if (this._detailCell) {
 		if (this._detailCell.innerHTML === "") {
 			this._button[ZmErrorDialog.DETAIL_BUTTON].setImage("SelectPullUpArrow");

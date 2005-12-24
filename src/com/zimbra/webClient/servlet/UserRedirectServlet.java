@@ -22,16 +22,30 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.webClient.build;
 
+package com.zimbra.webClient.servlet;
 
-public class JammerException extends Exception {
+import java.io.IOException;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * simple servlet to handle redirects of /zimbra/user to /service/user. 
+ *
+ */
+public class UserRedirectServlet extends HttpServlet
+{
+    public static final String SERVICE_URL = "/service/home"; 
     
-    public JammerException (String msg) {
-        super(msg);
-    }
-    
-    public JammerException (Throwable t){
-        super(t);
-    }
+    public void doGet (HttpServletRequest req, HttpServletResponse resp) throws IOException 
+    {
+        String qs = req.getQueryString();
+        if (qs != null && !qs.equals("")) {
+            resp.sendRedirect(SERVICE_URL+req.getPathInfo()+"?"+req.getQueryString());
+        } else {
+            resp.sendRedirect(SERVICE_URL+req.getPathInfo());
+        }
+    }    
 }

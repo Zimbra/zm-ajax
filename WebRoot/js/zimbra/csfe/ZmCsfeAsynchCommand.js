@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is: Zimbra Collaboration Suite.
+ * The Original Code is: Zimbra Collaboration Suite Web Client
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
@@ -173,6 +173,18 @@ function (response) {
 	this._fireInvokeEvent(newEx);
 }
 
+/**
+* Cancels this request (which must be async).
+*/
+ZmCsfeAsynchCommand.prototype.cancel =
+function() {
+	if (!this._rpcId) return;
+	
+	var rpcRequestObj = AjxRpc.getRpcCtxt(this._rpcId);
+	if (rpcRequestObj)
+		rpcRequestObj.cancel();
+}
+
 ZmCsfeAsynchCommand.prototype.invoke = 
 function (soapDoc, noAuthTokenRequired, serverUri, targetServer, useXml) {
 	if (!noAuthTokenRequired) {
@@ -204,7 +216,7 @@ function (soapDoc, noAuthTokenRequired, serverUri, targetServer, useXml) {
 			: soapDoc.getXml().replace("soap=", "xmlns:soap=");
 			
 		this._st = new Date();
-		AjxRpc.invoke(requestStr, uri,  {"Content-Type": "application/soap+xml; charset=utf-8"}, new AjxCallback(this, ZmCsfeAsynchCommand.prototype.rpcCallback)); //asynchronous call returns null 
+		this._rpcId = AjxRpc.invoke(requestStr, uri,  {"Content-Type": "application/soap+xml; charset=utf-8"}, new AjxCallback(this, this.rpcCallback)); //asynchronous call returns null 
 	} catch (ex) {
 		//JavaScript error, network error or unknown error may happen
 		var newEx = new ZmCsfeException();

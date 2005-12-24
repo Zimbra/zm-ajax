@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is: Zimbra Collaboration Suite.
+ * The Original Code is: Zimbra Collaboration Suite Web Client
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
@@ -37,10 +37,8 @@ function ZmBaseSplashScreen(shell, imageInfo, className) {
 	var htmlEl = this.getHtmlElement();
  	htmlEl.style.zIndex = Dwt.Z_SPLASH;
 	
- 	var myTable = this.getDocument().createElement("table");
- 	myTable.border = 0;
- 	myTable.cellSpacing = 0;
- 	myTable.cellPadding = 0;
+ 	var myTable = document.createElement("table");
+ 	myTable.border = myTable.cellSpacing = myTable.cellPadding = 0;
  	Dwt.setSize(myTable, "100%", "100%");
 	
  	var row = myTable.insertRow(0);
@@ -57,12 +55,14 @@ ZmBaseSplashScreen.prototype = new DwtControl;
 ZmBaseSplashScreen.prototype.constructor = ZmBaseSplashScreen;
 
 /** abstract **/
-ZmBaseSplashScreen.prototype.getDefaultSubstitutions = function (){};
+ZmBaseSplashScreen.prototype.getDefaultSubstitutions = function() {};
 
-ZmBaseSplashScreen.getHtml = function (substitutions) {
+ZmBaseSplashScreen.getHtml = 
+function(substitutions) {
 	return DwtBorder.getBorderHtml("SplashScreen", substitutions);	
-};
+}
 
-ZmBaseSplashScreen.prototype.getHtml = function () {
+ZmBaseSplashScreen.prototype.getHtml = 
+function() {
 	return ZmBaseSplashScreen.getHtml(this.getDefaultSubstitutions());
 }

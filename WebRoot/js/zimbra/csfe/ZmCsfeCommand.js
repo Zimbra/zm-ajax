@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and limitations
  * under the License.
  * 
- * The Original Code is: Zimbra Collaboration Suite.
+ * The Original Code is: Zimbra Collaboration Suite Web Client
  * 
  * The Initial Developer of the Original Code is Zimbra, Inc.
  * Portions created by Zimbra are Copyright (C) 2005 Zimbra, Inc.
@@ -108,21 +108,24 @@ function(sessionId) {
 ZmCsfeCommand.prototype.invoke =
 function(params) {
 
+	if (!params.soapDoc) return;
+
+	var soapDoc = params.soapDoc;
 	// Add the SOAP header and context
-	var hdr = params.soapDoc.createHeaderElement();
-	var context = params.soapDoc.set("context", null, hdr);
+	var hdr = soapDoc.createHeaderElement();
+	var context = soapDoc.set("context", null, hdr);
 	context.setAttribute("xmlns", "urn:zimbra");
 	if (params.noSession)
-		params.soapDoc.set("nosession", null, context);
+		soapDoc.set("nosession", null, context);
 	var sessionId = ZmCsfeCommand.getSessionId();
 	if (sessionId) {
-		var si = params.soapDoc.set("sessionId", null, context);
+		var si = soapDoc.set("sessionId", null, context);
 		si.setAttribute("id", sessionId);
 	}
 	if (params.targetServer)
-		params.soapDoc.set("targetServer", params.targetServer, context);
+		soapDoc.set("targetServer", params.targetServer, context);
 	if (params.changeToken) {
-		var ct = params.soapDoc.set("change", null, context);
+		var ct = soapDoc.set("change", null, context);
 		ct.setAttribute("token", params.changeToken);
 		ct.setAttribute("type", "new");
 	}
@@ -132,26 +135,26 @@ function(params) {
 		var authToken = ZmCsfeCommand.getAuthToken();
 		if (!authToken)
 			throw new ZmCsfeException("AuthToken required", ZmCsfeException.NO_AUTH_TOKEN, "ZmCsfeCommand.invoke");
-		params.soapDoc.set("authToken", authToken, context);
+		soapDoc.set("authToken", authToken, context);
 	}
 	
 	// Tell server what kind of response we want
 	if (!params.useXml) {
-		var js = params.soapDoc.set("format", null, context);
+		var js = soapDoc.set("format", null, context);
 		js.setAttribute("type", "js");
 	}
 
 	var asyncMode = params.asyncMode;
-
-	DBG.println(AjxDebug.DBG1, asyncMode ? "<H4>REQUEST (asynchronous)</H4>" : "<H4>REQUEST</H4>");
-	DBG.printXML(AjxDebug.DBG1, params.soapDoc.getXml());
+	var methodNameStr = soapDoc.getMethod().nodeName;
+	DBG.println(AjxDebug.DBG1, ["<H4>", methodNameStr, (asyncMode) ? " (asynchronous)" : "" ,"</H4>"].join(""), methodNameStr);
+	DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
 
 	var rpcCallback;
 	try {
 		var uri = params.serverUri || ZmCsfeCommand.serverUri;
 		if (params.logRequest)
-			uri = uri + params.soapDoc._methodEl.nodeName;
-		var requestStr = params.soapDoc.getXml();
+			uri = uri + soapDoc._methodEl.nodeName;
+		var requestStr = soapDoc.getXml();
 		if (AjxEnv.isSafari)
 			requestStr = requestStr.replace("soap=", "xmlns:soap=");
 			
@@ -162,13 +165,17 @@ function(params) {
 			this._rpcId = AjxRpc.invoke(requestStr, uri, {"Content-Type": "application/soap+xml; charset=utf-8"}, rpcCallback);
 		} else {
 			var response = AjxRpc.invoke(requestStr, uri, {"Content-Type": "application/soap+xml; charset=utf-8"});
-			return this._getResponseData(response, false);
+			if(!params.returnXml) {
+				return this._getResponseData(response, false);
+			} else {
+				return response;
+			}
 		}
 	} catch (ex) {
-		if (!(ex instanceof ZmCsfeException || ex instanceof AjxSoapException || ex instanceof AjxException)) {
+		if (!(ex && (ex instanceof ZmCsfeException || ex instanceof AjxSoapException || ex instanceof AjxException))) {
 			var newEx = new ZmCsfeException();
 			newEx.method = "ZmCsfeCommand.invoke";
-			newEx.detail = ex.toString();
+			newEx.detail = ex ? ex.toString() : "undefined exception";
 			newEx.code = ZmCsfeException.UNKNOWN_ERROR;
 			newEx.msg = "Unknown Error";
 			ex = newEx;
@@ -190,23 +197,46 @@ function(params) {
 ZmCsfeCommand.prototype._getResponseData =
 function(response, asyncMode) {
 	this._en = new Date();
-	DBG.println(AjxDebug.DBG1, "ROUND TRIP TIME: " + (this._en.getTime() - this._st.getTime()));
+	DBG.println(AjxDebug.PERF, "ROUND TRIP TIME: " + (this._en.getTime() - this._st.getTime()));
 
 	var result = new ZmCsfeResult();
-	
+
 	var xmlResponse = false;
 	var respDoc = null;
 	if (typeof(response.text) == "string" && response.text.indexOf("{") == 0) {
 		respDoc = response.text;
 	} else {
-		xmlResponse = true;
-		// responseXML is empty under IE
-		respDoc = (AjxEnv.isIE || response.xml == null)
-			? AjxSoapDoc.createFromXml(response.text) 
-			: AjxSoapDoc.createFromDom(response.xml);
+		try {
+			xmlResponse = true;
+			if (!(response.text || (response.xml && (typeof response.xml) == "string"))) {
+				// If IE can't reach the server, it returns immediately with an empty response rather than waiting and timing out
+				throw new ZmCsfeException("Csfe service error", ZmCsfeException.NETWORK_ERROR, "ZmCsfeCommand.prototype.invoke", "Empty HTTP response");
+			}
+			// responseXML is empty under IE
+			respDoc = (AjxEnv.isIE || response.xml == null) ? AjxSoapDoc.createFromXml(response.text) :
+															  AjxSoapDoc.createFromDom(response.xml);
+		} catch (ex) {
+			DBG.dumpObj(AjxDebug.DBG1, ex);
+			if (asyncMode) {
+				result.set(ex, true);
+				return result;
+			} else {
+				throw ex;
+			}
+		}
+		if (!respDoc) {
+			var ex = new ZmCsfeException("Csfe service error", ZmCsfeException.SOAP_ERROR, "ZmCsfeCommand.prototype.invoke", "Bad XML response doc");
+			DBG.dumpObj(AjxDebug.DBG1, ex);
+			if (asyncMode) {
+				result.set(ex, true);
+				return result;
+			} else {
+				throw ex;
+			}
+		}
 	}
 	
-	DBG.println(AjxDebug.DBG1, asyncMode ? "<H4>RESPONSE (asynchronous)</H4>" : "<H4>RESPONSE</H4>");
+	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", (asyncMode) ? " (asynchronous)" : "" ,"</H4>"].join(""), "Response");
 
 	var resp;
 	if (xmlResponse) {
@@ -215,10 +245,13 @@ function(response, asyncMode) {
 		var fault = AjxSoapDoc.element2FaultObj(body);
 		if (fault) {
 			var ex = new ZmCsfeException("Csfe service error", fault.errorCode, "ZmCsfeCommand.prototype.invoke", fault.reason);
-			if (asyncMode)
+			DBG.dumpObj(AjxDebug.DBG1, ex);
+			if (asyncMode) {
 				result.set(ex, true);
-			else
+				return result;
+			} else {
 				throw ex;
+			}
 		}
 
 		resp = "{";
@@ -237,11 +270,26 @@ function(response, asyncMode) {
 
 	var fault = data.Body.Fault;
 	if (fault) {
-		var ex = new ZmCsfeException(fault.Reason.Text, fault.Detail.Error.Code, "ZmCsfeCommand.prototype.invoke", fault.Code.Value);
-		if (asyncMode)
+		var trace = fault.Detail.Error.Trace;
+		var reasonText = fault.Reason.Text + (trace ? "\n"+trace : "");
+		var ex = new ZmCsfeException(reasonText, fault.Detail.Error.Code, "ZmCsfeCommand.prototype.invoke", fault.Code.Value);
+		DBG.dumpObj(AjxDebug.DBG1, ex);
+		if (asyncMode) {
 			result.set(ex, true);
-		else
+			return result;
+		} else {
 			throw ex;
+		}
+	} else if (!response.success) {
+		var ex = new ZmCsfeException("Csfe service error", ZmCsfeException.CSFE_SVC_ERROR,
+									 "ZmCsfeCommand.prototype.invoke", "HTTP response status " + response.status);
+		DBG.dumpObj(AjxDebug.DBG1, ex);
+		if (asyncMode) {
+			result.set(ex, true);
+			return result;
+		} else {
+			throw ex;
+		}
 	} else {
 		if (asyncMode)
 			result.set(data);
@@ -260,12 +308,13 @@ function(response, asyncMode) {
 * @param response	[Object]		RPC response object
 */
 ZmCsfeCommand.prototype._runCallback =
-function(args) {
-
-	var callback = args[0];
-	var response = args[1];
-
-	var result = this._getResponseData(response, true);
+function(callback, result) {
+	var response;
+	if (result instanceof ZmCsfeResult) {
+		response = result; // we already got an exception and packaged it
+	} else {
+		response = this._getResponseData(result, true);
+	}
 	this._en = new Date();
 
 	if (!callback) {
@@ -273,7 +322,19 @@ function(args) {
 		return;
 	}
 
-	if (callback) callback.run(result);
+	if (callback) callback.run(response);
+}
+
+/**
+* Cancels this request (which must be async).
+*/
+ZmCsfeCommand.prototype.cancel =
+function() {
+	if (!this._rpcId) return;
+	
+	var rpcRequestObj = AjxRpc.getRpcCtxt(this._rpcId);
+	if (rpcRequestObj)
+		rpcRequestObj.cancel();
 }
 
 // DEPRECATED - instead, use instance method invoke() above
