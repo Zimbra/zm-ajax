@@ -101,7 +101,6 @@ function(sessionId) {
 * @param useXml			[boolean]*		If true, an XML response is requested
 * @param noSession		[boolean]*		If true, no session info is included
 * @param changeToken	[string]*		Current change token
-* @param highestNotifySeen [int]*       Sequence # of the highest notification we have processed
 * @param asyncMode		[boolean]*		If true, request sent asynchronously
 * @param callback		[AjxCallback]*	Callback to run when response is received (async mode)
 * @param logRequest		[boolean]*		If true, SOAP command name is appended to server URL
@@ -125,10 +124,6 @@ function(params) {
 	}
 	if (params.targetServer)
 		soapDoc.set("targetServer", params.targetServer, context);
-	if (params.highestNotifySeen) {
-	  	var notify = soapDoc.set("notify", null, context);
-	  	notify.setAttribute("seq", params.highestNotifySeen);
-	}
 	if (params.changeToken) {
 		var ct = soapDoc.set("change", null, context);
 		ct.setAttribute("token", params.changeToken);
@@ -202,15 +197,15 @@ function(params) {
 ZmCsfeCommand.prototype._getResponseData =
 function(response, asyncMode) {
 	this._en = new Date();
-	DBG.println(AjxDebug.DBG1, "ROUND TRIP TIME: " + (this._en.getTime() - this._st.getTime()));
+	DBG.println(AjxDebug.PERF, "ROUND TRIP TIME: " + (this._en.getTime() - this._st.getTime()));
 
 	var result = new ZmCsfeResult();
+
 	var xmlResponse = false;
 	var respDoc = null;
 	if (typeof(response.text) == "string" && response.text.indexOf("{") == 0) {
 		respDoc = response.text;
 	} else {
-		// an XML response if we requested one, or a fault
 		try {
 			xmlResponse = true;
 			if (!(response.text || (response.xml && (typeof response.xml) == "string"))) {
@@ -241,17 +236,11 @@ function(response, asyncMode) {
 		}
 	}
 	
-	var linkName = "Response";
-	if (respDoc && respDoc.match) {
-		var m = respDoc.match(/\{Body:\{(\w+):/);
-		if (m && m.length) linkName = m[1];
-	}
-	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", (asyncMode) ? " (asynchronous)" : "" ,"</H4>"].join(""), linkName);
+	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", (asyncMode) ? " (asynchronous)" : "" ,"</H4>"].join(""), "Response");
 
-	var data = new Object();	
+	var resp;
 	if (xmlResponse) {
-		// could be a good XML response, or a fault
-/*		DBG.printXML(AjxDebug.DBG1, respDoc.getXml());
+		DBG.printXML(AjxDebug.DBG1, respDoc.getXml());
 		var body = respDoc.getBody();
 		var fault = AjxSoapDoc.element2FaultObj(body);
 		if (fault) {
@@ -264,34 +253,23 @@ function(response, asyncMode) {
 				throw ex;
 			}
 		}
-		// convert XML response to JS
+
 		resp = "{";
 		var hdr = respDoc.getHeader();
 		if (hdr)
 			resp += AjxUtil.xmlToJs(hdr) + ",";
 		resp += AjxUtil.xmlToJs(body);
-		resp += "}";*/
-		data = respDoc._xmlDoc.toJSObject(true,false,true);
+		resp += "}";
 	} else {
-		try {	
-			eval("data=" + respDoc);
-		} catch (ex) {
-			DBG.dumpObj(AjxDebug.DBG1, ex);
-			if (asyncMode) {
-				result.set(ex, true);
-				return result;
-			} else {
-				throw ex;
-			}	
-		}
-
+		resp = respDoc;	
 	}
 
+	var data = new Object();
+	eval("data=" + resp);
 	DBG.dumpObj(AjxDebug.DBG1, data, -1);
 
 	var fault = data.Body.Fault;
 	if (fault) {
-		// JS response with fault
 		var trace = fault.Detail.Error.Trace;
 		var reasonText = fault.Reason.Text + (trace ? "\n"+trace : "");
 		var ex = new ZmCsfeException(reasonText, fault.Detail.Error.Code, "ZmCsfeCommand.prototype.invoke",
@@ -304,7 +282,6 @@ function(response, asyncMode) {
 			throw ex;
 		}
 	} else if (!response.success) {
-		// bad XML or JS response that had no fault
 		var ex = new ZmCsfeException("Csfe service error", ZmCsfeException.CSFE_SVC_ERROR,
 									 "ZmCsfeCommand.prototype.invoke", "HTTP response status " + response.status);
 		DBG.dumpObj(AjxDebug.DBG1, ex);
@@ -315,7 +292,6 @@ function(response, asyncMode) {
 			throw ex;
 		}
 	} else {
-		// good response
 		if (asyncMode)
 			result.set(data);
 	}
