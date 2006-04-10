@@ -102,7 +102,7 @@ public class SetHeaderFilter implements Filter {
         String value = this.config.getInitParameter(key);
         boolean ret = def;
         if (value != null) {
-            ret = Boolean.valueOf(value);
+            ret = (new Boolean(value)).booleanValue();
         }
         return ret;
     }
@@ -215,8 +215,8 @@ public class SetHeaderFilter implements Filter {
             System.out.println("@doFilter");
         }
         // make sure we're dealing with an http request
-        HttpServletRequest req;
-        HttpServletResponse resp;
+        HttpServletRequest req = null;
+        HttpServletResponse resp = null;
         boolean proceed = shouldProcess(request, response);
         if (proceed){
             req = (HttpServletRequest)request;
@@ -233,20 +233,20 @@ public class SetHeaderFilter implements Filter {
         
         if( uri.toLowerCase().indexOf("microsoft-server-activesync") != -1 )
         {
-			if(debug > 0){ System.out.println("ActiveSync client detected..."); }
+			if(debug > 0){ System.out.println("ZimbraSync client detected..."); }
 			try
 			{
 				String targetContextStr = "/service/";
 				ServletContext myContext = config.getServletContext();
 				ServletContext targetContext = myContext.getContext( targetContextStr );
-				RequestDispatcher dispatcher = targetContext.getRequestDispatcher( "/extension/activesync" );
+				RequestDispatcher dispatcher = targetContext.getRequestDispatcher( "/extension/zimbrasync" );
 				dispatcher.forward( request, response );
 				return;
 			}catch(NullPointerException npe)
 			{
 				//if this happens, make sure in server.xml the context element for the zimbra app
 				//has crossContext=true
-				if(debug >0){System.out.println("unable to forward activesync request");}
+				if(debug >0){System.out.println("unable to forward ZimbraSync request");}
 			}
 			
         }
@@ -256,7 +256,7 @@ public class SetHeaderFilter implements Filter {
         // request.
         setCacheControlHeaders(req, resp);
         
-        boolean supportCompression;
+        boolean supportCompression = false;
         supportCompression = this.supportsGzip(req, resp);
         setRequestAttributes(req, resp, supportCompression);
         if (!supportCompression) {
@@ -264,6 +264,7 @@ public class SetHeaderFilter implements Filter {
                 System.out.println("doFilter gets called wo compression");
             }
             chain.doFilter(req, resp);
+            return;
         } else {
             Matcher m = extensionPattern.matcher(uri);
             if (debug > 0) {
@@ -282,6 +283,7 @@ public class SetHeaderFilter implements Filter {
                 resp.setHeader(HEADER_CONTENT_ENCODING, HEADER_VAL_GZIP);
             }
             chain.doFilter(req, resp);
+            return;
         }
     }
 
@@ -291,7 +293,7 @@ public class SetHeaderFilter implements Filter {
             req.setAttribute(ATTR_NAME_FILE_EXTENSION, gzipExtension);
         }
         req.setAttribute(ATTR_NAME_VERSION, jsVersion);
-        String mode = req.getParameter("mode");
+        String mode = (String) req.getParameter("mode");
         if (!isProdMode){
             if (mode == null){
                 mode = "mjsf";
@@ -300,8 +302,11 @@ public class SetHeaderFilter implements Filter {
             }
         }
         req.setAttribute("mode", mode);
+        
+        String hiRes = (String) req.getParameter("hiRes");
+        if (hiRes != null)
+        	req.setAttribute("hiRes", hiRes);
     }
-
     /**
      * Returns whether the browser supports gzipped content.
      * Checks a query parameter first, then the Accept-Encoding header.
@@ -374,7 +379,7 @@ public class SetHeaderFilter implements Filter {
     
     public void setCacheControlHeaders (HttpServletRequest req,
                                         HttpServletResponse resp){
-        String uri = req.getRequestURI();
+        String uri = (String) req.getRequestURI();
         // is this a request for a jsp page?
         if (debug > 0){
             System.out.println("URI = " + uri + " ");
@@ -422,3 +427,4 @@ public class SetHeaderFilter implements Filter {
         }
     }
 }
+
