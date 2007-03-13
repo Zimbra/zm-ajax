@@ -128,7 +128,6 @@ ZmCsfeException.define("DOMAIN_NOT_EMPTY", "account.DOMAIN_NOT_EMPTY");
 ZmCsfeException.define("DISTRIBUTION_LIST_EXISTS", "account.DISTRIBUTION_LIST_EXISTS");
 ZmCsfeException.define("IDENTITY_EXISTS", "account.IDENTITY_EXISTS");
 ZmCsfeException.define("TOO_MANY_IDENTITIES", "account.TOO_MANY_IDENTITIES", ZMsg.errorTooManyIdentities);
-ZmCsfeException.define("MAINTENANCE_MODE", "account.MAINTENANCE_MODE", ZMsg.errorMaintenanceMode);
 
 ZmCsfeException.define("COS_EXISTS", "account.COS_EXISTS");
 
@@ -156,4 +155,3 @@ ZmCsfeException.define("MAIL_UNABLE_TO_IMPORT_CONTACTS", "mail.UNABLE_TO_IMPORT_
 ZmCsfeException.define("VOLUME_NO_SUCH_PATH", "volume.NO_SUCH_PATH");
 ZmCsfeException.define("LICENSE_ERROR", "service.LICENSE_ERROR");
 
-ZmCsfeException.define("VOICE_CONNECTION_ERROR", "voice.velodrome.HTTP_CONNECTION_FAILED", ZmMsg.errorVoiceConnection);
