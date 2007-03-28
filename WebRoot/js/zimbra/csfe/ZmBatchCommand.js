@@ -104,7 +104,7 @@ function(callback) {
 	}
 
 	// bug fix #9086 - Safari has bugs with appendChild :(
-	if (AjxEnv.isSafari && !AjxEnv.isSafariNightly) {
+	if (AjxEnv.isSafari) {
 		this.runSafari(callback);
 		return;
 	}
@@ -118,7 +118,7 @@ function(callback) {
     for (var i = 0; i < size; i++) {
 		var soapDoc = this._soapDocs[i];
 		var reqEl = soapDoc.getMethod();
-		reqEl.setAttribute("requestId", i);
+		reqEl.setAttribute("id", i);
 		var node = batchSoapDoc.adoptNode(reqEl);
 		batchSoapDoc.getMethod().appendChild(node);
 	}
@@ -137,7 +137,7 @@ function(callback) {
     for (var i = 0; i < size; i++) {
 		var soapDoc = this._soapDocs[i];
 		var reqEl = soapDoc.getMethod();
-		reqEl.setAttribute("requestId", i);
+		reqEl.setAttribute("id", i);
 
 		this._appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:runCallback});
 	}
@@ -209,7 +209,7 @@ function(method, response) {
 		var resp = response[i];
 		var data = {};
 		data[method] = resp;
-		var id = resp.requestId;
+		var id = resp.id;
 		if (method == "Fault") {
 			var execFrame = this._execFrames[id];
 			if (this._errorCallbacks[id]) {
