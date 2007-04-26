@@ -128,6 +128,7 @@ ZmCsfeException.define("DOMAIN_NOT_EMPTY", "account.DOMAIN_NOT_EMPTY");
 ZmCsfeException.define("DISTRIBUTION_LIST_EXISTS", "account.DISTRIBUTION_LIST_EXISTS");
 ZmCsfeException.define("IDENTITY_EXISTS", "account.IDENTITY_EXISTS");
 ZmCsfeException.define("TOO_MANY_IDENTITIES", "account.TOO_MANY_IDENTITIES", ZMsg.errorTooManyIdentities);
+ZmCsfeException.define("MAINTENANCE_MODE", "account.MAINTENANCE_MODE", ZMsg.errorMaintenanceMode);
 
 ZmCsfeException.define("COS_EXISTS", "account.COS_EXISTS");
 
@@ -150,8 +151,10 @@ ZmCsfeException.define("MAIL_SEND_ABORTED_ADDRESS_FAILURE", "mail.SEND_ABORTED_A
 ZmCsfeException.define("MAIL_SEND_FAILURE", "mail.SEND_FAILURE", ZMsg.mailSendFailure);
 ZmCsfeException.define("MAIL_TOO_MANY_CONTACTS", "mail.TOO_MANY_CONTACTS", ZMsg.errorTooManyContacts);
 ZmCsfeException.define("MAIL_TOO_MANY_TERMS", "mail.TOO_MANY_QUERY_TERMS_EXPANDED", ZMsg.errorTooManyTerms);
+ZmCsfeException.define("MAIL_UNABLE_TO_IMPORT_APPOINTMENTS", "mail.MAIL_UNABLE_TO_IMPORT_APPOINTMENTS", ZMsg.errorUnableToImport);
 ZmCsfeException.define("MAIL_UNABLE_TO_IMPORT_CONTACTS", "mail.UNABLE_TO_IMPORT_CONTACTS", ZMsg.errorUnableToImport);
 
 ZmCsfeException.define("VOLUME_NO_SUCH_PATH", "volume.NO_SUCH_PATH");
 ZmCsfeException.define("LICENSE_ERROR", "service.LICENSE_ERROR");
 
+ZmCsfeException.define("VOICE_CONNECTION_ERROR", "voice.velodrome.HTTP_CONNECTION_FAILED", ZmMsg.errorVoiceConnection);
