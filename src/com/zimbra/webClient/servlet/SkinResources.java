@@ -61,15 +61,13 @@ extends HttpServlet {
 
 	private static final String C_SKIN = "ZM_SKIN";
 	private static final String C_ADMIN_SKIN = "ZA_SKIN";
+	
+	private static final String T_HTML = "html";
 
-    private static final String T_CSS = "css";
-    private static final String T_HTML = "html";
-    private static final String T_JAVASCRIPT = "javascript";
-
-    private static final String N_SKIN = "skin";
+	private static final String N_SKIN = "skin";
 
 	private static final String DEFAULT_SKIN = "sand";
-	private static final String SKIN_MANIFEST = "manifest.xml";
+	private static final String SKIN_MANIFEST_EXT = ".xml";
 
 	private static final Pattern RE_IFDEF = Pattern.compile("^\\s*#ifdef\\s+(.*?)\\s*$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern RE_IFNDEF = Pattern.compile("^\\s*#ifndef\\s+(.*?)\\s*$", Pattern.CASE_INSENSITIVE);
@@ -78,16 +76,7 @@ extends HttpServlet {
 
 	private static final boolean DEBUG = false;
 
-    private static final Map<String,String> TYPES = new HashMap<String,String>();
-
-    static {
-        TYPES.put("css", "text/css");
-        TYPES.put("html", "text/html");
-        TYPES.put("js", "text/javascript");
-        TYPES.put("plain", "text/plain");
-    }
-
-    //
+	//
 	// Data
 	//
 
@@ -127,9 +116,7 @@ extends HttpServlet {
 			System.err.println("DEBUG: browserType="+browserType);
 			System.err.println("DEBUG: uri="+uri);
 			System.err.println("DEBUG: cacheId="+cacheId);
-            System.err.println("DEBUG: contentType="+contentType);
-            System.err.println("DEBUG: type="+type);
-        }
+		}
 
 		// generate buffer
 		Map<String,String> buffers = cache.get(cacheId);
@@ -137,7 +124,7 @@ extends HttpServlet {
 		if (buffer == null) {
 			if (DEBUG) System.err.println("DEBUG: generating buffer");
 			buffer = generate(req, macros, type);
-            if (!debug) {
+			if (!debug) {
 				if (buffers == null) {
 					buffers = new HashMap<String,String>();
 					cache.put(cacheId, buffers);
@@ -228,7 +215,7 @@ extends HttpServlet {
 		File fileDir = new File(fileDirname);
 		String skinDirname = context.getRealPath("/skins/" + skin);
 		File skinDir = new File(skinDirname);
-		File manifestFile = new File(skinDir, SKIN_MANIFEST);
+		File manifestFile = new File(skinDir, skin + SKIN_MANIFEST_EXT);
 
 		// load manifest
 		Manifest manifest = new Manifest(manifestFile, macros);
@@ -270,8 +257,7 @@ extends HttpServlet {
 		}
 
 		// return data
-        out.flush();
-        return cout.toString();
+		return cout.toString();
 	}
 
 	static void preprocess(File file,
@@ -346,19 +332,9 @@ extends HttpServlet {
 	// Private static functions
 	//
 
-    /**
-     * Return the request URI without any path parameters.
-     * We do this because we are only concerned with the type and
-     * filenames that we need to aggregate and return. And various
-     * web containers may insert the jsessionid path parameter to
-     * URIs returned by <code>getRequestURI</code> if no session
-     * ID cookie has been set.
-     */
 	private static String getRequestURI(HttpServletRequest req) {
-        String servletPath = req.getServletPath();
-        String pathInfo = req.getPathInfo();
-        return pathInfo != null ? servletPath + pathInfo : servletPath;
-    }
+		return req.getRequestURI();
+	}
 
 	private static Cookie getCookie(HttpServletRequest req, String name) {
 		Cookie[] cookies = req.getCookies();
@@ -405,7 +381,7 @@ extends HttpServlet {
 		}
 		index = uri.lastIndexOf('/');
 		String type = index != -1 ? uri.substring(index + 1) : "plain";
-		return TYPES.get(type);
+		return "text/" + type;
 	}
 
 	private static String getUserAgent(HttpServletRequest req) {
@@ -634,9 +610,7 @@ extends HttpServlet {
 		private static final String E_SUBSTITUTIONS = "substitutions";
 		private static final String E_CSS = "css";
 		private static final String E_HTML = "html";
-        private static final String E_SCRIPT = "script";
-        private static final String E_TEMPLATE = "template";
-        private static final String E_FILE = "file";
+		private static final String E_FILE = "file";
 
 		private static final Pattern RE_TOKEN = Pattern.compile("@.+?@");
 
@@ -647,10 +621,8 @@ extends HttpServlet {
 		private List<File> substList = new LinkedList<File>();
 		private List<File> cssList = new LinkedList<File>();
 		private List<File> htmlList = new LinkedList<File>();
-        private List<File> scriptList = new LinkedList<File>();
-        private List<File> templateList = new LinkedList<File>();
 
-        private Properties substitutions = new Properties();
+		private Properties substitutions = new Properties();
 
 		//
 		// Constructors
@@ -679,10 +651,8 @@ extends HttpServlet {
 			getFiles(document, E_SUBSTITUTIONS, skinDir, substList);
 			getFiles(document, E_CSS, skinDir, cssList);
 			getFiles(document, E_HTML, skinDir, htmlList);
-            getFiles(document, E_SCRIPT, skinDir, scriptList);
-            getFiles(document, E_TEMPLATE, skinDir, templateList);
 
-            // process substitutions
+			// process substitutions
 			for (File file : substList) {
 				if (DEBUG) System.err.println("DEBUG: subst file = "+file);
 				try {
@@ -740,20 +710,14 @@ extends HttpServlet {
 			return htmlList;
 		}
 
-        public List<File> scriptFiles() {
-            return scriptList;
-        }
-
-        public List<File> templateFiles() {
-            return templateList;
-        }
-
-        public List<File> getFiles(String type) {
-			if (type.equals(SkinResources.T_CSS)) return cssFiles();
-			if (type.equals(SkinResources.T_HTML)) return htmlFiles();
-            if (type.equals(SkinResources.T_JAVASCRIPT)) return scriptFiles();
-            // REVISIT: template files
-            return null;
+		public List<File> getFiles(String type) {
+			if (type.equals("css")) {
+				return cssFiles();
+			}
+			if (type.equals("html")) {
+				return htmlFiles();
+			}
+			return null;
 		}
 
 		// operations
