@@ -36,8 +36,13 @@
 * @param isException	[boolean]	true if the data is an exception object
 * @param header			[object]	the SOAP header
 */
-function ZmCsfeResult(data, isException, header) {
+ZmCsfeResult = function(data, isException, header) {
 	this.set(data, isException, header);
+};
+
+ZmCsfeResult.prototype.toString =
+function() {
+	return "ZmCsfeResult";
 };
 
 /**
