@@ -146,7 +146,7 @@ public class SkinResources
 
         Locale locale = getLocale(req);
         String cacheId = client + ": " + skin + ": " + browserType;
-        if (type.equals(T_JAVASCRIPT)) {
+        if (type.equals(T_JAVASCRIPT) || type.equals(T_CSS)) {
             cacheId += ": " + locale;
         }
 
@@ -274,7 +274,7 @@ public class SkinResources
 
     private String generate(HttpServletRequest req, HttpServletResponse resp,
                             Map<String, String> macros,
-                            String type, String client, Locale locale)
+                            String type, String client, Locale requestedLocale)
             throws IOException {
         String commentStart = "/* ";
         String commentContinue = " * ";
@@ -356,7 +356,31 @@ public class SkinResources
                         ZimbraLog.webclient.debug("DEBUG: !file.exists() " + file.getAbsolutePath());
                 }
                 files.add(file);
-            }
+				// add locale overrides
+				if (type.equals(T_CSS)) {
+					Locale defaultLocale = Locale.getDefault();
+					Locale[] locales = defaultLocale.equals(requestedLocale)
+									 ? new Locale[]{ requestedLocale }
+									 : new Locale[]{ defaultLocale, requestedLocale };
+					for (Locale locale : locales) {
+						// NOTE: Overrides are loaded in backwards order from
+						//       resource bundles because CSS rules that appear
+						//       later in the file take precedence. This is
+						//       different than resource bundles where the
+						//       first entry seen takes precedence.
+						String language = locale.getLanguage();
+						files.add(new File(fileDir, filename+"_"+language+ext));
+						String country = locale.getCountry();
+						if (country != null && country.length() > 0) {
+							files.add(new File(fileDir, filename+"_"+language+"_"+country+ext));
+							String variant = locale.getVariant();
+							if (variant != null && variant.length() > 0) {
+								files.add(new File(fileDir, filename+"_"+language+"_"+country+"_"+variant+ext));
+							}
+						}
+					}
+				}
+			}
 
             for (File file : files) {
                 if (!file.exists()) {
@@ -1228,6 +1252,12 @@ public class SkinResources
 			String height = (params.length > 3 ? params[3] : null);
 			String repeat = (params.length > 4 ? params[4] : null);
 
+			if (name == null) throw new IOException("image(): specify directory, name, width, height");
+			
+			// if there is no extension in the name, assume it's a sub
+			if (name.indexOf(".") == -1) {
+				name = getProperty(stack, name);
+			}
 			if (name == null) throw new IOException("image(): specify directory, name, width, height");
 			
 			boolean isPNG = (name.toLowerCase().indexOf(".png") > -1);
