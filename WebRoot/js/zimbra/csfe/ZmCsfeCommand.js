@@ -212,14 +212,18 @@ function(params) {
 		var requestStr = soapDoc.getXml();
 
 		this._st = new Date();
-
+		
+		var requestHeaders = {"Content-Type": "application/soap+xml; charset=utf-8"};
+		if(AjxEnv.isIE6 && (location.protocol == "https:")) //bug 22829
+			requestHeaders["Connection"] = "Close";
+			
 		if (asyncMode) {
 //			DBG.println(AjxDebug.DBG1, "set callback for asynchronous response");	
 			rpcCallback = new AjxCallback(this, this._runCallback, params);
-			this._rpcId = AjxRpc.invoke(requestStr, uri, {"Content-Type": "application/soap+xml; charset=utf-8"}, rpcCallback);
+			this._rpcId = AjxRpc.invoke(requestStr, uri, requestHeaders, rpcCallback);
 		} else {
 //			DBG.println(AjxDebug.DBG1, "parse response synchronously");	
-			var response = AjxRpc.invoke(requestStr, uri, {"Content-Type": "application/soap+xml; charset=utf-8"});
+			var response = AjxRpc.invoke(requestStr, uri, requestHeaders);
 			if (!params.returnXml) {
 				return this._getResponseData(params, response);
 			} else {
@@ -437,7 +441,11 @@ function(soapDoc, noAuthTokenRequired, serverUri, targetServer, useXml, noSessio
 		var requestStr = soapDoc.getXml();
 			
 		var _st = new Date();
-		var response = AjxRpc.invoke(requestStr, uri, {"Content-Type": "application/soap+xml; charset=utf-8"});
+		var requestHeaders = {"Content-Type": "application/soap+xml; charset=utf-8"};
+		if(AjxEnv.isIE6 && (location.protocol=="https:")) //bug 22829
+			requestHeaders["Connection"] = "Close";
+			
+		var response = AjxRpc.invoke(requestStr, uri, requestHeaders);
 		var _en = new Date();
 		DBG.println(AjxDebug.DBG1, "ROUND TRIP TIME: " + (_en.getTime() - _st.getTime()));
 
