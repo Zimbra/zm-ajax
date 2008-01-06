@@ -25,10 +25,6 @@ ZmCsfeCommand._COOKIE_NAME = "ZM_AUTH_TOKEN";
 ZmCsfeCommand.serverUri = null;
 ZmCsfeCommand._sessionId = null;
 
-// Reasons for re-sending a request
-ZmCsfeCommand.REAUTH	= "reauth";
-ZmCsfeCommand.RETRY		= "retry";
-
 // Static methods
 
 ZmCsfeCommand.getAuthToken =
@@ -92,26 +88,26 @@ function(fault, method) {
  * Sends a SOAP request to the server and processes the response.
  *
  * @param params			[hash]			hash of params:
- *        soapDoc			[AjxSoapDoc]	The SOAP document that represents the request
+ *        soapDoc			[AjxSoapDoc]	the SOAP document that represents the request
  *        noAuthToken		[boolean]*		If true, the check for an auth token is skipped
  *        serverUri			[string]*		URI to send the request to
  *        targetServer		[string]*		Host that services the request
  *        useXml			[boolean]*		If true, an XML response is requested
  *        noSession			[boolean]*		If true, no session info is included
  *        changeToken		[string]*		Current change token
- *        highestNotifySeen [int]*  	     Sequence # of the highest notification we have processed
+ *        highestNotifySeen [int]*  	    Sequence # of the highest notification we have processed
  *        asyncMode			[boolean]*		If true, request sent asynchronously
  *        callback			[AjxCallback]*	Callback to run when response is received (async mode)
  *        logRequest		[boolean]*		If true, SOAP command name is appended to server URL
  *        accountId			[string]*		ID of account to execute on behalf of
  *        accountName		[string]*		name of account to execute on behalf of
  *        skipAuthCheck		[boolean]*		don't check if auth token has changed
- *        resend			[constant]*		reason for resending request
+ *        resend			[boolean]*		if true, we are reusing soapDoc (re-auth)
  */
 ZmCsfeCommand.prototype.invoke =
 function(params) {
 
-	if (!(params && params.soapDoc)) { return; }
+	if (!params.soapDoc) return;
 
 	var soapDoc = params.soapDoc;
 	
@@ -167,19 +163,21 @@ function(params) {
 		}
 	}
 
+	var methodNameStr = soapDoc.getMethod().nodeName;
+
 	// Get auth token from cookie if required
 	if (!params.noAuthToken) {
 		var authToken = ZmCsfeCommand.getAuthToken();
 		if (!authToken) {
-			throw new ZmCsfeException("AuthToken required", ZmCsfeException.NO_AUTH_TOKEN, "ZmCsfeCommand.invoke");
+			throw new ZmCsfeException("AuthToken required", ZmCsfeException.NO_AUTH_TOKEN, methodNameStr);
 		}
-		if (ZmCsfeCommand._curAuthToken && !params.skipAuthCheck && 
-			(params.resend != ZmCsfeCommand.REAUTH) && (authToken != ZmCsfeCommand._curAuthToken)) {
+		if (ZmCsfeCommand._curAuthToken && !params.skipAuthCheck && !params.resend &&
+			(authToken != ZmCsfeCommand._curAuthToken)) {
 			throw new ZmCsfeException("AuthToken has changed", ZmCsfeException.AUTH_TOKEN_CHANGED, methodNameStr);
 		}
 		ZmCsfeCommand._curAuthToken = authToken;
-		if (params.resend == ZmCsfeCommand.REAUTH) {
-			// replace old auth token with current one
+		if (params.resend) {
+			// replace old auth token with new one
 			var nodes = soapDoc.getDoc().getElementsByTagName("authToken");
 			if (nodes && nodes.length == 1) {
 				DBG.println(AjxDebug.DBG1, "Re-auth: replacing auth token");
@@ -194,13 +192,12 @@ function(params) {
 					DBG.println(AjxDebug.DBG1, "Re-auth: could not find context!");
 				}
 			}
-		} else if (!params.resend){
+		} else {
 			soapDoc.set("authToken", authToken, context);
 		}
 	}
 
 	var asyncMode = params.asyncMode;
-	var methodNameStr = soapDoc.getMethod().nodeName;
 	DBG.println(AjxDebug.DBG1, ["<H4>", methodNameStr, (asyncMode) ? " (asynchronous)" : "" ,"</H4>"].join(""), methodNameStr);
 	DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
 
@@ -219,13 +216,13 @@ function(params) {
 			
 		if (asyncMode) {
 //			DBG.println(AjxDebug.DBG1, "set callback for asynchronous response");	
-			rpcCallback = new AjxCallback(this, this._runCallback, params);
+			rpcCallback = new AjxCallback(this, this._runCallback, [params.callback, soapDoc]);
 			this._rpcId = AjxRpc.invoke(requestStr, uri, requestHeaders, rpcCallback);
 		} else {
 //			DBG.println(AjxDebug.DBG1, "parse response synchronously");	
 			var response = AjxRpc.invoke(requestStr, uri, requestHeaders);
 			if (!params.returnXml) {
-				return this._getResponseData(params, response);
+				return this._getResponseData(response, false, soapDoc);
 			} else {
 				return response;
 			}
@@ -233,7 +230,7 @@ function(params) {
 	} catch (ex) {
 		if (!(ex && (ex instanceof ZmCsfeException || ex instanceof AjxSoapException || ex instanceof AjxException))) {
 			var newEx = new ZmCsfeException();
-			newEx.method = "ZmCsfeCommand.invoke";
+			newEx.method = methodNameStr;
 			newEx.detail = ex ? ex.toString() : "undefined exception";
 			newEx.code = ZmCsfeException.UNKNOWN_ERROR;
 			newEx.msg = "Unknown Error";
@@ -248,40 +245,18 @@ function(params) {
 };
 
 /**
- * Runs the callback that was passed to invoke() for an async command.
- *
- * @param callback	[AjxCallback]	Callback to run with response data
- * @param params	[hash]			hash of params (see method invoke())
- */
-ZmCsfeCommand.prototype._runCallback =
-function(params, result) {
-	if (!result) { return; }
-
-	var response;
-	if (result instanceof ZmCsfeResult) {
-		response = result; // we already got an exception and packaged it
-	} else {
-		response = this._getResponseData(result, params);
-	}
-	this._en = new Date();
-
-	if (params.callback) {
-		params.callback.run(response);
-	} else {
-		DBG.println(AjxDebug.DBG1, "ZmCsfeCommand.prototype._runCallback: Missing callback!");
-	}
-};
-
-/**
  * Takes the response to an RPC request and returns a JS object with the response data.
  *
  * @param response	[Object]		RPC response with properties "text" and "xml"
- * @param params	[hash]			hash of params (see method invoke())
+ * @param asyncMode	[boolean]		true if we're in asynchronous mode
+ * @param soapDoc	[AjxSoapDoc]	the SOAP document that represents the request
  */
 ZmCsfeCommand.prototype._getResponseData =
-function(response, params) {
+function(response, asyncMode, soapDoc) {
 	this._en = new Date();
 	DBG.println(AjxDebug.DBG1, "ROUND TRIP TIME: " + (this._en.getTime() - this._st.getTime()));
+
+	var methodNameStr = soapDoc ? soapDoc.getMethod().nodeName : "";
 
 	var result = new ZmCsfeResult();
 	var xmlResponse = false;
@@ -294,14 +269,14 @@ function(response, params) {
 			xmlResponse = true;
 			if (!(response.text || (response.xml && (typeof response.xml) == "string"))) {
 				// If we can't reach the server, req returns immediately with an empty response rather than waiting and timing out
-				throw new ZmCsfeException(null, ZmCsfeException.EMPTY_RESPONSE, "ZmCsfeCommand.prototype.invoke");
+				throw new ZmCsfeException(null, ZmCsfeException.EMPTY_RESPONSE, methodNameStr);
 			}
 			// responseXML is empty under IE
 			respDoc = (AjxEnv.isIE || response.xml == null) ? AjxSoapDoc.createFromXml(response.text) :
 															  AjxSoapDoc.createFromDom(response.xml);
 		} catch (ex) {
 			DBG.dumpObj(AjxDebug.DBG1, ex);
-			if (params.asyncMode) {
+			if (asyncMode) {
 				result.set(ex, true);
 				return result;
 			} else {
@@ -309,9 +284,9 @@ function(response, params) {
 			}
 		}
 		if (!respDoc) {
-			var ex = new ZmCsfeException(null, ZmCsfeException.SOAP_ERROR, "ZmCsfeCommand.prototype.invoke", "Bad XML response doc");
+			var ex = new ZmCsfeException(null, ZmCsfeException.SOAP_ERROR, methodNameStr, "Bad XML response doc");
 			DBG.dumpObj(AjxDebug.DBG1, ex);
-			if (params.asyncMode) {
+			if (asyncMode) {
 				result.set(ex, true);
 				return result;
 			} else {
@@ -325,7 +300,7 @@ function(response, params) {
 		var m = respDoc.match(/\{"?Body"?:\{"?(\w+)"?:/);
 		if (m && m.length) linkName = m[1];
 	}
-	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), linkName);
+	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", (asyncMode) ? " (asynchronous)" : "" ,"</H4>"].join(""), linkName);
 
 	var obj = {};
 
@@ -337,10 +312,10 @@ function(response, params) {
 			eval("obj=" + respDoc);
 		} catch (ex) {
 			if (ex.name == "SyntaxError") {
-				ex = new ZmCsfeException(null, ZmCsfeException.BAD_JSON_RESPONSE, "ZmCsfeCommand.prototype._getResponseData");
+				ex = new ZmCsfeException(null, ZmCsfeException.BAD_JSON_RESPONSE, methodNameStr);
 			}
 			DBG.dumpObj(AjxDebug.DBG1, ex);
-			if (params.asyncMode) {
+			if (asyncMode) {
 				result.set(ex, true);
 				return result;
 			} else {
@@ -355,8 +330,8 @@ function(response, params) {
 	var fault = obj.Body.Fault;
 	if (fault) {
 		// JS response with fault
-		var ex = ZmCsfeCommand.faultToEx(fault, "ZmCsfeCommand.prototype.invoke");
-		if (params.asyncMode) {
+		var ex = ZmCsfeCommand.faultToEx(fault, methodNameStr);
+		if (asyncMode) {
 			result.set(ex, true, obj.Header);
 			return result;
 		} else {
@@ -365,8 +340,8 @@ function(response, params) {
 	} else if (!response.success) {
 		// bad XML or JS response that had no fault
 		var ex = new ZmCsfeException(null, ZmCsfeException.CSFE_SVC_ERROR,
-									 "ZmCsfeCommand.prototype.invoke", "HTTP response status " + response.status);
-		if (params.asyncMode) {
+									 methodNameStr, "HTTP response status " + response.status);
+		if (asyncMode) {
 			result.set(ex, true);
 			return result;
 		} else {
@@ -374,7 +349,7 @@ function(response, params) {
 		}
 	} else {
 		// good response
-		if (params.asyncMode) {
+		if (asyncMode) {
 			result.set(obj);
 		}
 	}
@@ -383,7 +358,33 @@ function(response, params) {
 		ZmCsfeCommand.setSessionId(obj.Header.context.sessionId);
 	}
 
-	return params.asyncMode ? result : obj;
+	return asyncMode ? result : obj;
+};
+
+/**
+ * Runs the callback that was passed to invoke() for an async command.
+ *
+ * @param callback	[AjxCallback]	Callback to run with response data
+ * @param soapDoc	[AjxSoapDoc]	the SOAP document that represents the request
+ * @param response	[Object]		RPC response object
+ */
+ZmCsfeCommand.prototype._runCallback =
+function(callback, soapDoc, result) {
+	if (!result) { return; }
+
+	var response;
+	if (result instanceof ZmCsfeResult) {
+		response = result; // we already got an exception and packaged it
+	} else {
+		response = this._getResponseData(result, true, soapDoc);
+	}
+	this._en = new Date();
+
+	if (callback) {
+		callback.run(response);
+	} else {
+		DBG.println(AjxDebug.DBG1, "ZmCsfeCommand.prototype._runCallback: Missing callback!");
+	}
 };
 
 /**
@@ -391,121 +392,28 @@ function(response, params) {
  */
 ZmCsfeCommand.prototype.cancel =
 function() {
-	if (!this._rpcId) return;
+	if (!this._rpcId) { return; }
 
 	var req = AjxRpc.getRpcRequest(this._rpcId);
-	if (req)
+	if (req) {
 		req.cancel();
+	}
 };
 
 // DEPRECATED - instead, use instance method invoke() above
 ZmCsfeCommand.invoke =
-function(soapDoc, noAuthTokenRequired, serverUri, targetServer, useXml, noSession, changeToken) {
-	var hdr = soapDoc.createHeaderElement();
-	var context = soapDoc.set("context", null, hdr, "urn:zimbra");
-
-	if (noSession)
-		soapDoc.set("nosession", null, context);
-	var sessionId = ZmCsfeCommand.getSessionId();
-	if (sessionId) {
-		var si = soapDoc.set("sessionId", null, context);
-		si.setAttribute("id", sessionId);
-	}
-	if (targetServer)
-		soapDoc.set("targetServer", targetServer, context);
-	if (changeToken) {
-		var ct = soapDoc.set("change", null, context);
-		ct.setAttribute("token", changeToken);
-		ct.setAttribute("type", "new");
-	}
-
-	// See if we have an auth token, if not, then mock up and need to authenticate or just have no auth cookie
-	if (!noAuthTokenRequired) {
-		var authToken = ZmCsfeCommand.getAuthToken();
-		if (!authToken)
-			throw new ZmCsfeException("AuthToken required", ZmCsfeException.NO_AUTH_TOKEN, "ZmCsfeCommand.invoke");
-		soapDoc.set("authToken", authToken, context);
-	}
-
-	if (!useXml) {
-		var js = soapDoc.set("format", null, context);
-		js.setAttribute("type", "js");
-	}
-
-	DBG.println(AjxDebug.DBG1, "<H4>REQUEST</H4>");
-	DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
-
-	var xmlResponse = false;
-	try {
-		var uri = serverUri || ZmCsfeCommand.serverUri;
-		var requestStr = soapDoc.getXml();
-			
-		var _st = new Date();
-		var requestHeaders = {"Content-Type": "application/soap+xml; charset=utf-8"};
-		if(AjxEnv.isIE6 && (location.protocol=="https:")) //bug 22829
-			requestHeaders["Connection"] = "Close";
-			
-		var response = AjxRpc.invoke(requestStr, uri, requestHeaders);
-		var _en = new Date();
-		DBG.println(AjxDebug.DBG1, "ROUND TRIP TIME: " + (_en.getTime() - _st.getTime()));
-
-		var respDoc = null;
-		if (typeof(response.text) == "string" && response.text.indexOf("{") == 0) {
-			respDoc = response.text;
-		} else {
-			xmlResponse = true;
-			// responseXML is empty under IE
-			respDoc = (AjxEnv.isIE || response.xml == null)
-				? AjxSoapDoc.createFromXml(response.text) 
-				: AjxSoapDoc.createFromDom(response.xml);
-		}
-	} catch (ex) {
-		if (ex instanceof AjxSoapException) {
-			throw ex;
-		} else if (ex instanceof AjxException) {
-			throw ex; 
-		}  else {
-			var newEx = new ZmCsfeException();
-			newEx.method = "ZmCsfeCommand.invoke";
-			newEx.detail = ex.toString();
-			newEx.code = ZmCsfeException.UNKNOWN_ERROR;
-			newEx.msg = "Unknown Error";
-			throw newEx;
-		}
-	}
-	
-	DBG.println(AjxDebug.DBG1, "<H4>RESPONSE</H4>");
-
-	var resp;
-	if (xmlResponse) {
-		DBG.printXML(AjxDebug.DBG1, respDoc.getXml());
-		var body = respDoc.getBody();
-		var fault = AjxSoapDoc.element2FaultObj(body);
-		if (fault) {
-			throw new ZmCsfeException("Csfe service error", fault.errorCode, "ZmCsfeCommand.invoke", fault.reason);
-		}
-		if (useXml)
-			return body;
-
-		resp = "{";
-		var hdr = respDoc.getHeader();
-		if (hdr)
-			resp += AjxUtil.xmlToJs(hdr) + ",";
-		resp += AjxUtil.xmlToJs(body);
-		resp += "}";
-	} else {
-		resp = respDoc;	
-	}
-
-	var obj = new Object();
-	eval("obj=" + resp);
-	DBG.dumpObj(obj, -1);
-
-	var fault = obj.Body.Fault;
-	if (fault)
-		throw new ZmCsfeException(fault.Reason.Text, fault.Detail.Error.Code, "ZmCsfeCommand.invoke", fault.Code.Value);
-	if (obj.Header && obj.Header.context && obj.Header.context.sessionId)
-		ZmCsfeCommand.setSessionId(obj.Header.context.sessionId);
-
-	return obj;
+function(soapDoc, noAuthToken, serverUri, targetServer, useXml, noSession, changeToken) {
+	DBG.println(AjxDebug.DBG1, "Warning: use of deprecated method ZmCsfeCommand.invoke()");
+	var command = new ZmCsfeCommand();
+	var cmdParams = {
+		soapDoc:soapDoc,
+		noAuthToken:noAuthToken,
+		serverUri:serverUri,
+		targetServer:targetServer,
+		useXml:useXml,
+		noSession:noSession,
+		changeToken:changeToken,
+		asyncMode:false
+	};
+	return command.invoke(cmdParams);
 };
