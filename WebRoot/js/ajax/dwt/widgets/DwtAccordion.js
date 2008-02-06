@@ -53,6 +53,7 @@ function() {
  * @param params	[hash]			hash of params:
  *        title		[string]		text for accordion header
  *        data		[hash]			item data
+ *        icon		[string]*		icon
  */
 DwtAccordion.prototype.addAccordionItem =
 function(params) {
@@ -63,7 +64,12 @@ function(params) {
 
 	var itemNum = this.__ITEMCOUNT++;
 	var item = new DwtAccordionItem(itemNum, params.title, params.data, this);
-	var subs = {id:this._htmlElId, itemNum:itemNum, title:params.title };
+	var subs = {
+		id: this._htmlElId,
+		itemNum: itemNum,
+		title: params.title,
+		icon: params.icon
+	};
 
 	// append new accordion item
 	var row = this._table.insertRow(-1);
@@ -76,6 +82,8 @@ function(params) {
 	var headerDiv = document.getElementById(this._htmlElId + "_header_" + itemNum);
 	headerDiv.onclick = AjxCallback.simpleClosure(this._handleOnClickHeader, this, item);
 	headerDiv.oncontextmenu = AjxCallback.simpleClosure(this._handleOnRightClickHeader, this, item);
+	headerDiv.onmouseover = AjxCallback.simpleClosure(this._handleOnMouseoverHeader, this, item);
+	headerDiv.onmouseout = AjxCallback.simpleClosure(this._handleOnMouseoutHeader, this, item);
 
 	this._items.push(item);
 
@@ -142,8 +150,16 @@ function(width, height) {
 	if (width) {
 		// if width changed, resize all header items
 		for (var i = 0; i < this._items.length; i++) {
-			var title = document.getElementById(this._htmlElId + "_title_" + this._items[i].id);
-			Dwt.setSize(title, width - 30);
+			var id = this._items[i].id;
+			var title = document.getElementById(this._htmlElId + "_title_" + id);
+			var fudge = 30;
+
+			var iconCell = document.getElementById(this._htmlElId + "_icon_" + id);
+			if (iconCell && iconCell.className && iconCell.className != "") {
+				fudge += 16; // the default width of an icon
+			}
+			Dwt.setSize(title, width - fudge);
+
 		}
 	}
 
@@ -185,25 +201,24 @@ function(id, notify) {
 		var header = document.getElementById(this._htmlElId + "_header_" + itemId);
 		var body = document.getElementById(this._htmlElId + "_body_" + itemId);
 		var cell = document.getElementById(this._htmlElId + "_cell_" + itemId);
-		var icon = document.getElementById(this._htmlElId + "_icon_" + itemId);
+		var status = document.getElementById(this._htmlElId + "_status_" + itemId);
 
 		if (id == itemId) {
 			Dwt.setVisible(body, true);
 			header.className = "ZAccordionHeader ZWidget ZSelected";
-			icon.className = "ImgAccordionOpened";
+			status.className = "ImgAccordionOpened";
 			cell.style.height = "100%";
 			this._currentItemId = id;
 			selectedItem = this._items[i];
 		} else {
 			Dwt.setVisible(body, false);
 			header.className = "ZAccordionHeader ZWidget";
-			icon.className = "ImgAccordionClosed";
+			status.className = "ImgAccordionClosed";
 			cell.style.height = "0px";
 		}
 	}
 	if (selectedItem && notify && this.isListenerRegistered(DwtEvent.SELECTION)) {
 		var selEv = DwtShell.selectionEvent;
-//		DwtUiEvent.copy(selEv, ev);
 		selEv.item = this;
 		selEv.detail = selectedItem;
 		this.notifyListeners(DwtEvent.SELECTION, selEv);
@@ -259,12 +274,6 @@ DwtAccordion.prototype.addSelectionListener =
 function(listener) {
 	this.addListener(DwtEvent.SELECTION, listener);
 };
-
-DwtAccordion.prototype.addContextListener =
-function(listener) {
-	this.addListener(DwtEvent.ONCONTEXTMENU, listener);
-};
-
 
 // Private Methods
 
@@ -342,6 +351,24 @@ function(item, ev) {
 	}
 };
 
+DwtAccordion.prototype._handleOnMouseoverHeader =
+function(item, ev) {
+	ev = ev || window.event;
+
+	if (this.isListenerRegistered(DwtEvent.ONMOUSEOVER)) {
+		var selEv = DwtShell.selectionEvent;
+		DwtUiEvent.copy(selEv, ev);
+		selEv.item = this;
+		selEv.detail = item;
+		this.notifyListeners(DwtEvent.ONMOUSEOVER, selEv);
+	}
+};
+
+DwtAccordion.prototype._handleOnMouseoutHeader =
+function(ev) {
+	this.setToolTipContent("");
+};
+
 /**
  * Handles a resize event.
  *
@@ -377,4 +404,12 @@ DwtAccordionItem = function(id, title, data, accordion) {
 DwtAccordionItem.prototype.toString =
 function() {
 	return "DwtAccordionItem";
+};
+
+DwtAccordionItem.prototype.setIcon =
+function(icon) {
+	var iconCell = document.getElementById(this.accordion._htmlElId + "_icon_" + this.id);
+	if (iconCell) {
+		iconCell.className = icon;
+	}
 };
