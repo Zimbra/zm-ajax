@@ -300,7 +300,7 @@ function(actionCode, ev) {
 			if (this.__currentItem) {
 				var mev = DwtShell.mouseEvent;
 				this._setMouseEvent(mev, true, this.__currentItem, null, false, false, false, 0, 0);
-				this.__currentItem._mouseOutListener(mev);
+				DwtMenuItem._mouseOutListener(mev);
 				this.__currentItem = null;
 			}
 			this.popdown(0);
@@ -409,10 +409,10 @@ function(which) {
 	var mev = DwtShell.mouseEvent;
 	if (this.__currentItem) {
 		this._setMouseEvent(mev, true, this.__currentItem, null, false, false, false, 0, 0);
-		this.__currentItem._mouseOutListener(mev);
+		DwtMenuItem._mouseOutListener(mev);
 	}
 	this._setMouseEvent(mev, true, currItem, null, false, false, false, 0, 0);
-	currItem._mouseOverListener(mev);	// mouseover selects a menu item
+	DwtMenuItem._mouseOverListener(mev);	// mouseover selects a menu item
 	this.__currentItem = currItem;
 };
 
