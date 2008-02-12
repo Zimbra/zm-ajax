@@ -152,6 +152,7 @@ DwtMenu._activeMenus = new AjxVector() ;
 
 DwtMenu.prototype.dispose =
 function() {
+	this._table = null;
 	DwtComposite.prototype.dispose.call(this);
 
 	// Remove this from the shell. (Required because of hack in constructor.) 
@@ -434,13 +435,15 @@ function() {
 
 DwtMenu.prototype.removeChild =
 function(child) {
-	if (this._style == DwtMenu.BAR_STYLE) {
-		var cell = child.getHtmlElement().parentNode;
-		this._table.rows[0].deleteCell(Dwt.getCellIndex(cell));
-	} else {
-		var el = child.getHtmlElement();
-		if (el)
-			this._table.deleteRow(el.parentNode.parentNode.rowIndex);
+	if (this._table) {
+		if (this._style == DwtMenu.BAR_STYLE) {
+			var cell = child.getHtmlElement().parentNode;
+			this._table.rows[0].deleteCell(Dwt.getCellIndex(cell));
+		} else {
+			var el = child.getHtmlElement();
+			if (el)
+				this._table.deleteRow(el.parentNode.parentNode.rowIndex);
+		}
 	}
 	this._children.remove(child);
 }
