@@ -35,7 +35,7 @@ DwtSelect = function(params) {
 	params.className = params.className || "ZSelect";
 	params.posStyle = params.posStyle || Dwt.STATIC_STYLE;
     DwtButton.call(this, params);
-    var clsName = className || "ZSelect";
+
 	var events = AjxEnv.isIE ? [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP] :
 							   [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP, DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT];
 	this._setEventHdlrs(events);
