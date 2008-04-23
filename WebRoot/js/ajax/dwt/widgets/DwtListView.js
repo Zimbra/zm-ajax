@@ -30,7 +30,6 @@
  *        headerList	[array]*			list of IDs for columns
  *        noMaximize	[boolean]*			if true, all columns are fixed-width (otherwise, one will
  * 											expand to fill available space)
- *        view			[constant]*			ID of view
  */
 DwtListView = function(params) {
 	if (arguments.length == 0) { return; }
@@ -38,17 +37,16 @@ DwtListView = function(params) {
 	params.className = params.className || "DwtListView";
 	DwtComposite.call(this, params);
 
-	this._view = params.view || Dwt.getNextId();
 	if (params.headerList) {
 		var htmlElement = this.getHtmlElement();
 
 		this._listColDiv = document.createElement("div");
-		this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
+		this._listColDiv.id = Dwt.getNextId();
 		this._listColDiv.className = "DwtListView-ColHeader";
 		htmlElement.appendChild(this._listColDiv);
 
 		this._listDiv = document.createElement("div");
-		this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
+		this._listDiv.id = Dwt.getNextId();
 		this._listDiv.className = "DwtListView-Rows";
 		htmlElement.appendChild(this._listDiv);
 
@@ -75,6 +73,7 @@ DwtListView = function(params) {
 	this.addListener(DwtEvent.ONMOUSEMOVE, this._listenerMouseMove);
 	this.addListener(DwtEvent.ONDBLCLICK, this._listenerDoubleClick);
 
+	this._viewPrefix = "";
 	this._evtMgr = new AjxEventMgr();
 	this._selectedItems = new AjxVector();
 	this._selAnchor = null; 
@@ -122,6 +121,10 @@ DwtListView._LAST_REASON 		= 3;
 DwtListView._TOOLTIP_DELAY 		= 250;
 
 DwtListView.HEADERITEM_HEIGHT 	= 24;
+DwtListView.HEADERITEM_ARROW  	= "arr--";
+DwtListView.HEADER_ID			= "crr--";
+DwtListView.HEADERITEM_LABEL 	= "drr--";
+DwtListView.HEADERITEM_ICON		= "irr--";
 
 DwtListView.TYPE_HEADER_ITEM 	= "1";
 DwtListView.TYPE_LIST_ITEM 		= "2";
@@ -195,12 +198,10 @@ function(defaultColumnSort) {
 
 	// does this list view have headers or have they already been created?
 	if (!this._headerList || this._headerColCreated) { return; }
-	this._headerHash = {};
-	this._headerIdHash = {};
 
 	var idx = 0;
 	var htmlArr = [];
-	this._headerTableId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_TABLE, this._view);
+	this._headerTableId = DwtListView.HEADER_ID + Dwt.getNextId();
 
 	htmlArr[idx++] = "<table id='";
 	htmlArr[idx++] = this._headerTableId;
@@ -212,13 +213,7 @@ function(defaultColumnSort) {
 		var headerCol = this._headerList[i];
 		if (!headerCol._visible) { continue; }
 
-		var field = headerCol._field;
-		headerCol._index = i;
-		var id = headerCol._id = DwtId.getListViewHdrId(DwtId.WIDGET_HDR, this._view, field);
-
-		this._headerHash[field] = headerCol;
-		this._headerIdHash[id] = headerCol;
-
+		var id = headerCol._id;
 		htmlArr[idx++] = "<td id='";
 		htmlArr[idx++] = id;
 		htmlArr[idx++] = "' class='";
@@ -253,7 +248,7 @@ function(defaultColumnSort) {
 		// add new table for icon/label/sorting arrow
 		htmlArr[idx++] = "<table border=0 cellpadding=0 cellspacing=0 width=100%><tr>";
 		if (headerCol._iconInfo) {
-			var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "'"].join("");
+			var idText = ["id='", DwtListView.HEADERITEM_ICON, id, "'"].join("");
 			htmlArr[idx++] = "<td><center>";
 			htmlArr[idx++] = AjxImg.getImageHtml(headerCol._iconInfo, null, idText);
 			htmlArr[idx++] = "</center></td>";
@@ -261,7 +256,7 @@ function(defaultColumnSort) {
 
 		if (headerCol._label) {
 			htmlArr[idx++] = "<td id='";
-			htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, field);
+			htmlArr[idx++] = DwtListView.HEADERITEM_LABEL + id;
 			htmlArr[idx++] = "' class='DwtListHeaderItem-label'>";
 			htmlArr[idx++] = headerCol._label;
 			htmlArr[idx++] = "</td>";
@@ -271,14 +266,16 @@ function(defaultColumnSort) {
 			var arrowIcon = this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow";
 			
 			htmlArr[idx++] = "<td width=10 id='";
-			htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
+			htmlArr[idx++] = DwtListView.HEADERITEM_ARROW + id;
 			htmlArr[idx++] = "'>";
-			var isDefault = (field == defaultColumnSort);
-			htmlArr[idx++] = AjxImg.getImageHtml(arrowIcon, isDefault ? null : "visibility:hidden");
+			htmlArr[idx++] = headerCol._sortable == defaultColumnSort
+				? AjxImg.getImageHtml(arrowIcon)
+				: AjxImg.getImageHtml(arrowIcon, "visibility:hidden");
 			htmlArr[idx++] = "</td>";
-			if (isDefault) {
+			if (headerCol._sortable == defaultColumnSort) {
 				this._currentColId = id;
 			}
+				
 		}
 
 		// ALWAYS add "sash" separators
@@ -288,7 +285,7 @@ function(defaultColumnSort) {
 			htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
 			htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
 			htmlArr[idx++] = "px; background-color: #8A8A8A'></div></td>";
-			var sashId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_SASH, this._view, field);
+			var sashId = id + "--sash";
 			htmlArr[idx++] = "<td id='";
 			htmlArr[idx++] = sashId;
 			htmlArr[idx++] = "' class='DwtListView-Sash'><div style='width: 1px; height: ";
@@ -309,18 +306,18 @@ function(defaultColumnSort) {
 	for (var j = 0; j < this._headerList.length; j++) {
 		var headerCol = this._headerList[j];
 		var id = headerCol._id;
-		var field = headerCol._field;
 		var cell = document.getElementById(id);
 		if (!cell) { continue; }
 
-		if (headerCol._sortable && field == defaultColumnSort) {
+		var sortable = headerCol._sortable;
+		if (sortable && sortable == defaultColumnSort) {
 			cell.className = "DwtListView-Column DwtListView-ColumnActive";
 		}
 
 		var isResizeable = headerCol._resizeable;
 		if (isResizeable) {
 			// always get the sibling cell to the right
-			var sashId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_SASH, this._view, field);
+			var sashId = id + "--sash";
 			var sashCell = document.getElementById(sashId);
 			if (sashCell) {
 				this.associateItemWithElement(headerCol, sashCell, DwtListView.TYPE_HEADER_SASH, sashId, {index:j});
@@ -345,6 +342,19 @@ function(item) {
 		}
 	}
 	return null;
+};
+
+// this returns the index into the header list array for the given ID
+DwtListView.prototype.getColIndexForId =
+function(headerId) {
+	if (this._headerList) {
+		for (var i = 0; i < this._headerList.length; i++) {
+			if (this._headerList[i]._field == headerId) {
+				return i;
+			}
+		}
+	}
+	return -1;
 };
 
 /**
@@ -768,9 +778,9 @@ function(htmlArr, idx, params) {
  */
 DwtListView.prototype._getRow =
 function(htmlArr, idx, item, params) {
-	var rowId = this._getRowId(item, params) || Dwt.getNextId();
 	var className = this._getRowClass(item, params);
-	htmlArr[idx++] = rowId ? "<tr" : ["<tr id='", rowId, "'"].join("");
+	var rowId = this._getRowId(item, params) || Dwt.getNextId();
+	htmlArr[idx++] = ["<tr id='", rowId, "'"].join("");
 	htmlArr[idx++] = className ? ([" class='", className, "'>"].join("")) : ">";
 	return idx;
 };
@@ -919,7 +929,7 @@ function(htmlArr, idx, item, field, colIdx, params) {
  */
 DwtListView.prototype._getFieldId =
 function(item, field) {
-	return DwtId.getListViewItemId(DwtId.WIDGET_ITEM_FIELD, this._view, item.id, field);
+	return [this.getViewPrefix(), field, "_", item.id].join("");
 };
 
 /**
@@ -1122,7 +1132,8 @@ function(item, skipNotify) {
 		}
 
 		// reset the selected index
-		this._firstSelIndex = (this._list && this._list.size() > 0) ? this._list.indexOf(item) : -1;
+		this._firstSelIndex = (this._list && this._list.size() > 0)
+			? this._list.indexOf(item) : -1;
 
 		this._scrollList(el);
 
@@ -1208,8 +1219,13 @@ function() {
 
 DwtListView.prototype._getItemId =
 function(item) {
-	return DwtId.getListViewItemId(DwtId.WIDGET_ITEM, this._view, item ? item.id : Dwt.getNextId());
-};
+	var id = item ? ([this.getViewPrefix(), (item.id ? item.id : Dwt.getNextId())].join("")) : null;
+	if (AjxEnv.isIE && !this._viewPrefix && AjxUtil.isNumeric(id)) {
+		// numeric ID causes problem for AjxHistoryMgr in IE
+		id = "_" + id;
+	}
+	return id;
+}
 
 DwtListView.prototype._getHeaderTableId =
 function() {
@@ -1319,6 +1335,16 @@ function(ev)  {
 DwtListView.prototype.getTargetItemDiv =
 function(ev)  {
 	return this.findItemDiv(DwtUiEvent.getTarget(ev));
+};
+
+DwtListView.prototype.getViewPrefix =
+function() {
+	return this._viewPrefix;
+};
+
+DwtListView.prototype.setViewPrefix =
+function(viewPrefix) {
+	this._viewPrefix = viewPrefix;
 };
 
 /**
@@ -1810,7 +1836,9 @@ function(clickedCol, ev) {
 	if (!size) { return; }
 
 	// reset order by sorting preference
-	this._bSortAsc = (hdr._id == this._currentColId) ? !this._bSortAsc : this._getDefaultSortbyForCol(hdr);
+	this._bSortAsc = (hdr._id == this._currentColId)
+		? !this._bSortAsc
+		: this._getDefaultSortbyForCol(hdr);
 
 	// reset arrows as necessary
 	this._setSortedColStyle(hdr._id);
@@ -1849,9 +1877,7 @@ function(columnId) {
 	
 	if (this._currentColId && (columnId != this._currentColId)) {
 		// unset current column arrow
-		var headerCol = this._headerIdHash[this._currentColId];
-		var field = headerCol._field;
-		oldArrowId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
+		oldArrowId = DwtListView.HEADERITEM_ARROW + this._currentColId;
 		oldArrowCell = document.getElementById(oldArrowId);
 		if (oldArrowCell && oldArrowCell.firstChild) {
 			var imgEl = (AjxImg._mode == AjxImg.SINGLE_IMG) ? oldArrowCell.firstChild : oldArrowCell.firstChild.firstChild;
@@ -1867,11 +1893,9 @@ function(columnId) {
 		}
 	}
 	this._currentColId = columnId;
-	var headerCol = this._headerIdHash[this._currentColId];
-	var field = headerCol._field;
-
+			
 	// set new column arrow
-	var newArrowId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
+	var newArrowId = DwtListView.HEADERITEM_ARROW + columnId;
 	var newArrowCell = document.getElementById(newArrowId);
 	if (newArrowCell) {
 		AjxImg.setImage(newArrowCell, this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow");
@@ -1947,11 +1971,7 @@ function(ev) {
 		
 		// XXX: style hacks - improve this later
 		this._headerClone.style.borderTop = "1px solid #777777";
-
-		var headerCol = this._headerIdHash[this._clickDiv.id];
-		var field = headerCol._field;
-		var hdrLabelId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, field);
-		var labelCell = document.getElementById(hdrLabelId);
+		var labelCell = document.getElementById(DwtListView.HEADERITEM_LABEL + this._clickDiv.id);
 		if (labelCell) {
 			labelCell.style.color = "white";
 		}
@@ -2029,16 +2049,12 @@ function(ev) {
 	
 	if (data.type != DwtListView.TYPE_HEADER_ITEM) {
 		// something is messed up! redraw the header
-		var headerCol = this._headerIdHash[this._currentColId];
-		var sortField = headerCol._sortable ? headerCol._field : null;
+		var sortable = this._getSortableFromColId(this._currentColId);
 		this._headerColCreated = false;
-		this.createHeaderHtml(sortField);
+		this.createHeaderHtml(sortable);
 	} else {
 		// reset styles as necessary
-		var headerCol = this._headerIdHash[this._clickDiv.id];
-		var field = headerCol._field;
-		var hdrLabelId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, field);
-		var labelCell = document.getElementById(hdrLabelId);
+		var labelCell = document.getElementById(DwtListView.HEADERITEM_LABEL + this._clickDiv.id);
 		if (labelCell) {
 			labelCell.style.color = "black";
 		}
@@ -2116,11 +2132,24 @@ DwtListView.prototype._relayout =
 function() {
 	// force relayout of header column
 	this._headerColCreated = false;
-	var headerCol = this._headerIdHash[this._currentColId];
-	var sortField = headerCol._sortable ? headerCol._field : null;
+	var sortable = this._getSortableFromColId(this._currentColId);
 	var sel = this.getSelection()[0];
-	this.setUI(sortField);
+	this.setUI(sortable);
 	this.setSelection(sel, true);
+};
+
+// XXX: this could be optimized by saving the sortable everytime the sort column changes
+DwtListView.prototype._getSortableFromColId = 
+function(colId) {
+	// helper function to find column that was last sorted
+	var sortable = null;
+	for (var i = 0; i < this._headerList.length; i++) {
+		if (this._headerList[i]._id == colId) {
+			sortable = this._headerList[i]._sortable;
+			break;
+		}
+	}
+	return sortable;
 };
 
 DwtListView.prototype._getParentForColResize = 
@@ -2170,8 +2199,8 @@ function(column, bSortByAsc) {
 	this._bSortAsc = bSortByAsc;
 	var columnId = null;
 	for (var i = 0; i < this._headerList.length; i++) {
-		if (this._headerList[i]._sortable && this._headerList[i]._field == column) {
-			columnId = this._headerList[i]._field;
+		if (this._headerList[i]._sortable && this._headerList[i]._sortable == column) {
+			columnId = this._headerList[i]._id;
 			break;
 		}
 	}
@@ -2341,52 +2370,48 @@ function(actionCode, ev) {
 };
 
 /**
- * DwtListHeaderItem
- * This is a (optional) "container" class for DwtListView objects which want a
- * column header to appear. Create a new DwtListViewItem for each column header
- * you want to appear. Be sure to specify width values (otherwise, undefined is
- * default)
- *
- * @param params		[hash]		hash of params:
- *        field			[int]		identifier for this column
- *        text	 		[string]*	text shown for the column
- *        icon	 		[string]*	icon shown for the column
- *        width 		[int]*		width of the column
- *        sortable 		[boolean]*	flag indicating whether column is sortable
- *        resizeable 	[boolean]*	flag indicating whether column can be resized
- *        visible 		[boolean]*	flag indicating whether column is initially visible
- *        name 			[string]*	description of column used if column headers have action menu
- * 									- if not supplied, uses label value. This param is
- *									primarily used for columns w/ only an icon (no label).
- *        align			[int]		alignment style of label
- *        noRemove		[boolean]*	flag indicating whether this column can be removed (overrides visible flag)
- *        view			[constant]	ID of owning view
- */
-DwtListHeaderItem = function(params) {
-
-	if (arguments.length == 0) { return; }
-	params = Dwt.getParams(arguments, DwtListView.PARAMS);
-
-	this._field = params.field;
-	this._label = params.text;
-	this._iconInfo = params.icon;
-	this._sortable = params.sortable;
-	this._resizeable = params.resizeable;
-	this._visible = (params.visible !== false); // default to visible
-	this._name = params.name || params.text;
-	this._align = params.align;
-	this._noRemove = params.noRemove;
+* DwtListHeaderItem
+* This is a (optional) "container" class for DwtListView objects which want a
+* column header to appear. Create a new DwtListViewItem for each column header
+* you want to appear. Be sure to specify width values (otherwise, undefined is
+* default)
+*
+* @param	id 			[Int]		Some ID used internally (a GUID gets appended to ensure uniqueness)
+* @param	label 		[String]*	The text shown for the column
+* @param	iconInfo 	[String]*	The icon shown for the column
+* @param	width 		[Int]*		The width of the column
+* @param	sortable 	[Int]*		Flag indicating whether column is sortable
+* @param	resizeable 	[Boolean]*	Flag indicating whether column can be resized
+* @param	visible 	[Boolean]*	Flag indicating whether column is initially visible
+* @param	name 		[String]*	Description of column used if column headers have action menu
+* 									- If not supplied, uses label value. This param is
+*									primarily used for columns w/ only an icon (no label).
+* @param	align		[Int]		alignment style of label
+* @param	noRemove	[Boolean]*	flag indicating whether this column can be removed (overrides visible flag)
+*
+* TODO - kill this class and make a static array in derived class describing
+* column info (i.e. derived classes will be required to supply this!)
+*
+*/
+DwtListHeaderItem = function(id, label, iconInfo, width, sortable, resizeable, visible, name, align, noRemove) {
+	this._id = [id, Dwt.getNextId()].join("_");
+	this._field = id;
+	this._label = label;
+	this._iconInfo = iconInfo;
+	this._sortable = sortable;
+	this._resizeable = resizeable;
+	this._visible = (visible !== false); // only set visible if explicitly set to false
+	this._name = name || label;
+	this._align = align;
+	this._noRemove = noRemove;
 	// width:
-	var w = parseInt(params.width);
+	var w = parseInt(width);
 	if (isNaN(w) || !w) {
 		this._width = "auto";
-	} else if (String(w) == String(params.width)) {
+	} else if (String(w) == String(width)) {
 		this._width = w;
 	} else {
-		this._width = parseInt(String(params.width).substr(0, String(w).length));
-		this._widthUnits = AjxStringUtil.getUnitsFromSizeString(params.width);
+		this._width = parseInt(String(width).substr(0, String(w).length));
+		this._widthUnits = AjxStringUtil.getUnitsFromSizeString(width);
 	}
 };
-
-DwtListHeaderItem.PARAMS = ["id", "text", "icon", "width", "sortable", "resizeable",
-							"visible", "name", "align", "noRemove", "view"];
