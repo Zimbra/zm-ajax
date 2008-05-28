@@ -2353,9 +2353,7 @@ function(ev) {
 						obj._setDragProxyState(true);
 						obj.__dropAllowed = true;
 						destDwtObj._dragEnter(mouseEv);
-					}
-					else
-					{
+					} else {
 						obj._setDragProxyState(false);
 						obj.__dropAllowed = false;
 					}
@@ -2431,6 +2429,25 @@ function(ev) {
 				obj._destroyDragProxy(obj._dndProxy);
 				obj._dragging = DwtControl._NO_DRAG;
 			} else {
+				DwtControl.__badDrop(obj, mouseEv);
+			}
+			mouseEv._stopPropagation = true;
+			mouseEv._returnValue = false;
+			mouseEv.setToDhtmlEvent(ev);
+			return false;
+		}
+	}
+};
+
+/**
+ * Handles a bad DND drop operation by showing an animation of the icon flying
+ * back to its origin.
+ * 
+ * @param obj		[DwtControl]	control that underlies drag operation
+ * @param mouseEv	[DwtMouseEvent]	mouse event
+ */
+DwtControl.__badDrop =
+function(obj, mouseEv) {
 	obj._dragSource._cancelDrag();
 	// The following code sets up the drop effect for when an
 	// item is dropped onto an invalid target. Basically the
@@ -2445,13 +2462,6 @@ function(ev) {
 	var m = (obj.__dragEndY - obj.__dragStartY) / (obj.__dragEndX - obj.__dragStartX);
 	obj.__badDropAction.args = [m, obj.__dragStartY - (m * obj.__dragStartX), (obj.__dragStartX - obj.__dragEndX < 0) ? -1 : 1];
 	AjxTimedAction.scheduleAction(obj.__badDropAction, 0);
-			}
-			mouseEv._stopPropagation = true;
-			mouseEv._returnValue = false;
-			mouseEv.setToDhtmlEvent(ev);
-			return false;
-		}
-	}
 };
 
 /**
