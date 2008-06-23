@@ -58,6 +58,9 @@ DwtKeyMap.MAP_NAME["toolbarHorizontal"]	= "DwtToolBar-horiz";
 DwtKeyMap.MAP_NAME["toolbarVertical"]	= "DwtToolBar-vert";
 DwtKeyMap.MAP_NAME["tabView"]			= "DwtTabView";
 
+DwtKeyMap.KEY_TYPE = {};
+DwtKeyMap.KEY_TYPE["modifiers"] = DwtKeyMap.IS_MODIFIER = {};
+
 // Key names
 DwtKeyMap.CTRL			= "Ctrl+";
 DwtKeyMap.META			= "Meta+";
@@ -167,7 +170,7 @@ function(map, keys, mapNames) {
 		var parts = propName.split(".");
 		var last = parts[parts.length - 1];
 		if (DwtKeyMap.IS_DOC_KEY[last]) { continue; }
-		var mapName = mapNames[parts[0]];
+		var mapName = mapNames[parts[0]] || parts[0];
 		if ((this._checkedMap[mapName] === false) ||
 			(!this._checkedMap[mapName] && !this._checkMap(mapName))) { continue; }
 		if (!map[mapName]) {
