@@ -188,7 +188,7 @@ function(map, keys, mapNames) {
 					parents1[p] = mapNames[parents[p]];
 				}
 				map[mapName][action] = parents1.join(",");
-			} else {
+			} else if (last == "keycode") {
 				map[mapName][ks] = action;
 			}
 		}

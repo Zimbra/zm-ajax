@@ -690,7 +690,7 @@ function(ev) {
 		key += DwtKeyMap.SHIFT;
 	}
 	
-	kbMgr.__keySequence[kbMgr.__keySequence.length] = key + kbMgr.__keyMapMgr.keyCode2Char(keyCode);
+	kbMgr.__keySequence[kbMgr.__keySequence.length] = key + keyCode;
 
 //	DBG.println("kbnav", "KEYCODE: " + keyCode + " - KEY SEQ: " + kbMgr.__keySequence.join(""));
 	
