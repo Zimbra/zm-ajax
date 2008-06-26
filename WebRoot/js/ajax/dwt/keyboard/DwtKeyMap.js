@@ -34,6 +34,11 @@ DwtKeyMap = function(subclassInit) {
 	this._args			= {};
 	this._checkedMap	= {};	// cache results of _checkMap()
 	this._load(this._map, AjxKeys, DwtKeyMap.MAP_NAME);
+
+	DwtKeyMap.MOD_ORDER[DwtKeyMap.ALT]		= 1;
+	DwtKeyMap.MOD_ORDER[DwtKeyMap.CTRL]		= 2;
+	DwtKeyMap.MOD_ORDER[DwtKeyMap.META]		= 3;
+	DwtKeyMap.MOD_ORDER[DwtKeyMap.SHIFT]	= 4;
 };
 
 DwtKeyMap.deserialize =
@@ -58,14 +63,12 @@ DwtKeyMap.MAP_NAME["toolbarHorizontal"]	= "DwtToolBar-horiz";
 DwtKeyMap.MAP_NAME["toolbarVertical"]	= "DwtToolBar-vert";
 DwtKeyMap.MAP_NAME["tabView"]			= "DwtTabView";
 
-DwtKeyMap.KEY_TYPE = {};
-DwtKeyMap.KEY_TYPE["modifiers"] = DwtKeyMap.IS_MODIFIER = {};
+// Returns true if the given key is a modifier. The list of modifier keys is
+// taken from the AjxKeys properties file.
+DwtKeyMap.IS_MODIFIER = {};
 
-// Key names
-DwtKeyMap.CTRL			= "Ctrl+";
-DwtKeyMap.META			= "Meta+";
-DwtKeyMap.ALT			= "Alt+";
-DwtKeyMap.SHIFT			= "Shift+";
+// Order filled in by DwtKeyMapMgr._processKeyDefs()
+DwtKeyMap.MOD_ORDER		= {};
 
 DwtKeyMap.ARROW_DOWN		= "ArrowDown";
 DwtKeyMap.ARROW_LEFT		= "ArrowLeft";
@@ -123,8 +126,9 @@ DwtKeyMap.TEXT_STRIKETHRU	= "Strikethru";
 
 DwtKeyMap.GOTO_TAB_RE = new RegExp(DwtKeyMap.GOTO_TAB + "(\\d+)");
 
-DwtKeyMap.SEP = ","; // Key separator
-DwtKeyMap.INHERIT = "INHERIT"; // Inherit keyword.
+DwtKeyMap.JOIN		= "+";			// Modifier join character
+DwtKeyMap.SEP		= ",";			// Key separator
+DwtKeyMap.INHERIT	= "INHERIT";	// Map inheritance keyword
 
 DwtKeyMap.IS_DOC_KEY = {};
 DwtKeyMap.IS_DOC_KEY["description"]	= true;
@@ -157,20 +161,24 @@ function(map, keys, mapNames) {
 		var last = parts[parts.length - 1];
 		if (last == "win" || last == "mac" || last == "linux") {
 			if (last == curPlatform) {
-				var baseKey = parts.slice(0, 2).join(".");
+				var baseKey = parts.slice(0, parts.length - 1).join(".");
 				keys[baseKey] = keys[propName];
 			}
 			keys[propName] = null;
 		}
 	}
-
+	
 	for (var propName in keys) {
-		var propValue = keys[propName];
+		var propValue = AjxStringUtil.trim(keys[propName]);
 		if (typeof keys[propName] != "string") { continue; }
 		var parts = propName.split(".");
 		var last = parts[parts.length - 1];
 		if (DwtKeyMap.IS_DOC_KEY[last]) { continue; }
 		var mapName = mapNames[parts[0]] || parts[0];
+		if (mapName == "keys") {
+			this._processKeyDef(parts[1], parts[2], propValue);
+			continue;
+		}
 		if ((this._checkedMap[mapName] === false) ||
 			(!this._checkedMap[mapName] && !this._checkMap(mapName))) { continue; }
 		if (!map[mapName]) {
@@ -180,7 +188,7 @@ function(map, keys, mapNames) {
 		if (!this._checkAction(mapName, action)) { continue; }
 		var keySequences = propValue.split(/\s*;\s*/);
 		for (var i = 0; i < keySequences.length; i++) {
-			var ks = keySequences[i];
+			var ks = this._canonicalize(keySequences[i]);
 			if (action == DwtKeyMap.INHERIT) {
 				var parents = ks.split(/\s*,\s*/);
 				var parents1 = [];
@@ -218,4 +226,42 @@ function(mapName) {
 DwtKeyMap.prototype._checkAction =
 function(mapName, action) {
 	return true;
+};
+
+/**
+ * Sets up constants for a modifier key as described in a properties file.
+ * 
+ * @param key	[string]		ctrl, alt, shift, or meta
+ * @param field	[string]		display or keycode
+ * @param value	[string|int]	property value
+ */
+DwtKeyMap.prototype._processKeyDef = 
+function(key, field, value) {
+	if (!key || !field || !value) { return; }
+	if (field == "display") {
+		DwtKeyMap[key.toUpperCase()] = value;
+	} else if (field == "keycode") {
+		DwtKeyMap.IS_MODIFIER[value] = true;
+	}
+};
+
+/**
+ * Ensures a predictable order for the modifiers in a key sequence:
+ * 
+ * 			Alt Ctrl Meta Shift
+ * 
+ * Example: "Shift+Ctrl+U" will be transformed into "Ctrl+Shift+U"
+ * 
+ * @param ks	[string]	key sequence
+ */
+DwtKeyMap.prototype._canonicalize =
+function(ks) {
+	if (ks.indexOf(DwtKeyMap.JOIN) == -1) { return ks; }
+	var parts = ks.split(DwtKeyMap.JOIN);
+	var mods = parts.slice(0, parts.length - 1);
+	mods.sort(function(a, b) {
+		return DwtKeyMap.MOD_ORDER[a] - DwtKeyMap.MOD_ORDER[b];
+	});
+	mods.push(parts[parts.length - 1]);
+	return mods.join(DwtKeyMap.JOIN);
 };

@@ -80,7 +80,7 @@ DwtKeyboardMgr.FOCUS_FIELD_ID = "kbff";
  */
 DwtKeyboardMgr.isPossibleInputShortcut =
 function(ev) {
-	return (!DwtKeyMapMgr.isModifier(ev.keyCode) &&
+	return (!DwtKeyMap.IS_MODIFIER[ev.keyCode] &&
 			(ev.keyCode == 27 || DwtKeyMapMgr.hasModifier(ev)) ||
 			(ev.target.tagName.toUpperCase() == "INPUT" && (ev.keyCode == 13 || ev.keyCode == 3)));
 };
@@ -660,7 +660,7 @@ function(ev) {
 	 
 	// Filter out modifier keys. If we're in an input field, filter out legitimate input.
 	// (A shortcut from an input field must use a modifier key.)
-	if (DwtKeyMapMgr.isModifier(keyCode) || (!kbMgr.__dwtCtrlHasFocus && (kbMgr.__killKeySeqTimedActionId == -1) &&
+	if (DwtKeyMap.IS_MODIFIER[keyCode] || (!kbMgr.__dwtCtrlHasFocus && (kbMgr.__killKeySeqTimedActionId == -1) &&
 		DwtKeyMapMgr.isInputElement(ev.target) && !DwtKeyboardMgr.isPossibleInputShortcut(ev))) {
 
 	 	return kbMgr.__processKeyEvent(ev, kev, true, DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
@@ -672,25 +672,13 @@ function(ev) {
 		kbMgr.__killKeySeqTimedActionId = -1;
 	}
 		
- 	var key = "";
- 	
- 	if (kev.metaKey) {
- 		key += DwtKeyMap.META;
- 	}
-	
-	if (kev.ctrlKey) {
-		key += DwtKeyMap.CTRL;
-	}
-		
-	if (kev.altKey) {
-		key += DwtKeyMap.ALT;
-	}
-		
-	if (kev.shiftKey) {
-		key += DwtKeyMap.SHIFT;
-	}
-	
-	kbMgr.__keySequence[kbMgr.__keySequence.length] = key + keyCode;
+ 	var parts = [];
+	if (kev.altKey) 	{ parts.push(DwtKeyMap.ALT); }
+	if (kev.ctrlKey) 	{ parts.push(DwtKeyMap.CTRL); }
+ 	if (kev.metaKey) 	{ parts.push(DwtKeyMap.META); }
+	if (kev.shiftKey) 	{ parts.push(DwtKeyMap.SHIFT); }
+	parts.push(keyCode);
+	kbMgr.__keySequence[kbMgr.__keySequence.length] = parts.join(DwtKeyMap.JOIN);
 
 //	DBG.println("kbnav", "KEYCODE: " + keyCode + " - KEY SEQ: " + kbMgr.__keySequence.join(""));
 	
