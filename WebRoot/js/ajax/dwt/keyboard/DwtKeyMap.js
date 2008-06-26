@@ -58,15 +58,22 @@ DwtKeyMap.MAP_NAME["toolbarHorizontal"]	= "DwtToolBar-horiz";
 DwtKeyMap.MAP_NAME["toolbarVertical"]	= "DwtToolBar-vert";
 DwtKeyMap.MAP_NAME["tabView"]			= "DwtTabView";
 
+// Modifiers
+DwtKeyMap.CTRL			= "Ctrl";
+DwtKeyMap.META			= "Meta";
+DwtKeyMap.ALT			= "Alt";
+DwtKeyMap.SHIFT			= "Shift";
+
+DwtKeyMap.MOD_ORDER		= {};
+DwtKeyMap.MOD_ORDER[DwtKeyMap.ALT]		= 1;
+DwtKeyMap.MOD_ORDER[DwtKeyMap.CTRL]		= 2;
+DwtKeyMap.MOD_ORDER[DwtKeyMap.META]		= 3;
+DwtKeyMap.MOD_ORDER[DwtKeyMap.SHIFT]	= 4;
+
 DwtKeyMap.KEY_TYPE = {};
 DwtKeyMap.KEY_TYPE["modifiers"] = DwtKeyMap.IS_MODIFIER = {};
 
 // Key names
-DwtKeyMap.CTRL			= "Ctrl+";
-DwtKeyMap.META			= "Meta+";
-DwtKeyMap.ALT			= "Alt+";
-DwtKeyMap.SHIFT			= "Shift+";
-
 DwtKeyMap.ARROW_DOWN		= "ArrowDown";
 DwtKeyMap.ARROW_LEFT		= "ArrowLeft";
 DwtKeyMap.ARROW_RIGHT		= "ArrowRight";
@@ -123,8 +130,9 @@ DwtKeyMap.TEXT_STRIKETHRU	= "Strikethru";
 
 DwtKeyMap.GOTO_TAB_RE = new RegExp(DwtKeyMap.GOTO_TAB + "(\\d+)");
 
-DwtKeyMap.SEP = ","; // Key separator
-DwtKeyMap.INHERIT = "INHERIT"; // Inherit keyword.
+DwtKeyMap.JOIN		= "+";			// Modifier join character
+DwtKeyMap.SEP		= ",";			// Key separator
+DwtKeyMap.INHERIT	= "INHERIT";	// Inherit keyword.
 
 DwtKeyMap.IS_DOC_KEY = {};
 DwtKeyMap.IS_DOC_KEY["description"]	= true;
@@ -170,7 +178,7 @@ function(map, keys, mapNames) {
 		var parts = propName.split(".");
 		var last = parts[parts.length - 1];
 		if (DwtKeyMap.IS_DOC_KEY[last]) { continue; }
-		var mapName = mapNames[parts[0]] || parts[0];
+		var mapName = mapNames[parts[0]];
 		if ((this._checkedMap[mapName] === false) ||
 			(!this._checkedMap[mapName] && !this._checkMap(mapName))) { continue; }
 		if (!map[mapName]) {
@@ -180,7 +188,7 @@ function(map, keys, mapNames) {
 		if (!this._checkAction(mapName, action)) { continue; }
 		var keySequences = propValue.split(/\s*;\s*/);
 		for (var i = 0; i < keySequences.length; i++) {
-			var ks = keySequences[i];
+			var ks = this._canonicalize(keySequences[i]);
 			if (action == DwtKeyMap.INHERIT) {
 				var parents = ks.split(/\s*,\s*/);
 				var parents1 = [];
@@ -218,4 +226,25 @@ function(mapName) {
 DwtKeyMap.prototype._checkAction =
 function(mapName, action) {
 	return true;
+};
+
+/**
+ * Ensures a predictable order for the modifiers in a key sequence:
+ * 
+ * 			Alt Ctrl Meta Shift
+ * 
+ * Example: "Shift+Ctrl+U" will be transformed into "Ctrl+Shift+U"
+ * 
+ * @param ks	[string]	key sequence
+ */
+DwtKeyMap.prototype._canonicalize =
+function(ks) {
+	if (ks.indexOf(DwtKeyMap.JOIN) == -1) { return ks; }
+	var parts = ks.split(DwtKeyMap.JOIN);
+	var mods = parts.slice(0, parts.length - 1);
+	mods.sort(function(a, b) {
+		return DwtKeyMap.MOD_ORDER[a] - DwtKeyMap.MOD_ORDER[b];
+	});
+	mods.push(parts[parts.length - 1]);
+	return mods.join(DwtKeyMap.JOIN);
 };
