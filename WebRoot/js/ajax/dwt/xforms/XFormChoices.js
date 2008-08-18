@@ -30,6 +30,8 @@ XFormChoices = function(choiceObject, type, valueProperty, labelProperty) {
 	if (this._type == XFormChoices.AUTO) this.autoDetermineType();
 	
 	this._eventMgr = new AjxEventMgr();
+	this._hasMore = false;
+	this._totalAvailable=0;
 }
 XFormChoices.prototype = new Object();
 XFormChoices.prototype.constructor = XFormChoices;
@@ -175,11 +177,21 @@ XFormChoices.prototype.dirtyChoices = function () {
 	this.notifyListeners(DwtEvent.XFORMS_CHOICES_CHANGED, {});
 }
 
+XFormChoices.prototype.hasMore = function () {
+	return this._hasMore;
+}
 
+XFormChoices.prototype.setHasMore = function (more) {
+	this._hasMore=more;
+}
 
+XFormChoices.prototype.setTotalAvailable = function(total) {
+	this._totalAvailable=total;
+}
 
-
-
+XFormChoices.prototype.getTotalAvailable = function() {
+	return this._totalAvailable;
+}
 //
 //	listening -- these are from DwtControl  -- make an installable interface?
 //
