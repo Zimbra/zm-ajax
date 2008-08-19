@@ -503,15 +503,21 @@ function(item, index, realizeDeferred) {
 };
 
 DwtTreeItem.prototype.sort = function(cmp) {
-        if (this._childDiv) {
-                this._children.sort(cmp);
-                var df = document.createDocumentFragment();
-                this._children.foreach(function(item, i){
-                        df.appendChild(item.getHtmlElement());
-                        item._index = i;
-                });
-                this._childDiv.appendChild(df);
-        }
+	this._children.sort(cmp);
+	if (this._childDiv) {
+		this._setChildElOrder();
+	} else {
+		this._needsSort = true;
+	}
+};
+
+DwtTreeItem.prototype._setChildElOrder = function(cmp) {
+	var df = document.createDocumentFragment();
+	this._children.foreach(function(item, i) {
+		df.appendChild(item.getHtmlElement());
+		item._index = i;
+	});
+	this._childDiv.appendChild(df);
 };
 
 DwtTreeItem.prototype._getDragProxy =
@@ -631,6 +637,12 @@ function() {
 			treeItem._initialized = true;
 		}
 	}
+	if (this._needsSort) {
+		if (a.length) {
+			this._setChildElOrder();
+		}
+		delete this.__needsSort;
+	}
 };
 
 DwtTreeItem.prototype._isChildOf =
@@ -672,7 +684,7 @@ function(actioned) {
 		if (!this._initialized) {
 			this._initialize();
 		}
-		if (actioned && (this._actionEnabled || this._forceNotifyAction) && !this._selected) {
+		if (this._textCell && actioned && (this._actionEnabled || this._forceNotifyAction) && !this._selected) {
 			this._textCell.className = this._actionedClassName;
 			return true;
 		} else if (!actioned) {
