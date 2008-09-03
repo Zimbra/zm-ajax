@@ -196,44 +196,6 @@ DwtResizableWindow.prototype.getSize = function() {
                  y: this._gotSize.y }; // return a copy
 };
 
-/**
- * Returns the size of the window plus some padding to separate the window
- * from the edge of the screen.
- */
-DwtResizableWindow.prototype.getPaddedSize = function() {
-	var result = this.getSize();
-	var padding = this.getPadding();
-	result.x += padding.right;
-	result.y += padding.bottom;
-	return result;
-};
-
-/** If the window is offscreen, this method moves it to where it's fully visible */
-DwtResizableWindow.prototype.ensureVisibleLocation =
-function(parentSizeX, parentSizeY) {
-	if (!this.isMinimized()) {
-		var doIt = false;
-		var newX = Dwt.DEFAULT;
-		var newY = Dwt.DEFAULT;
-		var mySize = this.getPaddedSize();
-		if ((this._loc.x + mySize.x) > parentSizeX) {
-			newX = Math.max(0, parentSizeX - mySize.x);
-			doIt = true;
-		}
-		if ((this._loc.y + mySize.y) > parentSizeY) {
-			newY = Math.max(0, parentSizeY - mySize.y);
-			doIt = true;
-		}
-		if (doIt) {
-			this.setLocation(newX, newY);
-		}
-	}
-};
-
-DwtResizableWindow.prototype.getPadding = function() {
-	return { bottom: 0, right: 0 };
-};
-
 /* BEGIN: listeners */
 
 // FOCUS
@@ -302,8 +264,6 @@ function(minimize) {
 	} else {
 		this.delClassName("Minimize", null);
 		this._windowManager._onRestore(this);
-		var parentSize = this._windowManager.getSize();
-		this.ensureVisibleLocation(parentSize.x, parentSize.y);
 	}
 };
 
@@ -644,8 +604,6 @@ DwtWindowManager = function(parent, zIndex) {
 		this._windowBlurListener = new AjxListener(this, this._windowBlurListener);
 		this._windowDisposeListener = new AjxListener(this, this._windowDisposeListener);
 		this.setZIndex(zIndex);
-
-		this.shell.addControlListener(new AjxListener(this, this._shellControlListener));
 	}
 };
 
@@ -882,16 +840,5 @@ function(drw) {
 		right: element.style.right,
 		bottom: element.style.bottom
 	};
-};
-
-DwtWindowManager.prototype._shellControlListener =
-function(controlEvent) {
-	// Make sure all windows are still on the screen after a shell resize.
-	// (No need to check minimized windows, which are positioned relative to
-	// the bottom of the screen.)
-	for (var i = 0, count = this.all_windows.size(); i < count; i++) {
-		var drw = this.all_windows.get(i);
-		drw.ensureVisibleLocation(controlEvent.newWidth, controlEvent.newHeight);
-	}
 };
 
