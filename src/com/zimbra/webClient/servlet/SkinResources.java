@@ -141,8 +141,8 @@ public class SkinResources
 
     /**
      * <ul>
-     * <li>Key: client:skin/templates={true|false|split|only}:browser[:locale]
-     * (e.g. standard:beach/templates=split:GECKO NAVIGATOR MACINTOSH:en_US)
+     * <li>Key: alphabetical list of macro names based on user agent
+     * (e.g. GECKO NAVIGATOR MACINTOSH)
      * <li>Value: Map
      * <ul>
      * <li>Key: request uri
@@ -882,7 +882,7 @@ public class SkinResources
                     geckoDate = Float.parseFloat(token.substring(index + 6));
                 } else if ((index = token.indexOf("applewebkit/")) != -1) {
                     isWebKitBased = true;
-                    webKitVersion = parseFloat(token.substring(index + 12));
+                    webKitVersion = Float.parseFloat(token.substring(index + 12));
                 } else if ((index = token.indexOf("rv:")) != -1) {
                     mozVersion = parseVersion(token.substring(index + 3));
                     browserVersion = mozVersion;
