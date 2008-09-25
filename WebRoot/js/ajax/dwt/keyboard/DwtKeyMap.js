@@ -70,6 +70,7 @@ DwtKeyMap.IS_MODIFIER = {};
 // Order filled in by DwtKeyMapMgr._processKeyDefs()
 DwtKeyMap.MOD_ORDER		= {};
 
+// Key names
 DwtKeyMap.ARROW_DOWN		= "ArrowDown";
 DwtKeyMap.ARROW_LEFT		= "ArrowLeft";
 DwtKeyMap.ARROW_RIGHT		= "ArrowRight";
@@ -108,6 +109,7 @@ DwtKeyMap.JUSTIFY_LEFT		= "LeftJustify";
 DwtKeyMap.JUSTIFY_RIGHT		= "RightJustify";
 DwtKeyMap.NEXT				= "Next";
 DwtKeyMap.NEXT_TAB			= "NextTab";
+DwtKeyMap.NO				= "No";
 DwtKeyMap.PARENTMENU		= "ParentMenu";
 DwtKeyMap.PREV				= "Previous";
 DwtKeyMap.PREV_TAB			= "PreviousTab";
@@ -123,12 +125,13 @@ DwtKeyMap.TEXT_BOLD			= "Bold";
 DwtKeyMap.TEXT_ITALIC		= "Italic";
 DwtKeyMap.TEXT_UNDERLINE	= "Underline";
 DwtKeyMap.TEXT_STRIKETHRU	= "Strikethru";
+DwtKeyMap.YES				= "Yes";
 
 DwtKeyMap.GOTO_TAB_RE = new RegExp(DwtKeyMap.GOTO_TAB + "(\\d+)");
 
 DwtKeyMap.JOIN		= "+";			// Modifier join character
 DwtKeyMap.SEP		= ",";			// Key separator
-DwtKeyMap.INHERIT	= "INHERIT";	// Map inheritance keyword
+DwtKeyMap.INHERIT	= "INHERIT";	// Inherit keyword.
 
 DwtKeyMap.prototype.getMap =
 function() {

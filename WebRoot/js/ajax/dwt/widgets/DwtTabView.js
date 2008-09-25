@@ -252,7 +252,8 @@ function() {
 		for (var k = 0; k < seqs.length; k++) {
 			var ks = seqs[k];
 			for (var i = 1; i <= num; i++) {
-				var newKs = ks.replace(/NNN/, i);
+                var keycode = 48 + i;
+				var newKs = ks.replace(/NNN/, keycode);
 				kmm.setMapping("DwtTabView", newKs, "GoToTab" + i);
 			}
 		}
@@ -304,7 +305,9 @@ function (width, height) {
 		for (var curTabKey in this._tabs) {
 			var tabView = this._tabs[curTabKey].view;
 			if (tabView && !(tabView instanceof AjxCallback)) {
-				tabView.resetSize(width, height);
+				var contentHeight;
+				contentHeight = contentHeight || height - Dwt.getSize(this._tabBarEl).y;
+				tabView.resetSize(width, contentHeight);
 			}	
 		}
 	}		
@@ -391,6 +394,8 @@ DwtTabViewPage = function(parent, className, posStyle) {
 	DwtPropertyPage.call(this, parent, clsName, ps);
 
     this._createHtml();
+	this.getHtmlElement().style.overflowY = "auto";
+	this.getHtmlElement().style.overflowX = "visible";
 };
 
 DwtTabViewPage.prototype = new DwtPropertyPage;
@@ -424,11 +429,7 @@ function() {
 		}
 	}
 
-	if (this.parent.getHtmlElement().offsetWidth > 0) { 						// if parent visible, use offsetWidth
-		this._contentEl.style.width=this.parent.getHtmlElement().offsetWidth;
-	} else {
-		this._contentEl.style.width = this.parent.getHtmlElement().style.width;	//if parent not visible, resize page to fit parent
-	}
+	this._contentEl.style.width = this.parent.getHtmlElement().style.width;	// resize page to fit parent
 };
 
 DwtTabViewPage.prototype.hideMe = 
@@ -438,9 +439,7 @@ function() {
 
 DwtTabViewPage.prototype.resetSize =
 function(newWidth, newHeight) {
-	if (this._rendered) {
-		this.setSize(newWidth, newHeight);
-	}
+	this.setSize(newWidth, newHeight);
 };
 
 
