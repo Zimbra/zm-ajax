@@ -40,6 +40,7 @@ DynSelect_XFormItem.prototype.initFormItem = function () {
 	this.dataFetcherMethod  = this.getInheritedProperty("dataFetcherMethod");	
 	this.dataFetcherObject = null;
 }
+
 DynSelect_XFormItem.prototype.changeChoicesCallback = 
 function (data, more, total) {
 	DBG.println(AjxDebug.DBG1, AjxBuffer.concat(this.getId(),".choices came back"));
@@ -47,9 +48,19 @@ function (data, more, total) {
 	if(!choices)
 		return;
 	choices.setChoices(data);
+	choices.setHasMore(more);
+	choices.setTotalAvailable(total);	
 	choices.dirtyChoices();
-	if(more) {
+	/*if(more) {
 		this.showNote(AjxMessageFormat.format(ZaMsg.Alert_MoreResultsAvailable,total));
+	}*/
+}
+
+DynSelect_XFormItem.prototype.showMenu = function (thisObj, event) {
+	OSelect1_XFormItem.prototype.showMenu.call(this,thisObj,event);
+	
+	if(this.menuUp && this.choices.hasMore() && this.choices.getTotalAvailable()>0) {
+		this.showNote(AjxMessageFormat.format(ZaMsg.Alert_MoreResultsAvailable,this.choices.getTotalAvailable()));
 	}
 }
 

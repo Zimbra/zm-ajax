@@ -19,11 +19,10 @@
 AjxDateUtil = function() {
 };
 
-AjxDateUtil.YEAR		= 1;
-AjxDateUtil.MONTH		= 2;
-AjxDateUtil.WEEK		= 3;
-AjxDateUtil.DAY			= 4;
-AjxDateUtil.TWO_WEEKS	= 5;
+AjxDateUtil.YEAR = 1;
+AjxDateUtil.MONTH = 2;
+AjxDateUtil.WEEK = 3;
+AjxDateUtil.DAY = 4;
 
 AjxDateUtil.MSEC_PER_FIFTEEN_MINUTES = 900000;
 AjxDateUtil.MSEC_PER_HALF_HOUR = 1800000;
@@ -135,9 +134,7 @@ function(date, field, offset) {
 	} else if (field == AjxDateUtil.WEEK) {
 		date.setDate(date.getDate() + 7*offset);
 	} else if (field == AjxDateUtil.DAY) {
-		date.setDate(date.getDate() + offset);
-	} else if (field == AjxDateUtil.TWO_WEEKS) {
-		date.setDate(date.getDate() + 14*offset);
+		date.setDate(date.getDate() + offset);		
 	} else {
 		return date;
 	}
