@@ -117,6 +117,11 @@ function(id) {
 	return null;
 };
 
+DwtAccordion.prototype.getItemByIndex =
+function(index) {
+	return (index >=0 && index < this._items.length) ? this._items[index] : null;
+}
+
 /**
  * Hides all accordion items.
  */
@@ -208,6 +213,14 @@ function(x, y, width, height) {
 	DwtComposite.prototype.setBounds.call(this, x, y, width, height);
 
 	this.resize(width, height);
+};
+
+/**
+ * Returns the expanded accordion item
+ */
+DwtAccordion.prototype.getExpandedItem =
+function() {
+	return this._items[this._currentItemId];
 };
 
 /**
