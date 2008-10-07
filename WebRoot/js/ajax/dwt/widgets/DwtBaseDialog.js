@@ -182,11 +182,7 @@ function(loc) {
 	} else {
 		this._positionDialog();
 	}
-
-    //reset TAB focus before popup of dialog.
-    //method be over-written to focus a different member.
-    this._resetTabFocus();
-
+	
 	this.setZIndex(thisZ);
 	this._poppedUp = true;
 
@@ -194,13 +190,9 @@ function(loc) {
 	var kbMgr = this._shell.getKeyboardMgr();
 	kbMgr.pushTabGroup(this._tabGroup);
 	kbMgr.pushDefaultHandler(this);
+	this._tabGroup.resetFocusMember(true);
 
 	this.notifyListeners(DwtEvent.POPUP, this);
-};
-
-DwtBaseDialog.prototype._resetTabFocus =
-function(){
-    this._tabGroup.resetFocusMember(true);
 };
 
 DwtBaseDialog.prototype.focus = 
