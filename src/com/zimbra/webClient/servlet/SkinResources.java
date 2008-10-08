@@ -70,7 +70,6 @@ public class SkinResources
 	private static final String P_LANGUAGE = "language";
 	private static final String P_COUNTRY = "country";
 	private static final String P_VARIANT = "variant";
-	private static final String P_SERVER_NAME = "server-name";
 	private static final String P_SERVLET_PATH = "servlet-path";
 	private static final String P_TEMPLATES = "templates";
 	private static final String P_COMPRESS = "compress";
@@ -142,8 +141,8 @@ public class SkinResources
 
     /**
      * <ul>
-     * <li>Key: alphabetical list of macro names based on user agent
-     * (e.g. GECKO NAVIGATOR MACINTOSH)
+     * <li>Key: client:skin/templates={true|false|split|only}:browser[:locale]
+     * (e.g. standard:beach/templates=split:GECKO NAVIGATOR MACINTOSH:en_US)
      * <li>Value: Map
      * <ul>
      * <li>Key: request uri
@@ -696,9 +695,8 @@ public class SkinResources
     // Private static functions
     //
 
-	private String getServerName(HttpServletRequest req) {
-		String serverName = getServletConfig().getInitParameter(P_SERVER_NAME);
-		return serverName != null ? serverName : req.getServerName();
+	private static String getServerName(HttpServletRequest req) {
+		return req.getServerName();
 	}
 
     /**
