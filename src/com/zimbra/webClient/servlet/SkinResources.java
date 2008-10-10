@@ -40,6 +40,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.*;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
@@ -70,6 +71,7 @@ public class SkinResources
 	private static final String P_LANGUAGE = "language";
 	private static final String P_COUNTRY = "country";
 	private static final String P_VARIANT = "variant";
+	private static final String P_SERVER_NAME = "server-name";
 	private static final String P_SERVLET_PATH = "servlet-path";
 	private static final String P_TEMPLATES = "templates";
 	private static final String P_COMPRESS = "compress";
@@ -695,8 +697,9 @@ public class SkinResources
     // Private static functions
     //
 
-	private static String getServerName(HttpServletRequest req) {
-		return req.getServerName();
+	private String getServerName(HttpServletRequest req) {
+		String serverName = getServletConfig().getInitParameter(P_SERVER_NAME);
+		return serverName != null ? serverName : HttpUtil.getVirtulaHost(req);
 	}
 
     /**
