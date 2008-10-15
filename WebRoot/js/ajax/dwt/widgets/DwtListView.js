@@ -887,13 +887,7 @@ function(actionCode, ev) {
 		case DwtKeyMap.ADD_SELECT_PREV: this._selectItem(false, true, true); break;
 		case DwtKeyMap.PREV:			this._setKbFocusElement(false); break;
 		case DwtKeyMap.NEXT:			this._setKbFocusElement(true); break;
-		case DwtKeyMap.DBLCLICK:
-			if (this.getSelectionCount() > 0) {
-				this.emulateDblClick(this.getItemFromElement(this._kbAnchor));
-			} else if (this._kbAnchor) {
-				this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT});
-			}
-			break;
+		case DwtKeyMap.DBLCLICK:		this.emulateDblClick(this.getItemFromElement(this._kbAnchor)); break;
 
 		case DwtKeyMap.SELECT_ALL:
 			if (this._list && this._list.size()) {
@@ -1686,7 +1680,22 @@ function(element, next) {
  */
 DwtListView.prototype._scrollList =
 function(itemDiv) {
-	this._scrollIntoView(itemDiv, itemDiv.parentNode);
+	// TODO might be able to cache some of these values
+	var parentNode = itemDiv.parentNode;
+	var itemDivTop = Dwt.getLocation(itemDiv, this._tmpPoint).y;
+	var parentTop = Dwt.getLocation(parentNode, this._tmpPoint).y;
+
+	var diff = itemDivTop - (parentNode.scrollTop + parentTop);
+	if (diff < 0) {
+		parentNode.scrollTop += diff;
+	} else {
+		var parentH = Dwt.getSize(parentNode, this._tmpPoint).y;
+		var itemDivH = Dwt.getSize(itemDiv, this._tmpPoint).y;
+		diff = (itemDivTop + itemDivH) - (parentTop + parentH + parentNode.scrollTop);
+		if (diff > 0) {
+			parentNode.scrollTop += diff;
+		}
+	}
 };
 
 DwtListView.prototype._emulateSingleClick =
@@ -1711,13 +1720,11 @@ function(next) {
 	}
 
 	if (this._kbAnchor != orig) {
-		if (orig) {
-			var selClass = this._selectedClass;
-			if (orig.className.indexOf(selClass) != -1) {
-				Dwt.delClass(orig, this._styleRe, selClass);
-			} else {
-				Dwt.delClass(orig, this._styleRe);		// , this._normalClass		MOW
-			}
+		var selClass = this._selectedClass;
+		if (orig.className.indexOf(selClass) != -1) {
+			Dwt.delClass(orig, this._styleRe, selClass);
+		} else {
+			Dwt.delClass(orig, this._styleRe);		// , this._normalClass		MOW
 		}
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 	}
@@ -1727,7 +1734,7 @@ function(next) {
 
 DwtListView.prototype._itemSelected =
 function(itemDiv, ev) {
-	if (this._allowLeftSelection(itemDiv, ev, ev && ev.button)) {
+	if (this._allowLeftSelection(itemDiv, ev, (ev) ? ev.button : null)) {
 		/* Unmark the KB focus element. We need to do this because it is
 		 * possible for this element to not be the same as the selection
 		 * anchor due to NEXT and PREV keyboard actions */
@@ -2239,9 +2246,10 @@ function() {
 	// force relayout of header column
 	this.headerColCreated = false;
 	var headerCol = this._headerIdHash[this._currentColId];
-	var sortField = (headerCol && headerCol._sortable) ? headerCol._field : null;
-	this.setUI(sortField);
+	if (!headerCol) { return; }
+	var sortField = headerCol._sortable ? headerCol._field : null;
 	var sel = this.getSelection()[0];
+	this.setUI(sortField);
 	this.setSelection(sel, true);
 };
 
@@ -2268,8 +2276,6 @@ DwtListView.prototype._focus =
 function() {
 	if (this._kbAnchor) {
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
-	} else {
-		this._setKbFocusElement();
 	}
 };
 
