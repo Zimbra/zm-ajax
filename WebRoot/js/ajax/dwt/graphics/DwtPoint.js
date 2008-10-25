@@ -30,8 +30,6 @@ DwtPoint = function(x, y) {
 	this.y = y;
 }
 
-DwtPoint.tmp = new DwtPoint(0, 0);
-
 /**
  * This method returns this class' name.
  * 
