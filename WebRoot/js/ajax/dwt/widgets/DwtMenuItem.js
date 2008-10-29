@@ -165,13 +165,6 @@ function(delay) {
 	this._hoverDelay = delay;
 };
 
-DwtMenuItem.prototype.setShortcut =
-function(shortcut) {
-	if (shortcut && this._dropDownEl) {
-		this._dropDownEl.innerHTML = shortcut;
-	}
-};
-
 //
 // Protected methods
 //
