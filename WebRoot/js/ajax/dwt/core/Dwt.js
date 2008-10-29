@@ -359,7 +359,9 @@ function(htmlElement, style) {
  */
 Dwt.getBounds =
 function(htmlElement, rect) {
-	var tmpPt = DwtPoint.tmp;
+	if (!Dwt.__tmpPoint)
+		Dwt.__tmpPoint = new DwtPoint(0, 0);
+	var tmpPt = Dwt.__tmpPoint;
 
 	Dwt.getLocation(htmlElement, tmpPt);
 	var locX = tmpPt.x;
