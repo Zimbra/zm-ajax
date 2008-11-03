@@ -24,16 +24,16 @@
  *
  * @author Ross Dargahi
  * 
- * @param params		[hash]				hash of params:
- *        parent		[DwtComposite] 		parent widget
- *        index 		[int]*				index at which to add this control among parent's children 
- *        text 			[string]*			label text for the tree item
- *        imageInfo		[string]*			icon for the tree item
- *        deferred		[boolean]*			If true, postpone initialization until needed.
- *        className		[string]*			CSS class
- *        posStyle		[constant]*			positioning style
- *        forceNotifySelection	[boolean]*	force notify selection even if checked style
- *        forceNotifyAction		[boolean]*	force notify action even if checked style
+ * @param params				[hash]				hash of params:
+ *        parent				[DwtComposite] 		parent widget
+ *        index 				[int]*				index at which to add this control among parent's children
+ *        text 					[string]*			label text for the tree item
+ *        imageInfo				[string]*			icon for the tree item
+ *        deferred				[boolean]*			If true, postpone initialization until needed.
+ *        className				[string]*			CSS class
+ *        posStyle				[constant]*			positioning style
+ *        forceNotifySelection	[boolean]*			force notify selection even if checked style
+ *        forceNotifyAction		[boolean]*			force notify action even if checked style
  */
 DwtTreeItem = function(params) {
     if (arguments.length == 0) { return; }    
@@ -48,10 +48,11 @@ DwtTreeItem = function(params) {
 	}
 
 	this._origClassName = params.className || "DwtTreeItem";
-	this._textClassName = this._origClassName + "-Text";
-	this._selectedClassName = this._origClassName + "-" + DwtCssStyle.SELECTED;
-	this._actionedClassName = this._origClassName + "-" + DwtCssStyle.ACTIONED;
-	this._dragOverClassName = this._origClassName + "-" + DwtCssStyle.DRAG_OVER;
+	this._textClassName = [this._origClassName, "Text"].join("-");
+	this._selectedClassName = [this._origClassName, DwtCssStyle.SELECTED].join("-");
+	this._selectedFocusedClassName = [this._origClassName, DwtCssStyle.SELECTED, DwtCssStyle.FOCUSED].join("-");
+	this._actionedClassName = [this._origClassName, DwtCssStyle.ACTIONED].join("-");
+	this._dragOverClassName = [this._origClassName, DwtCssStyle.DRAG_OVER].join("-");
 
 	params.deferred = (params.deferred !== false);
 	params.className = null;
@@ -66,6 +67,8 @@ DwtTreeItem = function(params) {
 	this._forceNotifySelection = Boolean(params.forceNotifySelection);
 	this._actionEnabled = true;
 	this._forceNotifyAction = Boolean(params.forceNotifyAction);
+	this._dndScrollCallback = params.dndScrollCallback;
+	this._dndScrollId = params.dndScrollId;
 
 	// disable selection if checkbox style
 	if (this._tree._isCheckedStyle()) {
@@ -83,7 +86,8 @@ DwtTreeItem = function(params) {
 	}
 };
 
-DwtTreeItem.PARAMS = ["parent", "index", "text", "imageInfo", "deferred", "className", "posStyle"];
+DwtTreeItem.PARAMS = ["parent", "index", "text", "imageInfo", "deferred", "className", "posStyle",
+					  "forceNotifySelection", "forceNotifyAction"];
 
 DwtTreeItem.prototype = new DwtComposite;
 DwtTreeItem.prototype.constructor = DwtTreeItem;
@@ -346,6 +350,70 @@ function(child) {
 	}
 };
 
+DwtTreeItem.prototype.getKeyMapName =
+function() {
+	return "DwtTreeItem";
+};
+
+DwtTreeItem.prototype.handleKeyAction =
+function(actionCode, ev) {
+
+
+	switch (actionCode) {
+
+		case DwtKeyMap.NEXT: {
+			var ti = this._tree._getNextTreeItem(true);
+			if (ti) {
+				ti._tree.setSelection(ti, false, true);
+			}
+			break;
+		}
+
+		case DwtKeyMap.PREV: {
+			var ti = this._tree._getNextTreeItem(false);
+			if (ti) {
+				ti._tree.setSelection(ti, false, true);
+			}
+			break;
+		}
+
+		case DwtKeyMap.EXPAND: {
+			if (!this._expanded) {
+				this.setExpanded(true, false, true);
+			}
+			break;
+		}
+
+		case DwtKeyMap.COLLAPSE: {
+			if (this._expanded) {
+				this.setExpanded(false, false, true);
+			}
+			break;
+		}
+
+		case DwtKeyMap.ACTION: {
+			var target = this.getHtmlElement();
+			var p = Dwt.toWindow(target, 0, 0);
+			var s = this.getSize();
+			var docX = p.x + s.x / 4;
+			var docY = p.y + s.y / 2;
+			this._gotMouseDownRight = true;
+			this._emulateSingleClick({dwtObj:this, target:target, button:DwtMouseEvent.RIGHT,
+									  docX:docX, docY:docY, kbNavEvent:true});
+
+			break;
+		}
+
+
+		default:
+			return false;
+
+	}
+
+	return true;
+};
+
+
 DwtTreeItem.prototype._initialize =
 function(index, realizeDeferred) {
 	this._checkState();
@@ -503,15 +571,21 @@ function(item, index, realizeDeferred) {
 };
 
 DwtTreeItem.prototype.sort = function(cmp) {
-        if (this._childDiv) {
-                this._children.sort(cmp);
-                var df = document.createDocumentFragment();
-                this._children.foreach(function(item, i){
-                        df.appendChild(item.getHtmlElement());
-                        item._index = i;
-                });
-                this._childDiv.appendChild(df);
-        }
+	this._children.sort(cmp);
+	if (this._childDiv) {
+		this._setChildElOrder();
+	} else {
+		this._needsSort = true;
+	}
+};
+
+DwtTreeItem.prototype._setChildElOrder = function(cmp) {
+	var df = document.createDocumentFragment();
+	this._children.foreach(function(item, i) {
+		df.appendChild(item.getHtmlElement());
+		item._index = i;
+	});
+	this._childDiv.appendChild(df);
 };
 
 DwtTreeItem.prototype._getDragProxy =
@@ -560,9 +634,10 @@ function() {
 };
 
 DwtTreeItem.prototype._dragLeave =
-function() {
-	if (this._preDragClassName)
+function(ev) {
+	if (this._preDragClassName) {
 		this._textCell.className = this._preDragClassName;
+	}
 };
 
 DwtTreeItem.prototype._drop =
@@ -571,7 +646,7 @@ function() {
 		this._textCell.className = this._preDragClassName;
 };
 
-DwtTreeItem._nodeIconMouseDownHdlr = 
+DwtTreeItem._nodeIconMouseDownHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
 	var mouseEv = DwtShell.mouseEvent;
@@ -631,6 +706,12 @@ function() {
 			treeItem._initialized = true;
 		}
 	}
+	if (this._needsSort) {
+		if (a.length) {
+			this._setChildElOrder();
+		}
+		delete this.__needsSort;
+	}
 };
 
 DwtTreeItem.prototype._isChildOf =
@@ -645,21 +726,21 @@ function(item) {
 };
 
 DwtTreeItem.prototype._setSelected =
-function(selected) {
+function(selected, noFocus) {
 	if (this._selected != selected) {
 		this._selected = selected;
 		if (!this._initialized) {
 			this._initialize();
 		}
+		if (!this._textCell) { return; }
 		if (selected && (this._selectionEnabled || this._forceNotifySelection)) {
-            if (this._textCell) {
-                this._textCell.className = this._selectedClassName;
-            }
+            this._textCell.className = this._selectedClassName;
+			if (!noFocus) {
+				this.focus();
+			}
             return true;
 		} else {
-            if (this._textCell) {
-    			this._textCell.className = this._textClassName;
-            }
+   			this._textCell.className = this._textClassName;
             return false;
 		}
 	}
@@ -672,16 +753,30 @@ function(actioned) {
 		if (!this._initialized) {
 			this._initialize();
 		}
+		if (!this._textCell) { return; }
 		if (actioned && (this._actionEnabled || this._forceNotifyAction) && !this._selected) {
 			this._textCell.className = this._actionedClassName;
 			return true;
 		} else if (!actioned) {
-			if (this._textCell && !this._selected) {
+			if (!this._selected) {
 				this._textCell.className = this._textClassName;
 			}
 			return false;
 		}
 	}
+};
+
+DwtTreeItem.prototype._focus =
+function() {
+	if (!this._textCell) { return; }
+	// focused tree item should always be selected as well
+	this._textCell.className = this._selectedFocusedClassName;
+};
+
+DwtTreeItem.prototype._blur =
+function() {
+	if (!this._textCell) { return; }
+	this._textCell.className = this._selected ? this._selectedClassName : this._textClassName;
 };
 
 DwtTreeItem._checkBoxMouseDownHdlr =
@@ -780,6 +875,14 @@ function(ev) {
 			return obj.notifyListeners(DwtEvent.ONMOUSEUP, ev);
 		}
 	}
+};
+
+DwtTreeItem.prototype._emulateSingleClick =
+function(params) {
+	var mev = new DwtMouseEvent();
+	this._setMouseEvent(mev, params);
+	mev.kbNavEvent = params.kbNavEvent;
+	this.notifyListeners(DwtEvent.ONMOUSEUP, mev);
 };
 
 DwtTreeItem._listeners = {};
