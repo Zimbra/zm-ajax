@@ -117,11 +117,6 @@ function(id) {
 	return null;
 };
 
-DwtAccordion.prototype.getItemByIndex =
-function(index) {
-	return (index >=0 && index < this._items.length) ? this._items[index] : null;
-}
-
 /**
  * Hides all accordion items.
  */
@@ -216,14 +211,6 @@ function(x, y, width, height) {
 };
 
 /**
- * Returns the expanded accordion item
- */
-DwtAccordion.prototype.getExpandedItem =
-function() {
-	return this._items[this._currentItemId || 0];
-};
-
-/**
  * Expands the accordion item with the given ID by making its body visible. The bodies of
  * other items are hidden.
  *
@@ -254,18 +241,12 @@ function(id, notify) {
 			cell.style.height = "0px";
 		}
 	}
-
 	if (selectedItem && notify && this.isListenerRegistered(DwtEvent.SELECTION)) {
-		this.notifySelectionListeners(selectedItem);
+		var selEv = DwtShell.selectionEvent;
+		selEv.item = this;
+		selEv.detail = selectedItem;
+		this.notifyListeners(DwtEvent.SELECTION, selEv);
 	}
-};
-
-DwtAccordion.prototype.notifySelectionListeners =
-function(selectedItem) {
-	var selEv = DwtShell.selectionEvent;
-	selEv.item = this;
-	selEv.detail = selectedItem;
-	this.notifyListeners(DwtEvent.SELECTION, selEv);
 };
 
 /**
