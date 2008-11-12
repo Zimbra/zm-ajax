@@ -24,12 +24,12 @@
  *
  * @author Ross Dargahi
  * 
- * @param params		[hash]				hash of params:
- *        parent		[DwtComposite] 		parent widget
- *        style 		[constant]*			tree style: DwtTree.SINGLE_STYLE (single selection) or 
- * 											DwtTree.MULTI_STYLE (multiselection);
- *        className		[string]*			CSS class
- *        posStyle		[constant]*			positioning style
+ * @param params			[hash]				hash of params:
+ *        parent			[DwtComposite] 		parent widget
+ *        style 			[constant]*			tree style: DwtTree.SINGLE_STYLE (single selection) or
+ * 												DwtTree.MULTI_STYLE (multiselection);
+ *        className			[string]*			CSS class
+ *        posStyle			[constant]*			positioning style
  */
 DwtTree = function(params) {
 	if (arguments.length == 0) { return; }
@@ -120,8 +120,9 @@ function() {
 	for (var i = 0; i < sz; i++) {
 		a[i]._setSelected(false);
 	}
-	if (sz > 0)
+	if (sz > 0) {
 		this._notifyListeners(DwtEvent.SELECTION, this._selectedItems.getArray(), DwtTree.ITEM_DESELECTED, null, this._selEv);
+	}
 	this._selectedItems.removeAll();
 }
 
@@ -131,7 +132,7 @@ function() {
 }
 
 DwtTree.prototype.setSelection =
-function(treeItem, skipNotify) {
+function(treeItem, skipNotify, kbNavEvent, noFocus) {
 	// Remove currently selected items from the selection list. if <treeItem> is in that list, then note it and return
 	// after we are done processing the selected list
 	var a = this._selectedItems.getArray();
@@ -140,33 +141,35 @@ function(treeItem, skipNotify) {
 	var j = 0;
 	var alreadySelected = false;
 	for (var i = 0; i < sz; i++) {
-		if (a[i] == treeItem) 
+		if (a[i] == treeItem) {
 			alreadySelected = true;
-		else {
+		} else {
 			a[i]._setSelected(false);
 			this._selectedItems.remove(a[i]);
-			if (da == null)
+			if (da == null) {
 				da = new Array();
+			}
 			da[j++] = a[i];
 		}
 	}
 
-	if (da && !skipNotify)
-		this._notifyListeners(DwtEvent.SELECTION, da, DwtTree.ITEM_DESELECTED, null, this._selEv);
+	if (da && !skipNotify) {
+		this._notifyListeners(DwtEvent.SELECTION, da, DwtTree.ITEM_DESELECTED, null, this._selEv, kbNavEvent);
+	}
 
-	if (alreadySelected)
-		return;
+	if (alreadySelected) { return; }
 	this._selectedItems.add(treeItem);
-	
+
 	// Expand all parent nodes, and then set item selected
 	var parent = treeItem.parent
 	while(parent instanceof DwtTreeItem) {
 		parent.setExpanded(true);
 		parent = parent.parent;
 	}
-	if (treeItem._setSelected(true) && !skipNotify)
-		this._notifyListeners(DwtEvent.SELECTION, [treeItem], DwtTree.ITEM_SELECTED, null, this._selEv);
-}
+	if (treeItem._setSelected(true, noFocus) && !skipNotify) {
+		this._notifyListeners(DwtEvent.SELECTION, [treeItem], DwtTree.ITEM_SELECTED, null, this._selEv, kbNavEvent);
+	}
+};
 
 DwtTree.prototype.getSelectionCount =
 function() {
@@ -194,6 +197,7 @@ function(item, index) {
 	} else {
 		thisHtmlElement.insertBefore(item.getHtmlElement(), thisHtmlElement.childNodes[index]);	
 	}
+	this._clearTreeItemList();
 }
 
 DwtTree.prototype.sort = function(cmp) {
@@ -211,7 +215,80 @@ function(child) {
 	this._children.remove(child);
 	this._selectedItems.remove(child);
 	this.getHtmlElement().removeChild(child.getHtmlElement());
+	this._clearTreeItemList();
 }
+
+/**
+ * Returns the next (or previous) tree item relative to the currently selected item,
+ * in top-to-bottom order as the tree appears visually. Items such as separators (and
+ * possibly headers) that cannot be selected are skipped.
+ *
+ * If there is no currently selected item, return the first or last item. If we go past
+ * the beginning or end of the tree, return null.
+ *
+ * For efficiency, a flattened list of the visible and selectable tree items is maintained.
+ * It will be cleared on any change to the tree's display, then regenerated when it is
+ * needed.
+ *
+ * @param next		[boolean]		if true, return next tree item; otherwise, return previous tree item
+ */
+DwtTree.prototype._getNextTreeItem =
+function(next) {
+
+	var sel = this.getSelection();
+	var curItem = (sel && sel.length) ? sel[0] : null;
+
+	var nextItem = null, idx = -1;
+	var list = this._getTreeItemList();
+	if (curItem) {
+		for (var i = 0, len = list.length; i < len; i++) {
+			var ti = list[i];
+			if (ti == curItem) {
+				idx = next ? i + 1 : i - 1;
+				break;
+			}
+		}
+		nextItem = list[idx]; // if array index out of bounds, nextItem is undefined
+	} else {
+		// if nothing is selected yet, return the first or last item
+		if (list && list.length) {
+			nextItem = next ? list[0] : list[list.length - 1];
+		}
+	}
+	return nextItem;
+};
+
+/**
+ * Creates a flat list of this tree's visible and selectable items, going depth-first.
+ */
+DwtTree.prototype._getTreeItemList =
+function() {
+	if (!(this._treeItemList && this._treeItemList.length)) {
+		var list = [];
+		this._treeItemList = this._addToList(list);
+	}
+	return this._treeItemList;
+};
+
+DwtTree.prototype._addToList =
+function(list, treeItem) {
+	if (treeItem && treeItem._selectionEnabled) {
+		list.push(treeItem);
+	}
+	if (!treeItem || treeItem._expanded) {
+		var parent = treeItem || this;
+		var children = parent.getChildren ? parent.getChildren() : [];
+		for (var i = 0; i < children.length; i++) {
+			this._addToList(list, children[i]);
+		}
+	}
+	return list;
+};
+
+DwtTree.prototype._clearTreeItemList =
+function() {
+	this._treeItemList = null;
+};
 
 /**
 * Workaround for IE, which resets checkbox state when an element is appended to the DOM.
@@ -272,15 +349,17 @@ function(item, ev) {
 	var numSelectedItems = this._selectedItems.size();
 	if (this._style & DwtTree.SINGLE_STYLE || (!ev.shiftKey && !ev.ctrlKey)) {
 		if (numSelectedItems > 0) {
-			for (i = 0; i < numSelectedItems; i++)
+			for (i = 0; i < numSelectedItems; i++) {
 				a[i]._setSelected(false);
+			}
 			// Notify listeners of deselection
 			this._notifyListeners(DwtEvent.SELECTION, this._selectedItems.getArray(), DwtTree.ITEM_DESELECTED, ev, this._selEv);
 			this._selectedItems.removeAll();
 		}
 		this._selectedItems.add(item);
-		if (item._setSelected(true))
+		if (item._setSelected(true)) {
 			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
+		}
 	} else {
 		if (ev.ctrlKey) {
 			if (this._selectedItems.contains(item)) {
@@ -289,8 +368,9 @@ function(item, ev) {
 				this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_DESELECTED, ev, this._selEv);
 			} else {
 				this._selectedItems.add(item);
-				if (item._setSelected(true))
+				if (item._setSelected(true)) {
 					this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
+				}
 			}
 		} else {
 			// SHIFT KEY
@@ -308,6 +388,7 @@ function(item, ev, skipNotify) {
 	if (ev && !skipNotify) {
 		this._notifyListeners(DwtEvent.TREE, [item], DwtTree.ITEM_EXPANDED, ev, DwtShell.treeEvent);
 	}
+	this._clearTreeItemList();
 }
 
 DwtTree.prototype._itemCollapsed =
@@ -343,10 +424,12 @@ function(item, ev, skipNotify) {
 			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
 		}
 	}
+
+	this._clearTreeItemList();
 }
 
 DwtTree.prototype._notifyListeners =
-function(listener, items, detail, srcEv, destEv) {
+function(listener, items, detail, srcEv, destEv, kbNavEvent) {
 	if (this.isListenerRegistered(listener)) {
 		if (srcEv) {
 			DwtUiEvent.copy(destEv, srcEv);
@@ -356,6 +439,7 @@ function(listener, items, detail, srcEv, destEv) {
 			destEv.item = items[0];
 		}
 		destEv.detail = detail;
+		destEv.kbNavEvent = kbNavEvent;
 		this.notifyListeners(listener, destEv);
 	}
 }
