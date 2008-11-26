@@ -754,13 +754,12 @@ function() {
 	}
 }
 
-DwtHtmlEditor.prototype.TEXTAREA_CLASSNAME = "DwtHtmlEditorTextArea";
 DwtHtmlEditor.prototype._initTextMode =
 function(ignorePendingContent) {
 	var htmlEl = this.getHtmlElement();
 	this._textAreaId = "textarea_" + Dwt.getNextId();
 	var textArea = document.createElement("textarea");
-	textArea.className = this.TEXTAREA_CLASSNAME;
+	textArea.className = "DwtHtmlEditorTextArea";
 	textArea.id = this._textAreaId;
 	htmlEl.appendChild(textArea);
 
