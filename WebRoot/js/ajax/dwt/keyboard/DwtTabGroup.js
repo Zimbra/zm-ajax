@@ -221,7 +221,7 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
  */
 DwtTabGroup.prototype.contains =
 function(member) {	
-	return (Boolean(this.__getTabGroupForMember(member)));
+	return (this.__getTabGroupForMember(member));
 };
 
 /**
