@@ -305,9 +305,7 @@ function (width, height) {
 		for (var curTabKey in this._tabs) {
 			var tabView = this._tabs[curTabKey].view;
 			if (tabView && !(tabView instanceof AjxCallback)) {
-				var contentHeight;
-				contentHeight = contentHeight || height - Dwt.getSize(this._tabBarEl).y;
-				tabView.resetSize(width, contentHeight);
+				tabView.resetSize(width, height);
 			}	
 		}
 	}		
@@ -386,33 +384,28 @@ function (ev) {
 **/
 DwtTabViewPage = function(parent, className, posStyle) {
 	if (arguments.length == 0) return;
-	params = Dwt.getParams(arguments, DwtTabViewPage.PARAMS);
-	params.className = params.className || "ZTabPage";
-	params.posStyle = params.posStyle || DwtControl.ABSOLUTE_STYLE;
+
+	var clsName = className || "ZTabPage";
+	var ps = posStyle || DwtControl.ABSOLUTE_STYLE;
 	this._rendered = true; // by default UI creation is not lazy
 
-	DwtPropertyPage.call(this, params);
+	DwtPropertyPage.call(this, parent, clsName, ps);
 
     this._createHtml();
-	this.getHtmlElement().style.overflowY = "auto";
-	this.getHtmlElement().style.overflowX = "visible";
-	if (params.contentTemplate) {
-		this.getContentHtmlElement().innerHTML = AjxTemplate.expand(params.contentTemplate, this._htmlElId);
-	}
 };
 
 DwtTabViewPage.prototype = new DwtPropertyPage;
 DwtTabViewPage.prototype.constructor = DwtTabViewPage;
 
-DwtTabViewPage.prototype.toString = function() {
-	return "DwtTabViewPage";
-};
-
 DwtTabViewPage.prototype.TEMPLATE = "dwt.Widgets#ZTabPage";
 
-DwtTabViewPage.PARAMS = DwtPropertyPage.PARAMS.concat("contentTemplate");
 
 // Public methods
+
+DwtTabViewPage.prototype.toString =
+function() {
+	return "DwtTabViewPage";
+};
 
 DwtTabViewPage.prototype.getContentHtmlElement =
 function() {
@@ -432,7 +425,11 @@ function() {
 		}
 	}
 
-	this._contentEl.style.width = this.parent.getHtmlElement().style.width;	// resize page to fit parent
+	if (this.parent.getHtmlElement().offsetWidth > 0) { 						// if parent visible, use offsetWidth
+		this._contentEl.style.width=this.parent.getHtmlElement().offsetWidth;
+	} else {
+		this._contentEl.style.width = this.parent.getHtmlElement().style.width;	//if parent not visible, resize page to fit parent
+	}
 };
 
 DwtTabViewPage.prototype.hideMe = 
@@ -442,7 +439,9 @@ function() {
 
 DwtTabViewPage.prototype.resetSize =
 function(newWidth, newHeight) {
-	this.setSize(newWidth, newHeight);
+	if (this._rendered) {
+		this.setSize(newWidth, newHeight);
+	}
 };
 
 

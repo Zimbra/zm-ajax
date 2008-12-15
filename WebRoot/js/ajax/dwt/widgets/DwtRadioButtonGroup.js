@@ -43,13 +43,6 @@ function() {
 };
 
 //
-// Data
-//
-
-DwtRadioButtonGroup.prototype._enabled = true;
-DwtRadioButtonGroup.prototype._visible = true;
-
-//
 // Public methods
 //
 
@@ -62,26 +55,9 @@ DwtRadioButtonGroup.prototype.removeSelectionListener = function(listener) {
 };
 
 DwtRadioButtonGroup.prototype.setEnabled = function(enabled) {
-	this._enabled = enabled;
 	for (var id in this._radios) {
 		this._radios[id].disabled = !enabled;
 	}
-};
-DwtRadioButtonGroup.prototype.isEnabled = function() {
-	return this._enabled;
-};
-
-DwtRadioButtonGroup.prototype.setVisible = function(visible) {
-	this._visible = visible;
-	for (var id in this._radioButtons) {
-		this._radioButtons[id].setVisible(visible);
-	}
-	for (var id in this._radios) {
-		Dwt.setVisible(this._radios[id], visible);
-	}
-};
-DwtRadioButtonGroup.prototype.isVisible = function() {
-	return this._visible;
 };
 
 DwtRadioButtonGroup.prototype.addRadio =
