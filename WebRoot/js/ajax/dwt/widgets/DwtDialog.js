@@ -67,7 +67,10 @@ DwtDialog = function(params) {
 		standardButtons = [DwtDialog.OK_BUTTON, DwtDialog.CANCEL_BUTTON];
 	} else if (standardButtons == DwtDialog.NO_BUTTONS) {
 		standardButtons = null;
+	} else if (standardButtons && !standardButtons.length) {
+		standardButtons = [standardButtons];
 	}
+	
 	// assemble the list of button IDs, and the list of button descriptors
 	this._buttonList = [];
 	var buttonOrder = {};
@@ -77,7 +80,7 @@ DwtDialog = function(params) {
 	if (standardButtons || extraButtons) {
 		this._buttonDesc = {};
 		if (standardButtons && standardButtons.length) {
-			this._enterButtonId = standardButtons[0];
+			this._initialEnterButtonId = this._enterButtonId = standardButtons[0];
 			for (var i = 0; i < standardButtons.length; i++) {
 				var buttonId = standardButtons[i];
 				this._buttonList.push(buttonId);
@@ -93,7 +96,7 @@ DwtDialog = function(params) {
 		}
 		if (extraButtons && extraButtons.length) {
 			if (!this._enterButtonId) {
-				this._enterButtonId = extraButtons[0];
+				this._initialEnterButtonId = this._enterButtonId = extraButtons[0];
 			}
 			for (var i = 0; i < extraButtons.length; i++) {
 				var buttonId = extraButtons[i].id;
@@ -199,6 +202,22 @@ function() {
 	this.resetButtonStates();
 };
 
+DwtDialog.prototype.popup =
+function(loc, focusButtonId) {
+	this._focusButtonId = focusButtonId;
+	DwtBaseDialog.prototype.popup.call(this, loc);
+};
+
+DwtDialog.prototype._resetTabFocus =
+function(){
+	if (this._focusButtonId) {
+		var focusButton = this.getButton(this._focusButtonId);
+		this._tabGroup.setFocusMember(focusButton, true);
+	} else {
+		DwtBaseDialog.prototype._resetTabFocus.call(this);
+	}
+};
+
 /**
 * Sets the dialog back to its original state after being constructed, by clearing any
 * detail message and resetting the standard button callbacks.
@@ -219,6 +238,7 @@ function() {
 		this._button[b].setEnabled(true);
 		this._button[b].setHovered(false);
 	}
+	this.associateEnterWithButton(this._initialEnterButtonId);
 };
 
 DwtDialog.prototype.getButton =
@@ -245,15 +265,15 @@ function(buttonId) {
 * Registers a callback on the given button. Can be passed an AjxCallback,
 * or the params needed to create one.
 *
-* @param button		[constant]				one of the standard dialog buttons
+* @param buttonId	[constant]				one of the standard dialog buttons
 * @param func		[function|AjxCallback]	callback method
 * @param obj		[object]				callback obj
 * @param args		[array]					callback args
 */
 DwtDialog.prototype.registerCallback =
 function(buttonId, func, obj, args) {
-	var callback = (func instanceof AjxCallback) ? func : new AjxCallback(obj, func, args);
-	this._buttonDesc[buttonId].callback = callback;
+	this._buttonDesc[buttonId].callback = (func instanceof AjxCallback)
+		? func : (new AjxCallback(obj, func, args));
 };
 
 DwtDialog.prototype.unregisterCallback =
@@ -264,7 +284,7 @@ function(buttonId) {
 /**
 * Makes the given listener the only listener for the given button.
 *
-* @param button		one of the standard dialog buttons
+* @param buttonId	one of the standard dialog buttons
 * @param listener	a listener
 */
 DwtDialog.prototype.setButtonListener =
@@ -300,7 +320,19 @@ function(actionCode, ev) {
 		case DwtKeyMap.CANCEL:
 			this.popdown();
 			break;
-			
+
+		case DwtKeyMap.YES:
+			if (this._buttonDesc[DwtDialog.YES_BUTTON]) {
+				this._runCallbackForButtonId(DwtDialog.YES_BUTTON);
+			}
+			break;
+
+		case DwtKeyMap.NO:
+			if (this._buttonDesc[DwtDialog.NO_BUTTON]) {
+				this._runCallbackForButtonId(DwtDialog.NO_BUTTON);
+			}
+			break;
+
 		default:
 			return false;
 	}
@@ -311,20 +343,21 @@ function(actionCode, ev) {
 // Protected methods
 //
 
-DwtDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
-    DwtBaseDialog.prototype._createHtmlFromTemplate.call(this, templateId, data);
+DwtDialog.prototype._createHtmlFromTemplate =
+function(templateId, data) {
+	DwtBaseDialog.prototype._createHtmlFromTemplate.call(this, templateId, data);
 
-    var focusId = data.id+"_focus";
-    if (document.getElementById(focusId)) {
-        this._focusElementId = focusId;
-    }
-    this._buttonsEl = document.getElementById(data.id+"_buttons");
-    if (this._buttonsEl) {
-        var html = [];
-        var idx = 0;
-        this._addButtonsHtml(html,idx);
-        this._buttonsEl.innerHTML = html.join(""); 
-    }
+	var focusId = data.id+"_focus";
+	if (document.getElementById(focusId)) {
+		this._focusElementId = focusId;
+	}
+	this._buttonsEl = document.getElementById(data.id+"_buttons");
+	if (this._buttonsEl) {
+		var html = [];
+		var idx = 0;
+		this._addButtonsHtml(html,idx);
+		this._buttonsEl.innerHTML = html.join("");
+	}
 };
 
 // TODO: Get rid of these button template methods!
@@ -462,4 +495,4 @@ DwtDialog_ButtonDescriptor = function(id, label, align, callback, cellTemplate) 
 	this.align = align;
 	this.callback = callback;
 	this.cellTemplate = cellTemplate;
-}
+};
