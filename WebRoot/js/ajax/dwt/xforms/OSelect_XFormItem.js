@@ -247,6 +247,9 @@ OSelect1_XFormItem.prototype.redrawChoices = function () {
 }
 
 OSelect1_XFormItem.prototype.hideMenu = function () {
+ 	var menu = this.getMenuElement();
+ 	if (menu == null) return; 	
+	
 	// hide the menu on a timer so we don't have to deal with wierd selection bugs
 	setTimeout(this.getFormGlobalRef()+".getElement('" + this.getMenuElementId() + "').style.display = 'none'", 10);
 
