@@ -43,9 +43,9 @@ XFormItemFactory.createItem = function (attributes, parentItem, xform) {
 			
 	// get the class for that type and create one
 	var type = this.getItemType(attributes, modelItem);
-	var constructor = this.getItemTypeConstructor(type, xform);
+	var constructorFunction = this.getItemTypeConstructor(type, xform);
 
-	var item = new constructor();
+	var item = new constructorFunction();
 	item._setAttributes(attributes);
 
 	// get a unique id for the item
@@ -150,31 +150,31 @@ XFormItemFactory.getItemType = function (attributes, modelItem) {
 XFormItemFactory.typeConstructorMap = {};
 
 XFormItemFactory.createItemType = 
-function (typeConstant, typeName, constructor, superClassConstructor) {
-	if (constructor == null) constructor = new Function();
+function (typeConstant, typeName, constructorFunction, superClassConstructor) {
+	if (constructorFunction == null) constructorFunction = new Function();
 	if (typeof superClassConstructor == "string") superClassConstructor = this.getItemTypeConstructor(superClassConstructor);
 	if (superClassConstructor == null) superClassConstructor = XFormItem;
 
 	// initialize the constructor
-	constructor.prototype = new superClassConstructor();	
+	constructorFunction.prototype = new superClassConstructor();	
 
-	constructor.prototype.type = typeName;
-	constructor.prototype.constructor = constructor;
-	constructor.prototype.toString = new Function("return '[XFormItem:" + typeName + " ' + this.getId() + ']'");
-	constructor.toString = new Function("return '[Class XFormItem:" + typeName + "]'");
+	constructorFunction.prototype.type = typeName;
+	constructorFunction.prototype.constructor = constructorFunction;
+	constructorFunction.prototype.toString = new Function("return '[XFormItem:" + typeName + " ' + this.getId() + ']'");
+	constructorFunction.toString = new Function("return '[Class XFormItem:" + typeName + "]'");
 	
 	// put the item type into the typemap
-	this.registerItemType(typeConstant, typeName, constructor);
+	this.registerItemType(typeConstant, typeName, constructorFunction);
 	
 	// return the prototype
-	return constructor;
+	return constructorFunction;
 }
 
 XFormItemFactory.registerItemType = 
-function(typeConstant, typeName, constructor) {
+function(typeConstant, typeName, constructorFunction) {
 	// assign the type constant to the window so everyone else can use it
 	window[typeConstant] = typeName;
-	this.typeConstructorMap[typeName] = constructor;	
+	this.typeConstructorMap[typeName] = constructorFunction;	
 }
 
 XFormItemFactory.defaultItemType = "output";

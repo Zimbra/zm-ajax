@@ -27,9 +27,9 @@ XModelItemFactory = function() {}
 XModelItemFactory.createItem = function (attributes, parentItem, xmodel) {
 	// assign a modelItem to the item
 	var type = attributes.type;
-	constructor = this.getItemTypeConstructor(type || _UNTYPED_);
+	var constructorFunction = this.getItemTypeConstructor(type || _UNTYPED_);
 
-	var item = new constructor();
+	var item = new constructorFunction();
 	item._setAttributes(attributes);
 	if (item.id != null && item.ref == null) item.ref = item.id;
 
@@ -79,30 +79,30 @@ XModelItemFactory.getFullPath = function (itemPath, parentPath) {
 
 XModelItemFactory.typeConstructorMap = {};
 
-XModelItemFactory.createItemType = function (typeConstant, typeName, constructor, superClassConstructor) {
-	if (constructor == null) constructor = new Function();
+XModelItemFactory.createItemType = function (typeConstant, typeName, constructorFunction, superClassConstructor) {
+	if (constructorFunction == null) constructorFunction = new Function();
 	if (typeof superClassConstructor == "string") superClassConstructor = this.getItemTypeConstructor(superClassConstructor);
 	if (superClassConstructor == null) superClassConstructor = XModelItem;
 
 	// initialize the constructor
-	constructor.prototype = new superClassConstructor();	
+	constructorFunction.prototype = new superClassConstructor();	
 
-	constructor.prototype.type = typeName;
-	constructor.prototype.constructor = constructor;
-	constructor.prototype.toString = new Function("return '[XModelItem:" + typeName + " path=\"' + this.getIdPath() + '\"]'");
-	constructor.toString = new Function("return '[Class XModelItem:" + typeName + "]'");
+	constructorFunction.prototype.type = typeName;
+	constructorFunction.prototype.constructor = constructorFunction;
+	constructorFunction.prototype.toString = new Function("return '[XModelItem:" + typeName + " path=\"' + this.getIdPath() + '\"]'");
+	constructorFunction.toString = new Function("return '[Class XModelItem:" + typeName + "]'");
 	
 	// put the item type into the typemap
-	this.registerItemType(typeConstant, typeName, constructor);
+	this.registerItemType(typeConstant, typeName, constructorFunction);
 
 	// return the prototype
-	return constructor;
+	return constructorFunction;
 }
 
-XModelItemFactory.registerItemType = function(typeConstant, typeName, constructor) {
+XModelItemFactory.registerItemType = function(typeConstant, typeName, constructorFunction) {
 	// assign the type constant to the window so everyone else can use it
 	window[typeConstant] = typeName;
-	this.typeConstructorMap[typeName] = constructor;	
+	this.typeConstructorMap[typeName] = constructorFunction;	
 }
 
 
