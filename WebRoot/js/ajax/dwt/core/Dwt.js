@@ -359,9 +359,7 @@ function(htmlElement, style) {
  */
 Dwt.getBounds =
 function(htmlElement, rect) {
-	if (!Dwt.__tmpPoint)
-		Dwt.__tmpPoint = new DwtPoint(0, 0);
-	var tmpPt = Dwt.__tmpPoint;
+	var tmpPt = DwtPoint.tmp;
 
 	Dwt.getLocation(htmlElement, tmpPt);
 	var locX = tmpPt.x;
@@ -1069,8 +1067,12 @@ Dwt.setSelectionText = function(input, text) {
 };
 
 Dwt.instanceOf =
-function(obj, className) {
-	return (window[className] && obj instanceof window[className]);
+function(objOrClassName, className) {
+	if (typeof objOrClassName == "string") {
+		return window[objOrClassName] &&
+		       (objOrClassName == className || window[objOrClassName].prototype instanceof window[className]);
+	}
+	return (window[className] && objOrClassName instanceof window[className]);
 };
 
 /**

@@ -196,6 +196,44 @@ DwtResizableWindow.prototype.getSize = function() {
                  y: this._gotSize.y }; // return a copy
 };
 
+/**
+ * Returns the size of the window plus some padding to separate the window
+ * from the edge of the screen.
+ */
+DwtResizableWindow.prototype.getPaddedSize = function() {
+	var result = this.getSize();
+	var padding = this.getPadding();
+	result.x += padding.right;
+	result.y += padding.bottom;
+	return result;
+};
+
+/** If the window is offscreen, this method moves it to where it's fully visible */
+DwtResizableWindow.prototype.ensureVisibleLocation =
+function(parentSizeX, parentSizeY) {
+	if (!this.isMinimized()) {
+		var doIt = false;
+		var newX = Dwt.DEFAULT;
+		var newY = Dwt.DEFAULT;
+		var mySize = this.getPaddedSize();
+		if ((this._loc.x + mySize.x) > parentSizeX) {
+			newX = Math.max(0, parentSizeX - mySize.x);
+			doIt = true;
+		}
+		if ((this._loc.y + mySize.y) > parentSizeY) {
+			newY = Math.max(0, parentSizeY - mySize.y);
+			doIt = true;
+		}
+		if (doIt) {
+			this.setLocation(newX, newY);
+		}
+	}
+};
+
+DwtResizableWindow.prototype.getPadding = function() {
+	return { bottom: 0, right: 0 };
+};
+
 /* BEGIN: listeners */
 
 // FOCUS
@@ -259,11 +297,12 @@ function(minimize) {
 	this._minimized = minimize;
 	if (minimize) {
 		this.delClassName(null, "Minimize");
-		var size = this._getMinimizedSize();
-		this._windowManager._onMinimize(this, size);
+		this._windowManager._onMinimize(this);
 	} else {
 		this.delClassName("Minimize", null);
 		this._windowManager._onRestore(this);
+		var parentSize = this._windowManager.getSize();
+		this.ensureVisibleLocation(parentSize.x, parentSize.y);
 	}
 };
 
@@ -275,15 +314,6 @@ function() {
 DwtResizableWindow.prototype.isMinimized =
 function() {
 	return this._minimized;
-};
-
-DwtResizableWindow.prototype.showAlert =
-function(alert) {
-	if (alert) {
-		this.delClassName(null, "ZAlert");
-	} else {
-		this.delClassName("ZAlert", null);
-	}
 };
 
 // Protected
@@ -412,30 +442,51 @@ DwtResizableWindow.prototype.__resizeMouseMove = function(ev) {
 		break;
 	}
 
-	var maxPos = this._maxPos;
-	if (maxPos === true) {
-		// restrict to parent
-		maxPos = this.parent.getSize();
-		var tmp = this.getSize() || (new DwtPoint(0,0));
-		if (width != null)
-			tmp.x = width;
-		if (height != null)
-			tmp.y = height;
-		maxPos.x -= tmp.x + 4;
-		maxPos.y -= tmp.y + 4;
+	// If the new size is too small in either direction, don't
+	// make any change in that direction.
+	if (height && this._minSize && this._minSize.y && (height < this._minSize.y)) {
+		height = null;
+		y = null;
+	}
+	if (width && this._minSize && this._minSize.x && (width < this._minSize.x)) {
+		width = null;
+		x = null;
 	}
 
+	// Adjust values for the maximum position.
+	var maxPos = this._maxPos;
 	if (maxPos) {
-		if (x != null && maxPos.x != null)
-			if (x > maxPos.x) {
+		var newSize = this.getSize() || (new DwtPoint(0,0));
+		if (width != null) {
+			newSize.x = width;
+		}
+		if (height != null) {
+			newSize.y = height;
+		}
+
+		if (maxPos === true) {
+			// Restrict to parent size.
+			var padding = this.getPadding();
+			maxPos = this.parent.getSize();
+			maxPos.x -= newSize.x + padding.right;
+			maxPos.y -= newSize.y + padding.bottom;
+		}
+
+		var newX = x ? x : this._loc.x,
+			newY = y ? y : this._loc.y;
+		
+		if (maxPos.x != null && (newX > maxPos.x)) {
+			width = null;
+			if (x) {
 				x = maxPos.x
-				width = null;
 			}
-		if (y != null && maxPos.y != null)
-			if (y > maxPos.y) {
+		}
+		if (maxPos.y != null && (newY > maxPos.y)) {
+			height = null;
+			if (y) {
 				y = maxPos.y;
-				height = null;
 			}
+		}
 	}
 
 	if (this._minPos) {
@@ -550,7 +601,7 @@ DwtResizableWindow.__static_dlgMouseDown = function(ev) {
 	var mouseEv = DwtShell.mouseEvent;
 	mouseEv.setFromDhtmlEvent(ev);
 	var htmlEl = DwtUiEvent.getTargetWithProp(mouseEv, "isDwtResizableWindow");
-	obj = DwtControl.findControl(htmlEl);
+	var obj = DwtControl.findControl(htmlEl);
 	obj.__dlgMouseDown(mouseEv);
 };
 
@@ -604,6 +655,8 @@ DwtWindowManager = function(parent, zIndex) {
 		this._windowBlurListener = new AjxListener(this, this._windowBlurListener);
 		this._windowDisposeListener = new AjxListener(this, this._windowDisposeListener);
 		this.setZIndex(zIndex);
+
+		this.shell.addControlListener(new AjxListener(this, this._shellControlListener));
 	}
 };
 
@@ -765,58 +818,74 @@ DwtWindowManager.prototype.getBounds = function() {
 
 DwtWindowManager.MINIMIZE_PADDING = 10;
 
+DwtWindowManager.prototype._positionMinimized =
+function(index, managerSize) {
+	var padding = 10;
+	var windowsPerRow = parseInt((managerSize.x - padding) / (this._minimizedSize.x + padding));
+	var rowNum = parseInt(index / windowsPerRow);
+	var colNum = index % windowsPerRow;
+	return {
+		bottom: padding + (padding + this._minimizedSize.y) * rowNum,
+		right: padding + (padding + this._minimizedSize.x) * colNum
+	};
+};
+
 DwtWindowManager.prototype._onMinimize =
-function(drw, size) {
+function(drw) {
 	if (!this._minimized) {
 		this._minimized = [];
-		this._minimizedRight = 20;
 	}
+	this._minimizedSize = this._minimizedSize || drw._getMinimizedSize();
 
-	var right = this._minimizedRight + DwtWindowManager.MINIMIZE_PADDING;
-	this._minimizedRight = right + size.x;
-
-	var minimizedData = {
-		window: drw,
-		minimizedSize: size,
-		minimizedRight: right,
-		position: this._getPosition(drw)
-	};
-	this._minimized.push(minimizedData);
+	var managerSize = this.getSize();
+	var location = this._positionMinimized(this._minimized.length, managerSize);
 
 	var minimizePosition = {
-		size: size,
+		size: this._minimizedSize,
 		left: "auto",
 		top: "auto",
-		right: right,
-		bottom: "20px"
+		right: location.right,
+		bottom: location.bottom
+	};
+	var minimizedData = {
+		window: drw,
+		minimizedSize: this._minimizedSize,
+		position: this._getPosition(drw)
 	};
 	this._setPosition(drw, minimizePosition);
+	this._minimized.push(minimizedData);
+
+
+};
+
+DwtWindowManager.prototype._repositionMinimizedWindows =
+function(startIndex) {
+	var count = this._minimized ? this._minimized.length : 0;
+	if (startIndex >= count) {
+		return;
+	}
+	var managerSize = this.getSize();
+	for (var i = startIndex; i < count; i++) {
+		var data = this._minimized[i];
+		var location = this._positionMinimized(i, managerSize);
+		var element = data.window.getHtmlElement();
+		element.style.right = location.right;
+		element.style.bottom = location.bottom;
+	}
 };
 
 DwtWindowManager.prototype._onRestore =
 function(drw, disposing) {
-	var restoreData = null;
-	var restoreIndex = -1;
-	var shiftSize;
 	for (var i = 0, count = this._minimized.length; i < count; i++) {
 		var data = this._minimized[i];
-		if (!restoreData) {
-			if (data.window == drw) {
-				restoreData = data;
-				restoreIndex = i;
-				if (!disposing) {
-					this._setPosition(drw, restoreData.position);
-				}
-				shiftSize = restoreData.minimizedSize.x + DwtWindowManager.MINIMIZE_PADDING;
-				this._minimizedRight -= shiftSize;
+		if (data.window == drw) {
+			this._minimized.splice(i, 1);
+			if (!disposing) {
+				this._setPosition(drw, data.position);
 			}
-		} else {
-			data.minimizedRight -= shiftSize;
-			data.window.getHtmlElement().style.right = data.minimizedRight;
+			this._repositionMinimizedWindows(i);
+			break;
 		}
-	}
-	if (restoreIndex != -1) {
-		this._minimized.splice(restoreIndex, 1);
 	}
 };
 
@@ -840,5 +909,17 @@ function(drw) {
 		right: element.style.right,
 		bottom: element.style.bottom
 	};
+};
+
+DwtWindowManager.prototype._shellControlListener =
+function(controlEvent) {
+	// Make sure all non-minimized windows are still on the screen after a shell resize.
+	for (var i = 0, count = this.all_windows.size(); i < count; i++) {
+		var drw = this.all_windows.get(i);
+		drw.ensureVisibleLocation(controlEvent.newWidth, controlEvent.newHeight);
+	}
+
+	// Relayout the minimized windows.
+	this._repositionMinimizedWindows(0);
 };
 
