@@ -91,6 +91,7 @@ DwtListView = function(params) {
 	this.headerColCreated = false;
 	this.multiSelectEnabled = true;
 	this.firstSelIndex = -1;
+	this._tmpPoint = new DwtPoint(0, 0);
 
 	// the key is the HTML ID of the item's associated DIV; the value is an object
 	// with information about that row
@@ -262,7 +263,7 @@ function(defaultColumnSort) {
 			htmlArr[idx++] = "</td>";
 		}
 
-		if (headerCol._sortable && !headerCol._noSortArrow) {
+		if (headerCol._sortable) {
 			var arrowIcon = this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow";
 			
 			htmlArr[idx++] = "<td align=right style='padding-right:2px' width=100% id='";
@@ -326,12 +327,10 @@ function(defaultColumnSort) {
 DwtListView.prototype.getItemIndex =
 function(item) {
 	var list = this._list;
-	if (list) {
-		var len = list.size();
-		for (var i = 0; i < len; ++i) {
-			if (list.get(i).id == item.id) {
-				return i;
-			}
+	var len = list.size();
+	for (var i = 0; i < len; ++i) {
+		if (list.get(i).id == item.id) {
+			return i;
 		}
 	}
 	return null;
@@ -880,31 +879,15 @@ function() {
 DwtListView.prototype.handleKeyAction =
 function(actionCode, ev) {
 	switch (actionCode) {
-		case DwtKeyMap.SELECT:			this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT, kbNavEvent:true}); break;
-		case DwtKeyMap.SELECT_CURRENT:	this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT, ctrlKey:true, kbNavEvent:true}); break;
+		case DwtKeyMap.SELECT:			this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT}); break;
+		case DwtKeyMap.SELECT_CURRENT:	this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT, ctrlKey:true}); break;
 		case DwtKeyMap.SELECT_NEXT:		this._selectItem(true, false, true); break;
 		case DwtKeyMap.SELECT_PREV:		this._selectItem(false, false, true); break;
 		case DwtKeyMap.ADD_SELECT_NEXT: this._selectItem(true, true, true); break;
 		case DwtKeyMap.ADD_SELECT_PREV: this._selectItem(false, true, true); break;
 		case DwtKeyMap.PREV:			this._setKbFocusElement(false); break;
 		case DwtKeyMap.NEXT:			this._setKbFocusElement(true); break;
-		case DwtKeyMap.DBLCLICK: {
-			if (!this._kbAnchor) { break; }
-			var anchorSelected = false;
-			var a = this.getSelectedItems().getArray();
-			for (var i = 0; i < a.length; i++) {
-				if (a[i] == this._kbAnchor) {
-					anchorSelected = true;
-					break;
-				}
-			}
-			if (anchorSelected) {
-				this.emulateDblClick(this.getItemFromElement(this._kbAnchor), true);
-			} else {
-				this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT, kbNavEvent:true});
-			}
-			break;
-		}
+		case DwtKeyMap.DBLCLICK:		this.emulateDblClick(this.getItemFromElement(this._kbAnchor)); break;
 
 		case DwtKeyMap.SELECT_ALL:
 			if (this._list && this._list.size()) {
@@ -934,7 +917,7 @@ function(actionCode, ev) {
 				var s = Dwt.getSize(this._kbAnchor);
 				var docX = p.x + s.x / 4;
 				var docY = p.y + s.y / 2;
-				this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.RIGHT, docX:docX, docY:docY, kbNavEvent:true});
+				this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.RIGHT, docX:docX, docY:docY});
 			}
 			break;
 
@@ -1656,12 +1639,11 @@ function(ev) {
 };
 
 DwtListView.prototype.emulateDblClick =
-function(item, kbNavEvent) {
+function(item) {
 	var div = document.getElementById(this._getItemId(item));
 	if (div) {
 		var mev = new DwtMouseEvent();
 		this._setMouseEvent(mev, {target:div, button:DwtMouseEvent.LEFT});
-		mev.kbNavEvent = kbNavEvent;
 		this._itemClicked(div, mev);
 		this._doubleClickListener(mev);
 	}
@@ -1700,7 +1682,22 @@ function(element, next) {
  */
 DwtListView.prototype._scrollList =
 function(itemDiv) {
-	DwtControl._scrollIntoView(itemDiv, itemDiv.parentNode);
+	// TODO might be able to cache some of these values
+	var parentNode = itemDiv.parentNode;
+	var itemDivTop = Dwt.getLocation(itemDiv, this._tmpPoint).y;
+	var parentTop = Dwt.getLocation(parentNode, this._tmpPoint).y;
+
+	var diff = itemDivTop - (parentNode.scrollTop + parentTop);
+	if (diff < 0) {
+		parentNode.scrollTop += diff;
+	} else {
+		var parentH = Dwt.getSize(parentNode, this._tmpPoint).y;
+		var itemDivH = Dwt.getSize(itemDiv, this._tmpPoint).y;
+		diff = (itemDivTop + itemDivH) - (parentTop + parentH + parentNode.scrollTop);
+		if (diff > 0) {
+			parentNode.scrollTop += diff;
+		}
+	}
 };
 
 DwtListView.prototype._emulateSingleClick =
@@ -1725,13 +1722,11 @@ function(next) {
 	}
 
 	if (this._kbAnchor != orig) {
-		if (orig) {
-			var selClass = this._selectedClass;
-			if (orig.className.indexOf(selClass) != -1) {
-				Dwt.delClass(orig, this._styleRe, selClass);
-			} else {
-				Dwt.delClass(orig, this._styleRe);		// , this._normalClass		MOW
-			}
+		var selClass = this._selectedClass;
+		if (orig.className.indexOf(selClass) != -1) {
+			Dwt.delClass(orig, this._styleRe, selClass);
+		} else {
+			Dwt.delClass(orig, this._styleRe);		// , this._normalClass		MOW
 		}
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 	}
@@ -1741,7 +1736,7 @@ function(next) {
 
 DwtListView.prototype._itemSelected =
 function(itemDiv, ev) {
-	if (this._allowLeftSelection(itemDiv, ev, ev && ev.button)) {
+	if (this._allowLeftSelection(itemDiv, ev, (ev) ? ev.button : null)) {
 		/* Unmark the KB focus element. We need to do this because it is
 		 * possible for this element to not be the same as the selection
 		 * anchor due to NEXT and PREV keyboard actions */
@@ -1932,18 +1927,16 @@ function(columnId) {
 	if (this._currentColId && (columnId != this._currentColId)) {
 		// unset current column arrow
 		var headerCol = this._headerIdHash[this._currentColId];
-		if (!headerCol._noSortArrow) {
-			var field = headerCol._field;
-			var oldArrowId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
-			var oldArrowCell = document.getElementById(oldArrowId);
-			if (oldArrowCell && oldArrowCell.firstChild) {
-				var imgEl = (AjxImg._mode == AjxImg.SINGLE_IMG) ? oldArrowCell.firstChild : oldArrowCell.firstChild.firstChild;
-				if (imgEl) {
-					imgEl.style.visibility = "hidden";
-				}
+		var field = headerCol._field;
+		var oldArrowId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
+		var oldArrowCell = document.getElementById(oldArrowId);
+		if (oldArrowCell && oldArrowCell.firstChild) {
+			var imgEl = (AjxImg._mode == AjxImg.SINGLE_IMG) ? oldArrowCell.firstChild : oldArrowCell.firstChild.firstChild;
+			if (imgEl) {
+				imgEl.style.visibility = "hidden";
 			}
 		}
-
+		
 		// reset style for old sorted column
 		var oldSortedCol = document.getElementById(this._currentColId);
 		if (oldSortedCol) {
@@ -1952,18 +1945,16 @@ function(columnId) {
 	}
 	this._currentColId = columnId;
 	var headerCol = this._headerIdHash[this._currentColId];
+	var field = headerCol._field;
 
 	// set new column arrow
-	if (!headerCol._noSortArrow) {
-		var field = headerCol._field;
-		var newArrowId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
-		var newArrowCell = document.getElementById(newArrowId);
-		if (newArrowCell) {
-			AjxImg.setImage(newArrowCell, this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow");
-			var imgEl = (AjxImg._mode == AjxImg.SINGLE_IMG) ? newArrowCell.firstChild : newArrowCell.firstChild.firstChild;
-			if (imgEl) {
-				imgEl.style.visibility = "visible";
-			}
+	var newArrowId = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
+	var newArrowCell = document.getElementById(newArrowId);
+	if (newArrowCell) {
+		AjxImg.setImage(newArrowCell, this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow");
+		var imgEl = (AjxImg._mode == AjxImg.SINGLE_IMG) ? newArrowCell.firstChild : newArrowCell.firstChild.firstChild;
+		if (imgEl) {
+			imgEl.style.visibility = "visible";
 		}
 	}
 	
@@ -2257,9 +2248,10 @@ function() {
 	// force relayout of header column
 	this.headerColCreated = false;
 	var headerCol = this._headerIdHash[this._currentColId];
-	var sortField = (headerCol && headerCol._sortable) ? headerCol._field : null;
-	this.setUI(sortField);
+	if (!headerCol) { return; }
+	var sortField = headerCol._sortable ? headerCol._field : null;
 	var sel = this.getSelection()[0];
+	this.setUI(sortField);
 	this.setSelection(sel, true);
 };
 
@@ -2286,8 +2278,6 @@ DwtListView.prototype._focus =
 function() {
 	if (this._kbAnchor) {
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
-	} else {
-		this._setKbFocusElement();
 	}
 };
 
@@ -2336,7 +2326,6 @@ function(clear) {
  *        align			[int]		alignment style of label
  *        noRemove		[boolean]*	flag indicating whether this column can be removed (overrides visible flag)
  *        view			[constant]	ID of owning view
- *        noSortArrow	[boolean]*	if true, do not show up/down sort arrow in column
  */
 DwtListHeaderItem = function(params) {
 
@@ -2347,7 +2336,6 @@ DwtListHeaderItem = function(params) {
 	this._label = params.text;
 	this._iconInfo = params.icon;
 	this._sortable = params.sortable;
-	this._noSortArrow = params.noSortArrow;
 	this._resizeable = params.resizeable;
 	this._visible = (params.visible !== false); // default to visible
 	this._name = params.name || params.text;
