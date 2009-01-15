@@ -65,6 +65,8 @@ function (data, more, total) {
 }
 
 DynSelect_XFormItem.prototype.showMenu = function (thisObj, event) {
+	if(!this._enabled)
+		return;	
 	OSelect1_XFormItem.prototype.showMenu.call(this,thisObj,event);
 	
 	if(this.menuUp && this.choices.hasMore() && this.choices.getTotalAvailable()>0) {
