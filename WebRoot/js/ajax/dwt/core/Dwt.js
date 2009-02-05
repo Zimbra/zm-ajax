@@ -132,17 +132,9 @@ Dwt.Z_HIDDEN = 100;
 Dwt.Z_CURTAIN = 200;
 
 
-/** DwtWindowManager inside of a view.  It holds modeless dialogs (DwtResizableWindow).
- */
-Dwt.Z_VIEW_WINDOW_MANAGER = 290;
-
 /** Visible layer. Elements at this layer will be in view
  * @type Int*/
 Dwt.Z_VIEW = 300;
-
-/** DwtWindowManager.  It holds modeless dialogs (DwtResizableWindow).
- */
-Dwt.Z_WINDOW_MANAGER = 490;
 
 /** Popup menu layer. Used by the menu components
  * @type Int*/
@@ -359,9 +351,7 @@ function(htmlElement, style) {
  */
 Dwt.getBounds =
 function(htmlElement, rect) {
-	if (!Dwt.__tmpPoint)
-		Dwt.__tmpPoint = new DwtPoint(0, 0);
-	var tmpPt = Dwt.__tmpPoint;
+	var tmpPt = DwtPoint.tmp;
 
 	Dwt.getLocation(htmlElement, tmpPt);
 	var locX = tmpPt.x;
@@ -1069,8 +1059,12 @@ Dwt.setSelectionText = function(input, text) {
 };
 
 Dwt.instanceOf =
-function(obj, className) {
-	return (window[className] && obj instanceof window[className]);
+function(objOrClassName, className) {
+	if (typeof objOrClassName == "string") {
+		return window[objOrClassName] &&
+		       (objOrClassName == className || window[objOrClassName].prototype instanceof window[className]);
+	}
+	return (window[className] && objOrClassName instanceof window[className]);
 };
 
 /**
