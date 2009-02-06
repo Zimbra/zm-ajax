@@ -316,14 +316,12 @@ function (hoverImageInfo) {
 * @param shouldToggle
 * @param followIconStyle	style of menu item (should be checked or radio style) for
 *							which the button icon should reflect the menu item icon
-* @param popupAbove         true to pop up the menu above the button
 */
 DwtButton.prototype.setMenu =
-function(menuOrCallback, shouldToggle, followIconStyle, popupAbove) {
+function(menuOrCallback, shouldToggle, followIconStyle) {
 	this._menu = menuOrCallback;
 	this._shouldToggleMenu = (shouldToggle === true);
 	this._followIconStyle = followIconStyle;
-	this._popupAbove = popupAbove;
 	if (this._menu) {
         if (this._dropDownEl) {
 			var idx = (this._imageCell) ? 1 : 0;
@@ -373,7 +371,7 @@ function(dontCreate) {
 			return null;
 		}
 		var callback = this._menu;
-		this.setMenu(callback.run(this), this._shouldToggleMenu, this._followIconStyle, this._popupAbove);
+		this.setMenu(callback.run());
 		if ((this.__preventMenuFocus != null) && (this._menu instanceof DwtMenu))
 			this._menu.dontStealFocus(this.__preventMenuFocus);
 	}
@@ -449,17 +447,12 @@ function(menu) {
 	var parentElement = parent.getHtmlElement();
 	// since buttons are often absolutely positioned, and menus aren't, we need x,y relative to window
 	var parentLocation = Dwt.toWindow(parentElement, 0, 0);
-	var leftBorder = (parentElement.style.borderLeftWidth == "") ? 0 : parseInt(parentElement.style.borderLeftWidth);
-	var x = parentLocation.x + leftBorder;
+	var verticalBorder = (parentElement.style.borderLeftWidth == "") ? 0 : parseInt(parentElement.style.borderLeftWidth);
+	var x = parentLocation.x + verticalBorder;
 	x = ((x + menuSize.x) >= windowSize.x) ? windowSize.x - menuSize.x : x;
-	var y;
-	if (this._popupAbove) {
-		y = parentLocation.y - menuSize.y;
-	} else {
-		var horizontalBorder = (parentElement.style.borderTopWidth == "") ? 0 : parseInt(parentElement.style.borderTopWidth);
-		horizontalBorder += (parentElement.style.borderBottomWidth == "") ? 0 : parseInt(parentElement.style.borderBottomWidth);
-		y = parentLocation.y + parentBounds.height + horizontalBorder;
-	}
+	var horizontalBorder = (parentElement.style.borderTopWidth == "") ? 0 : parseInt(parentElement.style.borderTopWidth);
+	horizontalBorder += (parentElement.style.borderBottomWidth == "") ? 0 : parseInt(parentElement.style.borderBottomWidth);
+	var y = parentLocation.y + parentBounds.height + horizontalBorder;
 	menu.popup(0, x, y);
 };
 
@@ -513,14 +506,12 @@ function() {
 	DwtButton._dropDownCellMouseDownHdlr(mev);
 };
 
-/** This method is called from mouseUpHdlr in <i>DwtControl</i>. */
+/** This method is called from mouseUpHdl in <i>DwtControl</i>. */
 DwtButton.prototype._focusByMouseUpEvent =
-function()  {
-	// don't steal focus if on a toolbar that's not part of focus ring
-	if (!(this.parent && (this.parent instanceof DwtToolBar) && this.parent.noFocus)) {
-		DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getTabGroupMember());
-	}
-};
+  function()  {
+	DBG.println(AjxDebug.DBG3, "DwtButton.prototype._focusByMouseUpEvent");
+	DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getTabGroupMember());
+  }
 
 // NOTE: _focus and _blur will be reworked to reflect styles correctly
 DwtButton.prototype._focus =
@@ -572,8 +563,10 @@ function (){
 };
 
 DwtButton.prototype.deactivate =
-function() {
-	this._showHoverImage(true);
+function (){
+	if (this._hoverImageInfo){
+		this.setImage(this._hoverImageInfo);
+	}
 
 	if (this._style & DwtButton.TOGGLE_STYLE){
 		this._selected = !this._selected;
@@ -587,21 +580,6 @@ DwtButton.prototype.dontStealFocus = function(val) {
 	if (this._menu instanceof DwtMenu)
 		this._menu.dontStealFocus(val);
 	this.__preventMenuFocus = val;
-};
-
-DwtButton.prototype._showHoverImage =
-function(show) {
-	// if the button is image-only, DwtLabel#setImage is bad
-	// because it clears the element first
-	// (innerHTML = "") causing a mouseout event, then it
-	// re-sets the image, which results in a new mouseover
-	// event, thus looping forever eating your CPU and
-	// blinking.
-	if (this._hoverImageInfo){
-		var iconEl = this._getIconEl();
-		var info = show ? this._hoverImageInfo : this.__imageInfo;
-		iconEl.firstChild.className = AjxImg.getClassForImage(info);
-	}
 };
 
 DwtButton.prototype._handleClick =
@@ -696,7 +674,22 @@ DwtButton._mouseOverListener =
 function(ev) {
 	var button = ev.dwtObj;
 	if (!button) { return false; }
-	button._showHoverImage(true);
+    if (button._hoverImageInfo) {
+
+	    // if the button is image-only, the following is bad
+	    // because DwtLabel#setImage clears the element first
+	    // (innerHTML = "") causing a mouseout event, then it
+	    // re-sets the image, which results in a new mouseover
+	    // event, thus looping forever eating your CPU and
+	    // blinking.
+
+	    // this.setImage(this._hoverImageInfo); // sucks.
+
+	    // hope I'm not breaking anything (mihai@zimbra.com):
+
+	    var iconEl = button._getIconEl();
+	    iconEl.firstChild.className = AjxImg.getClassForImage(button._hoverImageInfo);
+    }
     button.setDisplayState(DwtControl.HOVER);
 
     var dropDown = button._dropDownEl;
@@ -712,7 +705,9 @@ DwtButton._mouseOutListener =
 function(ev) {
 	var button = ev.dwtObj;
 	if (!button) { return false; }
-	button._showHoverImage(false);
+    if (button._hoverImageInfo) {
+        button.setImage(button._enabledImageInfo);
+    }
 	button._setMouseOutClassName();
     button.isActive = false;
 
