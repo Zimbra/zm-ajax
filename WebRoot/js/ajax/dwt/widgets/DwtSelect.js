@@ -123,6 +123,7 @@ function(element) {
  */
 DwtSelect.prototype.addOption =
 function(option, selected, value) {
+	if (!option) { return; }
 	var opt = null;
 	var val = null;
 	if (typeof(option) == 'string') {
@@ -134,7 +135,7 @@ function(option, selected, value) {
 			if (value)
 				opt.setValue(value);
 			selected = opt.isSelected();
-		} else if(option instanceof DwtSelectOptionData || option.value != null) {
+		} else if(option instanceof DwtSelectOptionData || option.value) {
 			val = value != null ? value : option.value;
 			opt = new DwtSelectOption(val, option.isSelected, option.displayValue, this, null, option.image, option.selectedValue);
 			selected = Boolean(option.isSelected);
@@ -447,10 +448,8 @@ function(option) {
  		if (displayValue) {
  			this.setText(AjxStringUtil.htmlEncode(displayValue));
  		}
- 		if (image) {
- 			this.setImage(image);
- 		}
-		this._selectedValue = option._value;
+ 		this.setImage(image);
+ 		this._selectedValue = option._value;
 		this._selectedOption = option;
 	}
     this._updateSelection(option);
