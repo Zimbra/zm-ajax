@@ -19,10 +19,11 @@
 AjxDateUtil = function() {
 };
 
-AjxDateUtil.YEAR = 1;
-AjxDateUtil.MONTH = 2;
-AjxDateUtil.WEEK = 3;
-AjxDateUtil.DAY = 4;
+AjxDateUtil.YEAR		= 1;
+AjxDateUtil.MONTH		= 2;
+AjxDateUtil.WEEK		= 3;
+AjxDateUtil.DAY			= 4;
+AjxDateUtil.TWO_WEEKS	= 5;
 
 AjxDateUtil.MSEC_PER_FIFTEEN_MINUTES = 900000;
 AjxDateUtil.MSEC_PER_HALF_HOUR = 1800000;
@@ -53,7 +54,7 @@ AjxDateUtil._daysPerMonth = {
 };
 
 AjxDateUtil._init =
-function() {                                           
+function() {
 	AjxDateUtil._dateFormat = AjxDateFormat.getDateInstance(AjxDateFormat.SHORT).clone();
 	var segments = AjxDateUtil._dateFormat.getSegments();
 	for (var i = 0; i < segments.length; i++) {
@@ -63,7 +64,7 @@ function() {
 	}
 	AjxDateUtil._dateTimeFormat = 
 		new AjxDateFormat(AjxDateUtil._dateFormat.toPattern() + " " + AjxDateFormat.getTimeInstance(AjxDateFormat.SHORT));
-	
+
 	AjxDateUtil._dateFormatNoYear = new AjxDateFormat(AjxMsg.formatDateMediumNoYear);
 };
 
@@ -134,7 +135,9 @@ function(date, field, offset) {
 	} else if (field == AjxDateUtil.WEEK) {
 		date.setDate(date.getDate() + 7*offset);
 	} else if (field == AjxDateUtil.DAY) {
-		date.setDate(date.getDate() + offset);		
+		date.setDate(date.getDate() + offset);
+	} else if (field == AjxDateUtil.TWO_WEEKS) {
+		date.setDate(date.getDate() + 14*offset);
 	} else {
 		return date;
 	}
@@ -147,7 +150,7 @@ AjxDateUtil.computeDateDelta =
 function(dateMSec) {
 	var deltaMSec = (new Date()).getTime() - dateMSec;
 	var durationStr = AjxDateUtil.computeDuration(deltaMSec);
-    return durationStr ? (durationStr + " " + AjxMsg.ago) : null;
+	return durationStr ? (durationStr + " " + AjxMsg.ago) : null;
 };
 
 // Returns a string describing the duration, which is in milliseconds.
@@ -521,8 +524,7 @@ function(mins, secs) {
 
 AjxDurationFormatVerbose.formatSeconds =
 function(secs) {
-	var deltaStr = secs + " " + ((secs > 1) ? AjxMsg.seconds : AjxMsg.second);
-	return deltaStr;
+	return (secs + " " + ((secs > 1) ? AjxMsg.seconds : AjxMsg.second));
 };
 
 AjxDurationFormatConcise = function() { }
@@ -590,16 +592,16 @@ AjxDateUtil.SATURDAY = 6;
  * 
  */
 AjxDateUtil.getDateForNextDay =
-function(fromThisDate,thisWeekday,count) {
-    count = count?count:1;
-    var r = new Date(fromThisDate);
-    for(var i=0;i<count;i++){
-        r = AjxDateUtil._getDateForNextWeekday(r,thisWeekday);
-        if(i<count-1){
-            r.setDate(r.getDate()+1);
-        }
-    }
-    return r;
+function(fromThisDate, thisWeekday, count) {
+	count = count || 1;
+	var r = new Date(fromThisDate);
+	for (var i = 0; i < count; i++) {
+		r = AjxDateUtil._getDateForNextWeekday(r, thisWeekday);
+		if (i < count-1) {
+			r.setDate(r.getDate() + 1);
+		}
+	}
+	return r;
 }
 
 /**
@@ -609,16 +611,16 @@ function(fromThisDate,thisWeekday,count) {
  *
  */
 AjxDateUtil.getDateForNextWorkWeekDay =
-function(fromThisDate,count) {
-    count = count?count:1;
-    var r = new Date(fromThisDate);
-    for(var i=0;i<count;i++){
-        r = AjxDateUtil._getDateForNextWorkWeekday(r);
-        if(i<count-1){
-            r.setDate(r.getDate()+1);
-        }
-    }
-    return r;
+function(fromThisDate, count) {
+	count = count?count:1;
+	var r = new Date(fromThisDate);
+	for (var i = 0; i < count; i++) {
+		r = AjxDateUtil._getDateForNextWorkWeekday(r);
+		if (i < count-1) {
+			r.setDate(r.getDate() + 1);
+		}
+	}
+	return r;
 }
 
 /**
@@ -628,12 +630,12 @@ function(fromThisDate,count) {
  * @param count this many positions to navigate, if negative goes in reverse, if positive goes forward
  */
 AjxDateUtil.getDateForThisDay =
-function(fromThisDate,thisWeekday,count) {
-    if(count < 0 ){
-        return AjxDateUtil.getDateForPrevDay(fromThisDate,thisWeekday,-count); //-(-)  is plus
-    }else{
-        return AjxDateUtil.getDateForNextDay(fromThisDate,thisWeekday,count);
-    }
+function(fromThisDate, thisWeekday, count) {
+	if (count < 0 ) {
+		return AjxDateUtil.getDateForPrevDay(fromThisDate, thisWeekday, -count);//-(-)  is plus
+	} else {
+		return AjxDateUtil.getDateForNextDay(fromThisDate, thisWeekday, count);
+	}
 }
 
 /**
@@ -643,11 +645,11 @@ function(fromThisDate,thisWeekday,count) {
  */
 AjxDateUtil.getDateForThisWorkWeekDay =
 function(fromThisDate, count) {
-    if(count < 0 ){
-        return AjxDateUtil.getDateForPrevWorkWeekDay(fromThisDate,-count); //-(-)  is plus
-    }else{
-        return AjxDateUtil.getDateForNextWorkWeekDay(fromThisDate,count);
-    }
+	if (count < 0 ) {
+		return AjxDateUtil.getDateForPrevWorkWeekDay(fromThisDate, -count);		//-(-)  is plus
+	}else{
+		return AjxDateUtil.getDateForNextWorkWeekDay(fromThisDate, count);
+	}
 }
 
 /**
@@ -656,18 +658,17 @@ function(fromThisDate, count) {
  * @param thisWeekday  The day to find ( eg. AjxDateUtil.SUNDAY)
  * @param count Which occurence, like first, second..has to be always positive
  */
-
 AjxDateUtil.getDateForPrevDay =
 function(fromThisDate,thisWeekday,count) {
-    count = count?count:1;
-    var r = new Date(fromThisDate);
-    for(var i=0;i<count;i++){
-        r = AjxDateUtil._getDateForPrevWeekday(r,thisWeekday);
-        if(i<count-1){
-            r.setDate(r.getDate()-1);
-        }
-    }
-    return r;
+	count = count || 1;
+	var r = new Date(fromThisDate);
+	for (var i = 0; i < count; i++) {
+		r = AjxDateUtil._getDateForPrevWeekday(r, thisWeekday);
+		if (i < count-1) {
+			r.setDate(r.getDate()-1);
+		}
+	}
+	return r;
 }
 
 /**
@@ -678,78 +679,79 @@ function(fromThisDate,thisWeekday,count) {
 
 AjxDateUtil.getDateForPrevWorkWeekDay =
 function(fromThisDate, count) {
-    count = count?count:1;
-    var r = new Date(fromThisDate);
-    for(var i=0;i<count;i++){
-        r = AjxDateUtil._getDateForPrevWorkWeekday(r);
-        if(i<count-1){
-            r.setDate(r.getDate()-1);
-        }
-    }
-    return r;
+	count = count || 1;
+	var r = new Date(fromThisDate);
+	for(var i = 0; i < count; i++) {
+		r = AjxDateUtil._getDateForPrevWorkWeekday(r);
+		if (i < count-1) {
+			r.setDate(r.getDate()-1);
+		}
+	}
+	return r;
 }
 
 AjxDateUtil._getDateForNextWeekday =
 function(fromThisDate,thisWeekday) {
-    var newDate = new Date(fromThisDate);
-    var weekDay = fromThisDate.getDay();
-    if(weekDay==thisWeekday){
-        return newDate;
-    }
-   var diff = (thisWeekday-weekDay);
-    if(diff > 0){
-        newDate.setDate(fromThisDate.getDate() + diff);
-    }else{
-        newDate.setDate(fromThisDate.getDate() + (7 + diff));
-    }
-    return newDate;
+	var newDate = new Date(fromThisDate);
+	var weekDay = fromThisDate.getDay();
+	if (weekDay == thisWeekday) {
+		return newDate;
+	}
+	var diff = (thisWeekday-weekDay);
+	if (diff > 0) {
+		newDate.setDate(fromThisDate.getDate() + diff);
+	} else {
+		newDate.setDate(fromThisDate.getDate() + (7 + diff));
+	}
+	return newDate;
 }
 
 AjxDateUtil._getDateForNextWorkWeekday =
 function(fromThisDate) {
-    var newDate = new Date(fromThisDate);
-    var weekDay = fromThisDate.getDay();
-    if(weekDay == AjxDateUtil.SUNDAY) {
-        newDate.setDate(fromThisDate.getDate()+1);
-    }else if(weekDay == AjxDateUtil.SATURDAY) {
-        newDate.setDate(fromThisDate.getDate()+2);
-    }
-    return newDate;
+	var newDate = new Date(fromThisDate);
+	var weekDay = fromThisDate.getDay();
+	if (weekDay == AjxDateUtil.SUNDAY) {
+		newDate.setDate(fromThisDate.getDate()+1);
+	} else if (weekDay == AjxDateUtil.SATURDAY) {
+		newDate.setDate(fromThisDate.getDate()+2);
+	}
+	return newDate;
 }
 
 AjxDateUtil._getDateForPrevWeekday =
-function(fromThisDate,thisWeekday) {
-    var newDate = new Date(fromThisDate);
-    var weekDay = fromThisDate.getDay();
-    if(weekDay==thisWeekday){
-        return newDate;
-    }
-    var diff = (weekDay-thisWeekday);
-    if(diff > 0){
-        newDate.setDate(fromThisDate.getDate()-diff);
-    }else{
-        newDate.setDate(fromThisDate.getDate()- (7 + diff));
-    }
-    return newDate;
+function(fromThisDate, thisWeekday) {
+	var newDate = new Date(fromThisDate);
+	var weekDay = fromThisDate.getDay();
+	if (weekDay == thisWeekday) {
+		return newDate;
+	}
+	var diff = (weekDay-thisWeekday);
+	if (diff > 0) {
+		newDate.setDate(fromThisDate.getDate() - diff);
+	} else {
+		newDate.setDate(fromThisDate.getDate() - (7 + diff));
+	}
+	return newDate;
 }
 
 AjxDateUtil._getDateForPrevWorkWeekday =
 function(fromThisDate) {
-    var newDate = new Date(fromThisDate);
-    var weekDay = fromThisDate.getDay();
-    if(weekDay == AjxDateUtil.SUNDAY) {
-        newDate.setDate(fromThisDate.getDate()-2);
-    }else if(weekDay == AjxDateUtil.SATURDAY) {
-        newDate.setDate(fromThisDate.getDate()-1);
-    }
-    return newDate;
+	var newDate = new Date(fromThisDate);
+	var weekDay = fromThisDate.getDay();
+	if (weekDay == AjxDateUtil.SUNDAY) {
+		newDate.setDate(fromThisDate.getDate() - 2);
+	} else if (weekDay == AjxDateUtil.SATURDAY) {
+		newDate.setDate(fromThisDate.getDate() - 1);
+	}
+	return newDate;
 }
 
 //
 // Date calculator functions
 //
 
-AjxDateUtil.calculate = function(rule, date) {
+AjxDateUtil.calculate =
+function(rule, date) {
 	// initialize
 	if (!AjxDateUtil.__calculate_initialized) {
 		AjxDateUtil.__calculate_initialized = true;
@@ -877,7 +879,8 @@ AjxDateUtil.S_DURATION = [
 // Date calculator private functions
 //
 
-AjxDateUtil.__calculate_init = function() {
+AjxDateUtil.__calculate_init =
+function() {
 	AjxDateUtil.WEEKDAYS = {};
 	var weekdays = [
 		"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
@@ -923,22 +926,26 @@ AjxDateUtil.__calculate_init = function() {
 	AjxDateUtil.RE_SET = new RegExp("^("+AjxDateUtil.S_DURATION+"|"+AjxMsg["calc.date"]+")=(.*)$", "i");
 };
 
-AjxDateUtil.__calculate_normalizeFullWidthDigit = function(digit) {
+AjxDateUtil.__calculate_normalizeFullWidthDigit =
+function(digit) {
 	var charCode = "0".charCodeAt(0) + digit.charCodeAt(0) - "\uff10".charCodeAt(0);
 	return String.fromCharCode(charCode);
 };
 
 /** This is needed to handle asian full-width digits. */
-AjxDateUtil.__calculate_replaceFullWidthDigit = function($0, digit) {
+AjxDateUtil.__calculate_replaceFullWidthDigit =
+function($0, digit) {
 	return AjxDateUtil.__calculate_normalizeFullWidthDigit(digit);
 };
 
-AjxDateUtil.__calculate_parseInt = function(s) {
+AjxDateUtil.__calculate_parseInt =
+function(s) {
 	s = s.replace(/([\uFF10-\uFF19])/g, AjxDateUtil.__calculate_normalizeFullWidthDigit);
 	return parseInt(s, 10);
 };
 
-AjxDateUtil.__calculate_add = function(date, type, amount) {
+AjxDateUtil.__calculate_add =
+function(date, type, amount) {
 	if (type.match(AjxDateUtil.RE_YEAR)) {
 		date.setFullYear(date.getFullYear() + amount);
 		return;
@@ -1001,11 +1008,13 @@ AjxDateUtil.__calculate_add = function(date, type, amount) {
 	throw "unknown type: "+type;
 };
 
-AjxDateUtil.__calculate_add_ordinal = function() {
+AjxDateUtil.__calculate_add_ordinal =
+function() {
 	throw "TODO: not implemented";
 };
 
-AjxDateUtil.__calculate_set = function(date, type, value) {
+AjxDateUtil.__calculate_set =
+function(date, type, value) {
 	var args = value.split(/,/);
 	if (type.match(AjxDateUtil.RE_YEAR)) {
 		args[0] = AjxDateUtil.__calculate_fullYear(args[0]); // year
@@ -1053,7 +1062,8 @@ AjxDateUtil.__calculate_set = function(date, type, value) {
 	throw "unknown type: "+type;
 };
 
-AjxDateUtil.__calculate_fullYear = function(value) {
+AjxDateUtil.__calculate_fullYear =
+function(value) {
 	if (value.length == 2) {
 		var d = new Date;
 		d.setYear(parseInt(value, 10));
@@ -1062,12 +1072,14 @@ AjxDateUtil.__calculate_fullYear = function(value) {
 	return parseInt(value, 10);
 };
 
-AjxDateUtil.__calculate_month = function(value) {
+AjxDateUtil.__calculate_month =
+function(value) {
 	var monthnum = AjxDateUtil.MONTHNAME2MONTHNUM[value.toLowerCase()];
 	return monthnum != null ? monthnum : parseInt(value, 10) - 1;
 };
 
-AjxDateUtil.__calculate_day = function(value) {
+AjxDateUtil.__calculate_day =
+function(value) {
 	var daynum = AjxDateUtil.WEEKDAYS[value.toLowerCase()];
 	return daynum != null ? daynum : parseInt(value, 10);
 };

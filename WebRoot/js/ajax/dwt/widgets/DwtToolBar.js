@@ -157,6 +157,11 @@ function(className, index) {
 	return el;
 };
 
+DwtToolBar.prototype.removeSeparator =
+function(el) {
+	this._removeItem(el);
+};
+
 DwtToolBar.prototype.addFiller =
 function(className, index) {
 	var el = this._createFillerElement();
@@ -286,24 +291,38 @@ function(type, element, index) {
     // TODO!
 };
 
+DwtToolBar.prototype._removeItem =
+function(item) {
+	for (var i = 0; i < this._items.length; i++) {
+		if (this._items[i] == item) {
+			this._items.splice(i,1);
+			this._itemsEl.removeChild(item);
+			break;
+		}
+	}
+};
+
 // transfer focus to the current item
 DwtToolBar.prototype._focus =
 function(item) {
 	DBG.println(AjxDebug.DBG3, "DwtToolBar: FOCUS");
 	// make sure the key for expanding a button submenu matches our style
-	var kbm = this.shell.getKeyboardMgr();
-	if (kbm.isEnabled()) {
-		var kmm = kbm.__keyMapMgr;
-		if (kmm) {
-			if (this._style == DwtToolBar.HORIZ_STYLE) {
-				kmm.removeMapping("DwtButton", "ArrowRight");
-				kmm.setMapping("DwtButton", "ArrowDown", DwtKeyMap.SUBMENU);
-			} else {
-				kmm.removeMapping("DwtButton", "ArrowDown");
-				kmm.setMapping("DwtButton", "ArrowRight", DwtKeyMap.SUBMENU);
+	if (!this._submenuKeySet) {
+		var kbm = this.shell.getKeyboardMgr();
+		if (kbm.isEnabled()) {
+			var kmm = kbm.__keyMapMgr;
+			if (kmm) {
+				if (this._style == DwtToolBar.HORIZ_STYLE) {
+					kmm.removeMapping("DwtButton", "ArrowRight");
+					kmm.setMapping("DwtButton", "ArrowDown", DwtKeyMap.SUBMENU);
+				} else {
+					kmm.removeMapping("DwtButton", "ArrowDown");
+					kmm.setMapping("DwtButton", "ArrowRight", DwtKeyMap.SUBMENU);
+				}
+				kmm.reloadMap("DwtButton");
 			}
-			kmm.reloadMap("DwtButton");
 		}
+		this._submenuKeySet = true;
 	}
 
 	item = item ? item : this._getFocusItem(this._curFocusIndex);
