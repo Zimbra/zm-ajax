@@ -43,12 +43,16 @@ DynSelect_XFormItem.prototype.initFormItem = function () {
 	this.dataFetcherMethod = this.getInheritedProperty("dataFetcherMethod");	
 	this.dataFetcherObject = null;
 }
+
 DynSelect_XFormItem.prototype.changeChoicesCallback = 
 function (data, more, total) {
+	//DBG.println(AjxDebug.DBG1, AjxBuffer.concat(this.getId(),".choices came back"));
 	var choices = this.getChoices();
 	if(!choices)
 		return;
 	choices.setChoices(data);
+	choices.setHasMore(more);
+	choices.setTotalAvailable(total);	
 	choices.dirtyChoices();
 
 		
@@ -57,6 +61,16 @@ function (data, more, total) {
 		this.hideMenu();
 	} else {
 		this.showMenu();
+	}
+}
+
+DynSelect_XFormItem.prototype.showMenu = function (thisObj, event) {
+	if(!this._enabled)
+		return;	
+	OSelect1_XFormItem.prototype.showMenu.call(this,thisObj,event);
+	
+	if(this.menuUp && this.choices.hasMore() && this.choices.getTotalAvailable()>0) {
+		this.showNote(AjxMessageFormat.format(ZaMsg.Alert_MoreResultsAvailable,this.choices.getTotalAvailable()));
 	}
 	if(!this.menuUp)
 		this.showMenu();	
@@ -126,7 +140,7 @@ DynSelect_XFormItem.prototype.onKeyUp = function(value, event) {
 }
 
 DynSelect_XFormItem.prototype.resetChoices = function () {
-	if(!this.dataFetcherObject && this.dataFetcherClass !=null && this.dataFetcherMethod !=null) {
+	/*if(!this.dataFetcherObject && this.dataFetcherClass !=null && this.dataFetcherMethod !=null) {
 			this.dataFetcherObject = new this.dataFetcherClass(this.getForm().getController());
 	} else if(this.getInheritedProperty("dataFetcherInstance")) {
 		this.dataFetcherObject = this.getInstance();
@@ -135,7 +149,15 @@ DynSelect_XFormItem.prototype.resetChoices = function () {
 		return;
 		
 	var callback = new AjxCallback(this, this.changeChoicesCallback);
-	this.dataFetcherMethod.call(this.dataFetcherObject, "", null, callback , this.getForm());
+	this.dataFetcherMethod.call(this.dataFetcherObject, "", null, callback);*/
+
+	var choices = this.getChoices();
+	if(!choices)
+		return;
+	choices.setChoices([]);
+	choices.setHasMore(false);
+	choices.setTotalAvailable(0);	
+	choices.dirtyChoices();	
 }
 
 
@@ -163,9 +185,9 @@ DynSelect_XFormItem.prototype.handleKeyPressDelay = function (event,value,lastTy
 	var searchByProcessedValue = this.getInheritedProperty("searchByProcessedValue");
 	
 	if(searchByProcessedValue)	
-		this.dataFetcherMethod.call(this.dataFetcherObject, val, event, callback, this.getForm());
+		this.dataFetcherMethod.call(this.dataFetcherObject, val, event, callback);
 	else	
-		this.dataFetcherMethod.call(this.dataFetcherObject, value, event, callback, this.getForm());
+		this.dataFetcherMethod.call(this.dataFetcherObject, value, event, callback);
 }
 
 DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
