@@ -57,7 +57,14 @@ function(obj, index, noDuplicates) {
 		return;
 	}
 
-	AjxUtil.arrayAdd(this._array, obj, index);
+	// if index is out of bounds,
+	if (index == null || index < 0 || index >= this._array.length) {
+		// append object to the end
+		this._array.push(obj);
+	} else {
+		// otherwise, insert object
+		this._array.splice(index, 0, obj);
+	}
 };
 
 AjxVector.prototype.addList =
@@ -72,7 +79,13 @@ function(list) {
 
 AjxVector.prototype.remove =
 function(obj) {
-	return AjxUtil.arrayRemove(this._array, obj);
+	for (var i = 0; i < this._array.length; i++) {
+		if (this._array[i] == obj) {
+			this._array.splice(i,1);
+			return true;
+		}
+	}
+	return false;
 };
 
 AjxVector.prototype.removeAt =
@@ -80,7 +93,7 @@ function(index) {
 	if (index >= this._array.length || index < 0)
 		return null;
 
-	var delArr = this._array.splice(index, 1);
+	var delArr = this._array.splice(index,1);
 	var ret = null;
 	if (delArr) {
 		ret = delArr[0];
@@ -100,11 +113,6 @@ function() {
 AjxVector.prototype.removeLast =
 function() {
 	return this._array.length > 0 ? this._array.pop() : null;
-};
-
-AjxVector.prototype.reverse =
-function() {
-	this._array.reverse();
 };
 
 AjxVector.prototype.replace =

@@ -248,10 +248,6 @@ XModel.prototype.setInstanceValue = function (instance, path, value) {
 		}
 		parentValue[ref] = value;
 	}
-	
-	//notify listeners that my value has changed
-	var event = new DwtXModelEvent(instance, modelItem, path, value);
-	modelItem.notifyListeners(DwtEvent.XFORMS_VALUE_CHANGED, event);
 	return value;
 }
 
@@ -297,11 +293,12 @@ XModel.prototype.addRowAfter = function (instance, path, afterRow) {
 	}
 	var list = this.getInstanceValue(instance, path);
 	if (list == null) {
+		// create a list and install it!
 		list = [];
+		this.setInstanceValue(instance, path, list);
 	}
 
 	list.splice(afterRow+1, 0, newInstance);
-	this.setInstanceValue(instance, path, list);
 }
 
 

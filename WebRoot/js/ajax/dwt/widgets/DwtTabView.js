@@ -38,13 +38,11 @@ DwtTabView = function(params) {
 	DwtComposite.call(this, params);
 
 	this._stateChangeEv = new DwtEvent(true);
-	this._stateChangeEv.item = this;
-
 	this._tabs = [];
 	this._tabIx = 1;
     this._createHtml();
 
-	var tabGroupId = [this.toString(), this._htmlElId].join("-");
+	var tabGroupId = [this.toString(), this._htmlElId].join("-")
 	this._tabGroup = new DwtTabGroup(tabGroupId);
 	this._tabGroup.addMember(this._tabBar);
 };
@@ -89,7 +87,7 @@ DwtTabView.prototype.getTabGroupMember = function() {
 
 /**
 * @param title  -  text for the tab button
-* @param tabViewOrCallback - instance of DwtTabViewPage or an AjxCallback that
+* @param tabView - instance of DwtTabViewPage or an AjxCallback that
 *                  returns an instance of DwtTabViewPage
 * @return - the key for the added tab. This key can be used to retreive the tab using @link getTab
 * public method addTab. Note that this method does not automatically update the tabs panel.
@@ -158,10 +156,6 @@ function (tabKey) {
 	return (this._tabs && this._tabs[tabKey])
 		? this._tabs[tabKey]
 		: null;
-};
-
-DwtTabView.prototype.getTabBar = function() {
-	return this._tabBar;
 };
 
 DwtTabView.prototype.getTabTitle =
@@ -311,9 +305,7 @@ function (width, height) {
 		for (var curTabKey in this._tabs) {
 			var tabView = this._tabs[curTabKey].view;
 			if (tabView && !(tabView instanceof AjxCallback)) {
-				var contentHeight;
-				contentHeight = contentHeight || height - Dwt.getSize(this._tabBarEl).y;
-				tabView.resetSize(width, contentHeight);
+				tabView.resetSize(width, height);
 			}	
 		}
 	}		
@@ -392,33 +384,28 @@ function (ev) {
 **/
 DwtTabViewPage = function(parent, className, posStyle) {
 	if (arguments.length == 0) return;
-	params = Dwt.getParams(arguments, DwtTabViewPage.PARAMS);
-	params.className = params.className || "ZTabPage";
-	params.posStyle = params.posStyle || DwtControl.ABSOLUTE_STYLE;
+
+	var clsName = className || "ZTabPage";
+	var ps = posStyle || DwtControl.ABSOLUTE_STYLE;
 	this._rendered = true; // by default UI creation is not lazy
 
-	DwtPropertyPage.call(this, params);
+	DwtPropertyPage.call(this, parent, clsName, ps);
 
     this._createHtml();
-	this.getHtmlElement().style.overflowY = "auto";
-	this.getHtmlElement().style.overflowX = "visible";
-	if (params.contentTemplate) {
-		this.getContentHtmlElement().innerHTML = AjxTemplate.expand(params.contentTemplate, this._htmlElId);
-	}
 };
 
 DwtTabViewPage.prototype = new DwtPropertyPage;
 DwtTabViewPage.prototype.constructor = DwtTabViewPage;
 
-DwtTabViewPage.prototype.toString = function() {
-	return "DwtTabViewPage";
-};
-
 DwtTabViewPage.prototype.TEMPLATE = "dwt.Widgets#ZTabPage";
 
-DwtTabViewPage.PARAMS = DwtPropertyPage.PARAMS.concat("contentTemplate");
 
 // Public methods
+
+DwtTabViewPage.prototype.toString =
+function() {
+	return "DwtTabViewPage";
+};
 
 DwtTabViewPage.prototype.getContentHtmlElement =
 function() {
@@ -438,7 +425,11 @@ function() {
 		}
 	}
 
-	this._contentEl.style.width = this.parent.getHtmlElement().style.width;	// resize page to fit parent
+	if (this.parent.getHtmlElement().offsetWidth > 0) { 						// if parent visible, use offsetWidth
+		this._contentEl.style.width=this.parent.getHtmlElement().offsetWidth;
+	} else {
+		this._contentEl.style.width = this.parent.getHtmlElement().style.width;	//if parent not visible, resize page to fit parent
+	}
 };
 
 DwtTabViewPage.prototype.hideMe = 
@@ -448,7 +439,9 @@ function() {
 
 DwtTabViewPage.prototype.resetSize =
 function(newWidth, newHeight) {
-	this.setSize(newWidth, newHeight);
+	if (this._rendered) {
+		this.setSize(newWidth, newHeight);
+	}
 };
 
 
@@ -520,7 +513,7 @@ function(listener) {
 };
 
 /**
-* @param tabKey - the id used to create tab button in @link DwtTabBar.addButton method
+* @param tabId - the id used to create tab button in @link DwtTabBar.addButton method
 * @param listener - AjxListener
 **/
 DwtTabBar.prototype.addSelectionListener =
@@ -529,7 +522,7 @@ function(tabKey, listener) {
 };
 
 /**
-* @param tabKey - the id used to create tab button in @link DwtTabBar.addButton method
+* @param tabId - the id used to create tab button in @link DwtTabBar.addButton method
 * @param listener - AjxListener
 **/
 DwtTabBar.prototype.removeSelectionListener =
