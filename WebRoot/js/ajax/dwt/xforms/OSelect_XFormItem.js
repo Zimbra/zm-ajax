@@ -917,20 +917,19 @@ OSelect_XFormItem.prototype.choiceSelected = function (itemNum, clearOldValues, 
 }
 
 OSelect_XFormItem.prototype.setValue = function (newValue, clearOldValues, includeIntermediates, event) {
-	var oldValues
+	var newValues, currentValues;
+	newValues = new Array();
 	if (clearOldValues) {
 		if(this.getMultiple()) {
 			if(newValue instanceof Array)
-				oldValues = newValue;
+				newValues = newValue;
 			else
-				oldValues = [newValue];
+				newValues = [newValue];
 		} else {
-			oldValues = newValue;
+			newValues = newValue;
 		}
 	} else {
-		oldValues;
 		if (includeIntermediates) {
-			oldValues = [];
 			var vals = this.getNormalizedValues();
 			var start = this._selectionCursor;
 			var dist = this._selectionAnchor - this._selectionCursor;
@@ -939,58 +938,53 @@ OSelect_XFormItem.prototype.setValue = function (newValue, clearOldValues, inclu
 				start = this._selectionAnchor;
 			}
 			for (var i = start; i <= start + dist; ++i) {
-				oldValues.push(vals[i]);
+				newValues.push(vals[i]);
 			}
 		} else {
-			oldValues = this.getInstanceValue();
-
-			if(oldValues) {
-				if (typeof oldValues == "string") {
-					if (oldValues == "") 	
-						oldValues = [];
+			currentValues = this.getInstanceValue();
+			if(currentValues) {
+				if (typeof currentValues == "string") {
+					if (currentValues == "") 	
+						currentValues = [];
 					else
-						oldValues = oldValues.split(",");
+						currentValues = newValues.split(",");
 				}
 			} else {
-				oldValues = new Array();			
+				currentValues = new Array();			
 			}			
 			
 			var found = false;
-			for (var i = 0; i < oldValues.length; i++) {
-				if (oldValues[i] == newValue) {
+			var cnt = currentValues.length;
+			for (var i = 0; i < cnt; i++) {
+				if (currentValues[i] == newValue) {
 					found = true;
-					break;
+					continue;
+				} else {
+					newValues.push(currentValues[i]);
 				}
 			}
 			
-			if (found) {
-				oldValues.splice(i, 1);
-			} else {
-				oldValues.push(newValue);
+			if (!found) {
+				newValues.push(newValue);
 			}
 		}
-		if(!oldValues || (oldValues.length == 1 && oldValues[0] == "")) {
-			oldValues = []
+		if(!newValues || (newValues.length == 1 && newValues[0] == "")) {
+			newValues = []
 		} 
 		// if we have a modelItem which is a LIST type
-		//	convert the output to the propert outputType
+		//	convert the output to the proper outputType
 		var modelItem = this.getModelItem();
 		if (modelItem && modelItem.getOutputType) {
 			if (modelItem.getOutputType() == _STRING_) {
-				oldValues = oldValues.join(modelItem.getItemDelimiter());
+				newValues = newValues.join(modelItem.getItemDelimiter());
 			}
 		} else {
 			// otherwise assume we should convert it to a comma-separated string
-			oldValues = oldValues.join(",");
+			newValues = newValues.join(",");
 		}
 	}
-	this.getForm().itemChanged(this, oldValues, event);
+	this.getForm().itemChanged(this, newValues, event);
 }
-
-
-
-
-
 
 OSelect_Check_XFormItem = function() {}
 XFormItemFactory.createItemType("_OSELECT_CHECK_", "oselect_check", OSelect_Check_XFormItem, OSelect_XFormItem)
