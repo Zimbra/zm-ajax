@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -28,21 +30,22 @@
  *        id			[string]*			an explicit ID to use for the control's HTML element
  */
 DwtText = function(params) {
+
 	if (arguments.length == 0) return;
 	params = Dwt.getParams(arguments, DwtText.PARAMS);
 	params.className = params.className || "DwtText";
 	DwtControl.call(this, params);
-};
+}
 
 DwtText.PARAMS = ["parent", "className", "posStyle"];
 
 DwtText.prototype = new DwtControl;
 DwtText.prototype.constructor = DwtText;
 
-DwtText.prototype.toString =
+DwtText.prototype.toString = 
 function() {
 	return "DwtText";
-};
+}
 
 DwtText.prototype.getTabGroupMember = function() {
 	return null;
@@ -56,14 +59,14 @@ function(text) {
 	} else {
 		this._textNode.data = text;
 	}
-};
+}
 
 DwtText.prototype.getText =
 function() {
-	return this._textNode ? this._textNode.data : "";
-};
+	return this._textNode.data;
+}
 
 DwtText.prototype.getTextNode =
 function() {
 	return this._textNode;
-};
+}

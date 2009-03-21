@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -80,10 +82,8 @@ function() {
 
 ZmCsfeCommand.setSessionId =
 function(sessionId) {
-	var id = (sessionId != null)
-		? ((sessionId instanceof Array) ? sessionId[0].id : sessionId.id)
-		: null;
-	ZmCsfeCommand._sessionId = id ? parseInt(id) : null;
+	var id = (sessionId instanceof Array) ? sessionId[0].id : sessionId;
+	ZmCsfeCommand._sessionId = parseInt(id);
 };
 
 ZmCsfeCommand.faultToEx =
@@ -217,13 +217,10 @@ function(params) {
 	}
 	if (params.noSession) {
 		context.nosession = {};
-	} else {
-		var sessionId = ZmCsfeCommand.getSessionId();
-		if (sessionId) {
-			context.session = {_content:sessionId, id:sessionId};
-		} else {
-			context.session = {};
-		}
+	}
+	var sessionId = ZmCsfeCommand.getSessionId();
+	if (sessionId) {
+		context.sessionId = {_content:sessionId, id:sessionId};
 	}
 	if (params.targetServer) {
 		context.targetServer = {_content:params.targetServer};
@@ -245,8 +242,8 @@ function(params) {
 	}
 	
 	// Tell server what kind of response we want
-	if (params.useXml) {
-		context.format = {type:"xml"};
+	if (!params.useXml) {
+		context.format = {type:"js"};
 	}
 
 	params.methodNameStr = ZmCsfeCommand.getMethodName(params.jsonObj);
@@ -263,14 +260,10 @@ function(params) {
 		}
 		context.authToken = ZmCsfeCommand._curAuthToken = authToken;
 	}
-
-	if (window.DBG) {
-		var ts = DBG._getTimeStamp();
-		DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), params.methodNameStr);
-		DBG.dumpObj(AjxDebug.DBG1, obj);
-	}
-
+	
+	DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), params.methodNameStr);
 	params.jsonRequestObj = obj;
+	DBG.dumpObj(AjxDebug.DBG1, obj);
 
 	return AjxStringUtil.objToString(obj);
 };
@@ -295,12 +288,11 @@ function(params) {
 	
 		if (params.noSession) {
 			soapDoc.set("nosession", null, context);
-		} else {
-			var sessionId = ZmCsfeCommand.getSessionId();
-			var si = soapDoc.set("session", null, context);
-			if (sessionId) {
-				si.setAttribute("id", sessionId);
-			}
+		}
+		var sessionId = ZmCsfeCommand.getSessionId();
+		if (sessionId) {
+			var si = soapDoc.set("sessionId", null, context);
+			si.setAttribute("id", sessionId);
 		}
 		if (params.targetServer) {
 			soapDoc.set("targetServer", params.targetServer, context);
@@ -366,13 +358,9 @@ function(params) {
 			soapDoc.set("authToken", authToken, context);
 		}
 	}
-
-	if (window.DBG) {
-		var ts = DBG._getTimeStamp();
-		DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), params.methodNameStr);
-		DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
-	}
-
+	
+	DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), params.methodNameStr);
+	DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
 	return soapDoc.getXml();
 };
 
@@ -467,10 +455,7 @@ function(response, params) {
 		var m = respDoc.match(/\{"?Body"?:\{"?(\w+)"?:/);
 		if (m && m.length) linkName = m[1];
 	}
-	if (window.DBG) {
-		var ts = DBG._getTimeStamp();
-		DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), linkName);
-	}
+	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), linkName);
 
 	var obj = {};
 
@@ -523,8 +508,8 @@ function(response, params) {
 		}
 	}
 
-	if (obj.Header && obj.Header.context && obj.Header.context.session) {
-		ZmCsfeCommand.setSessionId(obj.Header.context.session);
+	if (obj.Header && obj.Header.context && obj.Header.context.sessionId) {
+		ZmCsfeCommand.setSessionId(obj.Header.context.sessionId);
 	}
 
 	return params.asyncMode ? result : obj;
