@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -261,18 +263,12 @@ DwtLabel.prototype._getIconEl = function() {
  * @private*/
 DwtLabel.prototype.__setImage =
 function(imageInfo) {
-
-
 	var iconEl = this._getIconEl();
-	if (iconEl) {
-		if (imageInfo) {
-			AjxImg.setImage(iconEl, imageInfo, null, !this._enabled);
+    if (iconEl) {
+    	AjxImg.setImage(iconEl, imageInfo, null, !this._enabled);
 
-			// set a ZHasRightIcon or ZHasLeftIcon on the outer element, depending on which we set
-			var elementClass = (this._style & DwtLabel.IMAGE_RIGHT ? "ZHasRightIcon" : "ZHasLeftIcon");
-			Dwt.addClass(this.getHtmlElement(), elementClass);
-		} else {
-			iconEl.innerHTML = "";
-		}
-	}
-};
+		// set a ZHasRightIcon or ZHasLeftIcon on the outer element, depending on which we set
+    	var elementClass = (this._style & DwtLabel.IMAGE_RIGHT ? "ZHasRightIcon" : "ZHasLeftIcon");
+		Dwt.addClass(this.getHtmlElement(), elementClass);
+    }
+}
