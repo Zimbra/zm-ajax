@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 /**
@@ -114,11 +116,6 @@ function(id) {
 	}
 	return null;
 };
-
-DwtAccordion.prototype.getItemByIndex =
-function(index) {
-	return (index >=0 && index < this._items.length) ? this._items[index] : null;
-}
 
 /**
  * Hides all accordion items.
@@ -252,18 +249,12 @@ function(id, notify) {
 			cell.style.height = "0px";
 		}
 	}
-
 	if (selectedItem && notify && this.isListenerRegistered(DwtEvent.SELECTION)) {
-		this.notifySelectionListeners(selectedItem);
+		var selEv = DwtShell.selectionEvent;
+		selEv.item = this;
+		selEv.detail = selectedItem;
+		this.notifyListeners(DwtEvent.SELECTION, selEv);
 	}
-};
-
-DwtAccordion.prototype.notifySelectionListeners =
-function(selectedItem) {
-	var selEv = DwtShell.selectionEvent;
-	selEv.item = this;
-	selEv.detail = selectedItem;
-	this.notifyListeners(DwtEvent.SELECTION, selEv);
 };
 
 /**
