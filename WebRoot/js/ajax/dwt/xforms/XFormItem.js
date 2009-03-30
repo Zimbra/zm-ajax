@@ -4172,13 +4172,13 @@ Dwt_Time_XFormItem = function() {
 	this.items[1].choices = Dwt_Time_XFormItem.TIME_MINUTE_CHOICES;
 	this.items[1].getDisplayValue = function (newValue) {
 		if (!(newValue instanceof Date)) newValue = new Date();
-		var ret = AjxDateUtil._pad(AjxDateUtil.getRoundedMins(newValue, 15));
+		var ret = AjxDateUtil._pad(AjxDateUtil.getRoundedMins(newValue, 5));
 		return ret;
 	};
 	this.items[2].type = _DWT_SELECT_;
 	this.items[2].errorLocation = _INHERIT_;
 }
-Dwt_Time_XFormItem.TIME_MINUTE_CHOICES = ["00","15","30","45"];
+Dwt_Time_XFormItem.TIME_MINUTE_CHOICES = ["00","05","10","15","20","25","30","35","40","45","50","55"];
 XFormItemFactory.createItemType("_DWT_TIME_", "dwt_time", Dwt_Time_XFormItem, Time_XFormItem);
 
 
