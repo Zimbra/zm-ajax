@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- *
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
- *
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- *
  * ***** END LICENSE BLOCK *****
  */
 
@@ -754,12 +752,13 @@ function() {
 	}
 }
 
+DwtHtmlEditor.prototype.TEXTAREA_CLASSNAME = "DwtHtmlEditorTextArea";
 DwtHtmlEditor.prototype._initTextMode =
 function(ignorePendingContent) {
 	var htmlEl = this.getHtmlElement();
 	this._textAreaId = "textarea_" + Dwt.getNextId();
 	var textArea = document.createElement("textarea");
-	textArea.className = "DwtHtmlEditorTextArea";
+	textArea.className = this.TEXTAREA_CLASSNAME;
 	textArea.id = this._textAreaId;
 	htmlEl.appendChild(textArea);
 
@@ -1634,39 +1633,40 @@ function() {
 //    - text
 //    - title
 DwtHtmlEditor.prototype.insertLink = function(params) {
-        	var doc  = this._getIframeDoc();
-		    var content =  (AjxEnv.isIE && doc && doc.body) ? (doc.body.innerHTML) : "";
 
-		    if(AjxEnv.isIE && content == ""){
+    var doc  = this._getIframeDoc();
+    var content =  (AjxEnv.isIE && doc && doc.body) ? (doc.body.innerHTML) : "";
 
-		        var a = doc.createElement("a");
-		        a.href = params.url;
-		        if (params.title) a.title = params.title;
+    if(AjxEnv.isIE && content == ""){
 
-		        var tNode = doc.createTextNode(params.text);
+        var a = doc.createElement("a");
+        a.href = params.url;
+        if (params.title) a.title = params.title;
 
-		        a.appendChild(tNode);
-		        doc.body.appendChild(a);				
-				return a;
-				
-		    }else{
-		        if (params.text)
-		            this.insertText(params.text, true);
-		        var url = "javascript:" + Dwt.getNextId();
-		        this._execCommand("createlink", url);
-		        var a = doc.getElementsByTagName("a");
-		        var link;
-		        for (var i = a.length; --i >= 0;) {
-		            if (a[i].href == url) {
-		                link = a[i];
-		                break;
-		            }
-		        }
-		        link.href = params.url;
-		        if (params.title)
-		            link.title = params.title;
-		        return link;
-		    }
+        var tNode = doc.createTextNode(params.text);
+
+        a.appendChild(tNode);
+        doc.body.appendChild(a);
+        return a;
+
+    }else{
+        if (params.text)
+            this.insertText(params.text, true);
+        var url = "javascript:" + Dwt.getNextId();
+        this._execCommand("createlink", url);
+        var a = doc.getElementsByTagName("a");
+        var link;
+        for (var i = a.length; --i >= 0;) {
+            if (a[i].href == url) {
+                link = a[i];
+                break;
+            }
+        }
+        link.href = params.url;
+        if (params.title)
+            link.title = params.title;
+        return link;
+    }
 };
 
 // if the caret/selection is currently a link, select it and return its properties
