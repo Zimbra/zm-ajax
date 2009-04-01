@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -22,24 +24,22 @@
 * @author Greg Solovyev
 **/
 
-DwtPropertyPage = function(params) {
+DwtPropertyPage = function(parent, className, posStyle) {
 	if (arguments.length == 0) return;
-	params = Dwt.getParams(arguments, DwtPropertyPage.PARAMS);
-	params.className = params.className || "DwtPropertyPage";
-	DwtComposite.call(this, params);
+	var clsName = className || "DwtPropertyPage";
+	DwtComposite.call(this, {parent:parent, className:className, posStyle:posStyle});
 	this._fieldIds = new Object();
 	this._fildDivIds = new Object();
 	this._isDirty = false;
-};
+}
 
 DwtPropertyPage.prototype = new DwtComposite;
 DwtPropertyPage.prototype.constructor = DwtPropertyPage;
 
-DwtPropertyPage.prototype.toString = function() {
+DwtPropertyPage.prototype.toString = 
+function() {
 	return "DwtPropertyPage";
-};
-
-DwtPropertyPage.PARAMS = DwtComposite.PARAMS;
+}
 
 /**
 * @param boolean

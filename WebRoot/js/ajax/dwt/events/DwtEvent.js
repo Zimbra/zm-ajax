@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -193,7 +195,7 @@ DwtEvent.XFORMS_VALUE_CHANGED		= "xforms-value-changed";
 DwtEvent.XFORMS_FORM_DIRTY_CHANGE	= "xforms-form-dirty-change";
 DwtEvent.XFORMS_CHOICES_CHANGED		= "xforms-choices-changed";
 DwtEvent.XFORMS_VALUE_ERROR			= "xforms-value-error";
-DwtEvent.XFORMS_INSTANCE_CHANGED 	= "xforms-instance-cahnged"; //fires when a new instance is applied to the form
+
 // Convenience lists
 /** Array of key event types
  * @type Array*/
