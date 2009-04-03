@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -31,11 +33,17 @@ DwtConfirmDialog = function(parent, className) {
 DwtConfirmDialog.prototype = new DwtDialog;
 DwtConfirmDialog.prototype.constructor = DwtConfirmDialog;
 
-DwtConfirmDialog.prototype.toString =
-function() {
+DwtConfirmDialog.prototype.toString = function() {
 	return "DwtConfirmDialog";
 };
 
+// Data
+
+DwtConfirmDialog.prototype._questionDiv;
+
+DwtConfirmDialog.prototype._yesCallback;
+DwtConfirmDialog.prototype._noCallback;
+DwtConfirmDialog.prototype._cancelCallback;
 
 // Public methods
 
@@ -61,33 +69,26 @@ function(questionHtml, yesCallback, noCallback, cancelCallback, loc) {
 	DwtDialog.prototype.popup.call(this, loc);
 };
 
-DwtConfirmDialog.prototype.popdown =
-function() {
+DwtConfirmDialog.prototype.popdown = function() {
 	this._yesCallback = this._noCallback = this._cancelCallback = null;
 	DwtDialog.prototype.popdown.call(this);
 };
 
 // Protected methods
 
-DwtConfirmDialog.prototype._handleYesButton =
-function(ev) {
+DwtConfirmDialog.prototype._handleYesButton = function(ev) {
 	if (this._yesCallback) this._yesCallback.run(ev);
 	this.popdown();
 };
-
-DwtConfirmDialog.prototype._handleNoButton =
-function(ev) {
+DwtConfirmDialog.prototype._handleNoButton = function(ev) {
 	if (this._noCallback) this._noCallback.run(ev);
 	this.popdown();
 };
-
-DwtConfirmDialog.prototype._handleCancelButton =
-function(ev) {
+DwtConfirmDialog.prototype._handleCancelButton = function(ev) {
 	if (this._cancelCallback) this._cancelCallback.run(ev);
 	this.popdown();
 };
 
-DwtConfirmDialog.prototype._getSeparatorTemplate =
-function() {
+DwtConfirmDialog.prototype._getSeparatorTemplate = function() {
 	return "";
 };

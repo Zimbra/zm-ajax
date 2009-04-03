@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -124,17 +126,15 @@ function() {
 	    var numFound = 0;
 	    for(var namesCounter=0; namesCounter < names.length; namesCounter++) {
 			// if desired plugin name is found in either plugin name or description
-			if (allPlugins[pluginsArrayCounter]) {
-				if( (allPlugins[pluginsArrayCounter].name.indexOf(names[namesCounter]) >= 0)) {
-					// this name was found
-					DBG.println("AjxPluginDetector: found name match '" + allPlugins[pluginsArrayCounter].name + "'");
-					numFound++;
-				} else if (allPlugins[pluginsArrayCounter].description.indexOf(names[namesCounter]) >= 0) {
-					// this name was found
-					DBG.println("AjxPluginDetector: found description match '" + allPlugins[pluginsArrayCounter].description + "'");
-					numFound++;
-				}
-			}
+			if( (allPlugins[pluginsArrayCounter].name.indexOf(names[namesCounter]) >= 0)) {
+				// this name was found
+				DBG.println("AjxPluginDetector: found name match '" + allPlugins[pluginsArrayCounter].name + "'");
+				numFound++;
+			} else if (allPlugins[pluginsArrayCounter].description.indexOf(names[namesCounter]) >= 0) {
+			    // this name was found
+				DBG.println("AjxPluginDetector: found description match '" + allPlugins[pluginsArrayCounter].description + "'");
+				numFound++;
+			}   
 	    }
 	    // now that we have checked all the required names against this one plugin,
 	    // if the number we found matches the total number provided then we were successful
