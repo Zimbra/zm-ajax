@@ -1,15 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ *
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
  * ***** END LICENSE BLOCK *****
  */
 /**
@@ -111,7 +113,7 @@ DwtControl = function(params) {
 	/** @private */
 	this.__index = params.index;
 
-	this.__parentElement = params.parentElement;
+        this.__parentElement = params.parentElement;
 
 	/** enabled state of this control. Public APIs to this member are
 	 * <code>getEnabled</code> and <code>setEnabled</code>
@@ -153,12 +155,9 @@ DwtControl = function(params) {
 
 	// set to true to ignore OVER and OUT mouse events between elements in the same control
 	this._ignoreInternalOverOut = false;
+}
 
-	// override this control's default template
-	this.TEMPLATE = params.template || this.TEMPLATE;
-};
-
-DwtControl.PARAMS = ["parent", "className", "posStyle", "deferred", "id", "index", "template"];
+DwtControl.PARAMS = ["parent", "className", "posStyle", "deferred", "id", "index"];
 
 DwtControl.ALL_BY_ID = {};
 
@@ -450,17 +449,14 @@ function(eventType, event) {
  */
 DwtControl.prototype.dispose =
 function() {
-	if (this._disposed) { return; }
+	if (this._disposed) return;
 
 	if (this.parent != null && this.parent instanceof DwtComposite) {
 		this.parent.removeChild(this);
 	}
 	this._elRef = null;
-	
-	if (DwtControl.ALL_BY_ID) {
-		DwtControl.ALL_BY_ID[this._htmlElId] = null;
-		delete DwtControl.ALL_BY_ID[this._htmlElId];
-	}
+	DwtControl.ALL_BY_ID[this._htmlElId] = null;
+	delete DwtControl.ALL_BY_ID[this._htmlElId];
 
 	this._disposed = true;
 	var ev = new DwtDisposeEvent();
@@ -469,7 +465,7 @@ function() {
 };
 
 /**
- * This method is deprecated. Please use "document" directly.
+ * This method is deprecated. Please use "document" directly in
  * @deprecated
  */
 DwtControl.prototype.getDocument =
@@ -740,8 +736,7 @@ function(x, y, width, height) {
 		this.__controlEvent.oldY = bds.y;
 		this.__controlEvent.oldWidth = bds.width;
 		this.__controlEvent.oldHeight = bds.height;
-		this.setLocation(x, y);
-		this.setSize(width, height);
+		Dwt.setBounds(htmlElement, x, y, width, height);
 		bds = Dwt.getBounds(htmlElement);
 		this.__controlEvent.newX = bds.x;
 		this.__controlEvent.newY = bds.y;
@@ -751,8 +746,7 @@ function(x, y, width, height) {
 		this.__controlEvent.requestedHeight = height;
 		this.notifyListeners(DwtEvent.CONTROL, this.__controlEvent);
 	} else {
-		this.setLocation(x, y);
-		this.setSize(width, height);
+		Dwt.setBounds(htmlElement, x, y, width, height);
 	}
 
 	return this;
@@ -846,27 +840,6 @@ function(state) {
         this._displayState = state;
         Dwt.delClass(this.getHtmlElement(), DwtControl._RE_STATES, state);
     }
-};
-
-/**
-* Adds an alert style to the control, for example to indicate that a new message has arrived.
-*/
-DwtControl.prototype.showAlert =
-function(alert) {
-	if (alert && !this._alert) {
-		this.delClassName(null, "ZAlert");
-	} else if (!alert && this._alert) {
-		this.delClassName("ZAlert", null);
-	}
-	this._alert = alert;
-};
-
-/**
-* Returns true if the control is showing an alert.
-*/
-DwtControl.prototype.isAlertShown =
-function() {
-	return this._alert;
 };
 
 DwtControl.prototype._createHtmlFromTemplate =
@@ -1017,7 +990,7 @@ function(enabled, setHtmlElement) {
 DwtControl.prototype.getHTMLElId =
 function () {
 	return this._htmlElId;
-};
+}
 
 /**
  * Returns the control's containing HTML element. By default this is a div element
@@ -1046,7 +1019,7 @@ function() {
  */
 DwtControl.fromElement =
 function(htmlEl)  {
-	return DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlEl.id];
+	return DwtControl.ALL_BY_ID[htmlEl.id];
 };
 
 /**
@@ -1056,7 +1029,7 @@ function(htmlEl)  {
  */
 DwtControl.fromElementId =
 function(htmlElId)  {
-	return DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlElId];
+	return DwtControl.ALL_BY_ID[htmlElId];
 };
 
 /**
@@ -1457,30 +1430,38 @@ function(width, height) {
 };
 
 /**
- * Returns static tooltip content (typically set using setToolTipContent). Controls
- * that want to return dynamic tooltip content should override this method.
- *
- * @param ev	[DwtEvent]		mouseover event
  * @return the tooltip content set for the control
  * @type String
  */
 DwtControl.prototype.getToolTipContent =
-function(ev) {
+function() {
 	if (this._disposed) { return; }
 
-	return this.__toolTipContent;
+	return this.__toolTipCallback ? this.__toolTipCallback.run() : this.__toolTipContent;
 };
 
 /**
- * Sets static tooltip content for the control. The content may be plain text or HTML.
+ * Sets the tooltip content for the control. The content may be plain text of HTML
  *
- * @param {String|AjxCallback} tooltip content or callback that specifies the content
+ * @param {String} text
  */
 DwtControl.prototype.setToolTipContent =
 function(text) {
 	if (this._disposed) { return; }
 
 	this.__toolTipContent = text;
+};
+
+/**
+ * Sets a callback that will return the tooltip content for the control.
+ * The content may be plain text of HTML
+ *
+ * @param {AjxCallback} callback
+ */
+DwtControl.prototype.setToolTipCallback =
+function(callback) {
+	if (this._disposed) { return; }
+	this.__toolTipCallback = callback;
 };
 
 /**
@@ -1744,7 +1725,7 @@ function() {
  * @see #focus
  */
 DwtControl.prototype._focusByMouseUpEvent =
-function(ev)  {
+function()  {
  	if (this.getEnabled()) {
  		this.focus();
  	}
@@ -1754,8 +1735,8 @@ function(ev)  {
 // TODO: we should remove _focusByMouseUpEvent and update all classes
 // that define it to use _focusByMouseDownEvent instead
 DwtControl.prototype._focusByMouseDownEvent =
-function(ev) {
-	this._focusByMouseUpEvent(ev);
+function() {
+	this._focusByMouseUpEvent();
 };
 
 /**
@@ -1782,7 +1763,7 @@ function(ev) {
  */
 DwtControl.prototype._getDragProxy =
 function(dragOp) {
-	DBG.println(AjxDebug.DBG2, "DwtControl.prototype._getDragProxy");
+	DBG.println("DwtControl.prototype._getDragProxy");
 	return null;
 };
 
@@ -2119,144 +2100,14 @@ function(ev) {
  */
 DwtControl.prototype._checkState =
 function() {
-	if (this._disposed) { return false; }
-	if (!this.__ctrlInited) {
+	if (this._disposed) return false;
+	if (!this.__ctrlInited)
 		this.__initCtrl();
-	}
 	return true;
 };
 
-/**
- * Positions this control at the given point. If no location is provided, centers it
- * within the shell.
- *
- * @param loc	[DwtPoint]*		point at which to position this control
- */
-DwtControl.prototype._position =
-function(loc) {
-	this._checkState();
-	var sizeShell = this.shell.getSize();
-	var sizeThis = this.getSize();
-	var x, y;
-	if (!loc) {
-		// if no location, go for the middle
-		x = Math.round((sizeShell.x - sizeThis.x) / 2);
-		y = Math.round((sizeShell.y - sizeThis.y) / 2);
-	} else {
-		x = loc.x;
-		y = loc.y;
-	}
-	// try to stay within shell boundaries
-	if ((x + sizeThis.x) > sizeShell.x) {
-		x = sizeShell.x - sizeThis.x;
-	}
-	if ((y + sizeThis.y) > sizeShell.y) {
-		y = sizeShell.y - sizeThis.y;
-	}
-	this.setLocation(x, y);
-};
 
-/**
- * Resets the scrollTop of container (if necessary) to ensure that element is visible.
- * 
- * @param element		[Element]		the element to be made visible
- * @param container		[Element]		the containing element to possibly scroll
- */
-DwtControl._scrollIntoView =
-function(element, container) {
-	var elementTop = Dwt.toWindow(element, 0, 0, null, null, DwtPoint.tmp).y;
-	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y + container.scrollTop;
 
-	var diff = elementTop - containerTop;
-	if (diff < 0) {
-		container.scrollTop += diff;
-	} else {
-		var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
-		var elementH = Dwt.getSize(element, DwtPoint.tmp).y;
-		diff = (elementTop + elementH) - (containerTop + containerH);
-		if (diff > 0) {
-			container.scrollTop += diff;
-		}
-	}
-};
-
-/**
- * Handles scrolling of a drop area for an object being dragged. The scrolling is based on proximity to
- * the top or bottom edge of the area (only vertical scrolling is done). The scrolling is done via a
- * looping timer, so that the scrolling is smooth and does not depend on additional mouse movement.
- *
- * @param params		[hash]			hash of params:
- *        container		[Element]		DOM element that may need to be scrolled
- *        threshold		[int]			if mouse is within this many pixels of top or bottom of container,
- * 										check if scrolling is needed
- *        amount		[int]			number of pixels to scroll at each interval
- *        interval		[int]			number of ms to wait before continuing to scroll
- *        id			[string]		ID for determing if we have moved out of container
- * @param ev
- */
-DwtControl._dndScrollCallback =
-function(params, ev) {
-
-	var container = params.container;
-	if (!container) { return; }
-
-	// stop scrolling if mouse has moved out of the scrolling area, or dnd object has been released;
-	// a bit tricky because this callback is run as the mouse moves among objects within the scroll area,
-	// so we need to see if mouse has moved from within to outside of scroll area
-	var dwtObjId = ev.dwtObj && ev.dwtObj._dndScrollId;
-	if (ev.type == "mouseup" || !dwtObjId || (params.id && dwtObjId != params.id)) {
-		if (container._dndScrollActionId != -1) {
-			AjxTimedAction.cancelAction(container._dndScrollActionId);
-			container._dndScrollActionId = -1;
-		}
-		return;
-	}
-
-	container._scrollAmt = 0;
-	if (container.clientHeight < container.scrollHeight) {
-		var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y;
-		var realTop = containerTop + container.scrollTop;
-		var scroll = container.scrollTop;
-		var diff = ev.docY - realTop; // do we need to scroll up?
-		var scrollAmt = (diff <= params.threshold) ? -1 * params.amount : 0;
-		if (scrollAmt == 0) {
-			var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
-			var containerBottom = realTop + containerH;
-			diff = containerBottom - ev.docY; // do we need to scroll down?
-			scrollAmt = (diff <= params.threshold) ? params.amount : 0;
-		}
-		container._scrollAmt = scrollAmt;
-		if (scrollAmt) {
-			if (!container._dndScrollAction) {
-				container._dndScrollAction = new AjxTimedAction(null, DwtControl._dndScroll, [params]);
-				container._dndScrollActionId = -1;
-			}
-			// launch scrolling loop
-			if (container._dndScrollActionId == -1) {
-				container._dndScrollActionId = AjxTimedAction.scheduleAction(container._dndScrollAction, 0);
-			}
-		} else {
-			// stop scrolling
-			if (container._dndScrollActionId != -1) {
-				AjxTimedAction.cancelAction(container._dndScrollActionId);
-				container._dndScrollActionId = -1;
-			}
-		}
-	}
-};
-
-DwtControl._dndScroll =
-function(params) {
-	var container = params.container;
-	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y;
-	var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
-	var scroll = container.scrollTop;
-	// if we are to scroll, make sure there is more scrolling to be done
-	if ((container._scrollAmt < 0 && scroll > 0) || (container._scrollAmt > 0 && (scroll + containerH < container.scrollHeight))) {
-		container.scrollTop += container._scrollAmt;
-		container._dndScrollActionId = AjxTimedAction.scheduleAction(container._dndScrollAction, params.interval);
-	}
-};
 
 /**
  * @private
@@ -2276,9 +2127,8 @@ function(ev) {
 };
 
 /**
- * Returns true if the control has static tooltip content, or if it has overridden
- * getToolTipContent() to return dynamic content. Essentially, it means that this
- * control provides tooltips and will need to use the hover mgr.
+ * @return true if the control does have tooltip content.
+ * @type Boolean
  *
  * @private
  */
@@ -2286,7 +2136,7 @@ DwtControl.prototype.__hasToolTipContent =
 function() {
 	if (this._disposed) { return false; }
 
-	return Boolean(this.__toolTipContent || (this.getToolTipContent != DwtControl.prototype.getToolTipContent));
+	return Boolean(this.__toolTipCallback || this.__toolTipContent);
 };
 
 /**
@@ -2378,7 +2228,7 @@ function(ev, evType) {
 			if ((!manager.isHovering() || manager.getHoverObject() != obj) && !DwtMenu.menuShowing()) {
 				manager.reset();
 				manager.setHoverObject(obj);
-				manager.setHoverOverData(mouseEv);
+				manager.setHoverOverData(obj);
 				manager.setHoverOverDelay(DwtToolTip.TOOLTIP_DELAY);
 				manager.setHoverOverListener(obj._hoverOverListener);
 				manager.hoverOver(mouseEv.docX, mouseEv.docY);
@@ -2407,8 +2257,7 @@ function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
 	if (!obj) { return false; }
 
-	ev = DwtUiEvent.getEvent(ev);
-	obj._focusByMouseDownEvent(ev);
+	obj._focusByMouseDownEvent();
 
 	if (obj.__hasToolTipContent()) {
 		var shell = DwtShell.getShell(window);
@@ -2535,7 +2384,9 @@ function(ev) {
 						obj._setDragProxyState(true);
 						obj.__dropAllowed = true;
 						destDwtObj._dragEnter(mouseEv);
-					} else {
+					}
+					else
+					{
 						obj._setDragProxyState(false);
 						obj.__dropAllowed = false;
 					}
@@ -2550,20 +2401,11 @@ function(ev) {
 				&& obj.__lastDestDwtObj._dropTarget
 				&& obj.__lastDestDwtObj != obj) {
 
-				// check if obj dragged out of scrollable container
-				if (destDwtObj && !destDwtObj._dndScrollCallback && obj.__lastDestDwtObj._dndScrollCallback) {
-					obj.__lastDestDwtObj._dndScrollCallback.run(mouseEv);
-				}
-
 				obj.__lastDestDwtObj._dragLeave(mouseEv);
 				obj.__lastDestDwtObj._dropTarget._dragLeave();
 			}
 
 			obj.__lastDestDwtObj = destDwtObj;
-
-			if ((destDwtObj != obj) && destDwtObj && destDwtObj._dndScrollCallback) {
-				destDwtObj._dndScrollCallback.run(mouseEv);
-			}
 
 			Dwt.setLocation(obj._dndProxy, mouseEv.docX + 2, mouseEv.docY + 2);
 			// TODO set up timed event to fire off another mouseover event.
@@ -2600,14 +2442,14 @@ function(ev) {
 	var mouseEv = DwtShell.mouseEvent;
 	mouseEv.setFromDhtmlEvent(ev, captureObj ? true : obj);
 	if (!obj._dragSource || !captureObj) {
-		//obj._focusByMouseUpEvent(ev);
+		//obj._focusByMouseUpEvent();
 		return DwtControl.__processMouseUpEvent(ev, obj, mouseEv);
 
 	} else {
 		captureObj.release();
 		if (obj._dragging != DwtControl._DRAGGING) {
 			obj._dragging = DwtControl._NO_DRAG;
-			//obj._focusByMouseUpEvent(ev);
+			//obj._focusByMouseUpEvent();
 			return DwtControl.__processMouseUpEvent(ev, obj, mouseEv);
 		} else {
 			obj.__lastDestDwtObj = null;
@@ -2620,28 +2462,6 @@ function(ev) {
 				obj._destroyDragProxy(obj._dndProxy);
 				obj._dragging = DwtControl._NO_DRAG;
 			} else {
-				DwtControl.__badDrop(obj, mouseEv);
-			}
-			if (destDwtObj._dndScrollCallback) {
-				destDwtObj._dndScrollCallback.run(mouseEv);
-			}
-			mouseEv._stopPropagation = true;
-			mouseEv._returnValue = false;
-			mouseEv.setToDhtmlEvent(ev);
-			return false;
-		}
-	}
-};
-
-/**
- * Handles a bad DND drop operation by showing an animation of the icon flying
- * back to its origin.
- * 
- * @param obj		[DwtControl]	control that underlies drag operation
- * @param mouseEv	[DwtMouseEvent]	mouse event
- */
-DwtControl.__badDrop =
-function(obj, mouseEv) {
 	obj._dragSource._cancelDrag();
 	// The following code sets up the drop effect for when an
 	// item is dropped onto an invalid target. Basically the
@@ -2656,6 +2476,13 @@ function(obj, mouseEv) {
 	var m = (obj.__dragEndY - obj.__dragStartY) / (obj.__dragEndX - obj.__dragStartX);
 	obj.__badDropAction.args = [m, obj.__dragStartY - (m * obj.__dragStartX), (obj.__dragStartX - obj.__dragEndX < 0) ? -1 : 1];
 	AjxTimedAction.scheduleAction(obj.__badDropAction, 0);
+			}
+			mouseEv._stopPropagation = true;
+			mouseEv._returnValue = false;
+			mouseEv.setToDhtmlEvent(ev);
+			return false;
+		}
+	}
 };
 
 /**
@@ -2709,9 +2536,9 @@ function(ev, evType) {
 	if (obj.__hasToolTipContent()) {
 		var shell = DwtShell.getShell(window);
 		var manager = shell.getHoverMgr();
-			manager.setHoverOutListener(obj._hoverOutListener);
-			manager.hoverOut();
-			obj.__tooltipClosed = false;
+		manager.setHoverOutListener(obj._hoverOutListener);
+		manager.hoverOut();
+		obj.__tooltipClosed = false;
 	}
 	return DwtControl.__mouseEvent(ev, evType || DwtEvent.ONMOUSEOUT, obj);
 };
@@ -2820,13 +2647,11 @@ function() {
 	var htmlElement = this._elRef = document.createElement("div");
 	// __internalId is for back-compatibility (was side effect of Dwt.associateElementWithObject)
 	this._htmlElId = htmlElement.id = this.__internalId = this._htmlElId || Dwt.getNextId();
-	if (DwtControl.ALL_BY_ID) {
-		if (DwtControl.ALL_BY_ID[this._htmlElId]) {
-			DBG.println(AjxDebug.DBG1, "Duplicate ID for " + this.toString() + ": " + this._htmlElId);
-			this._htmlElId = htmlElement.id = this.__internalId = DwtId._makeId(this._htmlElId, Dwt.getNextId());
-		}
-		DwtControl.ALL_BY_ID[this._htmlElId] = this;
+	if (DwtControl.ALL_BY_ID[this._htmlElId]) {
+		DBG.println(AjxDebug.DBG1, "Duplicate ID for " + this.toString() + ": " + this._htmlElId);
+		this._htmlElId = htmlElement.id = this.__internalId = DwtId._makeId(this._htmlElId, Dwt.getNextId());
 	}
+	DwtControl.ALL_BY_ID[this._htmlElId] = this;
 	DwtComposite._pendingElements[this._htmlElId] = htmlElement;
 	if (this.__posStyle == null || this.__posStyle == DwtControl.STATIC_STYLE) {
         htmlElement.style.position = DwtControl.STATIC_STYLE;
@@ -2881,60 +2706,22 @@ function(m, c, d) {
 };
 
 /**
- * Attempts to display a tooltip for this control, triggered by the cursor having been
- * over the control for a period of time. The tooltip may have already been set (if it's
- * a static tooltip). For dynamic tooltip content, the control implements getToolTipContent()
- * to return the content or a callback. It should return a callback if it makes an
- * async server call to get data.
- *
  * @private
  */
 DwtControl.prototype.__handleHoverOver =
 function(event) {
-
 	if (this._eventMgr.isListenerRegistered(DwtEvent.HOVEROVER)) {
 		this._eventMgr.notifyListeners(DwtEvent.HOVEROVER, event);
 	}
-
-	var mouseEv = event && event.object;
-	var tooltip = this.getToolTipContent(mouseEv);
-	var content, callback;
-	if (!tooltip) {
-		content = "";
-	} else if (typeof(tooltip) == "string") {
-		content = tooltip;
-	} else if (tooltip instanceof AjxCallback) {
-		callback = tooltip;
-	} else if (typeof(tooltip) == "object") {
-		content = tooltip.content;
-		callback = tooltip.callback;
+	if (this.__hasToolTipContent()) {
+		var shell = DwtShell.getShell(window);
+		var tooltip = shell.getToolTip();
+		tooltip.setContent(this.getToolTipContent());
+		tooltip.popup(event.x, event.y);
+		this.__lastTooltipX = event.x;
+		this.__lastTooltipY = event.y;
+		this.__tooltipClosed = false;
 	}
-
-	if (!content && callback && tooltip.loading) {
-		content = AjxMsg.loading;
-	}
-
-	if (content) {
-		this.__showToolTip(event, content);
-	}
-
-	if (callback) {
-		var callback1 = new AjxCallback(this, this.__showToolTip, [event]);
-		AjxTimedAction.scheduleAction(new AjxTimedAction(null, function() { callback.run(callback1); }), 0);
-	}
-};
-
-DwtControl.prototype.__showToolTip =
-function(event, content) {
-
-	if (!content) { return; }
-	var shell = DwtShell.getShell(window);
-	var tooltip = shell.getToolTip();
-	tooltip.setContent(content);
-	tooltip.popup(event.x, event.y);
-	this.__lastTooltipX = event.x;
-	this.__lastTooltipY = event.y;
-	this.__tooltipClosed = false;
 };
 
 /**
@@ -2968,20 +2755,15 @@ function(targetEl) {
 	return bIsInput;
 };
 
-
-// onunload hacking
-DwtControl.ON_UNLOAD =
-function() {
-	// break widget-element references
-	var h = DwtControl.ALL_BY_ID, i;
-	for (i in h) {
-		h[i]._elRef = null;
-	}
-	DwtControl.ALL_BY_ID = null;
+DwtControl.ON_UNLOAD = function() {
+        // break widget-element references
+        var h = DwtControl.ALL_BY_ID, i;
+        for (i in h)
+                h[i]._elRef = null;
+        DwtControl.ALL_BY_ID = null;
 };
 
-if (AjxEnv.isIE) {
-	window.attachEvent("onunload", DwtControl.ON_UNLOAD);
-} else {
-	window.addEventListener("unload", DwtControl.ON_UNLOAD, false);
-}
+if (AjxEnv.isIE)
+        window.attachEvent("onunload", DwtControl.ON_UNLOAD);
+else
+        window.addEventListener("unload", DwtControl.ON_UNLOAD, false);
