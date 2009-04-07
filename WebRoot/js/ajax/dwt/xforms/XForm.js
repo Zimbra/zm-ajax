@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -119,12 +121,12 @@ var _VISIBLE_ = "visible";
 /**
 * update the form with new values
 *  NOTE: this will be done automatically if you do a {@link #setInstance}
-* This method is costly and should not be called unless the whole form needs to be refreshed.
-* When a single or several values are changed on a form - use change events.
 **/
 XForm.prototype.refresh = function () {
-	if(this.__drawn)
-		this.updateElementStates();
+	// EMC 07/31/2005 -- I don't think we want to clear errors on every refresh
+	// since this is called from itemChanged.
+	//this.clearErrors();
+	this.updateScript();
 }
 
 
@@ -185,7 +187,7 @@ XForm.prototype.focusFirst = function(currentTabId) {
 		tabIdOrder = this.tabIdOrder[currentTabId];
 	} else {
 		for(var a in this.tabIdOrder) {
-			if(this.getItemById(a).getIsVisible() && this.getItemById(a).getIsEnabled() && this.tabIdOrder[a] && this.tabIdOrder[a].length > 0) {
+			if(this.getItemById(a).isRelevant() && this.tabIdOrder[a] && this.tabIdOrder[a].length > 0) {
 				tabIdOrder = this.tabIdOrder[a];
 				break;
 			}
@@ -195,7 +197,7 @@ XForm.prototype.focusFirst = function(currentTabId) {
 		var cnt = tabIdOrder.length;
 		for (var i = 0; i < cnt; i++) {
 			var nextItem = this.getItemById(tabIdOrder[i]);
-			if(nextItem && nextItem.focusable && nextItem.getIsVisible() && nextItem.getIsEnabled()) {
+			if(nextItem && nextItem.focusable && nextItem.isRelevant()) {
 				this.focusElement(tabIdOrder[i]);
 				break;
 			}
@@ -203,9 +205,8 @@ XForm.prototype.focusFirst = function(currentTabId) {
 	}
 }
 
-XForm.prototype.addTabGroup = function(item, tabGroupKeyAttr) {
-	tabGroupKeyAttr = tabGroupKeyAttr ? tabGroupKeyAttr : "tabGroupKey";
-	var tabGroupKey = item.getInheritedProperty(tabGroupKeyAttr) ? item.getInheritedProperty(tabGroupKeyAttr) : item.getId();
+XForm.prototype.addTabGroup = function(item) {
+	var tabGroupKey = item.getInheritedProperty("tabGroupKey") ? item.getInheritedProperty("tabGroupKey") : item.getId();
 	this.tabGroupIDs[tabGroupKey] = item.getId();
 }
 
@@ -228,7 +229,7 @@ XForm.prototype.focusNext = function(id, currentTabId) {
 					var elIndex = ((i+1) % cnt);
 					if(tabIdOrder[elIndex]) {
 						var nextEl = this.getItemById(tabIdOrder[elIndex]);
-						if(nextEl.focusable && nextEl.getIsVisible() && nextEl.getIsEnabled()) {
+						if(nextEl.focusable && nextEl.isRelevant()) {
 							this.focusElement(tabIdOrder[elIndex]);
 							found=true;
 							break;
@@ -264,7 +265,7 @@ XForm.prototype.focusPrevious = function(id, currentTabId) {
 					var elIndex = ((i-1) % cnt);
 					if(tabIdOrder[elIndex]) {
 						var nextEl = this.getItemById(tabIdOrder[elIndex]);
-						if(nextEl.focusable && nextEl.getIsVisible()  && nextEl.getIsEnabled()) {
+						if(nextEl.focusable && nextEl.isRelevant()) {
 							this.focusElement(tabIdOrder[elIndex]);
 							found=true;
 							break;
@@ -289,56 +290,20 @@ XForm.prototype.setModel = function (model) {
 	this.xmodel = model;
 }
 
+
+
 XForm.prototype.getInstance = function () {
 	return this.instance;
 }
-
-XForm.prototype.updateElementStates = function () {
-	if(!this.__drawn)
-		return;
-		
-	this.items[0].updateVisibility();
-	this.items[0].updateEnabledDisabled();
-	this.items[0].updateElement();
-}
-
 XForm.prototype.setInstance = function(instance) {
 	this.setIsDirty(false);
 	this.clearErrors();
 	this.instance = instance;
-	if(this.__drawn)
-		this.updateElementStates();
-	else
-		this.__updateStatesDelayed = true;
-		
 	if (this.__drawn) {
-		this.notifyListeners(DwtEvent.XFORMS_INSTANCE_CHANGED, new DwtXFormsEvent(this));
+		this.refresh();
 	}
 }
 
-XForm.prototype.getInstance = function() {
-	return this.instance;
-}
-
-XForm.prototype.setInstanceValue = function(val, refPath) {
-	this.xmodel.setInstanceValue(this.instance,refPath,val);
-}
-
-XForm.checkInstanceValue = function(refPath,val) {
-	return (this.getInstanceValue(refPath) == val);
-}
-
-XForm.checkInstanceValueNot = function(refPath,val) {
-	return (this.getInstanceValue(refPath) != val);
-}
-
-XForm.checkInstanceValueEmty = function(refPath) {
-	return AjxUtil.isEmpty(this.getInstanceValue(refPath));
-}
-
-XForm.checkInstanceValueNotEmty = function(refPath) {
-	return !AjxUtil.isEmpty(this.getInstanceValue(refPath));
-}
 
 XForm.prototype.getController = function () {
 	return this.controller;
@@ -387,7 +352,9 @@ XForm.prototype.initializeItems = function() {
 	}
 	this.items = this.initItemList([outerGroup]);
 	
-	this.__itemsAreInitialized = true;
+	// we wait to initialize items until the form is drawn, for speed
+
+	this.__itemsAreInitialized = false;
 }
 
 
@@ -435,6 +402,8 @@ XForm.prototype.indexItem = function(item, id) {
 	}
 	this.__externalIdIndex[exId] = arr;
 }
+
+
 // refPath is ignored
 // This is probably not useful to an Xforms client --
 // use getItemsById instead.
@@ -490,6 +459,13 @@ XForm.prototype.draw = function (parentElement) {
 	//	if not, you'll have call put HTML somewhere and call the scripts yourself
 	if (parentElement) {
 		parentElement.innerHTML = formOutput;
+
+
+		if (this.instance != null) {
+			// run the updateScript
+			this.refresh();
+//			setTimeout(this.getGlobalRef()+ ".refresh()", 1000);
+		}
 	}
 	
 	// notify any listeners that we're "ready"
@@ -498,11 +474,6 @@ XForm.prototype.draw = function (parentElement) {
 	// remember that we've been drawn
 	this.__drawn = true;
 	// and we're done!
-	
-	if(this.__updateStatesDelayed && this.instance) {
-		this.updateElementStates();
-		this.__updateStatesDelayed = false;
-	}	
 }
 
 
@@ -530,6 +501,7 @@ XForm.prototype.outputForm = function () {
 	this._itemsToInsert = {};
 	this._itemsToCleanup = [];
 
+	var updateScript = new AjxBuffer();		// holds the script to populate values and show/hide elements based on relevant attibute
 	
 	DBG.timePt("starting outputItemList");
 	// in initializeItems(), we guaranteed that there was a single outer item
@@ -537,8 +509,10 @@ XForm.prototype.outputForm = function () {
 	//	the form level.  Just output that (and it will output all children)
 
 	// output the actual items of the form
-	this.outputItemList(items[0].items, items[0], html, this.numCols);
+	this.outputItemList(items[0].items, items[0], html, updateScript, this.numCols);
 	DBG.timePt("finished outputItemList");
+	this.makeUpdateScript(updateScript);
+	DBG.timePt("finished makeUpdateScript");
 	html.append("</div id=\"", this.__id,"\">");
 
 	// save the HTML in this.__html (for debugging and such)
@@ -594,20 +568,21 @@ XForm.prototype.getOutstandingRowSpanCols = function (parentItem) {
 * @param items
 * @param parentItem
 * @param html
+* @param updateScript
 * @param numCols
 * @param currentCol
 * @param skipTable
 **/
-XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, currentCol, skipTable, skipOuter) {
+XForm.prototype.outputItemList = function (items, parentItem, html, updateScript,  numCols, currentCol, skipTable, skipOuter) {
 	if (parentItem.outputHTMLStart) {
-		parentItem.outputHTMLStart(html, currentCol);
+		parentItem.outputHTMLStart(html, updateScript, currentCol);
 	}
 	var drawTable = (parentItem.getUseParentTable() == false && skipTable != true);
 	var outerStyle = null;
 	if(!skipOuter) {
 		outerStyle = parentItem.getCssString();
 		if (outerStyle != null && outerStyle != "") {
-			parentItem.outputElementDivStart(html);
+			parentItem.outputElementDivStart(html, updateScript);
 		}
 	}
 
@@ -648,7 +623,8 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 
 		// write the beginning of the update script
 		//	(one of the routines below may want to modify it)
-		
+		item.outputUpdateScriptStart(html, updateScript);
+
 		var label = item.getLabel();
 		var labelLocation = item.getLabelLocation();
 		var showLabel = (label != null && (labelLocation == _LEFT_ || labelLocation == _RIGHT_));
@@ -670,34 +646,34 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 		// write the label to the left if desired
 		if (label != null && labelLocation == _LEFT_) {
 			//DBG.println("writing label");
-			item.outputLabelCellHTML(html, rowSpan, labelLocation);
+			item.outputLabelCellHTML(html, updateScript, rowSpan, labelLocation);
 		}
 
 		var writeElementDiv = item.getWriteElementDiv();
 		var outputMethod = item.getOutputHTMLMethod();
 		if (isNestingItem && itemUsesParentTable) {
 			// actually write out the item
-			if (outputMethod) outputMethod.call(item, html, currentCol);
+			if (outputMethod) outputMethod.call(item, html, updateScript, currentCol);
 
 		} else {
 
 			// write the cell that contains the item 
 			//	NOTE: this is currently also the container!
-			item.outputContainerTDStartHTML(html,  colSpan, rowSpan);
+			item.outputContainerTDStartHTML(html, updateScript, colSpan, rowSpan);
 	
 			// begin the element div, if required
-			if (writeElementDiv) 	item.outputElementDivStart(html);
+			if (writeElementDiv) 	item.outputElementDivStart(html, updateScript);
 			
 			// actually write out the item
-			if (outputMethod) outputMethod.call(item, html, 0);
+			if (outputMethod) outputMethod.call(item, html, updateScript, 0);
 
 	
 			// end the element div, if required
-			if (writeElementDiv) 	item.outputElementDivEnd(html);
+			if (writeElementDiv) 	item.outputElementDivEnd(html, updateScript);
 			
 	
 			// end the cell that contains the item
-			item.outputContainerTDEndHTML(html);
+			item.outputContainerTDEndHTML(html, updateScript);
 
 		}
 
@@ -706,10 +682,11 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 		// write the label to the right, if desired
 		if (label != null && labelLocation == _RIGHT_) {
 			//DBG.println("writing label");
-			item.outputLabelCellHTML(html, rowSpan);
+			item.outputLabelCellHTML(html, updateScript, rowSpan);
 		}
 		
 		// now end the update script if necessary
+		item.outputUpdateScriptEnd(html, updateScript);
 
 		if ( currentCol >= numCols) {
 			html.append( "</tr>");
@@ -724,11 +701,6 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 			html.append("</tr id='numCols'>");//\r<tr  id='numCols'>");
 			currentCol = this.getOutstandingRowSpanCols(parentItem);
 		}
-		
-		if(parentItem)
-			parentItem.registerActiveChild(item);
-			
-		item.signUpForEvents();	
 	}
 	
 	
@@ -736,12 +708,12 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 		html.append("</tbody></table>");
 	}
 	if (outerStyle != null && outerStyle != "") {
-		parentItem.outputElementDivEnd(html);
+		parentItem.outputElementDivEnd(html, updateScript);
 	}
 
 
 	if (parentItem.outputHTMLEnd) {
-		parentItem.outputHTMLEnd(html, currentCol);
+		parentItem.outputHTMLEnd(html, updateScript, currentCol);
 	}
 
 }
@@ -767,8 +739,7 @@ XForm.prototype.onBlur = function(id) {
 	this.__focusObject = null;
 }
 
-XForm.prototype.itemChanged = function (id, value, event, quite) {
-	//console.log("XForm.prototype.itemChanged start (" + id +","+value+","+event+")");
+XForm.prototype.itemChanged = function (id, value, event) {
 	var item = this.getItemById(id);
 	if (item == null) return alert("Couldn't get item for " + id);	// EXCEPTION
 	
@@ -797,19 +768,14 @@ XForm.prototype.itemChanged = function (id, value, event, quite) {
 //		DBG.println("itemChanged(", item.ref, ").onChange = ", onChangeMethod);
 		value = onChangeMethod.call(item, value, event, this);
 	} else {
-		var oldVal = item.getInstanceValue();
-		if(oldVal == value)
-			return;
-			
 		item.setInstanceValue(value);
 	}
 	
 	var event = new DwtXFormsEvent(this, item, value);
-	if(!quite)
-		this.notifyListeners(DwtEvent.XFORMS_VALUE_CHANGED, event);
+	this.notifyListeners(DwtEvent.XFORMS_VALUE_CHANGED, event);
 
 	this.setIsDirty(true, item);
-	//console.log("XForm.prototype.itemChanged end (" + id +","+value+","+event+")");
+	this.refresh();
 }
 
 
@@ -890,12 +856,86 @@ XForm.prototype.releaseFocus = function () {
 
 
 
+//
+//	SCRIPTS:
+//		* updateScript -- sets values of items in the HTML representation 
+//	-- CALLED REPEATEDLY: ON INITIAL DISPLAY AND EVERY TIME AN ITEM CHANGES
+
+
+
+XForm.prototype.makeUpdateScript = function (script) {
+	if (typeof script != "string") script = script.toString();
+	this.__updateScript = script;
+	this.updateScript = new Function(
+			(this.updateScriptStart != null ? this.updateScriptStart + ";" : '')
+			+ this.getUpdateScriptStart() 
+			+ script 
+			+ this.getUpdateScriptEnd()
+			+ (this.updateScriptEnd  != null ?  this.updateScriptEnd + ";" : '')
+		);
+}
+
+
+XForm.prototype.appendToUpdateScript = function (script) {
+	if (typeof script != "string") script = script.toString();
+	this.makeUpdateScript(this.__updateScript + script);
+}
+
+
+
+
+
+
+//
+//	Writing parts of the update script
+//
+
+XForm.prototype.getUpdateScriptStart = function () {
+	return AjxBuffer.concat(	
+			"var t0 = new Date().getTime();\r",
+			
+			"var updateScript;\r",
+			"var _____________________________________________________ = 0;\r",
+			"var form = this;\r",
+			"var model = this.xmodel;\r",
+			"var instance = this.instance;\r",
+			"var item, itemId, element, relevant, value, temp;\r",
+			"with (this) {"
+	);
+}
+
+
+XForm.prototype.getUpdateScriptEnd = function () {
+	return AjxBuffer.concat(	
+			"_____________________________________________________++;\r",
+			"}\r",	// end with (this)
+			"var event = new DwtXFormsEvent(form);\r",
+			"this.notifyListeners(DwtEvent.XFORMS_DISPLAY_UPDATED, event);\r",
+
+			"var t1 = new Date().getTime();\r",
+			"DBG.println('update script took ' + (t1 - t0) + ' msec.');\r"
+	);
+}
+
+
+
+
 /** @private */
 XForm.prototype._reparentDwtObject = function (dwtObj, newParent) {
 	var dwtE = dwtObj.getHtmlElement();
 	if (dwtE.parentNode) dwtE.parentNode.removeChild(dwtE);
 	newParent.appendChild(dwtE);
 }
+
+
+
+
+
+//
+//	INSERTING
+//
+
+
 
 XForm.prototype.shouldInsertItem = function (item) {
 	return (this._itemsToInsert[item.getId()] != null)
@@ -920,3 +960,4 @@ XForm.prototype.insertExternalWidget = function (item) {
 	// take the item out of the list to insert so we don't insert it more than once
 	delete this._itemsToInsert[item.getId()];
 }
+
