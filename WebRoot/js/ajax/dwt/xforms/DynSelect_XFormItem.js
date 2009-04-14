@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -43,16 +41,12 @@ DynSelect_XFormItem.prototype.initFormItem = function () {
 	this.dataFetcherMethod = this.getInheritedProperty("dataFetcherMethod");	
 	this.dataFetcherObject = null;
 }
-
 DynSelect_XFormItem.prototype.changeChoicesCallback = 
 function (data, more, total) {
-	//DBG.println(AjxDebug.DBG1, AjxBuffer.concat(this.getId(),".choices came back"));
 	var choices = this.getChoices();
 	if(!choices)
 		return;
 	choices.setChoices(data);
-	choices.setHasMore(more);
-	choices.setTotalAvailable(total);	
 	choices.dirtyChoices();
 
 		
@@ -61,16 +55,6 @@ function (data, more, total) {
 		this.hideMenu();
 	} else {
 		this.showMenu();
-	}
-}
-
-DynSelect_XFormItem.prototype.showMenu = function (thisObj, event) {
-	if(!this._enabled)
-		return;	
-	OSelect1_XFormItem.prototype.showMenu.call(this,thisObj,event);
-	
-	if(this.menuUp && this.choices.hasMore() && this.choices.getTotalAvailable()>0) {
-		this.showNote(AjxMessageFormat.format(ZaMsg.Alert_MoreResultsAvailable,this.choices.getTotalAvailable()));
 	}
 	if(!this.menuUp)
 		this.showMenu();	
@@ -140,24 +124,15 @@ DynSelect_XFormItem.prototype.onKeyUp = function(value, event) {
 }
 
 DynSelect_XFormItem.prototype.resetChoices = function () {
-	/*if(!this.dataFetcherObject && this.dataFetcherClass !=null && this.dataFetcherMethod !=null) {
+	var choices = this.getChoices();
+	choices.setChoices([]);
+	choices.dirtyChoices();
+	
+	if(!this.dataFetcherObject && this.dataFetcherClass !=null && this.dataFetcherMethod !=null) {
 			this.dataFetcherObject = new this.dataFetcherClass(this.getForm().getController());
 	} else if(this.getInheritedProperty("dataFetcherInstance")) {
 		this.dataFetcherObject = this.getInstance();
 	}	
-	if(!this.dataFetcherObject)
-		return;
-		
-	var callback = new AjxCallback(this, this.changeChoicesCallback);
-	this.dataFetcherMethod.call(this.dataFetcherObject, "", null, callback);*/
-
-	var choices = this.getChoices();
-	if(!choices)
-		return;
-	choices.setChoices([]);
-	choices.setHasMore(false);
-	choices.setTotalAvailable(0);	
-	choices.dirtyChoices();	
 }
 
 
@@ -183,11 +158,14 @@ DynSelect_XFormItem.prototype.handleKeyPressDelay = function (event,value,lastTy
 			
 	var callback = new AjxCallback(this, this.changeChoicesCallback);
 	var searchByProcessedValue = this.getInheritedProperty("searchByProcessedValue");
-	
-	if(searchByProcessedValue)	
-		this.dataFetcherMethod.call(this.dataFetcherObject, val, event, callback);
-	else	
-		this.dataFetcherMethod.call(this.dataFetcherObject, value, event, callback);
+	var callArgs = {event:event, callback:callback, extraLdapQuery:null, form:this.getForm()};
+	if(searchByProcessedValue && !AjxUtil.isEmpty(val))	{
+		callArgs["value"] = val;
+		this.dataFetcherMethod.call(this.dataFetcherObject, callArgs);
+	} else if (!AjxUtil.isEmpty(value)){
+		callArgs["value"] = value;	
+		this.dataFetcherMethod.call(this.dataFetcherObject, callArgs);
+	}
 }
 
 DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
@@ -198,6 +176,7 @@ DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 	inputHtml = ["<input type=text id=", id, "_display class=", this.getDisplayCssClass(), " value='VALUE' ", 
 				" onchange=\"",ref, ".onValueTyped(this.value, event||window.event)\"",
 				" onkeyup=\"",ref, ".onKeyUp(this.value, event||window.event)\"", "size=",inputSize,
+				this.getMouseoutHandlerHTML(),
 				">"].join("");
 	
 	if (this.getWidth() == "auto") {
@@ -228,7 +207,7 @@ DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 
 	HTMLoutput.append(
 		"<div id=", id, this.getCssString(),
-			" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').onClick(this)\"",
+			" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').onClick(event)\"",
 			" onselectstart=\"return false\"",
 			">",
 			"<table ", this.getTableCssString(), ">", 
@@ -240,17 +219,36 @@ DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
  	this.edited = false;
 }
 
-DynSelect_XFormItem.prototype.onClick = function() {
+DynSelect_XFormItem.prototype.getMouseoutHandlerHTML =
+function () {
+	var formId = this.getFormGlobalRef(), 
+		itemId = this.getId()
+		;
+	
+	var onMouseoutAction = "";
+	
+	var onMouseoutFunc = this.getInheritedProperty("onMouseout") ;
+	onMouseoutAction = AjxBuffer.concat(" onmouseout=\"", onMouseoutFunc || "XFormItem.prototype.hideInputTooltip" , 
+						".call(" ,   this.getGlobalRef(), ", event );\" ");
+						
+	return AjxBuffer.concat( onMouseoutAction );	
+}
+
+DynSelect_XFormItem.prototype.onClick = function(event) {
 	var choices = this.getNormalizedChoices();
-	if(choices && choices.values && choices.values.length) {
-		this.showMenu();
+	if(!this.edited && this.getInheritedProperty("editable")) {
+		this.showInputTooltip(event);
+	} else {
+		if(choices && choices.values && choices.values.length) {
+			this.showMenu();
+		}
 	}
 	if(AjxUtil.isEmpty(this.getInstanceValue()) && this._enabled) {
 		var el = this.getDisplayElement();
 		el.value = "";
 		el.className = this.getDisplayCssClass();
 	}
-	
+
 }
 
 DynSelect_XFormItem.prototype.getArrowElement = function () {

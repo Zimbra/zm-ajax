@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -57,35 +55,32 @@ function(obj, index, noDuplicates) {
 		return;
 	}
 
-	// if index is out of bounds,
-	if (index == null || index < 0 || index >= this._array.length) {
-		// append object to the end
-		this._array.push(obj);
-	} else {
-		// otherwise, insert object
-		this._array.splice(index, 0, obj);
-	}
+	AjxUtil.arrayAdd(this._array, obj, index);
 };
 
 AjxVector.prototype.addList =
 function(list) {
 	if (!list) return;
 
-	if (list.length) // array
+	if (list.length) {// array
 		this._array = this._array.concat(list);
-	else if (list.size && list.size()) // AjxVector
+	} else if (list.size && list.size()) {// AjxVector
+		// in new window, IE seems to lose its rtti :(
+		if (AjxEnv.isIE && (!(list._array instanceof Array))) {
+			var newList = [];
+			for (var i = 0; i < list._array.length; i++) {
+				newList.push(list._array[i]);
+			}
+			list._array = newList;
+		}
+
 		this._array = this._array.concat(list._array);
+	}
 };
 
 AjxVector.prototype.remove =
 function(obj) {
-	for (var i = 0; i < this._array.length; i++) {
-		if (this._array[i] == obj) {
-			this._array.splice(i,1);
-			return true;
-		}
-	}
-	return false;
+	return AjxUtil.arrayRemove(this._array, obj);
 };
 
 AjxVector.prototype.removeAt =
@@ -93,7 +88,7 @@ function(index) {
 	if (index >= this._array.length || index < 0)
 		return null;
 
-	var delArr = this._array.splice(index,1);
+	var delArr = this._array.splice(index, 1);
 	var ret = null;
 	if (delArr) {
 		ret = delArr[0];
@@ -113,6 +108,11 @@ function() {
 AjxVector.prototype.removeLast =
 function() {
 	return this._array.length > 0 ? this._array.pop() : null;
+};
+
+AjxVector.prototype.reverse =
+function() {
+	this._array.reverse();
 };
 
 AjxVector.prototype.replace =

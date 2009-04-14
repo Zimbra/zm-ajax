@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -38,11 +36,13 @@ DwtTabView = function(params) {
 	DwtComposite.call(this, params);
 
 	this._stateChangeEv = new DwtEvent(true);
+	this._stateChangeEv.item = this;
+
 	this._tabs = [];
 	this._tabIx = 1;
     this._createHtml();
 
-	var tabGroupId = [this.toString(), this._htmlElId].join("-")
+	var tabGroupId = [this.toString(), this._htmlElId].join("-");
 	this._tabGroup = new DwtTabGroup(tabGroupId);
 	this._tabGroup.addMember(this._tabBar);
 };
@@ -87,7 +87,7 @@ DwtTabView.prototype.getTabGroupMember = function() {
 
 /**
 * @param title  -  text for the tab button
-* @param tabView - instance of DwtTabViewPage or an AjxCallback that
+* @param tabViewOrCallback - instance of DwtTabViewPage or an AjxCallback that
 *                  returns an instance of DwtTabViewPage
 * @return - the key for the added tab. This key can be used to retreive the tab using @link getTab
 * public method addTab. Note that this method does not automatically update the tabs panel.
@@ -156,6 +156,10 @@ function (tabKey) {
 	return (this._tabs && this._tabs[tabKey])
 		? this._tabs[tabKey]
 		: null;
+};
+
+DwtTabView.prototype.getTabBar = function() {
+	return this._tabBar;
 };
 
 DwtTabView.prototype.getTabTitle =
@@ -305,7 +309,9 @@ function (width, height) {
 		for (var curTabKey in this._tabs) {
 			var tabView = this._tabs[curTabKey].view;
 			if (tabView && !(tabView instanceof AjxCallback)) {
-				tabView.resetSize(width, height);
+				var contentHeight;
+				contentHeight = contentHeight || height - Dwt.getSize(this._tabBarEl).y;
+				tabView.resetSize(width, contentHeight);
 			}	
 		}
 	}		
@@ -384,28 +390,33 @@ function (ev) {
 **/
 DwtTabViewPage = function(parent, className, posStyle) {
 	if (arguments.length == 0) return;
-
-	var clsName = className || "ZTabPage";
-	var ps = posStyle || DwtControl.ABSOLUTE_STYLE;
+	params = Dwt.getParams(arguments, DwtTabViewPage.PARAMS);
+	params.className = params.className || "ZTabPage";
+	params.posStyle = params.posStyle || DwtControl.ABSOLUTE_STYLE;
 	this._rendered = true; // by default UI creation is not lazy
 
-	DwtPropertyPage.call(this, parent, clsName, ps);
+	DwtPropertyPage.call(this, params);
 
     this._createHtml();
+	this.getHtmlElement().style.overflowY = "auto";
+	this.getHtmlElement().style.overflowX = "visible";
+	if (params.contentTemplate) {
+		this.getContentHtmlElement().innerHTML = AjxTemplate.expand(params.contentTemplate, this._htmlElId);
+	}
 };
 
 DwtTabViewPage.prototype = new DwtPropertyPage;
 DwtTabViewPage.prototype.constructor = DwtTabViewPage;
 
-DwtTabViewPage.prototype.TEMPLATE = "dwt.Widgets#ZTabPage";
-
-
-// Public methods
-
-DwtTabViewPage.prototype.toString =
-function() {
+DwtTabViewPage.prototype.toString = function() {
 	return "DwtTabViewPage";
 };
+
+DwtTabViewPage.prototype.TEMPLATE = "dwt.Widgets#ZTabPage";
+
+DwtTabViewPage.PARAMS = DwtPropertyPage.PARAMS.concat("contentTemplate");
+
+// Public methods
 
 DwtTabViewPage.prototype.getContentHtmlElement =
 function() {
@@ -425,11 +436,7 @@ function() {
 		}
 	}
 
-	if (this.parent.getHtmlElement().offsetWidth > 0) { 						// if parent visible, use offsetWidth
-		this._contentEl.style.width=this.parent.getHtmlElement().offsetWidth;
-	} else {
-		this._contentEl.style.width = this.parent.getHtmlElement().style.width;	//if parent not visible, resize page to fit parent
-	}
+	this._contentEl.style.width = this.parent.getHtmlElement().style.width;	// resize page to fit parent
 };
 
 DwtTabViewPage.prototype.hideMe = 
@@ -439,9 +446,7 @@ function() {
 
 DwtTabViewPage.prototype.resetSize =
 function(newWidth, newHeight) {
-	if (this._rendered) {
-		this.setSize(newWidth, newHeight);
-	}
+	this.setSize(newWidth, newHeight);
 };
 
 
@@ -513,7 +518,7 @@ function(listener) {
 };
 
 /**
-* @param tabId - the id used to create tab button in @link DwtTabBar.addButton method
+* @param tabKey - the id used to create tab button in @link DwtTabBar.addButton method
 * @param listener - AjxListener
 **/
 DwtTabBar.prototype.addSelectionListener =
@@ -522,7 +527,7 @@ function(tabKey, listener) {
 };
 
 /**
-* @param tabId - the id used to create tab button in @link DwtTabBar.addButton method
+* @param tabKey - the id used to create tab button in @link DwtTabBar.addButton method
 * @param listener - AjxListener
 **/
 DwtTabBar.prototype.removeSelectionListener =
@@ -638,6 +643,7 @@ function(ev) {
 * @constructor
 **/
 DwtTabButton = function(parent, id) {
+	if (arguments.length == 0) return;
 	DwtButton.call(this, {parent:parent, className:"ZTab", id:id});
 };
 
@@ -678,3 +684,89 @@ DwtTabButton.prototype.setDisplayState = function(state) {
     }
     DwtButton.prototype.setDisplayState.call(this, state);
 };
+
+
+/**
+* @class
+* @constructor
+* @param parent
+* DwtTabBarFloat 
+**/
+DwtTabBarFloat = function(parent, tabCssClass, btnCssClass) {
+	if (arguments.length == 0) return;
+	DwtTabBar.call(this,parent,tabCssClass,btnCssClass)
+};
+
+DwtTabBarFloat.prototype = new DwtTabBar;
+DwtTabBarFloat.prototype.constructor = DwtTabBarFloat;
+
+DwtTabBarFloat.prototype.TEMPLATE = "dwt.Widgets#ZTabBarFloat";
+
+/**
+* @param tabKey
+* @param tabTitle
+**/
+DwtTabBarFloat.prototype.addButton =
+function(tabKey, tabTitle, id) {
+	var b = this._buttons[tabKey] = new DwtTabButtonFloat(this, id);
+	
+	this._buttons[tabKey].addSelectionListener(new AjxListener(this, DwtTabBar._setActiveTab));
+
+	if (this._btnImage != null) {
+		b.setImage(this._btnImage);
+	}
+
+	if (tabTitle != null) {
+		b.setText(tabTitle);
+	}
+
+	b.setEnabled(true);
+	b.setData("tabKey", tabKey);
+
+	if (parseInt(tabKey) == 1) {
+		this.openTab(tabKey, true);
+	}
+
+	// make sure that new button is selected properly
+    var sindex = this.__getButtonIndex(this._currentTabKey);
+    if (sindex != -1) {
+        var nindex = this.__getButtonIndex(tabKey);
+        if (nindex == sindex + 1) {
+            Dwt.addClass(b.getHtmlElement(), DwtTabBar.SELECTED_NEXT);
+        }
+    }
+
+    return b;
+};
+
+DwtTabBarFloat.prototype.addChild =
+function(child, index) {
+    DwtComposite.prototype.addChild.apply(this, arguments);
+
+    this._addItem(DwtToolBar.ELEMENT, child, index);
+};
+
+DwtTabBarFloat.prototype._addItem =
+function(type, element, index) {
+
+    // get the reference element for insertion
+    var placeEl = this._items[index] || this._suffixEl;
+
+    // insert item
+	var spliceIndex = index || (typeof index == "number") ? index : this._items.length;
+	this._items.splice(spliceIndex, 0, element);
+    
+    this._itemsEl.insertBefore(element.getHtmlElement(), placeEl);
+
+    // append spacer
+    // TODO!
+};
+
+DwtTabButtonFloat = function(parent, id) {
+	DwtTabButton.call(this, parent,id);
+};
+
+DwtTabButtonFloat.prototype = new DwtTabButton;
+DwtTabButtonFloat.prototype.constructor = DwtTabButtonFloat;
+
+DwtTabButtonFloat.prototype.TEMPLATE = "dwt.Widgets#ZTabFloat";

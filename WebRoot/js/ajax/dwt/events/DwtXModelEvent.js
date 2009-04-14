@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,13 +10,17 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
-/*
-Copyright (c) 2007, Yahoo! Inc. All rights reserved.
-Code licensed under the BSD License:
-http://developer.yahoo.net/yui/license.txt
-version: 2.3.0
-*/
-/* This file intentionally left blank */
+
+DwtXModelEvent = function(instance, modelItem, refPath, details) {
+	if (arguments.length == 0) return;
+	this.instance = instance;
+	this.modelItem = modelItem;
+	this.refPath = refPath;
+	this.details = details;
+}
+
+DwtEvent.prototype.toString = function() {
+	return "DwtXModelEvent";
+}

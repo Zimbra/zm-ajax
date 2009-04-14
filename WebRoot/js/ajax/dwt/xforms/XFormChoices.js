@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -30,8 +28,6 @@ XFormChoices = function(choiceObject, type, valueProperty, labelProperty) {
 	if (this._type == XFormChoices.AUTO) this.autoDetermineType();
 	
 	this._eventMgr = new AjxEventMgr();
-	this._hasMore = false;
-	this._totalAvailable=0;
 }
 XFormChoices.prototype = new Object();
 XFormChoices.prototype.constructor = XFormChoices;
@@ -188,21 +184,11 @@ XFormChoices.prototype.dirtyChoices = function () {
 	this.notifyListeners(DwtEvent.XFORMS_CHOICES_CHANGED, {});
 }
 
-XFormChoices.prototype.hasMore = function () {
-	return this._hasMore;
-}
 
-XFormChoices.prototype.setHasMore = function (more) {
-	this._hasMore=more;
-}
 
-XFormChoices.prototype.setTotalAvailable = function(total) {
-	this._totalAvailable=total;
-}
 
-XFormChoices.prototype.getTotalAvailable = function() {
-	return this._totalAvailable;
-}
+
+
 //
 //	listening -- these are from DwtControl  -- make an installable interface?
 //
