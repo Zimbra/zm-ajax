@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -38,15 +40,7 @@
  * press. If the control does not handle the key event, the event is handed to the application,
  * which handles it based on its current state. The application key event handler is in a sense
  * global, since it does not matter which control received the event.
- * </p><p>
- * At any given time there is a default handler, which is responsible for determining what
- * action is associated with a particular key sequence, and then taking it. A handler should support
- * the following methods:
- * 		getKeyMapName()		returns the name of the map that defines shortcuts for this handler
- * 		handleKeyAction()	performs the action associated with a shortcut
- * 		handleKeyEvent()	(optional) override; handler solely responsible for handling event
  * </p>
- *
  * @author Ross Dargahi
  *
  * @see DwtShell
@@ -333,13 +327,6 @@ function(timeout) {
 	this.__keyTimeout = timeout;
 };
 
-// Clears the key sequence. The next key event will begin a new one.
-DwtKeyboardMgr.prototype.clearKeySeq =
-function() {
-	this.__killKeySeqTimedActionId = -1;
-	this.__keySequence.length = 0;
-};
-
 /**
  * Enables/disables keyboard nav.
  * 
@@ -456,7 +443,6 @@ function(focusObj) {
 			// ctrl -> ctrl: tell newly focused ctrl it got focus
 			DwtKeyboardMgr.__onFocusHdlr();
 		} else {
-			DwtKeyboardMgr.__onFocusHdlr();
 			// input -> ctrl: set browser focus to keyboard input field
 			this._kbFocusField.focus();
 		}
@@ -473,7 +459,7 @@ function(ev) {
 	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
 	kbMgr.__dwtCtrlHasFocus = true;
 	var focusObj = kbMgr.__focusObj;
-	if (focusObj && focusObj.__doFocus) {
+	if (focusObj && focusObj.__doFocus && (typeof focusObj.__doFocus == "function")) {
 		focusObj.__doFocus();
 	}
 //	DBG.println("kbnav", "focus object: " + kbMgr.__focusObj);
@@ -490,9 +476,9 @@ function(ev) {
 
 	// Got to play the trick with HTML elements which get focus before blur is
 	// called on the old focus object. (see _grabFocus)
-	var focusObj = kbMgr.__oldFocusObj || kbMgr.__focusObj;
+	var focusObj = kbMgr.__oldFocusObj ? kbMgr.__oldFocusObj : kbMgr.__focusObj;
 	
-	if (focusObj && focusObj.__doBlur) {
+	if (focusObj && focusObj.__doBlur && (typeof focusObj.__doBlur == "function")) {
 		focusObj.__doBlur();
 	}
 		
@@ -733,10 +719,10 @@ function(ev) {
 
 	switch (handled) {
 		case DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED:
-			kbMgr.clearKeySeq();
+			kbMgr.__keySequence.length = 0;
 		 	return kbMgr.__processKeyEvent(ev, kev, true);
 		case DwtKeyboardMgr.__KEYSEQ_HANDLED:
-			kbMgr.clearKeySeq();
+			kbMgr.__keySequence.length = 0;
 		case DwtKeyboardMgr.__KEYSEQ_PENDING:
 		 	return kbMgr.__processKeyEvent(ev, kev, false);
 	}
@@ -749,10 +735,6 @@ function(ev) {
  */
 DwtKeyboardMgr.prototype.__dispatchKeyEvent = 
 function(hdlr, ev, forceActionCode) {
-	if (hdlr && hdlr.handleKeyEvent) {
-		hdlr.handleKeyEvent(ev);
-		return DwtKeyboardMgr.__KEYSEQ_HANDLED;
-	}
 	var mapName = (hdlr && hdlr.getKeyMapName) ? hdlr.getKeyMapName() : null;
 	if (!mapName) {
 		return DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
@@ -793,7 +775,8 @@ DwtKeyboardMgr.prototype.__killKeySequenceAction =
 function() {
 //	DBG.println("kbnav", "DwtKeyboardMgr.__killKeySequenceAction: " + this.__mapName);
 	this.__dispatchKeyEvent(this.__hdlr, this.__ev, true);
-	this.clearKeySeq();
+	this.__killKeySeqTimedActionId = -1;
+	this.__keySequence.length = 0;
 };
 
 /**
