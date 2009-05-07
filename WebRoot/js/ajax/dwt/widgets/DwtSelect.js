@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -123,6 +121,7 @@ function(element) {
  */
 DwtSelect.prototype.addOption =
 function(option, selected, value) {
+	if (!option) { return; }
 	var opt = null;
 	var val = null;
 	if (typeof(option) == 'string') {
@@ -202,6 +201,24 @@ function(value, newValue) {
 
 	// Register listener to create new menu.
 	this.setMenu(this._menuCallback, true);
+};
+
+/**
+ * Enables or disables an option.
+ *
+ * @param value		{object} 	value 		the value of the option to enable/disable
+ * @param enabled	{Boolean}	enabled 	true to enable the option
+ */
+DwtSelect.prototype.enableOption =
+function(value, enabled) {
+	var option = this.getOptionWithValue(value);
+	if (option.enabled != enabled) {
+		option.enabled = enabled;
+		var item = option.getItem();
+		if (item) {
+			item.setEnabled(enabled);
+		}
+	}
 };
 
 DwtSelect.prototype.clearOptions =
@@ -404,6 +421,7 @@ DwtSelect.prototype._createMenu = function() {
 		if (text) {
 			mi.setText(AjxStringUtil.htmlEncode(text));
 		}
+		mi.setEnabled(option.enabled);
 
 		mi.addSelectionListener(new AjxListener(this, this._handleOptionSelection));
 		mi._optionIndex = i;
@@ -447,13 +465,21 @@ function(option) {
  		if (displayValue) {
  			this.setText(AjxStringUtil.htmlEncode(displayValue));
  		}
- 		if (image) {
- 			this.setImage(image);
- 		}
-		this._selectedValue = option._value;
+ 		this.setImage(image);
+ 		this._selectedValue = option._value;
 		this._selectedOption = option;
 	}
     this._updateSelection(option);
+
+    /* bug: 21041 */
+    var divElId = this.getHtmlElement();
+    AjxTimedAction.scheduleAction(new AjxTimedAction(this,
+		function(){
+			var divEl = document.getElementById(divElId.id);
+			if (divEl) {
+				divEl.style.width = divEl.childNodes[0].offsetWidth;
+			}
+    }, 200));
 };
 
 DwtSelect.prototype._updateSelection = 
@@ -525,6 +551,7 @@ DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, 
 	this._selectedValue = selectedValue;
 
 	this._internalObjectId = DwtSelect._assignId(this);
+	this.enabled = true;
 }
 
 DwtSelectOption.prototype.setItem = 

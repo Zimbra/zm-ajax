@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -82,8 +80,10 @@ function() {
 
 ZmCsfeCommand.setSessionId =
 function(sessionId) {
-	var id = (sessionId instanceof Array) ? sessionId[0].id : sessionId;
-	ZmCsfeCommand._sessionId = parseInt(id);
+	var id = (sessionId != null)
+		? ((sessionId instanceof Array) ? sessionId[0].id : sessionId.id)
+		: null;
+	ZmCsfeCommand._sessionId = id ? parseInt(id) : null;
 };
 
 ZmCsfeCommand.faultToEx =
@@ -159,7 +159,7 @@ function(request) {
  */
 ZmCsfeCommand.prototype.invoke =
 function(params) {
-
+	this.cancelled = false;
 	if (!(params && (params.soapDoc || params.jsonObj))) { return; }
 
 	var requestStr = ZmCsfeCommand.getRequestStr(params);
@@ -217,10 +217,13 @@ function(params) {
 	}
 	if (params.noSession) {
 		context.nosession = {};
-	}
-	var sessionId = ZmCsfeCommand.getSessionId();
-	if (sessionId) {
-		context.sessionId = {_content:sessionId, id:sessionId};
+	} else {
+		var sessionId = ZmCsfeCommand.getSessionId();
+		if (sessionId) {
+			context.session = {_content:sessionId, id:sessionId};
+		} else {
+			context.session = {};
+		}
 	}
 	if (params.targetServer) {
 		context.targetServer = {_content:params.targetServer};
@@ -242,8 +245,8 @@ function(params) {
 	}
 	
 	// Tell server what kind of response we want
-	if (!params.useXml) {
-		context.format = {type:"js"};
+	if (params.useXml) {
+		context.format = {type:"xml"};
 	}
 
 	params.methodNameStr = ZmCsfeCommand.getMethodName(params.jsonObj);
@@ -260,10 +263,14 @@ function(params) {
 		}
 		context.authToken = ZmCsfeCommand._curAuthToken = authToken;
 	}
-	
-	DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), params.methodNameStr);
+
+	if (window.DBG) {
+		var ts = DBG._getTimeStamp();
+		DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), params.methodNameStr);
+		DBG.dumpObj(AjxDebug.DBG1, obj);
+	}
+
 	params.jsonRequestObj = obj;
-	DBG.dumpObj(AjxDebug.DBG1, obj);
 
 	return AjxStringUtil.objToString(obj);
 };
@@ -288,11 +295,12 @@ function(params) {
 	
 		if (params.noSession) {
 			soapDoc.set("nosession", null, context);
-		}
-		var sessionId = ZmCsfeCommand.getSessionId();
-		if (sessionId) {
-			var si = soapDoc.set("sessionId", null, context);
-			si.setAttribute("id", sessionId);
+		} else {
+			var sessionId = ZmCsfeCommand.getSessionId();
+			var si = soapDoc.set("session", null, context);
+			if (sessionId) {
+				si.setAttribute("id", sessionId);
+			}
 		}
 		if (params.targetServer) {
 			soapDoc.set("targetServer", params.targetServer, context);
@@ -358,9 +366,13 @@ function(params) {
 			soapDoc.set("authToken", authToken, context);
 		}
 	}
-	
-	DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), params.methodNameStr);
-	DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
+
+	if (window.DBG) {
+		var ts = DBG._getTimeStamp();
+		DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), params.methodNameStr);
+		DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
+	}
+
 	return soapDoc.getXml();
 };
 
@@ -373,7 +385,9 @@ function(params) {
 ZmCsfeCommand.prototype._runCallback =
 function(params, result) {
 	if (!result) { return; }
-
+	if(this.cancelled && params.skipCallbackIfCancelled)
+		return;
+		
 	var response;
 	if (result instanceof ZmCsfeResult) {
 		response = result; // we already got an exception and packaged it
@@ -455,7 +469,10 @@ function(response, params) {
 		var m = respDoc.match(/\{"?Body"?:\{"?(\w+)"?:/);
 		if (m && m.length) linkName = m[1];
 	}
-	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), linkName);
+	if (window.DBG) {
+		var ts = DBG._getTimeStamp();
+		DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), linkName);
+	}
 
 	var obj = {};
 
@@ -508,8 +525,8 @@ function(response, params) {
 		}
 	}
 
-	if (obj.Header && obj.Header.context && obj.Header.context.sessionId) {
-		ZmCsfeCommand.setSessionId(obj.Header.context.sessionId);
+	if (obj.Header && obj.Header.context && obj.Header.context.session) {
+		ZmCsfeCommand.setSessionId(obj.Header.context.session);
 	}
 
 	return params.asyncMode ? result : obj;
@@ -521,7 +538,7 @@ function(response, params) {
 ZmCsfeCommand.prototype.cancel =
 function() {
 	if (!this._rpcId) { return; }
-
+	this.cancelled = true;
 	var req = AjxRpc.getRpcRequestById(this._rpcId);
 	if (req) {
 		req.cancel();

@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.kabuki.tools.tz;
@@ -19,8 +17,6 @@ package com.zimbra.kabuki.tools.tz;
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-
-import com.zimbra.common.calendar.TZIDMapper;
 
 public class GenerateData {
 
@@ -133,11 +129,13 @@ public class GenerateData {
         Iterator<Timezone> iter = timezones.iterator();
         while (iter.hasNext()) {
             Timezone timezone = iter.next();
-            printJson(out, now, timezone);
-            if (iter.hasNext()) {
-                out.print(',');
+            if (timezone.isPrimary) {
+                printJson(out, now, timezone);
+                if (iter.hasNext()) {
+                    out.print(',');
+                }
+                out.println();
             }
-            out.println();
         }
         out.println("];");
     }
@@ -146,11 +144,16 @@ public class GenerateData {
         out.print("\t{ serverId: \"");
         printEscaped(out, timezone.id);
         out.print("\", clientId: \"");
-        printEscaped(out, TZIDMapper.toJava(timezone.id));
+        printEscaped(out, timezone.id);
         out.print("\",");
         if (timezone.daylight == null) {
             out.print(" standard: { offset: ");
             out.print(timezone.standard.offset);
+            if (timezone.standard.tzname != null) {
+                out.print(", tzname: \"");
+                printEscaped(out, timezone.standard.tzname);
+                out.print("\"");
+            }
             out.print(" } ");
         }
         else {
@@ -196,6 +199,11 @@ public class GenerateData {
             }
             out.print(" ]");
         }
+        if (onset.tzname != null) {
+            out.print(", tzname: \"");
+            printEscaped(out, onset.tzname);
+            out.print("\"");
+        }
         out.print(" }");
     }
 
@@ -219,12 +227,14 @@ public class GenerateData {
         private static Pattern RE_END_TZ = Pattern.compile("^END:VTIMEZONE");
         private static Pattern RE_BEGIN_STANDARD = Pattern.compile("^BEGIN:STANDARD");
         private static Pattern RE_BEGIN_DAYLIGHT = Pattern.compile("^BEGIN:DAYLIGHT");
-        private static Pattern RE_TZ_ID = Pattern.compile("^TZID:(.*)");
+        private static Pattern RE_TZ_ID = Pattern.compile("^TZID:(.+)");
+        private static Pattern RE_TZNAME = Pattern.compile("^TZNAME:(.+)");
+        private static Pattern RE_X_ZIMBRA_TZ_PRIMARY = Pattern.compile("^X-ZIMBRA-TZ-PRIMARY:(.+)");
         private static Pattern RE_TZ_OFFSET_TO = Pattern.compile("^TZOFFSETTO:([-+]?\\d+)");
         private static Pattern RE_DT_START = Pattern.compile(
             "DTSTART:(\\d{4})(\\d{2})(\\d{2})T(\\d{2})(\\d{2})(\\d{2})[Z]?"
         );
-        private static Pattern RE_RECUR_RULE = Pattern.compile("^RRULE:(.*)");
+        private static Pattern RE_RECUR_RULE = Pattern.compile("^RRULE:(.+)");
         private static Pattern RE_RECUR_RULE_DEF = Pattern.compile(
             "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=(\\d+);BYDAY=([-]?\\d+)(.{2})"
         );
@@ -255,6 +265,12 @@ public class GenerateData {
                     timezone.id = tzId.group(1);
                     continue;
                 }
+                Matcher isPrimary = RE_X_ZIMBRA_TZ_PRIMARY.matcher(line);
+                if (isPrimary.matches()) {
+                    String val = isPrimary.group(1);
+                    timezone.isPrimary = "TRUE".equals(val.toUpperCase());
+                    continue;
+                }
                 Matcher beginStd = RE_BEGIN_STANDARD.matcher(line);
                 if (beginStd.matches()) {
                     onset = timezone.standard;
@@ -281,6 +297,11 @@ public class GenerateData {
                         }
                     }
                 }
+                Matcher tzname = RE_TZNAME.matcher(line);
+                if (tzname.matches()) {
+                    onset.tzname = tzname.group(1);
+                    continue;
+                }
                 Matcher tzOffTo = RE_TZ_OFFSET_TO.matcher(line);
                 if (tzOffTo.matches()) {
                     onset.offset = offset2mins(tzOffTo.group(1));
@@ -305,7 +326,8 @@ public class GenerateData {
                 }
                 Matcher endTz = RE_END_TZ.matcher(line);
                 if (endTz.matches()) {
-                    timezones.add(timezone);
+                    if (timezone != null && timezone.isPrimary)
+                        timezones.add(timezone);
                     timezone = null;
                     onset = null;
                     continue;
@@ -366,6 +388,7 @@ public class GenerateData {
         public String id = "Undefined "+String.valueOf(++COUNT);
         public Onset standard = new Onset();
         public Onset daylight = null;
+        public boolean isPrimary = false;
     }
 
     public static class Onset {
@@ -378,6 +401,7 @@ public class GenerateData {
         public int min = 0;
         public int sec = 0;
         public int[] trans = null;
+        public String tzname;
     }
 
     public static class TimezoneComparator

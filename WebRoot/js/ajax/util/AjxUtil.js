@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -77,6 +75,11 @@ function(s, nameOnly) {
 	return nameOnly 
 		? AjxUtil.EMAIL_SHORT_RE.test(s) 
 		: AjxUtil.EMAIL_FULL_RE.test(s);
+};
+
+AjxUtil.isValidEmailNonReg = 
+function(s) {
+	return ((s.indexOf ("@") > 0) && (s.lastIndexOf ("@") == s.indexOf ("@")) && (s.indexOf (".@") < 0));
 };
 
 AjxUtil.SIZE_GIGABYTES = "GB";
@@ -344,6 +347,29 @@ function(array) {
 	return hash;
 };
 
+AjxUtil.arrayAdd =
+function(array, member, index) {
+
+	if (index == null || index < 0 || index >= array.length) {
+		// index absent or is out of bounds - append object to the end
+		array.push(member);
+	} else {
+		// otherwise, insert object
+		array.splice(index, 0, member);
+	}
+};
+
+AjxUtil.arrayRemove =
+function(array, member) {
+	for (var i = 0; i < array.length; i++) {
+		if (array[i] == member) {
+			array.splice(i, 1);
+			return true;
+		}
+	}
+	return false;
+};
+
 AjxUtil.indexOf =
 function(array, object, strict) {
 	if (array) {
@@ -477,4 +503,180 @@ AjxUtil.log =
 function(type, msg) {
 	if (!AjxUtil.LOG[type]) { return; }
 	AjxUtil.LOG[type].push(msg);
+};
+
+/**
+ * mergesort+dedupe
+**/
+AjxUtil.mergeArrays =
+function(arr1, arr2, orderfunc) {
+	if(!orderfunc) {
+		orderfunc = function (val1,val2) {
+			if(val1>val2)
+				return 1;
+			if (val1 < val2)
+				return -1;
+			if(val1 == val2)
+				return 0;
+		}
+	}
+ 	var tmpArr1 = [];
+ 	var cnt1 = arr1.length;
+ 	for(var i = 0; i < cnt1; i++) {
+ 		tmpArr1.push(arr1[i]);
+ 	}
+
+ 	var tmpArr2 = [];
+ 	var cnt2 = arr2.length;
+ 	for(var i = 0; i < cnt2; i++) {
+ 		tmpArr2.push(arr2[i]);
+ 	} 	
+	var resArr = [];
+	while (tmpArr1.length>0 && tmpArr2.length>0) {
+		if (orderfunc(tmpArr1[0],resArr[resArr.length-1])==0) {
+			tmpArr1.shift();
+			continue;
+		}
+		
+		if (orderfunc(tmpArr2[0],resArr[resArr.length-1])==0) {
+			tmpArr2.shift();
+			continue;
+		}		
+			
+		if (orderfunc(tmpArr1[0], tmpArr2[0])<0) {
+			resArr.push(tmpArr1.shift());
+		} else if (orderfunc(tmpArr1[0],tmpArr2[0])==0) {
+			resArr.push(tmpArr1.shift());
+			tmpArr2.shift();
+		} else {
+			resArr.push(tmpArr2.shift());
+		}
+	}
+		
+	while (tmpArr1.length>0) {
+		if (orderfunc(tmpArr1[0],resArr[resArr.length-1])==0) {
+			tmpArr1.shift();
+			continue;
+		}		
+		resArr.push(tmpArr1.shift());
+	}
+		
+	while (tmpArr2.length>0) {
+		if (orderfunc(tmpArr2[0], resArr[resArr.length-1])==0) {
+			tmpArr2.shift();
+			continue;
+		}			
+		resArr.push(tmpArr2.shift());
+	}
+	return resArr;	
+};
+
+AjxUtil.arraySubstract = function (arr1, arr2, orderfunc) {
+	if(!orderfunc) {
+		orderfunc = function (val1,val2) {
+			if(val1>val2)
+				return 1;
+			if (val1 < val2)
+				return -1;
+			if(val1 == val2)
+				return 0;
+		}
+	}
+ 	var tmpArr1 = [];
+ 	var cnt1 = arr1.length;
+ 	for(var i = 0; i < cnt1; i++) {
+ 		tmpArr1.push(arr1[i]);
+ 	}
+
+ 	var tmpArr2 = [];
+ 	var cnt2 = arr2.length;
+ 	for(var i = 0; i < cnt2; i++) {
+ 		tmpArr2.push(arr2[i]);
+ 	} 	
+ 	tmpArr2.sort(orderfunc);
+ 	tmpArr1.sort(orderfunc);
+	var resArr = [];
+	while(tmpArr1.length > 0 && tmpArr2.length > 0) {
+		if(orderfunc(tmpArr1[0],tmpArr2[0])==0) {
+			tmpArr1.shift();
+			tmpArr2.shift();
+			continue;
+		}
+		
+		if(orderfunc(tmpArr1[0],tmpArr2[0]) < 0) {
+			resArr.push(tmpArr1.shift());
+			continue;
+		}
+		
+		if(orderfunc(tmpArr1[0],tmpArr2[0]) > 0) {
+			tmpArr2.shift();
+			continue;
+		}
+	}
+	
+	while(tmpArr1.length > 0) {
+		resArr.push(tmpArr1.shift());
+	}
+	
+	return resArr;
+}
+/**
+ * Returns the keys of the given hash as a sorted list.
+ *
+ * @param hash		[hash]
+ */
+AjxUtil.getHashKeys =
+function(hash) {
+
+	var list = [];
+	for (var key in hash) {
+		list.push(key);
+	}
+	list.sort();
+
+	return list;
+};
+
+/**
+ * Does a shallow comparison of two arrays.
+ *
+ * @param arr1	[array]
+ * @param arr2	[array]
+ */
+AjxUtil.arrayCompare =
+function(arr1, arr2) {
+	if ((!arr1 || !arr2) && (arr1 != arr2)) {
+		return false;
+	}
+	if (arr1.length != arr2.length) {
+		return false;
+	}
+	for (var i = 0; i < arr1.length; i++) {
+		if (arr1[i] != arr2[i]) {
+			return false;
+		}
+	}
+	return true;
+};
+
+/**
+ * Does a shallow comparison of two hashes.
+ *
+ * @param hash1	[hash]
+ * @param hash2	[hash]
+ */
+AjxUtil.hashCompare =
+function(hash1, hash2) {
+
+	var keys1 = AjxUtil.getHashKeys(hash1);
+	var keys2 = AjxUtil.getHashKeys(hash12);
+	if (!AjxUtil.arrayCompare(keys1, keys2)) {
+		return false;
+	}
+	for (var key in keys1) {
+		if (hash1[key] != hash2[key]) {
+			return false;
+		}
+	}
+	return true;
 };

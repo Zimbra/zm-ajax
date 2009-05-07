@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -1557,7 +1555,7 @@ AjxNumberFormat.NumberSegment.prototype.format = function(number) {
 // Protected methods
 
 AjxNumberFormat.NumberSegment.prototype._normalize = function(s) {
-	var match = s.split(/([\.Ee])/);
+	var match = s.split(/[\.Ee]/);
 	
 	// normalize whole part
 	var whole = match.shift();
@@ -1581,15 +1579,13 @@ AjxNumberFormat.NumberSegment.prototype._normalize = function(s) {
 	// normalize rest
 	var fract = '0';
 	var expon;
-	while (match.length > 0) {
-		switch (match.shift()) {
-			case '.': fract = match.shift(); break;
-			case 'E': case 'e': expon = match.shift(); break;
-			default: // NOTE: should never get here!
-		}
-	}
 
-	fract = fract.replace(/0+$/,"");
+    if(s.match(/\./))
+        fract = match.shift();
+    else if(s.match(/\e/) || s.match(/\E/))
+        expon = match.shift();
+
+    fract = fract.replace(/0+$/,"");
 	if (fract.length < this._parent._minFracDigits) {
 		fract = AjxFormat._zeroPad(fract, this._parent._minFracDigits, I18nMsg.numberZero, true);
 	}
