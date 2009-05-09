@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -119,7 +117,7 @@ AjxRpc.freeRpcCtxt =
 function(rpcCtxt) {
 	// we're done using this rpcCtxt. Add it back to the pool
 	if (AjxRpc.__rpcOutstanding[rpcCtxt.id]) {
-		DBG.println("--- freeing rpcCtxt " + rpcCtxt.id);
+		DBG.println(AjxDebug.DBG2, "--- freeing rpcCtxt " + rpcCtxt.id);
 		AjxRpc.__rpcCache.push(rpcCtxt);
 		delete AjxRpc.__rpcOutstanding[rpcCtxt.id];
 	}
@@ -149,14 +147,14 @@ function() {
 
 	if (AjxRpc.__rpcCache.length > 0) {
 		rpcCtxt = AjxRpc.__rpcCache.pop();
-		DBG.println("reusing RPC ID " + rpcCtxt.id);
+		DBG.println(AjxDebug.DBG2, "reusing RPC ID " + rpcCtxt.id);
 	} else {
 		if (AjxRpc.__RPC_COUNT < AjxRpc.__RPC_CACHE_MAX) {
 			// we haven't reached our limit, so create a new AjxRpcRequest
 			var id = "__RpcCtxt_" + AjxRpc.__RPC_COUNT;
 			rpcCtxt = new AjxRpcRequest(id);
 			AjxRpc.__RPC_COUNT++;
-			DBG.println("Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
+			DBG.println(AjxDebug.DBG2, "Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
 		} else {
 			// yikes, we're out of rpc's! Look for an old one to kill.
 			rpcCtxt = AjxRpc.__reap();

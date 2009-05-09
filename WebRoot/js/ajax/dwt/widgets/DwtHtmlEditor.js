@@ -1,17 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- *
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
- *
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- *
  * ***** END LICENSE BLOCK *****
  */
 
@@ -47,7 +45,7 @@ DwtHtmlEditor = function(params) {
 	this._htmlModeInited = false;
 
 	this._initialize();
-}
+};
 
 DwtHtmlEditor.PARAMS = ["parent", "className", "posStyle", "content", "mode", "blankIframeSrc"];
 
@@ -135,11 +133,9 @@ DwtHtmlEditor._ACTION_CODE_TO_CMD = {};
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.TEXT_BOLD]			= DwtHtmlEditor.BOLD_STYLE;
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.TEXT_ITALIC]		= DwtHtmlEditor.ITALIC_STYLE;
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.TEXT_UNDERLINE]		= DwtHtmlEditor.UNDERLINE_STYLE;
-DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.TEXT_STRIKETHRU]	= DwtHtmlEditor.STRIKETHRU_STYLE;
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.JUSTIFY_LEFT]		= DwtHtmlEditor.JUSTIFY_LEFT;
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.JUSTIFY_CENTER]		= DwtHtmlEditor.JUSTIFY_CENTER;
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.JUSTIFY_RIGHT]		= DwtHtmlEditor.JUSTIFY_RIGHT;
-DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.JUSTIFY_FULL]		= DwtHtmlEditor.JUSTIFY_FULL;
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.HEADER1]			= DwtHtmlEditor._STYLES[1];
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.HEADER2]			= DwtHtmlEditor._STYLES[2];
 DwtHtmlEditor._ACTION_CODE_TO_CMD[DwtKeyMap.HEADER3]			= DwtHtmlEditor._STYLES[3];
@@ -248,7 +244,7 @@ function(src) {
 
 DwtHtmlEditor.prototype.isHtmlEditingSupported =
 function() {
-	return (!!(AjxEnv.isGeckoBased || AjxEnv.isIE || AjxEnv.isSafari3));
+	return (!!(AjxEnv.isGeckoBased || AjxEnv.isIE || AjxEnv.isSafari3up));
 }
 
 /**
@@ -752,14 +748,15 @@ function() {
 	 } else {
 		this._initTextMode();
 	}
-}
+};
 
+DwtHtmlEditor.prototype.TEXTAREA_CLASSNAME = "DwtHtmlEditorTextArea";
 DwtHtmlEditor.prototype._initTextMode =
 function(ignorePendingContent) {
 	var htmlEl = this.getHtmlElement();
 	this._textAreaId = "textarea_" + Dwt.getNextId();
 	var textArea = document.createElement("textarea");
-	textArea.className = "DwtHtmlEditorTextArea";
+	textArea.className = this.TEXTAREA_CLASSNAME;
 	textArea.id = this._textAreaId;
 	htmlEl.appendChild(textArea);
 
@@ -770,20 +767,16 @@ function(ignorePendingContent) {
 		this._pendingContent = null;
 	}
 	return textArea;
-}
+};
 
 DwtHtmlEditor.prototype._initHtmlMode =
 function(content) {
-        this._pendingContent = content || "";
+	this._pendingContent = content || "";
 	this._keyEvent = new DwtKeyEvent();
 	this._stateEvent = new DwtHtmlEditorStateEvent();
 	this._stateEvent.dwtObj = this;
 	this._updateStateAction = new AjxTimedAction(this, this._updateState);
-	return this._createIFrameEl();
-}
 
-DwtHtmlEditor.prototype._createIFrameEl =
-function() {
 	var htmlEl = this.getHtmlElement();
 	this._iFrameId = "iframe_" + Dwt.getNextId();
 	var iFrame = document.createElement("iframe");
@@ -793,13 +786,10 @@ function() {
 	iFrame.setAttribute("frameborder", "0", false);
 	iFrame.setAttribute("vspace", "0", false);
 	iFrame.setAttribute("autocomplete", "off", false);
-// 	iFrame.setAttribute("marginwidth", "0", false);
-// 	iFrame.setAttribute("marginheight", "0", false);
 
-        var cont = AjxCallback.simpleClosure(this._finishHtmlModeInit, this);
-        setTimeout(cont, DwtHtmlEditor._INITDELAY);
+	var cont = AjxCallback.simpleClosure(this._finishHtmlModeInit, this);
+	setTimeout(cont, DwtHtmlEditor._INITDELAY);
 
-//	if (AjxEnv.isIE && location.protocol == "https:")
 	iFrame.src = this._blankIframeSrc || "";
 	htmlEl.appendChild(iFrame);
 
@@ -808,42 +798,40 @@ function() {
 
 DwtHtmlEditor.prototype._finishHtmlModeInit =
 function() {
-        var doc = this._getIframeDoc();
+	var doc = this._getIframeDoc();
 
 	try {
 		// in case safari3 hasn't init'd BODY tag yet
-                if (AjxEnv.isSafari && doc.body == null) {
+		if (AjxEnv.isSafari && doc.body == null) {
 			doc.open();
 			doc.write("<html><head></head><body></body></html>");
 			doc.close();
 		}
-        } catch (ex) {
+	} catch (ex) {
 		DBG.println("XXX: Error initializing HTML mode :XXX");
 		return;
 	}
 
-        if (AjxEnv.isGeckoBased) {
-                doc.open();
-                doc.write(DwtHtmlEditor.INIT_HTML);
-                doc.close();
-        }
+	if (AjxEnv.isGeckoBased) {
+		doc.open();
+		doc.write(DwtHtmlEditor.INIT_HTML);
+		doc.close();
+	}
 
-        function cont(doc) {
-                this._enableDesignMode(doc);
-                this._setContentOnTimer();
-	        this._updateState();
-	        this._htmlModeInited = true;
-	        this._registerEditorEventHandlers(document.getElementById(this._iFrameId), doc);
-                // this.focus();
-        };
+	function cont(doc) {
+		this._enableDesignMode(doc);
+		this._setContentOnTimer();
+		this._updateState();
+		this._htmlModeInited = true;
+		this._registerEditorEventHandlers(document.getElementById(this._iFrameId), doc);
+	};
 
-        if (AjxEnv.isIE) {
-                // IE needs a timeout
-                setTimeout(AjxCallback.simpleClosure(cont, this, doc),
-                           DwtHtmlEditor._INITDELAY);
-        } else {
-	        cont.call(this, doc);
-        }
+	if (AjxEnv.isIE) {
+		// IE needs a timeout
+		setTimeout(AjxCallback.simpleClosure(cont, this, doc), DwtHtmlEditor._INITDELAY);
+	} else {
+		cont.call(this, doc);
+	}
 };
 
 DwtHtmlEditor.prototype._focus =
@@ -854,12 +842,12 @@ function() {
 DwtHtmlEditor.prototype._getIframeDoc =
 function() {
 	return this._iFrameId ? Dwt.getIframeDoc(document.getElementById(this._iFrameId)) : null;
-}
+};
 
 DwtHtmlEditor.prototype._getIframeWin =
 function() {
 	return Dwt.getIframeWindow(document.getElementById(this._iFrameId));
-}
+};
 
 DwtHtmlEditor.prototype._getParentElement =
 function() {
@@ -867,13 +855,14 @@ function() {
 		var iFrameDoc = this._getIframeDoc();
 		var selection = iFrameDoc.selection;
 		var range = selection.createRange();
-		if (selection.type == "None" || selection.type == "Text")
+		if (selection.type == "None" || selection.type == "Text") {
 			// If selection is None still have a parent element
 			return selection.createRange().parentElement();
-		else if (selection.type == "Control")
+		}
+		if (selection.type == "Control") {
 			return selection.createRange().item(0);
-		else
-			return iFrameDoc.body;
+		}
+		return iFrameDoc.body;
 	} else {
 		try {
 			var range = this._getRange();
@@ -888,15 +877,16 @@ function() {
 			return null;
 		}
 	}
-}
+};
 
 DwtHtmlEditor.prototype.getNearestElement =
 function(tagName) {
 	try {
 		var p = this._getParentElement();
 		tagName = tagName.toLowerCase();
-		while (p && p.nodeName.toLowerCase() != tagName)
+		while (p && p.nodeName.toLowerCase() != tagName) {
 			p = p.parentNode;
+		}
 		return p;
 	} catch(ex) {
 		return null;
@@ -925,17 +915,8 @@ function(node, pos, inclusive) {
 	}
 };
 
-DwtHtmlEditor.prototype._forceRedraw = function() {
-// this doesn't work :(
-// 	var save_collapse = table.style.borderCollapse;
-// 	table.style.borderCollapse = "collapse";
-// 	table.style.borderCollapse = "separate";
-// 	table.style.borderCollapse = save_collapse;
-
-// this works but wrecks the caret position
-//	var body = this._getIframeDoc().body;
-//	body.innerHTML = body.innerHTML;
-
+DwtHtmlEditor.prototype._forceRedraw =
+function() {
 	var body = this._getIframeDoc().body;
 	body.style.display = "none";
 	var self = this;
@@ -946,7 +927,8 @@ DwtHtmlEditor.prototype._forceRedraw = function() {
 	}, 10);
 };
 
-DwtHtmlEditor.prototype.getSelectedCells = function() {
+DwtHtmlEditor.prototype.getSelectedCells =
+function() {
 	var cells = null;
 	var sel = this._getSelection();
 	var range, i = 0;
@@ -1575,7 +1557,7 @@ function(iFrameDoc) {
  		if (AjxEnv.isGeckoBased && (AjxEnv.isLinux || AjxEnv.isMac))
  			this._registerEditorEventHandlers(document.getElementById(this._iFrameId), iFrameDoc);
 	} catch (ex) {
-		// Gecko may take some time to enable design mode..
+		// Gecko may take some time to enable design mode..        
 		if (AjxEnv.isGeckoBased || AjxEnv.isSafari) {
 			var ta = new AjxTimedAction(this, this._enableDesignMode, [iFrameDoc]);
 			AjxTimedAction.scheduleAction(ta, 10);
@@ -1634,39 +1616,40 @@ function() {
 //    - text
 //    - title
 DwtHtmlEditor.prototype.insertLink = function(params) {
-        	var doc  = this._getIframeDoc();
-		    var content =  (AjxEnv.isIE && doc && doc.body) ? (doc.body.innerHTML) : "";
 
-		    if(AjxEnv.isIE && content == ""){
+    var doc  = this._getIframeDoc();
+    var content =  (AjxEnv.isIE && doc && doc.body) ? (doc.body.innerHTML) : "";
 
-		        var a = doc.createElement("a");
-		        a.href = params.url;
-		        if (params.title) a.title = params.title;
+    if(AjxEnv.isIE && content == ""){
 
-		        var tNode = doc.createTextNode(params.text);
+        var a = doc.createElement("a");
+        a.href = params.url;
+        if (params.title) a.title = params.title;
 
-		        a.appendChild(tNode);
-		        doc.body.appendChild(a);				
-				return a;
-				
-		    }else{
-		        if (params.text)
-		            this.insertText(params.text, true);
-		        var url = "javascript:" + Dwt.getNextId();
-		        this._execCommand("createlink", url);
-		        var a = doc.getElementsByTagName("a");
-		        var link;
-		        for (var i = a.length; --i >= 0;) {
-		            if (a[i].href == url) {
-		                link = a[i];
-		                break;
-		            }
-		        }
-		        link.href = params.url;
-		        if (params.title)
-		            link.title = params.title;
-		        return link;
-		    }
+        var tNode = doc.createTextNode(params.text);
+
+        a.appendChild(tNode);
+        doc.body.appendChild(a);
+        return a;
+
+    }else{
+        if (params.text)
+            this.insertText(params.text, true);
+        var url = "javascript:" + Dwt.getNextId();
+        this._execCommand("createlink", url);
+        var a = doc.getElementsByTagName("a");
+        var link;
+        for (var i = a.length; --i >= 0;) {
+            if (a[i].href == url) {
+                link = a[i];
+                break;
+            }
+        }
+        link.href = params.url;
+        if (params.title)
+            link.title = params.title;
+        return link;
+    }
 };
 
 // if the caret/selection is currently a link, select it and return its properties

@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -27,9 +25,9 @@ XModelItemFactory = function() {}
 XModelItemFactory.createItem = function (attributes, parentItem, xmodel) {
 	// assign a modelItem to the item
 	var type = attributes.type;
-	var constructorFunction = this.getItemTypeConstructor(type || _UNTYPED_);
+	constructor = this.getItemTypeConstructor(type || _UNTYPED_);
 
-	var item = new constructorFunction();
+	var item = new constructor();
 	item._setAttributes(attributes);
 	if (item.id != null && item.ref == null) item.ref = item.id;
 
@@ -79,30 +77,30 @@ XModelItemFactory.getFullPath = function (itemPath, parentPath) {
 
 XModelItemFactory.typeConstructorMap = {};
 
-XModelItemFactory.createItemType = function (typeConstant, typeName, constructorFunction, superClassConstructor) {
-	if (constructorFunction == null) constructorFunction = new Function();
+XModelItemFactory.createItemType = function (typeConstant, typeName, constructor, superClassConstructor) {
+	if (constructor == null) constructor = new Function();
 	if (typeof superClassConstructor == "string") superClassConstructor = this.getItemTypeConstructor(superClassConstructor);
 	if (superClassConstructor == null) superClassConstructor = XModelItem;
 
 	// initialize the constructor
-	constructorFunction.prototype = new superClassConstructor();	
+	constructor.prototype = new superClassConstructor();	
 
-	constructorFunction.prototype.type = typeName;
-	constructorFunction.prototype.constructor = constructorFunction;
-	constructorFunction.prototype.toString = new Function("return '[XModelItem:" + typeName + " path=\"' + this.getIdPath() + '\"]'");
-	constructorFunction.toString = new Function("return '[Class XModelItem:" + typeName + "]'");
+	constructor.prototype.type = typeName;
+	constructor.prototype.constructor = constructor;
+	constructor.prototype.toString = new Function("return '[XModelItem:" + typeName + " path=\"' + this.getIdPath() + '\"]'");
+	constructor.toString = new Function("return '[Class XModelItem:" + typeName + "]'");
 	
 	// put the item type into the typemap
-	this.registerItemType(typeConstant, typeName, constructorFunction);
+	this.registerItemType(typeConstant, typeName, constructor);
 
 	// return the prototype
-	return constructorFunction;
+	return constructor;
 }
 
-XModelItemFactory.registerItemType = function(typeConstant, typeName, constructorFunction) {
+XModelItemFactory.registerItemType = function(typeConstant, typeName, constructor) {
 	// assign the type constant to the window so everyone else can use it
 	window[typeConstant] = typeName;
-	this.typeConstructorMap[typeName] = constructorFunction;	
+	this.typeConstructorMap[typeName] = constructor;	
 }
 
 
@@ -141,7 +139,7 @@ XModelItem.prototype._setAttributes = function (attributes) {
 
 
 XModelItem.prototype.initModelItem = function() {
-	window.status = '';
+	this._eventMgr = new AjxEventMgr();
 }
 
 
@@ -381,7 +379,7 @@ XModelItem.prototype.validateEmailAddress = function(value) {
 		   // set the name, so that on refresh, we don't display old data.
 			throw this.getModel().getErrorMessage("invalidEmailAddr");
 		 } else {
-			if((value.lastIndexOf ("@")!=value.indexOf ("@")) || (value.indexOf ("@")<0)) {
+			if(!AjxUtil.isValidEmailNonReg(value)) {
 			   throw this.getModel().getErrorMessage("invalidEmailAddr");
 			}
 	  	 }
@@ -486,6 +484,85 @@ XModelItem.prototype.getMinInclusive = function () 			{	return this.minInclusive
 XModelItem.prototype.getMinExclusive = function() { return this.minExclusive; }
 XModelItem.prototype.getMaxInclusive = function () 			{	return this.maxInclusive;				}
 XModelItem.prototype.getMaxExclusive = function() { return this.maxExclusive; }
+
+/**
+ * Registers a listener with the control. The listener will be call when events
+ * of type <code>eventType</code> fire
+ *
+ * @param {String} eventType Event type for which to listen (required)
+ * @param {AjxListener} listener Listener to be registered (required)
+ * @param index		[int]*			index at which to add listener
+ *
+ * @see DwtEvent
+ * @see AjxListener
+ * @see #removeListener
+ * @see #removeAllListeners
+ * @see #notifyListeners
+ */
+XModelItem.prototype.addListener =
+function(eventType, listener, index) {
+	return this._eventMgr.addListener(eventType, listener, index);
+};
+
+/**
+ * Removes a listener from the control.
+ *
+ * @param {String} eventType Event type for which to remove the listener (required)
+ * @param {AjxListener} listener Listener to be removed (required)
+ *
+ * @see DwtEvent
+ * @see AjxListener
+ * @see #addListener
+ * @see #removeAllListeners
+ */
+XModelItem.prototype.removeListener =
+function(eventType, listener) {
+	return this._eventMgr.removeListener(eventType, listener);
+};
+
+
+/**
+ * Removes all listeners for a particular event type.
+ *
+ * @param {String} eventType Event type for which to remove listeners (required)
+ *
+ * @see DwtEvent
+ * @see AjxListener
+ * @see #addListener
+ * @see #removeListener
+ */
+XModelItem.prototype.removeAllListeners =
+function(eventType) {
+	return this._eventMgr.removeAll(eventType);
+};
+
+/**
+ * Queries to see if there are any listeners registered for a particular event type
+ *
+ * @param {String} eventType Event type for which to check for listener registration (required)
+ *
+ * @return True if there is an listener registered for the specified event type
+ *
+ * @see DwtEvent
+ */
+XModelItem.prototype.isListenerRegistered =
+function(eventType) {
+	return this._eventMgr.isListenerRegistered(eventType);
+};
+
+/**
+ * Notifys all listeners of type <code>eventType</code> with <code>event</code>
+ *
+ * @param {String} eventType Event type for which to send notifications (required)
+ * @param {DwtEvent} event Event with which to notify. Typically a subclass of
+ * 		DwtEvent
+ *
+ * @see DwtEvent
+ */
+XModelItem.prototype.notifyListeners =
+function(eventType, event) {
+	return this._eventMgr.notifyListeners(eventType, event);
+};
 
 XModel.registerErrorMessage("notANumber",		 AjxMsg.notANumber);
 XModel.registerErrorMessage("numberTotalExceeded", AjxMsg.numberTotalExceeded);

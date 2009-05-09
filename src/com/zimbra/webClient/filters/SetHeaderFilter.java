@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -26,19 +24,21 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.naming.*;
-
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-    
+import com.zimbra.common.util.ZimbraLog;
+
 public class SetHeaderFilter implements Filter {
     
     // --------------------------------------------------------------
@@ -304,6 +304,9 @@ public class SetHeaderFilter implements Filter {
             }
             chain.doFilter(req, resp);
         }
+        
+        // Clear logging context before each servlet request.
+        ZimbraLog.clearContext();
     }
 
     private void setRequestAttributes( HttpServletRequest req, HttpServletResponse resp,
@@ -415,9 +418,10 @@ public class SetHeaderFilter implements Filter {
         } else {
             // we didn't find the query parameter, so check the accept
             // encoding headers
-            Enumeration e = req.getHeaders(HEADER_ACCEPT_ENCODING);
+            @SuppressWarnings("unchecked")
+            Enumeration<String> e = req.getHeaders(HEADER_ACCEPT_ENCODING);
             while (e.hasMoreElements()) {
-                String name = (String)e.nextElement();
+                String name = e.nextElement();
                 if (name.indexOf(HEADER_VAL_GZIP) != -1) {
                     if (debug > 0) {
                         System.out.println("supports compression");
