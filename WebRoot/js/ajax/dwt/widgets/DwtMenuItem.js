@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -153,15 +155,6 @@ DwtMenuItem.prototype.setImage = function(imageInfo) {
 	this.parent._iconItemAdded(this);
 }
 
-DwtMenuItem.prototype.setText =
-function(text) {
-	DwtButton.prototype.setText.call(this, text);
-	if (this.parent.isPoppedUp()) {
-		// resize menu if we reset text on the fly
-		this.parent.render();
-	}
-};
-
 DwtMenuItem.prototype.setMenu = function(menuOrCallback, shouldToggle, followIconStyle) {
 	DwtButton.prototype.setMenu.call(this, menuOrCallback, shouldToggle, followIconStyle);
 	this.parent._submenuItemAdded(this);
@@ -170,13 +163,6 @@ DwtMenuItem.prototype.setMenu = function(menuOrCallback, shouldToggle, followIco
 DwtMenuItem.prototype.setHoverDelay =
 function(delay) {
 	this._hoverDelay = delay;
-};
-
-DwtMenuItem.prototype.setShortcut =
-function(shortcut) {
-	if (shortcut && this._dropDownEl) {
-		this._dropDownEl.innerHTML = shortcut;
-	}
 };
 
 //
@@ -301,10 +287,10 @@ function() {
     }
 };
 
-DwtMenuItem.prototype._isMenuPoppedUp =
+DwtMenuItem.prototype._isMenuPoppedup =
 function() {
 	var menu = this.getMenu();
-	return (menu && menu.isPoppedUp()) ? true : false;
+	return (menu && menu.isPoppedup()) ? true : false;
 }
 
 
@@ -335,7 +321,7 @@ DwtMenuItem.prototype.__handleItemSelect = function(event) {
         return;
     }
     if (!this.isStyle(DwtMenuItem.CASCADE_STYLE)) {
-		if (!this._menu || !this._menu.isPoppedUp || !this._menu.isPoppedUp()) {
+		if (!this._menu || !this._menu.isPoppedup || !this._menu.isPoppedup()) {
 			DwtMenu.closeActiveMenu();
 		}
     }
@@ -343,7 +329,6 @@ DwtMenuItem.prototype.__handleItemSelect = function(event) {
 
 DwtMenuItem.prototype.__handleSubMenuMouseOver = function(event) {
     this.setDisplayState(DwtControl.HOVER);
-	this.parent._hoveredItem = this;
 };
 
 DwtMenuItem._mouseOverListener =
@@ -352,24 +337,15 @@ function(ev) {
 	if (!menuItem) { return false; }
 	if (menuItem._style & DwtMenuItem.SEPARATOR_STYLE) { return false; }
     DwtButton._mouseOverListener(ev, menuItem);
-	menuItem.parent._hoveredItem = menuItem;
     menuItem.parent._popdownSubmenus();
     if (menuItem._menu && !ev.ersatz) {
         menuItem._popupMenu(menuItem._hoverDelay);
     }
 };
 
-DwtMenuItem._mouseOutListener =
-function(ev) {
-	DwtButton._mouseOutListener(ev);
-	if (ev.dwtObj) {
-		ev.dwtObj.parent._hoveredItem = null;
-	}
-};
-
 DwtMenuItem._listeners = {};
 DwtMenuItem._listeners[DwtEvent.ONMOUSEOVER] = new AjxListener(null, DwtMenuItem._mouseOverListener);
-DwtMenuItem._listeners[DwtEvent.ONMOUSEOUT] = new AjxListener(null, DwtMenuItem._mouseOutListener);
+DwtMenuItem._listeners[DwtEvent.ONMOUSEOUT] = new AjxListener(null, DwtButton._mouseOutListener);
 DwtMenuItem._listeners[DwtEvent.ONMOUSEDOWN] = new AjxListener(null, DwtButton._mouseDownListener);
 DwtMenuItem._listeners[DwtEvent.ONMOUSEUP] = new AjxListener(null, DwtButton._mouseUpListener);
 DwtMenuItem._listeners[DwtEvent.ONMOUSEENTER] = new AjxListener(null, DwtMenuItem._mouseOverListener);

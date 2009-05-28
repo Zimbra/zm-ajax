@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -80,10 +82,8 @@ function() {
 
 ZmCsfeCommand.setSessionId =
 function(sessionId) {
-	var id = (sessionId != null)
-		? ((sessionId instanceof Array) ? sessionId[0].id : sessionId.id)
-		: null;
-	ZmCsfeCommand._sessionId = id ? parseInt(id) : null;
+	var id = (sessionId instanceof Array) ? sessionId[0].id : sessionId;
+	ZmCsfeCommand._sessionId = parseInt(id);
 };
 
 ZmCsfeCommand.faultToEx =
@@ -159,7 +159,7 @@ function(request) {
  */
 ZmCsfeCommand.prototype.invoke =
 function(params) {
-	this.cancelled = false;
+
 	if (!(params && (params.soapDoc || params.jsonObj))) { return; }
 
 	var requestStr = ZmCsfeCommand.getRequestStr(params);
@@ -184,53 +184,23 @@ function(params) {
 			return (!params.returnXml) ? (this._getResponseData(response, params)) : response;
 		}
 	} catch (ex) {
-		this._handleException(ex, params, rpcCallback);
-	}
-};
-
-/**
- * Sends a REST request to the server via GET and returns the response.
- *
- * @param params			[hash]				hash of params:
- *        restUri			[string]			REST URI to send the request to
- *        asyncMode			[boolean]*			If true, request sent asynchronously
- *        callback			[AjxCallback]*		Callback to run when response is received (async mode)
- */
-ZmCsfeCommand.prototype.invokeRest =
-function(params) {
-
-	if (!(params && params.restUri)) { return; }
-
-	var rpcCallback;
-	try {
-		this._st = new Date();
-		if (params.asyncMode) {
-			rpcCallback = new AjxCallback(this, this._runCallback, [params]);
-			this._rpcId = AjxRpc.invoke(null, params.restUri, null, rpcCallback, true);
-		} else {
-			var response = AjxRpc.invoke(null, params.restUri, null, null, true);
-			return response.text;
+		if (!(ex && (ex instanceof ZmCsfeException || ex instanceof AjxSoapException || ex instanceof AjxException))) {
+			var newEx = new ZmCsfeException();
+			newEx.method = params.methodNameStr;
+			newEx.detail = ex ? ex.toString() : "undefined exception";
+			newEx.code = ZmCsfeException.UNKNOWN_ERROR;
+			newEx.msg = "Unknown Error";
+			ex = newEx;
 		}
-	} catch (ex) {
-		this._handleException(ex, params, rpcCallback);
+		if (params.asyncMode) {
+			rpcCallback.run(new ZmCsfeResult(ex, true));
+		} else {
+			throw ex;
+		}
 	}
 };
 
-/**
- * Cancels this request (which must be async).
- */
-ZmCsfeCommand.prototype.cancel =
-function() {
-	if (!this._rpcId) { return; }
-	this.cancelled = true;
-	var req = AjxRpc.getRpcRequestById(this._rpcId);
-	if (req) {
-		req.cancel();
-	}
-};
-
-ZmCsfeCommand.getRequestStr =
-function(params) {
+ZmCsfeCommand.getRequestStr = function(params) {
 	return 	params.soapDoc ? ZmCsfeCommand._getSoapRequestStr(params) : ZmCsfeCommand._getJsonRequestStr(params);
 };
 
@@ -247,13 +217,10 @@ function(params) {
 	}
 	if (params.noSession) {
 		context.nosession = {};
-	} else {
-		var sessionId = ZmCsfeCommand.getSessionId();
-		if (sessionId) {
-			context.session = {_content:sessionId, id:sessionId};
-		} else {
-			context.session = {};
-		}
+	}
+	var sessionId = ZmCsfeCommand.getSessionId();
+	if (sessionId) {
+		context.sessionId = {_content:sessionId, id:sessionId};
 	}
 	if (params.targetServer) {
 		context.targetServer = {_content:params.targetServer};
@@ -275,8 +242,8 @@ function(params) {
 	}
 	
 	// Tell server what kind of response we want
-	if (params.useXml) {
-		context.format = {type:"xml"};
+	if (!params.useXml) {
+		context.format = {type:"js"};
 	}
 
 	params.methodNameStr = ZmCsfeCommand.getMethodName(params.jsonObj);
@@ -293,14 +260,10 @@ function(params) {
 		}
 		context.authToken = ZmCsfeCommand._curAuthToken = authToken;
 	}
-
-	if (window.DBG) {
-		var ts = DBG._getTimeStamp();
-		DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), params.methodNameStr);
-		DBG.dumpObj(AjxDebug.DBG1, obj);
-	}
-
+	
+	DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), params.methodNameStr);
 	params.jsonRequestObj = obj;
+	DBG.dumpObj(AjxDebug.DBG1, obj);
 
 	return AjxStringUtil.objToString(obj);
 };
@@ -325,12 +288,11 @@ function(params) {
 	
 		if (params.noSession) {
 			soapDoc.set("nosession", null, context);
-		} else {
-			var sessionId = ZmCsfeCommand.getSessionId();
-			var si = soapDoc.set("session", null, context);
-			if (sessionId) {
-				si.setAttribute("id", sessionId);
-			}
+		}
+		var sessionId = ZmCsfeCommand.getSessionId();
+		if (sessionId) {
+			var si = soapDoc.set("sessionId", null, context);
+			si.setAttribute("id", sessionId);
 		}
 		if (params.targetServer) {
 			soapDoc.set("targetServer", params.targetServer, context);
@@ -396,13 +358,9 @@ function(params) {
 			soapDoc.set("authToken", authToken, context);
 		}
 	}
-
-	if (window.DBG) {
-		var ts = DBG._getTimeStamp();
-		DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), params.methodNameStr);
-		DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
-	}
-
+	
+	DBG.println(AjxDebug.DBG1, ["<H4>", params.methodNameStr, params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), params.methodNameStr);
+	DBG.printXML(AjxDebug.DBG1, soapDoc.getXml());
 	return soapDoc.getXml();
 };
 
@@ -415,7 +373,6 @@ function(params) {
 ZmCsfeCommand.prototype._runCallback =
 function(params, result) {
 	if (!result) { return; }
-	if (this.cancelled && params.skipCallbackIfCancelled) {	return; }
 
 	var response;
 	if (result instanceof ZmCsfeResult) {
@@ -445,7 +402,6 @@ function(response, params) {
 
 	var result = new ZmCsfeResult();
 	var xmlResponse = false;
-	var restResponse = Boolean(params.restUri);
 	var respDoc = null;
 
 	// check for un-parseable HTML error response from server
@@ -462,7 +418,7 @@ function(response, params) {
 
 	if (typeof(response.text) == "string" && response.text.indexOf("{") == 0) {
 		respDoc = response.text;
-	} else if (!restResponse) {
+	} else {
 		// an XML response if we requested one, or a fault
 		try {
 			xmlResponse = true;
@@ -499,17 +455,14 @@ function(response, params) {
 		var m = respDoc.match(/\{"?Body"?:\{"?(\w+)"?:/);
 		if (m && m.length) linkName = m[1];
 	}
-	if (window.DBG) {
-		var ts = DBG._getTimeStamp();
-		DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" , " - ", ts, "</H4>"].join(""), linkName);
-	}
+	DBG.println(AjxDebug.DBG1, ["<H4> RESPONSE", params.asyncMode ? " (asynchronous)" : "" ,"</H4>"].join(""), linkName);
 
-	var obj = restResponse ? response.text : {};
+	var obj = {};
 
 	if (xmlResponse) {
 		DBG.printXML(AjxDebug.DBG1, respDoc.getXml());
 		obj = respDoc._xmlDoc.toJSObject(true, false, true);
-	} else if (!restResponse) {
+	} else {
 		try {
 			eval("obj=" + respDoc);
 		} catch (ex) {
@@ -529,7 +482,7 @@ function(response, params) {
 
 	DBG.dumpObj(AjxDebug.DBG1, obj, -1);
 
-	var fault = obj && obj.Body && obj.Body.Fault;
+	var fault = obj.Body.Fault;
 	if (fault) {
 		// JS response with fault
 		var ex = ZmCsfeCommand.faultToEx(fault, params);
@@ -555,26 +508,40 @@ function(response, params) {
 		}
 	}
 
-	if (obj.Header && obj.Header.context && obj.Header.context.session) {
-		ZmCsfeCommand.setSessionId(obj.Header.context.session);
+	if (obj.Header && obj.Header.context && obj.Header.context.sessionId) {
+		ZmCsfeCommand.setSessionId(obj.Header.context.sessionId);
 	}
 
 	return params.asyncMode ? result : obj;
 };
 
-ZmCsfeCommand.prototype._handleException =
-function(ex, params, callback) {
-	if (!(ex && (ex instanceof ZmCsfeException || ex instanceof AjxSoapException || ex instanceof AjxException))) {
-		var newEx = new ZmCsfeException();
-		newEx.method = params.methodNameStr || params.restUri;
-		newEx.detail = ex ? ex.toString() : "undefined exception";
-		newEx.code = ZmCsfeException.UNKNOWN_ERROR;
-		newEx.msg = "Unknown Error";
-		ex = newEx;
+/**
+ * Cancels this request (which must be async).
+ */
+ZmCsfeCommand.prototype.cancel =
+function() {
+	if (!this._rpcId) { return; }
+
+	var req = AjxRpc.getRpcRequestById(this._rpcId);
+	if (req) {
+		req.cancel();
 	}
-	if (params.asyncMode) {
-		callback.run(new ZmCsfeResult(ex, true));
-	} else {
-		throw ex;
-	}
+};
+
+// DEPRECATED - instead, use instance method invoke() above
+ZmCsfeCommand.invoke =
+function(soapDoc, noAuthToken, serverUri, targetServer, useXml, noSession, changeToken) {
+	DBG.println(AjxDebug.DBG1, "Warning: use of deprecated method ZmCsfeCommand.invoke()");
+	var command = new ZmCsfeCommand();
+	var cmdParams = {
+		soapDoc:soapDoc,
+		noAuthToken:noAuthToken,
+		serverUri:serverUri,
+		targetServer:targetServer,
+		useXml:useXml,
+		noSession:noSession,
+		changeToken:changeToken,
+		asyncMode:false
+	};
+	return command.invoke(cmdParams);
 };

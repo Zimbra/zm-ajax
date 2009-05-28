@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -188,30 +190,11 @@ function(mapName, action) {
 /**
  * Reloads a given keymap
  * 
- * @param {string} mapName Name of the keymap to reload
+ * @param {string} mapName Name of the keymap to releoad
  */
 DwtKeyMapMgr.prototype.reloadMap =
 function(mapName) {
 	this._fsas[mapName] = DwtKeyMapMgr.__buildFSA({}, this._map[mapName], mapName);
-};
-
-/**
- * Returns a list of maps that the given map inherits from.
- *
- * @param {string} mapName Name of the keymap to reload
- */
-DwtKeyMapMgr.prototype.getAncestors =
-function(mapName, list) {
-    list = list || [];
-    var subMap = this._fsas[mapName];
-    var parents = subMap && subMap.inherit;
-    if (parents && parents.length) {
-        for (var i = 0; i < parents.length; i++) {
-            list.push(parents[i]);
-            list = this.getAncestors(parents[i], list);
-        }
-    }
-    return list;
 };
 
 /**

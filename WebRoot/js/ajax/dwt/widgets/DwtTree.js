@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -22,12 +24,12 @@
  *
  * @author Ross Dargahi
  * 
- * @param params			[hash]				hash of params:
- *        parent			[DwtComposite] 		parent widget
- *        style 			[constant]*			tree style: DwtTree.SINGLE_STYLE (single selection) or
- * 												DwtTree.MULTI_STYLE (multiselection);
- *        className			[string]*			CSS class
- *        posStyle			[constant]*			positioning style
+ * @param params		[hash]				hash of params:
+ *        parent		[DwtComposite] 		parent widget
+ *        style 		[constant]*			tree style: DwtTree.SINGLE_STYLE (single selection) or 
+ * 											DwtTree.MULTI_STYLE (multiselection);
+ *        className		[string]*			CSS class
+ *        posStyle		[constant]*			positioning style
  */
 DwtTree = function(params) {
 	if (arguments.length == 0) { return; }
@@ -50,11 +52,9 @@ DwtTree = function(params) {
 		}
 		this._style = style;
 	}
-	this.isCheckedStyle = ((this._style & DwtTree.CHECKEDITEM_STYLE) != 0);
-
 	this._selectedItems = new AjxVector();
 	this._selEv = new DwtSelectionEvent(true);
-};
+}
 
 DwtTree.PARAMS = ["parent", "style", "className", "posStyle"];
 
@@ -64,7 +64,7 @@ DwtTree.prototype.constructor = DwtTree;
 DwtTree.prototype.toString = 
 function() {
 	return "DwtTree";
-};
+}
 
 DwtTree.SINGLE_STYLE = 1;
 DwtTree.MULTI_STYLE = 2;
@@ -79,43 +79,39 @@ DwtTree.ITEM_DBL_CLICKED = 4;
 DwtTree.ITEM_EXPANDED = 1;
 DwtTree.ITEM_COLLAPSED = 2;
 
-DwtTree.prototype.getStyle =
-function() {
+DwtTree.prototype.getStyle = function() {
 	return this._style;
 };
 
 DwtTree.prototype.addSelectionListener = 
 function(listener) {
 	this.addListener(DwtEvent.SELECTION, listener);
-	if (DwtControl.globalSelectionListener) {
-		this.addListener(DwtEvent.SELECTION, DwtControl.globalSelectionListener);
-	}
-};
+}
 
 DwtTree.prototype.removeSelectionListener = 
 function(listener) {
 	this.removeListener(DwtEvent.SELECTION, listener);    	
-};
+}
 
 DwtTree.prototype.addTreeListener = 
 function(listener) {
 	this.addListener(DwtEvent.TREE, listener);
-};
+}
 
 DwtTree.prototype.removeTreeListener = 
 function(listener) {
 	this.removeListener(DwtEvent.TREE, listener);
-};
+}
 
 DwtTree.prototype.getItemCount =
 function() {
 	return this._children.size();
-};
+}
 
 DwtTree.prototype.getItems =
 function() {
 	return this._children.getArray();
-};
+}
 
 DwtTree.prototype.deselectAll =
 function() {
@@ -124,19 +120,18 @@ function() {
 	for (var i = 0; i < sz; i++) {
 		a[i]._setSelected(false);
 	}
-	if (sz > 0) {
+	if (sz > 0)
 		this._notifyListeners(DwtEvent.SELECTION, this._selectedItems.getArray(), DwtTree.ITEM_DESELECTED, null, this._selEv);
-	}
 	this._selectedItems.removeAll();
-};
+}
 
 DwtTree.prototype.getSelection =
 function() {
 	return this._selectedItems.getArray();
-};
+}
 
 DwtTree.prototype.setSelection =
-function(treeItem, skipNotify, kbNavEvent, noFocus) {
+function(treeItem, skipNotify) {
 	// Remove currently selected items from the selection list. if <treeItem> is in that list, then note it and return
 	// after we are done processing the selected list
 	var a = this._selectedItems.getArray();
@@ -145,39 +140,41 @@ function(treeItem, skipNotify, kbNavEvent, noFocus) {
 	var j = 0;
 	var alreadySelected = false;
 	for (var i = 0; i < sz; i++) {
-		if (a[i] == treeItem) {
+		if (a[i] == treeItem) 
 			alreadySelected = true;
-		} else {
+		else {
 			a[i]._setSelected(false);
 			this._selectedItems.remove(a[i]);
-			if (da == null) {
+			if (da == null)
 				da = new Array();
-			}
 			da[j++] = a[i];
 		}
 	}
 
-	if (da && !skipNotify) {
-		this._notifyListeners(DwtEvent.SELECTION, da, DwtTree.ITEM_DESELECTED, null, this._selEv, kbNavEvent);
-	}
+	if (da && !skipNotify)
+		this._notifyListeners(DwtEvent.SELECTION, da, DwtTree.ITEM_DESELECTED, null, this._selEv);
 
-	if (alreadySelected) { return; }
+	if (alreadySelected)
+		return;
 	this._selectedItems.add(treeItem);
-
+	
 	// Expand all parent nodes, and then set item selected
-	this._expandUp(treeItem);
-	if (treeItem._setSelected(true, noFocus) && !skipNotify) {
-		this._notifyListeners(DwtEvent.SELECTION, [treeItem], DwtTree.ITEM_SELECTED, null, this._selEv, kbNavEvent);
+	var parent = treeItem.parent
+	while(parent instanceof DwtTreeItem) {
+		parent.setExpanded(true);
+		parent = parent.parent;
 	}
-};
+	if (treeItem._setSelected(true) && !skipNotify)
+		this._notifyListeners(DwtEvent.SELECTION, [treeItem], DwtTree.ITEM_SELECTED, null, this._selEv);
+}
 
 DwtTree.prototype.getSelectionCount =
 function() {
 	return this._selectedItems.size();
-};
+}
 
 DwtTree.prototype.addChild =
-function(child) {};
+function(child) {}
 
 DwtTree.prototype.addSeparator =
 function() {
@@ -185,18 +182,7 @@ function() {
 //	sep.className = "horizSep";
 	sep.className = "vSpace";
 	this.getHtmlElement().appendChild(sep);
-};
-
-// Expand parent chain from given item up to root
-DwtTree.prototype._expandUp =
-function(item) {
-	var parent = item.parent;
-	while (parent instanceof DwtTreeItem) {
-		parent.setExpanded(true);
-		parent.setVisible(true);
-		parent = parent.parent;
-	}
-};
+}
 
 DwtTree.prototype._addItem =
 function(item, index) {
@@ -208,10 +194,9 @@ function(item, index) {
 	} else {
 		thisHtmlElement.insertBefore(item.getHtmlElement(), thisHtmlElement.childNodes[index]);	
 	}
-};
+}
 
-DwtTree.prototype.sort =
-function(cmp) {
+DwtTree.prototype.sort = function(cmp) {
         this._children.sort(cmp);
         var df = document.createDocumentFragment();
         this._children.foreach(function(item, i){
@@ -226,74 +211,7 @@ function(child) {
 	this._children.remove(child);
 	this._selectedItems.remove(child);
 	this.getHtmlElement().removeChild(child.getHtmlElement());
-};
-
-/**
- * Returns the next (or previous) tree item relative to the currently selected item,
- * in top-to-bottom order as the tree appears visually. Items such as separators (and
- * possibly headers) that cannot be selected are skipped.
- *
- * If there is no currently selected item, return the first or last item. If we go past
- * the beginning or end of the tree, return null.
- *
- * For efficiency, a flattened list of the visible and selectable tree items is maintained.
- * It will be cleared on any change to the tree's display, then regenerated when it is
- * needed.
- *
- * @param next		[boolean]		if true, return next tree item; otherwise, return previous tree item
- */
-DwtTree.prototype._getNextTreeItem =
-function(next) {
-
-	var sel = this.getSelection();
-	var curItem = (sel && sel.length) ? sel[0] : null;
-
-	var nextItem = null, idx = -1;
-	var list = this.getTreeItemList(true);
-	if (curItem) {
-		for (var i = 0, len = list.length; i < len; i++) {
-			var ti = list[i];
-			if (ti == curItem) {
-				idx = next ? i + 1 : i - 1;
-				break;
-			}
-		}
-		nextItem = list[idx]; // if array index out of bounds, nextItem is undefined
-	} else {
-		// if nothing is selected yet, return the first or last item
-		if (list && list.length) {
-			nextItem = next ? list[0] : list[list.length - 1];
-		}
-	}
-	return nextItem;
-};
-
-/**
- * Creates a flat list of this tree's items, going depth-first.
- *
- * @param visible	[boolean]*		if true, only include visible/selectable items
- */
-DwtTree.prototype.getTreeItemList =
-function(visible) {
-	return this._addToList([], visible);
-};
-
-DwtTree.prototype._addToList =
-function(list, visible, treeItem) {
-	if (treeItem && !treeItem._isSeparator &&
-		(!visible || (treeItem.getVisible() && treeItem._selectionEnabled))) {
-
-		list.push(treeItem);
-	}
-	if (!treeItem || !visible || treeItem._expanded) {
-		var parent = treeItem || this;
-		var children = parent.getChildren ? parent.getChildren() : [];
-		for (var i = 0; i < children.length; i++) {
-			this._addToList(list, visible, children[i]);
-		}
-	}
-	return list;
-};
+}
 
 /**
 * Workaround for IE, which resets checkbox state when an element is appended to the DOM.
@@ -303,7 +221,7 @@ function(list, visible, treeItem) {
 */
 DwtTree.prototype.setCheckboxes =
 function(treeItem) {
-	if (!this.isCheckedStyle || !AjxEnv.isIE) return;
+	if (!this._isCheckedStyle() || !AjxEnv.isIE) return;
 	if (treeItem && treeItem._isSeparator) return;
 
 	var items;
@@ -313,9 +231,8 @@ function(treeItem) {
 	} else {
 		items = this.getItems();
 	}
-	for (var i = 0; i < items.length; i++) {
+	for (var i = 0; i < items.length; i++)
 		this.setCheckboxes(items[i]);
-	}
 };
 
 DwtTree.prototype._deselect =
@@ -325,7 +242,12 @@ function(item) {
 		item._setSelected(false);
 		this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_DESELECTED, null, this._selEv);
 	}
-};
+}
+
+DwtTree.prototype._isCheckedStyle =
+function() {
+	return ((this._style & DwtTree.CHECKEDITEM_STYLE) != 0);
+}
 
 DwtTree.prototype._itemActioned =
 function(item, ev) {
@@ -336,12 +258,12 @@ function(item, ev) {
 	this._actionedItem = item;
 	item._setActioned(true);
 	this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_ACTIONED, ev, this._selEv);
-};
+}
 
 DwtTree.prototype._itemChecked =
 function(item, ev) {
 	this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_CHECKED, ev, this._selEv);
-};
+}
 
 DwtTree.prototype._itemClicked =
 function(item, ev) {
@@ -350,17 +272,15 @@ function(item, ev) {
 	var numSelectedItems = this._selectedItems.size();
 	if (this._style & DwtTree.SINGLE_STYLE || (!ev.shiftKey && !ev.ctrlKey)) {
 		if (numSelectedItems > 0) {
-			for (i = 0; i < numSelectedItems; i++) {
+			for (i = 0; i < numSelectedItems; i++)
 				a[i]._setSelected(false);
-			}
 			// Notify listeners of deselection
 			this._notifyListeners(DwtEvent.SELECTION, this._selectedItems.getArray(), DwtTree.ITEM_DESELECTED, ev, this._selEv);
 			this._selectedItems.removeAll();
 		}
 		this._selectedItems.add(item);
-		if (item._setSelected(true)) {
+		if (item._setSelected(true))
 			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
-		}
 	} else {
 		if (ev.ctrlKey) {
 			if (this._selectedItems.contains(item)) {
@@ -369,32 +289,31 @@ function(item, ev) {
 				this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_DESELECTED, ev, this._selEv);
 			} else {
 				this._selectedItems.add(item);
-				if (item._setSelected(true)) {
+				if (item._setSelected(true))
 					this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
-				}
 			}
 		} else {
 			// SHIFT KEY
 		}
 	}
-};
+}
 
 DwtTree.prototype._itemDblClicked = 
 function(item, ev) {
 	this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_DBL_CLICKED, ev, this._selEv);
-};
+}
 
 DwtTree.prototype._itemExpanded =
 function(item, ev, skipNotify) {
-	if (!skipNotify) {
+	if (ev && !skipNotify) {
 		this._notifyListeners(DwtEvent.TREE, [item], DwtTree.ITEM_EXPANDED, ev, DwtShell.treeEvent);
 	}
-};
+}
 
 DwtTree.prototype._itemCollapsed =
 function(item, ev, skipNotify) {
 	var i;
-	if (!skipNotify) {
+	if (ev && !skipNotify) {
 		this._notifyListeners(DwtEvent.TREE, [item], DwtTree.ITEM_COLLAPSED, ev, DwtShell.treeEvent);
 	}
 	var setSelection = false;
@@ -424,10 +343,10 @@ function(item, ev, skipNotify) {
 			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
 		}
 	}
-};
+}
 
 DwtTree.prototype._notifyListeners =
-function(listener, items, detail, srcEv, destEv, kbNavEvent) {
+function(listener, items, detail, srcEv, destEv) {
 	if (this.isListenerRegistered(listener)) {
 		if (srcEv) {
 			DwtUiEvent.copy(destEv, srcEv);
@@ -437,7 +356,6 @@ function(listener, items, detail, srcEv, destEv, kbNavEvent) {
 			destEv.item = items[0];
 		}
 		destEv.detail = detail;
-		destEv.kbNavEvent = kbNavEvent;
 		this.notifyListeners(listener, destEv);
 	}
-};
+}
