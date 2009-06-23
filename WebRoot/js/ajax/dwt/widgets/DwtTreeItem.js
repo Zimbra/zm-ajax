@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -22,18 +24,16 @@
  *
  * @author Ross Dargahi
  * 
- * @param params				[hash]				hash of params:
- *        parent				[DwtComposite] 		parent widget
- *        index 				[int]*				index at which to add this control among parent's children
- *        text 					[string]*			label text for the tree item
- *        imageInfo				[string]*			icon for the tree item
- *        deferred				[boolean]*			If true, postpone initialization until needed.
- *        className				[string]*			CSS class
- *        posStyle				[constant]*			positioning style
- *        selectable			[boolean]*			if true, this item is selectable
- *        forceNotifySelection	[boolean]*			force notify selection even if checked style
- *        forceNotifyAction		[boolean]*			force notify action even if checked style
- *        singleClickAction		[boolean]*			true if an action is performed in single click
+ * @param params		[hash]				hash of params:
+ *        parent		[DwtComposite] 		parent widget
+ *        index 		[int]*				index at which to add this control among parent's children 
+ *        text 			[string]*			label text for the tree item
+ *        imageInfo		[string]*			icon for the tree item
+ *        deferred		[boolean]*			If true, postpone initialization until needed.
+ *        className		[string]*			CSS class
+ *        posStyle		[constant]*			positioning style
+ *        forceNotifySelection	[boolean]*	force notify selection even if checked style
+ *        forceNotifyAction		[boolean]*	force notify action even if checked style
  */
 DwtTreeItem = function(params) {
     if (arguments.length == 0) { return; }    
@@ -48,11 +48,10 @@ DwtTreeItem = function(params) {
 	}
 
 	this._origClassName = params.className || "DwtTreeItem";
-	this._textClassName = [this._origClassName, "Text"].join("-");
-	this._selectedClassName = [this._origClassName, DwtCssStyle.SELECTED].join("-");
-	this._selectedFocusedClassName = [this._origClassName, DwtCssStyle.SELECTED, DwtCssStyle.FOCUSED].join("-");
-	this._actionedClassName = [this._origClassName, DwtCssStyle.ACTIONED].join("-");
-	this._dragOverClassName = [this._origClassName, DwtCssStyle.DRAG_OVER].join("-");
+	this._textClassName = this._origClassName + "-Text";
+	this._selectedClassName = this._origClassName + "-" + DwtCssStyle.SELECTED;
+	this._actionedClassName = this._origClassName + "-" + DwtCssStyle.ACTIONED;
+	this._dragOverClassName = this._origClassName + "-" + DwtCssStyle.DRAG_OVER;
 
 	params.deferred = (params.deferred !== false);
 	params.className = null;
@@ -62,28 +61,17 @@ DwtTreeItem = function(params) {
 	this._extraInfo = params.extraInfo;
 	this._textParam = params.text;
 	this._deferred = params.deferred;
-	this._expandNodeImage = params.expandNodeImage || "NodeExpanded";
-	this._collapseNodeImage = params.collapseNodeImage || "NodeCollapsed";
 	this._itemChecked = false;
 	this._initialized = false;
-	this._selectionEnabled = Boolean(params.selectable !== false);
+	this._selectionEnabled = true;
 	this._forceNotifySelection = Boolean(params.forceNotifySelection);
 	this._actionEnabled = true;
 	this._forceNotifyAction = Boolean(params.forceNotifyAction);
-	this._dndScrollCallback = params.dndScrollCallback;
-	this._dndScrollId = params.dndScrollId;
 
 	// disable selection if checkbox style
-	if (this._tree.isCheckedStyle) {
+	if (this._tree._isCheckedStyle()) {
 		this.enableSelection(false);
 		this._selectedClassName = this._origClassName;
-	}
-	if (params.singleClickAction) {
-		this._singleClickAction = true;
-		this._selectedFocusedClassName = this._selectedClassName = this._textClassName;
-		this._hoverClassName = [this._origClassName, DwtCssStyle.HOVER].join("-");
-	} else {
-		this._hoverClassName = this._textClassName;
 	}
 
 	// if our parent is DwtTree or our parent is initialized and is not deferred
@@ -96,8 +84,7 @@ DwtTreeItem = function(params) {
 	}
 };
 
-DwtTreeItem.PARAMS = ["parent", "index", "text", "imageInfo", "deferred", "className", "posStyle",
-					  "forceNotifySelection", "forceNotifyAction"];
+DwtTreeItem.PARAMS = ["parent", "index", "text", "imageInfo", "deferred", "className", "posStyle"];
 
 DwtTreeItem.prototype = new DwtComposite;
 DwtTreeItem.prototype.constructor = DwtTreeItem;
@@ -360,78 +347,6 @@ function(child) {
 	}
 };
 
-DwtTreeItem.prototype.getKeyMapName =
-function() {
-	return "DwtTreeItem";
-};
-
-DwtTreeItem.prototype.handleKeyAction =
-function(actionCode, ev) {
-
-
-	switch (actionCode) {
-
-		case DwtKeyMap.NEXT: {
-			var ti = this._tree._getNextTreeItem(true);
-			if (ti) {
-				ti._tree.setSelection(ti, false, true);
-			}
-			break;
-		}
-
-		case DwtKeyMap.PREV: {
-			var ti = this._tree._getNextTreeItem(false);
-			if (ti) {
-				ti._tree.setSelection(ti, false, true);
-			}
-			break;
-		}
-
-		case DwtKeyMap.EXPAND: {
-			if (!this._expanded) {
-				this.setExpanded(true, false, true);
-			}
-			break;
-		}
-
-		case DwtKeyMap.COLLAPSE: {
-			if (this._expanded) {
-				this.setExpanded(false, false, true);
-			}
-			break;
-		}
-
-		case DwtKeyMap.ACTION: {
-			var target = this.getHtmlElement();
-			var p = Dwt.toWindow(target, 0, 0);
-			var s = this.getSize();
-			var docX = p.x + s.x / 4;
-			var docY = p.y + s.y / 2;
-			this._gotMouseDownRight = true;
-			this._emulateSingleClick({dwtObj:this, target:target, button:DwtMouseEvent.RIGHT,
-									  docX:docX, docY:docY, kbNavEvent:true});
-
-			break;
-		}
-
-
-		default:
-			return false;
-
-	}
-
-	return true;
-};
-
-DwtTreeItem.prototype.addNodeIconListeners =
-function() {
-	var imgEl = AjxImg.getImageElement(this._nodeCell);
-	if (imgEl) {
-		Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
-		Dwt.setHandler(imgEl, DwtEvent.ONMOUSEUP, DwtTreeItem._nodeIconMouseUpHdlr);
-	}
-};
-
 DwtTreeItem.prototype._initialize =
 function(index, realizeDeferred) {
 	this._checkState();
@@ -443,7 +358,7 @@ function(index, realizeDeferred) {
 	}
 	var data = {id:this._htmlElId,
 				divClassName:this._origClassName,
-				isCheckedStyle:this._tree.isCheckedStyle,
+				isCheckedStyle:this._tree._isCheckedStyle(),
 				textClassName:this._textClassName };
 
 	this._createHtmlFromTemplate(this.TEMPLATE, data);
@@ -464,8 +379,12 @@ function(index, realizeDeferred) {
 	if (this._nodeCell) {
 		this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
 		if (this._children.size() > 0) {
-			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
-			this.addNodeIconListeners();
+			AjxImg.setImage(this._nodeCell, "NodeCollapsed");
+			var imgEl = AjxImg.getImageElement(this._nodeCell);
+			if (imgEl) {
+				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
+				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEUP, DwtTreeItem._nodeIconMouseUpHdlr);
+			}
 		}
 	}
 
@@ -474,7 +393,7 @@ function(index, realizeDeferred) {
 	}
 
 	// initialize checkbox
-	if (this._tree.isCheckedStyle && this._checkBox) {
+	if (this._tree._isCheckedStyle() && this._checkBox) {
 		this.showCheckBox(this._checkBoxVisible);
 		if (AjxEnv.isIE) {
 			// HACK: See setChecked method for explanation
@@ -510,8 +429,11 @@ function(className) {
 	var treeItemEl = this.getHtmlElement();
 	
 	var newClassName = this._origClassName	 + " " + className;
-	if(treeItemDivEl) {
-		treeItemDivEl.className = newClassName;
+	if(treeItemTableEl) {
+		treeItemTableEl.className =  newClassName;
+		if(treeItemDivEl) {
+			treeItemDivEl.className = newClassName
+		}		
 	}else if (treeItemEl) {
 		treeItemEl.className =  className;
 	}	
@@ -520,11 +442,7 @@ function(className) {
 DwtTreeItem.prototype._addMouseListeners =
 function() {
 	var events = [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP, DwtEvent.ONDBLCLICK];
-	if (AjxEnv.isIE) {
-		events.push(DwtEvent.ONMOUSEENTER, DwtEvent.ONMOUSELEAVE);
-	} else {
-		events.push(DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT);
-	}
+	events.push(AjxEnv.isIE ? DwtEvent.ONMOUSELEAVE : DwtEvent.ONMOUSEOUT);
 	if (AjxEnv.isSafari) {
 		events.push(DwtEvent.ONCONTEXTMENU);
 	}
@@ -537,26 +455,23 @@ DwtTreeItem.prototype._addDeferredChild =
 function(child, index) {
 	// If we are initialized, then we need to add a expansion node
 	if (this._initialized && this._children.size() == 0) {
-		if (this._nodeCell) {
-			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
-			var imgEl = AjxImg.getImageElement(this._nodeCell);
-			if (imgEl) {
-				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
-				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEUP, DwtTreeItem._nodeIconMouseUpHdlr);
-			}
+		AjxImg.setImage(this._nodeCell, "NodeCollapsed");
+		var imgEl = AjxImg.getImageElement(this._nodeCell);
+		if (imgEl) {
+			Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
+			Dwt.setHandler(imgEl, DwtEvent.ONMOUSEUP, DwtTreeItem._nodeIconMouseUpHdlr);
 		}
 	}
 	this._children.add(child, index);
 };
 
 DwtTreeItem.prototype.addChild =
-function(child) { /* do nothing since we add to the DOM our own way */ };
+function(child) { /* do nothing since we add to the DOM our own way */ }
 
 DwtTreeItem.prototype._addItem =
 function(item, index, realizeDeferred) {
-	if (!this._children.contains(item)) {
+	if (!this._children.contains(item))
 		this._children.add(item, index);
-	}
 
 	if (this._childDiv == null) {
 		this._childDiv = document.createElement("div");
@@ -566,22 +481,19 @@ function(item, index, realizeDeferred) {
 			this._childDiv.className = "DwtTreeItemLevel1ChildDiv";
 		}
 		this.getHtmlElement().appendChild(this._childDiv);
-		if (!this._expanded) {
+		if (!this._expanded) 
 			this._childDiv.style.display = "none";
-		}
 	}
 
-	if (realizeDeferred && this._nodeCell) {
+	if (realizeDeferred) {
 		if (AjxImg.getImageClass(this._nodeCell) == AjxImg.getClassForImage("Blank_16")) {
-			if (this._expanded) {
-				AjxImg.setImage(this._nodeCell, this._expandNodeImage);
-			} else {
-				AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
-			}
+			if (this._expanded)
+				AjxImg.setImage(this._nodeCell, "NodeExpanded");
+			else
+				AjxImg.setImage(this._nodeCell, "NodeCollapsed");
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
-			if (imgEl) {
+			if (imgEl)
 				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
-			}
 		}
 	}
 
@@ -594,24 +506,16 @@ function(item, index, realizeDeferred) {
 	}
 };
 
-DwtTreeItem.prototype.sort =
-function(cmp) {
-	this._children.sort(cmp);
-	if (this._childDiv) {
-		this._setChildElOrder();
-	} else {
-		this._needsSort = true;
-	}
-};
-
-DwtTreeItem.prototype._setChildElOrder =
-function(cmp) {
-	var df = document.createDocumentFragment();
-	this._children.foreach(function(item, i) {
-		df.appendChild(item.getHtmlElement());
-		item._index = i;
-	});
-	this._childDiv.appendChild(df);
+DwtTreeItem.prototype.sort = function(cmp) {
+        if (this._childDiv) {
+                this._children.sort(cmp);
+                var df = document.createDocumentFragment();
+                this._children.foreach(function(item, i){
+                        df.appendChild(item.getHtmlElement());
+                        item._index = i;
+                });
+                this._childDiv.appendChild(df);
+        }
 };
 
 DwtTreeItem.prototype._getDragProxy =
@@ -660,10 +564,9 @@ function() {
 };
 
 DwtTreeItem.prototype._dragLeave =
-function(ev) {
-	if (this._preDragClassName) {
+function() {
+	if (this._preDragClassName)
 		this._textCell.className = this._preDragClassName;
-	}
 };
 
 DwtTreeItem.prototype._drop =
@@ -672,7 +575,7 @@ function() {
 		this._textCell.className = this._preDragClassName;
 };
 
-DwtTreeItem._nodeIconMouseDownHdlr =
+DwtTreeItem._nodeIconMouseDownHdlr = 
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
 	var mouseEv = DwtShell.mouseEvent;
@@ -704,9 +607,7 @@ function(expand, ev, skipNotify) {
 	if (!expand) {
 		this._expanded = false;
 		this._childDiv.style.display = "none";
-		if (this._nodeCell) {
-			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
-		}
+		AjxImg.setImage(this._nodeCell, "NodeCollapsed");
 		this._tree._itemCollapsed(this, ev, skipNotify);
 	} else {
 		// The first thing we need to do is initialize any deferred children so that they
@@ -714,9 +615,7 @@ function(expand, ev, skipNotify) {
 		this._realizeDeferredChildren();
 		this._expanded = true;
 		this._childDiv.style.display = "block";
-		if (this._nodeCell) {
-			AjxImg.setImage(this._nodeCell, this._expandNodeImage);
-		}
+		AjxImg.setImage(this._nodeCell, "NodeExpanded");
 		this._tree._itemExpanded(this, ev, skipNotify);
 	}	
 };
@@ -736,12 +635,6 @@ function() {
 			treeItem._initialized = true;
 		}
 	}
-	if (this._needsSort) {
-		if (a.length) {
-			this._setChildElOrder();
-		}
-		delete this.__needsSort;
-	}
 };
 
 DwtTreeItem.prototype._isChildOf =
@@ -756,21 +649,21 @@ function(item) {
 };
 
 DwtTreeItem.prototype._setSelected =
-function(selected, noFocus) {
+function(selected) {
 	if (this._selected != selected) {
 		this._selected = selected;
 		if (!this._initialized) {
 			this._initialize();
 		}
-		if (!this._textCell) { return; }
 		if (selected && (this._selectionEnabled || this._forceNotifySelection)) {
-            this._textCell.className = this._selectedClassName;
-			if (!noFocus) {
-				this.focus();
-			}
+            if (this._textCell) {
+                this._textCell.className = this._selectedClassName;
+            }
             return true;
 		} else {
-   			this._textCell.className = this._textClassName;
+            if (this._textCell) {
+    			this._textCell.className = this._textClassName;
+            }
             return false;
 		}
 	}
@@ -783,32 +676,16 @@ function(actioned) {
 		if (!this._initialized) {
 			this._initialize();
 		}
-		if (!this._textCell) { return; }
 		if (actioned && (this._actionEnabled || this._forceNotifyAction) && !this._selected) {
 			this._textCell.className = this._actionedClassName;
 			return true;
 		} else if (!actioned) {
-			if (!this._selected) {
+			if (this._textCell && !this._selected) {
 				this._textCell.className = this._textClassName;
 			}
 			return false;
 		}
 	}
-};
-
-DwtTreeItem.prototype._focus =
-function() {
-	if (!this._textCell) { return; }
-	// focused tree item should always be selected as well
-	if (this._selectionEnabled) {
-		this._textCell.className = this._selectedFocusedClassName;
-	}
-};
-
-DwtTreeItem.prototype._blur =
-function() {
-	if (!this._textCell) { return; }
-	this._textCell.className = this._selected ? this._selectedClassName : this._textClassName;
 };
 
 DwtTreeItem._checkBoxMouseDownHdlr =
@@ -861,23 +738,9 @@ function(ev) {
 
 	treeItem._gotMouseDownLeft = false;
 	treeItem._gotMouseDownRight = false;
-	if (treeItem._singleClickAction && treeItem._textCell) {
-		treeItem._textCell.className = treeItem._textClassName;
-	}
 };
 
-DwtTreeItem._mouseOverListener =
-function(ev) {
-	var treeItem = ev.dwtObj;
-	if (!treeItem) { return false; }
-	if (ev.target == treeItem._childDiv) { return; }
-
-	if (treeItem._singleClickAction && treeItem._textCell) {
-		treeItem._textCell.className = treeItem._hoverClassName;
-	}
-};
-
-DwtTreeItem._mouseUpListener =
+DwtTreeItem._mouseUpListener = 
 function(ev) {
 	var treeItem = ev.dwtObj;
 	if (!treeItem) { return false; }
@@ -923,20 +786,9 @@ function(ev) {
 	}
 };
 
-DwtTreeItem.prototype._emulateSingleClick =
-function(params) {
-	var mev = new DwtMouseEvent();
-	this._setMouseEvent(mev, params);
-	mev.kbNavEvent = params.kbNavEvent;
-	this.notifyListeners(DwtEvent.ONMOUSEUP, mev);
-};
-
 DwtTreeItem._listeners = {};
 DwtTreeItem._listeners[DwtEvent.ONMOUSEDOWN] = new AjxListener(null, DwtTreeItem._mouseDownListener);
 DwtTreeItem._listeners[DwtEvent.ONMOUSEOUT] = new AjxListener(null, DwtTreeItem._mouseOutListener);
-DwtTreeItem._listeners[DwtEvent.ONMOUSELEAVE] = new AjxListener(null, DwtTreeItem._mouseOutListener);
-DwtTreeItem._listeners[DwtEvent.ONMOUSEENTER] = new AjxListener(null, DwtTreeItem._mouseOverListener);
-DwtTreeItem._listeners[DwtEvent.ONMOUSEOVER] = new AjxListener(null, DwtTreeItem._mouseOverListener);
 DwtTreeItem._listeners[DwtEvent.ONMOUSEUP] = new AjxListener(null, DwtTreeItem._mouseUpListener);
 DwtTreeItem._listeners[DwtEvent.ONDBLCLICK] = new AjxListener(null, DwtTreeItem._doubleClickListener);
 DwtTreeItem._listeners[DwtEvent.ONCONTEXTMENU] = new AjxListener(null, DwtTreeItem._contextListener);

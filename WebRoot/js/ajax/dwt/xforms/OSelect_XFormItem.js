@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -40,7 +42,6 @@ OSelect1_XFormItem.prototype.editable = false;
 OSelect1_XFormItem.prototype.menuUp = false;
 OSelect1_XFormItem.prototype.noteUp = false;
 OSelect1_XFormItem.prototype.inputSize = 25;
-OSelect1_XFormItem.prototype.bmolsnr = true;
 //TODO: get showing check working for the normal SELECT, requires:
 //		* separate notion of hilited row (for mouseover) and selected row(s)
 //		* teach select1 that more than one value may be selected (same as select)
@@ -53,8 +54,6 @@ OSelect1_XFormItem.MENU_DIR_UP=2;
 OSelect1_XFormItem.MENU_DIR_UNKNOWN=0;
 OSelect1_XFormItem.NOTE_HEIGHT=40;
 OSelect1_XFormItem.prototype.menuDirection = OSelect1_XFormItem.MENU_DIR_UNKNOWN;
-OSelect1_XFormItem.prototype.visibilityChecks = [XFormItem.prototype.hasReadPermission];
-OSelect1_XFormItem.prototype.enableDisableChecks = [XFormItem.prototype.hasWritePermission];
 
 //	methods
 OSelect1_XFormItem.prototype.initFormItem = function () {
@@ -68,7 +67,6 @@ OSelect1_XFormItem.prototype.initFormItem = function () {
 }
 
 OSelect1_XFormItem.prototype.updateElement = function (newValue) {
-	if (this.choicesAreDirty()) this.updateChoicesHTML();
 	// hack: if this item can display multiple values and there's a comma in the value
 	//		assume it's a list of values
 	if (this.getMultiple() && newValue != null && newValue.indexOf(",") > -1) {
@@ -134,9 +132,7 @@ OSelect1_XFormItem.prototype.getNoteElement = function () {
 OSelect1_XFormItem.prototype.showMenu = function() {
 	if(!this._enabled)
 		return;
-	
-	this.hideInputTooltip();
-	
+
 	if (AjxEnv.isIE && !OSelect1_XFormItem._mouseWheelEventAttached) {
 		var form = this.getForm();
 		var formElement = form.getHtmlElement();
@@ -153,28 +149,27 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 	menu.className = this.getMenuCssClass();
 	menu.innerHTML = this.getChoicesHTML();	
 	var bounds;
-	//bounds = this.getBounds(this.getElement().childNodes[0]);
-	if(this.getInheritedProperty("editable")) {
-		bounds = this.getBounds(this.getDisplayElement());
-	} else {
-		bounds = this.getBounds(this.getElement());
-	}
-	var w =DwtShell.getShell(window).getSize();
+	bounds = this.getBounds(this.getElement().childNodes[0]);
+
+	var w = DwtShell.getShell(window).getSize();
 	var wh = w.y;
 	var WINDOW_GUTTER = 8;
 	menu.style.left = parseInt(bounds.left);
 	menu.style.top = parseInt(bounds.top) + parseInt(bounds.height) - 1;
 	var choices = this.getNormalizedChoices();
 	if(choices && choices.values) {
+	//	menu.style.width = bounds.width;
 		menu.style.overflow="hidden";
+//		menu.style.height = (parseInt(bounds.height-3)*choices.values.length)+3;
+//        menu.style.height = (17*choices.values.length)+3;
         var visibleChoices = choices.values.length - choices.totalInvisibleChoices;
         menu.style.height = (19*visibleChoices)+3;
+
     }
 
 	var value = this.getInstanceValue();
-	var getDisplayValueMethod = this.getDisplayValueMethod();
-	if (getDisplayValueMethod) {
-		value = getDisplayValueMethod.call(this, value);
+	if (this.$getDisplayValue) {
+		value = this.$getDisplayValue(value);
 	}
 	var selectedItemNum = this.getChoiceNum(value);
 	this.__currentHiliteItem = selectedItemNum;
@@ -186,28 +181,13 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 	var mBounds = this.getBounds(menu);
 	var menuHeight = mBounds.height;
 	var menuTop = mBounds.top;
-	if (AjxEnv.isIE) {
-		if(this.getInheritedProperty("editable")) {
-			menu.style.width = parseInt(bounds.width)+4;
-			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 1;			
-		} else {
-			menu.style.width = parseInt(bounds.width)+2;
-			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 1;
-		}
-	} else {
-		if(this.getInheritedProperty("editable")) {
-			menu.style.width = parseInt(bounds.width)-5;
-			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 6;
-		} else {
-			menu.style.width = parseInt(bounds.width)-3;
-			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 4;			
-		}
-	}
+
 	if(menuHeight + menuTop > wh - WINDOW_GUTTER) {
 		//menu does not fit downwards - check if it fits upwards
 		if((bounds.top - menuHeight) > WINDOW_GUTTER) {
 			//yes - it fits upwards
-			
+			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width);
+			menu.style.width = parseInt(bounds.width);	
 			menu.style.top = bounds.top - menuHeight;			
 			menu.getElementsByTagName("table")[0].className = this.getChoiceTableCssClass();				
 		} else {
@@ -226,11 +206,14 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 				menu.style.height = wh-WINDOW_GUTTER-parseInt(menu.style.top);								
 				this.menuDirection = OSelect1_XFormItem.MENU_DIR_DOWN;
 			}
+			menu.style.width = parseInt(bounds.width)+2;					
 			menu.style.overflow="auto";	
 			menu.getElementsByTagName("table")[0].className = this.getChoiceScrollTableCssClass();
 			menu.getElementsByTagName("table")[0].width="100%";
 		} 
 	} else {
+		menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width);
+		menu.style.width = parseInt(bounds.width);	
 		menu.getElementsByTagName("table")[0].className = this.getChoiceTableCssClass();
 	}
 	menu.style.zIndex = 1000000;
@@ -264,6 +247,9 @@ OSelect1_XFormItem.prototype.redrawChoices = function () {
 }
 
 OSelect1_XFormItem.prototype.hideMenu = function () {
+ 	var menu = this.getMenuElement();
+ 	if (menu == null) return; 	
+	
 	// hide the menu on a timer so we don't have to deal with wierd selection bugs
 	setTimeout(this.getFormGlobalRef()+".getElement('" + this.getMenuElementId() + "').style.display = 'none'", 10);
 
@@ -275,7 +261,7 @@ OSelect1_XFormItem.prototype.hideMenu = function () {
 		var form = this.getForm();
 		var formElement = form.getHtmlElement();
 		if (formElement.detachEvent) {
-			if (window.event != null) window.event.cancelBubble = true;
+			window.event.cancelBubble = true;
 			formElement.detachEvent("onmousewheel", OSelect1_XFormItem._mouseWheelHideMenu);
 			OSelect1_XFormItem._mouseWheelEventAttached = false;
 			OSelect1_XFormItem._mouseWheelCurrentSelect = null;
@@ -417,7 +403,7 @@ OSelect1_XFormItem.prototype.getBounds = function(anElement, containerElement) {
 	var myBounds = new Object();
 	myBounds.left = 0;
 	myBounds.top = 0;
-	myBounds.width = anElement.clientWidth;
+	myBounds.width = anElement.offsetWidth;
 	myBounds.height = anElement.offsetHeight;
 
 	if(!containerElement) {
@@ -604,6 +590,13 @@ OSelect1_XFormItem.prototype.setChoiceCssClass = function (itemNum, cssClass) {
 	var els = this.getChoiceElements(itemNum);
 	if (els) {
 		els.className = cssClass;
+/*		if (this.getShowCheck()) {
+			els[0].className = cssClass + "_check";
+			els[1].className = cssClass;
+		} else {
+			els[0].className = cssClass;
+		}
+*/		
 	}
 }
 
@@ -632,14 +625,59 @@ OSelect1_XFormItem.prototype.getItemNumFromEvent = function (event) {
 OSelect1_XFormItem.prototype.getChoiceElements = function (itemNum) {
 	if (itemNum == null || itemNum == -1) return null;
 	try {
-		return this.getForm().getElement([this.getId(), "_choice_",itemNum].join(""));
+//		return this.getForm().getElement(this.getId() + "_menu_table").rows[itemNum].getElementsByTagName("td");
+		return this.getForm().getElement(this.getId() + "_menu_table").getElementsByTagName("div")[itemNum];
 	} catch (e) {
 		return null;
 	}
 }
 
 
-OSelect1_XFormItem.prototype.outputHTML = function (HTMLoutput) {
+/*OSelect1_XFormItem.prototype.outputHTML = function (HTMLoutput, updateScript) {
+	var id = this.getId();
+	if (this.getWidth() == "auto") {
+		var element = this.getElement("temp");
+		var element = this.createElement("temp", null, "div", "MENU CONTENTS");
+		element.style.left = -1000;
+		element.style.top = -1000;
+		element.className = this.getMenuCssClass();
+		element.innerHTML = this.getChoicesHTML();
+		this._width = element.offsetWidth+20;
+		element.innerHTML = "";
+	}
+
+	HTMLoutput.append(
+		"<div id=", id, this.getCssString(),
+			" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').showMenu(this, event)\"",
+			" onselectstart=\"return false\"",
+			">\r", 
+
+			"  <table ", this.getTableCssString(), ">\r", 
+				"  <tr><td width=100%><div id=", id, "_display class=", this.getDisplayCssClass(), ">VALUE</div></td>\r",
+					"    <td>", this.getArrowButtonHTML(),"</td>\r", 
+				"  </tr>\r", 
+			"  </table>\r", 
+		"</div>\r"
+	);
+}*/
+/*
+OSelect1_XFormItem.prototype.getWidth = function () {
+	var width = XFormItem.prototype.getWidth.call(this);
+	if(width=="auto")
+		return width;
+	else {
+		if(String(parseInt(width)).length == String(width).length) {
+			return parseInt(width)+20;
+		} else {
+			var units = String(width).substring(String(parseInt(width)).length);
+			var newWidth = parseInt(width)+20;
+			return [newWidth,units].join("");
+		}
+	}
+	
+}*/
+
+OSelect1_XFormItem.prototype.outputHTML = function (HTMLoutput, updateScript) {
 	var id = this.getId();
 	var ref = this.getFormGlobalRef() + ".getItemById('"+ id + "')";	
 	var inputHtml;
@@ -647,24 +685,23 @@ OSelect1_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 		var inputSize = this.getInheritedProperty("inputSize");		
 		inputHtml = ["<input type=text id=", id, "_display class=", this.getDisplayCssClass(), " value='VALUE' ", 
 					" onchange=\"",ref, ".onValueTyped(this.value, event||window.event)\"",
-					" onmouseup=\"", ref, ".showMenu(this)\"",
+					" onmouseup=\"", ref, ".showMenu(this, event)\"",
 					" onkeyup=\"",ref, ".onKeyUp(this.value, event||window.event)\"", "size=",inputSize,
 					">"].join("");
 	}
-	
 	if (this.getWidth() == "auto") {
 		if(this.getInheritedProperty("editable") && !AjxEnv.isIE) {
 			var element = this.getElement("tempInput");
 			if(!element) 
-				element = this.createElement("tempInput", null, "input");
+				element = this.createElement("tempInput", null, "input", "MENU CONTENTS");
 			element.style.left = -1000;
 			element.style.top = -1000;
 			element.type="text";
 			element.size = inputSize;
 			element.className = this.getDisplayCssClass();
 			this._width = element.offsetWidth+20;
-			element.readonly = true;
-			this.hideElement("tempInput",false);			
+/*			element.innerHTML = "";
+			delete element;*/
 		} else {
 			var element = this.getElement("tempDiv");
 			if(!element) 
@@ -676,14 +713,13 @@ OSelect1_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 			this._width = element.offsetWidth+20;
 			element.innerHTML = "";
 		}
-
 	}
 
 	
 	if(this.getInheritedProperty("editable")) {
 		HTMLoutput.append(
 			"<div id=", id, this.getCssString(),
-				" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').showMenu(this)\"",
+				" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').showMenu(this, event)\"",
 				" onselectstart=\"return false\"",
 				">",
 				"<table ", this.getTableCssString(), ">", 
@@ -696,7 +732,7 @@ OSelect1_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 	} else {
 		HTMLoutput.append(
 			"<div id=", id, this.getCssString(),
-				" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').showMenu(this)\"",
+				" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').showMenu(this, event)\"",
 				" onselectstart=\"return false\"",
 				"><table ", this.getTableCssString(), ">",
 					"<tr><td width=100%><div id=", id, "_display class=", this.getDisplayCssClass(), ">VALUE</div></td>",
@@ -715,6 +751,7 @@ OSelect1_XFormItem.prototype.getArrowButtonHTML = function () {
  	 " onmouseout=\"", ref, ".displayMouseOut();\"",
  	 " onmousedown=\"", ref, ".displayMouseDown();\"", 	 
  	 ">", AjxImg.getImageHtml("SelectPullDownArrow"), "</div>");
+//	return AjxImg.getImageHtml("SelectPullDownArrow", "", AjxBuffer.concat("id=",this.getId(), "_arrow_button"));
 }
 
 OSelect1_XFormItem.prototype.getTableCssClass = function () {
@@ -746,8 +783,8 @@ OSelect1_XFormItem.prototype.getNoteCssClass = function () {
 }
 
 OSelect1_XFormItem.prototype.outputChoicesHTMLStart = function(html) {
-	html.append("<table cellspacing=0 cellpadding=0 id=", this.getId(),"_menu_table class=", this.getChoiceTableCssClass(), ">");
-	
+	html.append("<table cellspacing=0 cellpadding=0 id=", this.getId(),"_menu_table class=", this.getChoiceTableCssClass(), ">\r");
+	//html.append( "<div width=100% style='overflow:visible;' id=", this.getId(),"_menu_table class=", this.getChoiceTableCssClass(), ">\r");
 }
 OSelect1_XFormItem.prototype.outputChoicesHTMLEnd = function(html) {
 	html.append("</table>");
@@ -756,7 +793,7 @@ OSelect1_XFormItem.prototype.outputChoicesHTMLEnd = function(html) {
 OSelect1_XFormItem.prototype.getChoiceHTML = function (itemNum, value, label, cssClass) {
 	var ref = this.getFormGlobalRef() + ".getItemById('"+ this.getId()+ "')";
 	//try DIVs
-	return AjxBuffer.concat("<tr><td><div id=\"", this.getId(), "_choice_", itemNum, "\" ", "class=", cssClass, 
+	return AjxBuffer.concat("<tr><td><div class=", cssClass, 
 			" onmouseover=\"",ref, ".onChoiceOver(", itemNum,", event||window.event)\"",
 			" onmouseout=\"",ref, ".onChoiceOut(", itemNum,", event||window.event)\"",
 			" onclick=\"",ref, ".onChoiceClick(", itemNum,", event||window.event)\"",
@@ -771,10 +808,7 @@ OSelect1_XFormItem.prototype.setElementEnabled = function(enabled) {
 	var table = this.getForm().getElement(this.getId()).getElementsByTagName("table")[0];
 	if(enabled) {
 		this.getDisplayElement().className = this.getDisplayCssClass();
-		var el = this.getArrowElement();
-		if(el)
-			AjxImg.setImage(el, "SelectPullDownArrow");
-			
+		AjxImg.setImage(this.getArrowElement(), "SelectPullDownArrow");
 		this.getForm().getElement(this.getId()).className = this.cssClass;
 		table.className = this.getTableCssClass();
 		if(this.getInheritedProperty("editable")) {
@@ -782,10 +816,7 @@ OSelect1_XFormItem.prototype.setElementEnabled = function(enabled) {
 		}
 	} else {
 		this.getDisplayElement().className = this.getDisplayCssClass() + "_disabled";
-		var el = this.getArrowElement();
-		if(el)
-			AjxImg.setImage(el, "SelectPullDownArrowDis");
-			
+		AjxImg.setImage(this.getArrowElement(), "SelectPullDownArrowDis");
 		this.getForm().getElement(this.getId()).className = this.cssClass + "_disabled";
 		table.className = this.getTableCssClass()+"_disabled";
 		if(this.getInheritedProperty("editable")) {
@@ -799,6 +830,8 @@ OSelect1_XFormItem.prototype.setElementEnabled = function(enabled) {
 //
 OSelect_XFormItem = function() {}
 XFormItemFactory.createItemType("_OSELECT_", "oselect", OSelect_XFormItem, OSelect1_XFormItem);
+// override the default SELECT type
+//XFormItemFactory.registerItemType("_SELECT_", "select", OSelect_XFormItem)
 
 OSelect_XFormItem.prototype.focusable = false;
 OSelect_XFormItem.prototype.multiple = true;
@@ -815,16 +848,17 @@ OSelect_XFormItem.prototype.outputHTML = function(html) {
 OSelect_XFormItem.prototype.choicesChangeLsnr = function () {
 	this._choiceDisplayIsDirty = true;
 	delete this.$normalizedChoices;
+	//this.showMenu();
 	var element = this.getElement();
 	if(element)
 		element.innerHTML = this.getChoicesHTML();	
 }
 
 OSelect_XFormItem.prototype.outputChoicesHTMLStart = function(html) {
-	html.append("<table id=", this.getId(),"_menu_table width=100% cellspacing=2 cellpadding=0>");
+	html.append("<table id=", this.getId(),"_menu_table width=100% cellspacing=2 cellpadding=0>\r");
 }
 OSelect_XFormItem.prototype.outputChoicesHTMLEnd = function(html) {
-	html.append("</table>");
+	html.append("</table>\r");
 }
 
 
@@ -847,12 +881,6 @@ OSelect_XFormItem.prototype.updateElement = function (values) {
 		var itemNum = this.getChoiceNum(values);
 		if (itemNum != -1) this.hiliteChoice(itemNum);
 	}
-
-    //updateEnabledDisabled() should run after the element is created.
-    //OSelect_XFormItem updateElement will redraw the elements.
-    //The redraw of the elements will screw the enable disable state of the element
-    //So we update the enable disable state after the redraw.      
-    this.updateEnabledDisabled();
 }
 
 OSelect_XFormItem.prototype.onChoiceOver = function (itemNum) {}
@@ -862,14 +890,14 @@ OSelect_XFormItem.prototype.onChoiceClick = function (itemNum, event) {
 	event = event || window.event;
 	var clearOthers = true;
 	var includeIntermediates = false;
-	
+	//if (event.ctrlKey){
 	if(this.getMultiple()) {
 		clearOthers = false;
 		if (event.shiftKey) {
 			includeIntermediates = true;
 		}
 	}
-	
+	//} else if (event.shiftKey) {
 	this.choiceSelected(itemNum, clearOthers, includeIntermediates, event);
 };
 
@@ -889,20 +917,19 @@ OSelect_XFormItem.prototype.choiceSelected = function (itemNum, clearOldValues, 
 }
 
 OSelect_XFormItem.prototype.setValue = function (newValue, clearOldValues, includeIntermediates, event) {
-	var oldValues
+	var newValues, currentValues;
+	newValues = new Array();
 	if (clearOldValues) {
 		if(this.getMultiple()) {
 			if(newValue instanceof Array)
-				oldValues = newValue;
+				newValues = newValue;
 			else
-				oldValues = [newValue];
+				newValues = [newValue];
 		} else {
-			oldValues = newValue;
+			newValues = newValue;
 		}
 	} else {
-		oldValues;
 		if (includeIntermediates) {
-			oldValues = [];
 			var vals = this.getNormalizedValues();
 			var start = this._selectionCursor;
 			var dist = this._selectionAnchor - this._selectionCursor;
@@ -911,87 +938,59 @@ OSelect_XFormItem.prototype.setValue = function (newValue, clearOldValues, inclu
 				start = this._selectionAnchor;
 			}
 			for (var i = start; i <= start + dist; ++i) {
-				oldValues.push(vals[i]);
+				newValues.push(vals[i]);
 			}
 		} else {
-			oldValues = this.getInstanceValue();
-
-			if(oldValues) {
-				if (typeof oldValues == "string") {
-					if (oldValues == "") 	
-						oldValues = [];
+			currentValues = this.getInstanceValue();
+			if(currentValues) {
+				if (typeof currentValues == "string") {
+					if (currentValues == "") 	
+						currentValues = [];
 					else
-						oldValues = oldValues.split(",");
+						currentValues = newValues.split(",");
 				}
 			} else {
-				oldValues = new Array();			
+				currentValues = new Array();			
 			}			
 			
 			var found = false;
-			for (var i = 0; i < oldValues.length; i++) {
-				if (oldValues[i] == newValue) {
+			var cnt = currentValues.length;
+			for (var i = 0; i < cnt; i++) {
+				if (currentValues[i] == newValue) {
 					found = true;
-					break;
+					continue;
+				} else {
+					newValues.push(currentValues[i]);
 				}
 			}
 			
-			if (found) {
-				oldValues.splice(i, 1);
-			} else {
-				oldValues.push(newValue);
+			if (!found) {
+				newValues.push(newValue);
 			}
 		}
-		if(!oldValues || (oldValues.length == 1 && oldValues[0] == "")) {
-			oldValues = []
+		if(!newValues || (newValues.length == 1 && newValues[0] == "")) {
+			newValues = []
 		} 
 		// if we have a modelItem which is a LIST type
-		//	convert the output to the propert outputType
+		//	convert the output to the proper outputType
 		var modelItem = this.getModelItem();
 		if (modelItem && modelItem.getOutputType) {
 			if (modelItem.getOutputType() == _STRING_) {
-				oldValues = oldValues.join(modelItem.getItemDelimiter());
+				newValues = newValues.join(modelItem.getItemDelimiter());
 			}
 		} else {
 			// otherwise assume we should convert it to a comma-separated string
-			oldValues = oldValues.join(",");
+			newValues = newValues.join(",");
 		}
 	}
-	this.getForm().itemChanged(this, oldValues, event);
+	this.getForm().itemChanged(this, newValues, event);
 }
-
-OSelect_XFormItem.prototype.setElementEnabled = function (enabled) {
-	var choices = this.getNormalizedChoices();
-	if(!choices)
-		return;
-	
-	var values = choices.values;
-	if(!values)
-		return;
-		
-	var cnt = values.length;
-	for(var i=0; i < cnt; i ++) {
-		var chkbx = this.getElement(this.getId() + "_choiceitem_" + i);	
-		if(chkbx) {
-			if(enabled) {
-				chkbx.className = this.getChoiceCssClass();
-				chkbx.disabled = false;
-			} else {
-				chkbx.className = this.getChoiceCssClass() + "_disabled";
-				chkbx.disabled = true;
-			}
-		} 
-	}
-};
-
-
-
 
 OSelect_Check_XFormItem = function() {}
 XFormItemFactory.createItemType("_OSELECT_CHECK_", "oselect_check", OSelect_Check_XFormItem, OSelect_XFormItem)
 OSelect_Check_XFormItem.prototype.cssClass = "oselect_check";
 OSelect_Check_XFormItem.prototype.getChoiceHTML = function (itemNum, value, label, cssClass) {
 	var ref = this.getFormGlobalRef() + ".getItemById('"+ this.getId()+ "')";
-	var id = this.getId();
 	return AjxBuffer.concat(
 		"<tr><td class=", cssClass, 
 			" onmouseover=\"",ref, ".onChoiceOver(", itemNum,", event||window.event)\"",
@@ -999,9 +998,9 @@ OSelect_Check_XFormItem.prototype.getChoiceHTML = function (itemNum, value, labe
 			" onclick=\"",ref, ".onChoiceClick(", itemNum,", event||window.event)\"",
 			" ondblclick=\"",ref, ".onChoiceDoubleClick(", itemNum,", event||window.event)\"",
 		">",
-		"<table cellspacing=0 cellpadding=0><tr><td><input type=checkbox id='",id,"_choiceitem_",itemNum,"'></td><td>",
+		"<table cellspacing=0 cellpadding=0><tr><td><input type=checkbox></td><td>",
 				label,
-		"</td></tr></table></tr>"
+		"</td></tr></table></tr>\r"
 	);
 }
 
@@ -1054,23 +1053,4 @@ OSelect_Check_XFormItem.prototype.selectAll = function (ev) {
 
 OSelect_Check_XFormItem.prototype.deselectAll = function (ev) {
 	this.getForm().itemChanged(this, [], ev);
-}
-
-OSelect_Check_XFormItem.prototype.updateElement = function (values) {
-	var element = this.getElement();
-	element.innerHTML = this.getChoicesHTML();
-
-	if (values) {	
-		if(this.getMultiple()) {
-			if (typeof values == "string") values = values.split(",");
-			for (var i = 0; i < values.length; i++) {
-				var itemNum = this.getChoiceNum(values[i]);
-				if (itemNum != -1) this.hiliteChoice(itemNum);
-			}
-		} else {
-			var itemNum = this.getChoiceNum(values);
-			if (itemNum != -1) this.hiliteChoice(itemNum);
-		}
-	}
-    this.updateEnabledDisabled();
 }

@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -26,9 +28,6 @@
  *        options 		[array]				List of options. This can be either an array of DwtSelectOptions or an array of strings.
  *        className		[string]*			CSS class
  *        posStyle		[constant]*			positioning style
- *        cascade		[boolean]*			should menu cascade (i.e. multiple columns).
- *        									If not specified, default is true
- *        									for backwards compatibility.
  */
 DwtSelect = function(params) {
 	if (arguments.length == 0) { return; }
@@ -47,7 +46,6 @@ DwtSelect = function(params) {
     this._options = new AjxVector();
     this._optionValuesToIndices = {};
     this._selectedValue = this._selectedOption = null;
-	this._cascade = params.cascade == null || params.cascade;
 
     // add options
     var options = params.options;
@@ -66,7 +64,7 @@ DwtSelect = function(params) {
     // add listeners
     this._menuCallback = new AjxListener(this, this._createMenu);
     this.setMenu(this._menuCallback, true);
-};
+}
 
 DwtSelect.PARAMS = ["parent", "options", "style", "className"];
 
@@ -107,7 +105,7 @@ DwtSelect.prototype.TEMPLATE = "dwt.Widgets#ZSelect";
 DwtSelect.getObjectFromElement =
 function(element) {
 	return element && element.dwtObj
-		? AjxCore.objectWithId(element.dwtObj) : null;
+		? AjxCore.objectWithId(element.dwtObj) : null
 };
 
 // other
@@ -125,7 +123,6 @@ function(element) {
  */
 DwtSelect.prototype.addOption =
 function(option, selected, value) {
-	if (!option) { return; }
 	var opt = null;
 	var val = null;
 	if (typeof(option) == 'string') {
@@ -205,24 +202,6 @@ function(value, newValue) {
 
 	// Register listener to create new menu.
 	this.setMenu(this._menuCallback, true);
-};
-
-/**
- * Enables or disables an option.
- *
- * @param value		{object} 	value 		the value of the option to enable/disable
- * @param enabled	{Boolean}	enabled 	true to enable the option
- */
-DwtSelect.prototype.enableOption =
-function(value, enabled) {
-	var option = this.getOptionWithValue(value);
-	if (option.enabled != enabled) {
-		option.enabled = enabled;
-		var item = option.getItem();
-		if (item) {
-			item.setEnabled(enabled);
-		}
-	}
 };
 
 DwtSelect.prototype.clearOptions =
@@ -322,7 +301,7 @@ function(listener) {
 DwtSelect.prototype.size =
 function() {
 	return this._options.size();
-};
+}
 
 DwtSelect.prototype.disable =
 function() {
@@ -338,13 +317,13 @@ DwtSelect.prototype.setImage =
 function(imageInfo) {
 	// dont call DwtButton base class!
 	DwtLabel.prototype.setImage.call(this, imageInfo);
-};
+}
 
 DwtSelect.prototype.setText =
 function(text) {
 	// dont call DwtButton base class!
 	DwtLabel.prototype.setText.call(this, text);
-};
+}
 
 
 DwtSelect.prototype.dispose =
@@ -425,7 +404,6 @@ DwtSelect.prototype._createMenu = function() {
 		if (text) {
 			mi.setText(AjxStringUtil.htmlEncode(text));
 		}
-		mi.setEnabled(option.enabled);
 
 		mi.addSelectionListener(new AjxListener(this, this._handleOptionSelection));
 		mi._optionIndex = i;
@@ -469,21 +447,13 @@ function(option) {
  		if (displayValue) {
  			this.setText(AjxStringUtil.htmlEncode(displayValue));
  		}
- 		this.setImage(image);
- 		this._selectedValue = option._value;
+ 		if (image) {
+ 			this.setImage(image);
+ 		}
+		this._selectedValue = option._value;
 		this._selectedOption = option;
 	}
     this._updateSelection(option);
-
-    /* bug: 21041 */
-    var divElId = this.getHtmlElement();
-    AjxTimedAction.scheduleAction(new AjxTimedAction(this,
-		function(){
-			var divEl = document.getElementById(divElId.id);
-			if (divEl) {
-				divEl.style.width = divEl.childNodes[0].offsetWidth;
-			}
-    }, 200));
 };
 
 DwtSelect.prototype._updateSelection = 
@@ -521,7 +491,7 @@ DwtSelectOptionData = function(value, displayValue, isSelected, selectedValue, i
 	this.isSelected = isSelected;
 	this.selectedValue = selectedValue;
 	this.image = image;
-};
+}
 
 //
 // Class
@@ -555,8 +525,7 @@ DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, 
 	this._selectedValue = selectedValue;
 
 	this._internalObjectId = DwtSelect._assignId(this);
-	this.enabled = true;
-};
+}
 
 DwtSelectOption.prototype.setItem = 
 function(menuItem) {
@@ -619,8 +588,8 @@ function() {
 
 DwtSelectMenu = function(parent) {
 //    DwtMenu.call(this, parent, DwtMenu.DROPDOWN_STYLE, "ZSelectMenu", null, true);
-    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", cascade:parent._cascade});
-};
+    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu"});
+}
 DwtSelectMenu.prototype = new DwtMenu;
 DwtSelectMenu.prototype.constructor = DwtSelectMenu;
 
@@ -632,7 +601,7 @@ DwtSelectMenu.prototype.TEMPLATE = "dwt.Widgets#ZSelectMenu";
 
 DwtSelectMenuItem = function(parent) {
     DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem"});
-};
+}
 DwtSelectMenuItem.prototype = new DwtMenuItem;
 DwtSelectMenuItem.prototype.constructor = DwtSelectMenuItem;
 
