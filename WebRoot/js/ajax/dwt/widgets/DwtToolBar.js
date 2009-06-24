@@ -146,6 +146,7 @@ function() {
 DwtToolBar.prototype.addSpacer =
 function(size, index) {
     var el = this._createSpacerElement();
+	el.rel = "spacer";
 	this._addItem(DwtToolBar.SPACER, el, index);
 	return el;
 };
@@ -153,6 +154,7 @@ function(size, index) {
 DwtToolBar.prototype.addSeparator =
 function(className, index) {
 	var el = this._createSeparatorElement();
+	el.rel = "separator";
 	this._addItem(DwtToolBar.SEPARATOR, el, index);
 	return el;
 };
@@ -160,6 +162,7 @@ function(className, index) {
 DwtToolBar.prototype.addFiller =
 function(className, index) {
 	var el = this._createFillerElement();
+	el.rel = "filler";
 	this._addItem(DwtToolBar.FILLER, el, index);
 	return el;
 };
