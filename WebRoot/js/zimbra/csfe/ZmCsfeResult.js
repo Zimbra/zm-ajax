@@ -1,5 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -54,11 +56,10 @@ function(data, isException, header) {
 */
 ZmCsfeResult.prototype.getResponse =
 function() {
-	if (this._isException) {
+	if (this._isException)
 		throw this._data;
-	} else {
+	else
 		return this._data;
-	}
 };
 
 /**
