@@ -295,10 +295,12 @@ AjxTimezone.getShortName = function(clientId) {
 	}
 	return rule.shortName;
 };
-AjxTimezone.getMediumName = function(clientId) {
-	var rule = AjxTimezone.getRule(clientId);
+AjxTimezone.getMediumName = function(clientId,indx) {
+	var rule = AjxTimezone.getRule(clientId,null,indx);
 	if (!rule.mediumName) {
-		rule.mediumName = AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
+        var idWithOffset = [clientId,indx||"1"].join("_");
+        rule.mediumName = AjxMsg[idWithOffset] || AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
+
 	}
 	return rule.mediumName;
 };
@@ -307,22 +309,36 @@ AjxTimezone.getLongName = AjxTimezone.getMediumName;
 AjxTimezone.addRule = function(rule) {
     var serverId = rule.serverId;
     var clientId = rule.clientId;
-
-    AjxTimezone._CLIENT2SERVER[clientId] = serverId;
+    if(AjxTimezone._CLIENT2SERVER[clientId] !== undefined && AjxTimezone._CLIENT2RULE[clientId].standard.offset != rule.standard.offset){
+        AjxTimezone._CLIENT2SERVER_DUPS[clientId] = serverId;
+    }else{
+        AjxTimezone._CLIENT2SERVER[clientId] = serverId;
+    }
     AjxTimezone._SERVER2CLIENT[serverId] = clientId;
-    AjxTimezone._SHORT_NAMES[clientId] = AjxTimezone._generateShortName(rule.standard.offset);
-    AjxTimezone._CLIENT2RULE[clientId] = rule;
-
+    if(AjxTimezone._SHORT_NAMES[clientId] !== undefined && AjxTimezone._CLIENT2RULE[clientId].standard.offset != rule.standard.offset){
+        AjxTimezone._SHORT_NAMES_DUPS[clientId] = AjxTimezone._generateShortName(rule.standard.offset);
+    }else{
+        AjxTimezone._SHORT_NAMES[clientId] = AjxTimezone._generateShortName(rule.standard.offset);
+    }
+    if(AjxTimezone._CLIENT2RULE[clientId] !== undefined && AjxTimezone._CLIENT2RULE[clientId].standard.offset != rule.standard.offset){
+        AjxTimezone._CLIENT2RULE_DUPS[clientId] = rule;
+    }else{
+        AjxTimezone._CLIENT2RULE[clientId] = rule;
+    }
     var array = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
     array.push(rule);
 };
 
-AjxTimezone.getRule = function(clientId, tz) {
-	var rule = AjxTimezone._CLIENT2RULE[clientId];
+AjxTimezone.getRule = function(clientId, tz, indx) {
+    var rule = AjxTimezone._CLIENT2RULE[clientId];
+    if(indx){
+        rule = AjxTimezone._CLIENT2RULE_DUPS[clientId];        
+    }
     if (!rule) {
         // try to find the rule treating the clientId as the serverId
         clientId = AjxTimezone._SERVER2CLIENT[clientId];
         rule = AjxTimezone._CLIENT2RULE[clientId];
+        
     }
     if (!rule && tz) {
         var names = [ "standard", "daylight" ];
@@ -408,7 +424,7 @@ AjxTimezone.getAbbreviatedZoneChoices = function() {
 	if (!AjxTimezone._ABBR_ZONE_OPTIONS) {
 		AjxTimezone._ABBR_ZONE_OPTIONS = [];
 		for (var clientId in AjxTimezone._CLIENT2SERVER) {
-			var rule = AjxTimezone._CLIENT2RULE[clientId];
+            var rule = AjxTimezone._CLIENT2RULE[clientId];
 			var serverId = rule.serverId;
 			var option = {
 				displayValue: AjxTimezone.getMediumName(clientId),
@@ -418,6 +434,18 @@ AjxTimezone.getAbbreviatedZoneChoices = function() {
 				serverid: serverId
 			};
 			AjxTimezone._ABBR_ZONE_OPTIONS.push(option);
+            if(AjxTimezone._CLIENT2SERVER_DUPS[clientId]){
+                var rule = AjxTimezone._CLIENT2RULE_DUPS[clientId];
+                var serverId = rule.serverId;
+                var option = {
+                    displayValue: AjxTimezone.getMediumName(clientId,"2"),
+                    value: serverId,
+                    // these props used by sort comparator
+                    standard: rule.standard,
+                    serverid: serverId
+                };
+                AjxTimezone._ABBR_ZONE_OPTIONS.push(option);
+            }
 		}
 		AjxTimezone._ABBR_ZONE_OPTIONS.sort(AjxTimezone._BY_OFFSET);
 	}
@@ -474,9 +502,12 @@ AjxTimezone.DEFAULT;
 AjxTimezone.DEFAULT_RULE;
 
 AjxTimezone._CLIENT2SERVER = {};
+AjxTimezone._CLIENT2SERVER_DUPS = {};
 AjxTimezone._SERVER2CLIENT = {};
 AjxTimezone._SHORT_NAMES = {};
+AjxTimezone._SHORT_NAMES_DUPS = {};
 AjxTimezone._CLIENT2RULE = {};
+AjxTimezone._CLIENT2RULE_DUPS = {};
 
 /** 
  * The data is specified using the server identifiers for historical
