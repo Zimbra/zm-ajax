@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -82,7 +84,7 @@ DwtBaseDialog = function(params) {
 
 	// reset tab index
     this.setZIndex(Dwt.Z_HIDDEN); // not displayed until popup() called
-	this._position(DwtBaseDialog.__nowhereLoc);
+	this._positionDialog(DwtBaseDialog.__nowhereLoc);
 }
 
 DwtBaseDialog.PARAMS = ["parent", "className", "title", "zIndex", "mode", "loc", "view", "dragHandleId"];
@@ -153,7 +155,7 @@ function(listener) {
 * Makes the dialog visible, and places it. Everything under the dialog will
 * become veiled if we are modal. Note also that popping up a dialog will block
 * keyboard actions from being delivered to the global key action handler (if one
-* is registered).
+* is registered). To unblock this call <code>DwtKeyboadManager.prototype.
 *
 * @param loc	the desired location
 */
@@ -176,13 +178,11 @@ function(loc) {
 	if (loc) {
 		this._loc.x = loc.x;
 		this._loc.y = loc.y;
+		this._positionDialog(loc);
+	} else {
+		this._positionDialog();
 	}
-	this._position(loc);
-
-    //reset TAB focus before popup of dialog.
-    //method be over-written to focus a different member.
-    this._resetTabFocus();
-
+	
 	this.setZIndex(thisZ);
 	this._poppedUp = true;
 
@@ -190,13 +190,9 @@ function(loc) {
 	var kbMgr = this._shell.getKeyboardMgr();
 	kbMgr.pushTabGroup(this._tabGroup);
 	kbMgr.pushDefaultHandler(this);
+	this._tabGroup.resetFocusMember(true);
 
 	this.notifyListeners(DwtEvent.POPUP, this);
-};
-
-DwtBaseDialog.prototype._resetTabFocus =
-function(){
-    this._tabGroup.resetFocusMember(true);
 };
 
 DwtBaseDialog.prototype.focus = 
@@ -233,7 +229,7 @@ function() {
 	    var myZIndex = this._zIndex;
 		this.setZIndex(Dwt.Z_HIDDEN);
 		//TODO we should not create an object everytime we popdown a dialog (ditto w/popup)
-		this._position(DwtBaseDialog.__nowhereLoc);
+		this._positionDialog(DwtBaseDialog.__nowhereLoc);
 		if (this._mode == DwtBaseDialog.MODAL) {
 			this._undoModality(myZIndex);
 		} else {
@@ -342,18 +338,15 @@ DwtBaseDialog.prototype._initializeDragging =
 function(dragHandleId) {
 	var dragHandle = document.getElementById(dragHandleId);
 	if (dragHandle) {
-		var control = DwtControl.fromElementId(window._dwtShellId);
-		if (control) {
-			var p = Dwt.getSize(control.getHtmlElement());
-			var dragObj = document.getElementById(this._htmlElId);
-			var size = this.getSize();
-			var dragEndCb = new AjxCallback(this, this._dragEnd);
-			var dragCb = new AjxCallback(this, this._duringDrag);
-			var dragStartCb = new AjxCallback(this, this._dragStart);
+		var p = Dwt.getSize(DwtControl.fromElementId(window._dwtShellId).getHtmlElement());
+		var dragObj = document.getElementById(this._htmlElId);
+		var size = this.getSize();
+		var dragEndCb = new AjxCallback(this, this._dragEnd);
+		var dragCb = new AjxCallback(this, this._duringDrag);
+		var dragStartCb = new AjxCallback(this, this._dragStart);
 
-			DwtDraggable.init(dragHandle, dragObj, 0,
-							  document.body.offsetWidth - 10, 0, document.body.offsetHeight - 10, dragStartCb, dragCb, dragEndCb);
-		}
+ 		DwtDraggable.init(dragHandle, dragObj, 0,
+ 						  document.body.offsetWidth - 10, 0, document.body.offsetHeight - 10, dragStartCb, dragCb, dragEndCb);
 	}
 };
 
@@ -422,6 +415,27 @@ function (myZIndex) {
 	if (this._shell._veilOverlay.activeDialogs.length > 0 ) {
 		this._shell._veilOverlay.activeDialogs[0].focus();
 	}
+};
+
+DwtBaseDialog.prototype._positionDialog = 
+function (loc) {
+	var sizeShell = this._shell.getSize();
+	var sizeThis = this.getSize();
+	var x, y;
+	if (loc == null) {
+		// if no location, go for the middle
+		x = Math.round((sizeShell.x - sizeThis.x) / 2);
+		y = Math.round((sizeShell.y - sizeThis.y) / 2);
+	} else {
+		x = loc.x;
+		y = loc.y;
+	}
+	// try to stay within shell boundaries
+	if ((x + sizeThis.x) > sizeShell.x)
+		x = sizeShell.x - sizeThis.x;
+	if ((y + sizeThis.y) > sizeShell.y)
+		y = sizeShell.y - sizeThis.y;
+	this.setLocation(x, y);
 };
 
 /**

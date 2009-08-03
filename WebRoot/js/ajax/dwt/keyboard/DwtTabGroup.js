@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -91,22 +93,18 @@ function(listener) {
 /**
  * Adds a member to the tab group.
  * 
- * @param {DwtControl|DwtTabGroup|HTMLElement} member	member(s) to be added
+ * @param {DwtControl|DwtTabGroup|HTMLElement} member	member to be added
  * @param {Int} index Index at which to add the member. If omitted, the member
  * 		will be added to the end of the tab group (optional)
  */
 DwtTabGroup.prototype.addMember =
 function(member, index) {
 	if (!member) {return;}
-	var members = (member instanceof Array) ? member : [member];
-
-	for (var i = 0, len = members.length; i < len; i++) {
-		this.__members.add(members[i], index);
-
-		// If adding a tab group, register me as its parent
-		if (members[i] instanceof DwtTabGroup) {
-			members[i].newParent(this);
-		}
+	this.__members.add(member, index);
+	
+	// If adding a tab group, register me as its parent
+	if (member instanceof DwtTabGroup) {
+		member.newParent(this);
 	}
 };
 
@@ -223,7 +221,7 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
  */
 DwtTabGroup.prototype.contains =
 function(member) {	
-	return (Boolean(this.__getTabGroupForMember(member)));
+	return (this.__getTabGroupForMember(member));
 };
 
 /**
@@ -413,11 +411,6 @@ function(debugLevel) {
 	this.__dump(this, debugLevel);
 };
 
-DwtTabGroup.prototype.size =
-function() {
-	return this.__members.size();
-};
-
 /**
  * Returns the previous member in the tag group.
  * @private
@@ -460,7 +453,7 @@ function(member, checkEnabled) {
 	if (member instanceof DwtControl) {
 		return (member.getEnabled() && member.getVisible());
 	} else {
-		return !member.disabled && Dwt.getVisible(member);
+		return !member.disabled;
 	}
 };
 
@@ -599,7 +592,7 @@ function(tg, debugLevel, level) {
 	for (var i = 0; i < sz; i++) {
 		if (a[i] instanceof DwtTabGroup) {
 			tg.__dump(a[i], debugLevel, level + 1);
-		} else if (a[i].toString) {
+		} else if (a[i] instanceof DwtControl) {
 			DBG.println(debugLevel, levelIndent + "   " + a[i].toString());
 		} else {
 			DBG.println(debugLevel, levelIndent + "   " + a[i].tagName);

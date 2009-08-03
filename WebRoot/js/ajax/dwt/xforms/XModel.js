@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -167,7 +169,7 @@ XModel.prototype.normalizePath = function (path) {
 		path = path.split("]").join("");
 	}
 	if (path.indexOf(".") > -1) {
-		path = path.split(/[\/\.]+/);
+		path = path.split(this.pathDelimiter);
 		var outputPath = [];
 		for (var i = 0; i < path.length; i++) {
 			var step = path[i];
@@ -246,10 +248,6 @@ XModel.prototype.setInstanceValue = function (instance, path, value) {
 		}
 		parentValue[ref] = value;
 	}
-	
-	//notify listeners that my value has changed
-	var event = new DwtXModelEvent(instance, modelItem, path, value);
-	modelItem.notifyListeners(DwtEvent.XFORMS_VALUE_CHANGED, event);
 	return value;
 }
 
@@ -295,11 +293,12 @@ XModel.prototype.addRowAfter = function (instance, path, afterRow) {
 	}
 	var list = this.getInstanceValue(instance, path);
 	if (list == null) {
+		// create a list and install it!
 		list = [];
+		this.setInstanceValue(instance, path, list);
 	}
 
 	list.splice(afterRow+1, 0, newInstance);
-	this.setInstanceValue(instance, path, list);
 }
 
 

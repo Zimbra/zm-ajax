@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -33,7 +35,6 @@
  *        initialValue		[string]*			the initial value of the field
  *        size				[int]*				size of the input field (in characters)
  *        rows				[int]*				number of rows (more than 1 means textarea)
- *        forceMultiRow		[boolean]*			forces use of textarea even if rows == 1
  *        maxLen			[int]*				maximum length (in characters) of the input
  *        errorIconStyle	[constant]*			error icon style
  *        validationStyle	[constant]*			validation type
@@ -82,12 +83,12 @@ DwtInputField = function(params) {
 	var hackBegin = doCursorHack ? "" : Dwt.CARET_HACK_BEGIN;
 	var hackEnd = doCursorHack ? "" : Dwt.CARET_HACK_END;
 	if (this._errorIconStyle == DwtInputField.ERROR_ICON_NONE) {
-		if (params.forceMultiRow || (params.rows && params.rows > 1)) {
+		if (params.rows && params.rows > 1) {
 			var htmlArr = [hackBegin, "<textarea id='", inputFieldId, "' rows=", params.rows];
 			var i = htmlArr.length;
-			if (params.forceMultiRow || params.size) {
+			if (params.size) {
 				htmlArr[i++] = " cols=";
-				htmlArr[i++] = params.size || 1;
+				htmlArr[i++] = params.size;
 			}
 			if (params.wrap) {
 				htmlArr[i++] = " wrap=";
@@ -122,7 +123,7 @@ DwtInputField = function(params) {
 	}
 
 	this._tabGroup = new DwtTabGroup(this._htmlElId);
-	if (params.forceMultiRow || this._rows > 1) {
+	if (this._rows > 1) {
         this._inputField = document.getElementById(inputFieldId);
         this._inputField.onkeyup = DwtInputField._keyUpHdlr;
         this._inputField.onblur = DwtInputField._blurHdlr;
@@ -408,8 +409,8 @@ function() {
 	this.getInputElement().blur();
 };
 
-DwtInputField.prototype.setVisible = function(visible) {
-	DwtComposite.prototype.setVisible.apply(this, arguments);
+DwtInputField.prototype.setVisible = 
+function(visible) {
 	Dwt.setVisible(this.getInputElement(), visible);
 };
 
