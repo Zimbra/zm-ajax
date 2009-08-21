@@ -373,8 +373,14 @@ AjxStringUtil.urlComponentEncode = function(str) {
 AjxStringUtil.ENCODE_MAP = { '>' : '&gt;', '<' : '&lt;', '&' : '&amp;' };
 
 AjxStringUtil.htmlEncode =
-function(str, includeSpaces) {
+function(str, includeSpaces, onlyIfNotEncoded) {
 	if (!str) {return "";}
+    if(onlyIfNotEncoded){
+        var rgxStr = /&(lt|gt|amp"+(includeSpaces ? ("|nbsp") : "")+");/;
+        if(str.match(rgxStr)){
+            return str;
+        }
+    }
 
 	if (!AjxEnv.isSafari || AjxEnv.isSafariNightly) {
 		if (includeSpaces) {
