@@ -402,7 +402,10 @@ function(params) {
 	var url = [];
 	var i = 0;
 	if (!params.relative) {
-		var proto = params.protocol || location.protocol; 
+		var proto = params.protocol || location.protocol;
+		if (proto.indexOf(":") == -1) {
+				proto = proto + ":";
+		}
 		url[i++] = proto;
 		url[i++] = "//";
 		url[i++] = params.host || location.hostname;
