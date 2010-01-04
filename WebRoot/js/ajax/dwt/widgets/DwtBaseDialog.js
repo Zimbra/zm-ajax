@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,17 +11,13 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
-/**
- * @overview
- * 
- * This file contains a base Dwt dialog control.
- * 
- */
 
 /**
+ * @constructor
  * @class
  * This is a base class for dialogs. Given content, this class will take care of 
  * showing and hiding the dialog, as well as dragging it.
@@ -33,19 +30,18 @@
  * @author Ross Dargahi
  * @author Conrad Damon
  * 
- * @param {Hash}	params		a hash of parameters
- * <ul>
- * <li>parent	[DwtComposite]	the parent widget (the shell)</li>
- * <li>className		[String]*		the CSS class</li>
- * <li>title		[String]*		the title</li>
- * <li>zIndex		[int]*			the z-index to set for this dialog when it is visible. Defaults to {@link Dwt.Z_DIALOG}.</li>
- * <li>mode 		[constant]*			the modality of the dialog {@link DwtBaseDialog.MODAL} (default) or {@link DwtBaseDialog.MODELESS}</li>
- * <li>loc			[DwtPoint]*			Location at which to popup the dialog. Defaults to being centered within its parent.</li>
- * <li>view 		[DwtControl]*		the control whose element is to be re-parented
- * <li>dragHandleId 		[String]*	the ID of element used as drag handle</li>
- * </ul>
- * 
- * @extends	DwtComposite
+ * @param params		[hash]				hash of params:
+ *        parent		[DwtComposite] 		parent widget (the shell)
+ *        className		[string]*			CSS class
+ *        title			[string]*			title of dialog
+ *        zIndex		[int]*				The z-index to set for this dialog when it is visible. Defaults
+ *									 		to <i>Dwt.Z_DIALOG</i>.
+ *        mode 			[constant]*			The modality of the dialog. One of: DwtBaseDialog.MODAL (default) or 
+ *									 		DwtBaseDialog.MODELESS.
+ *        loc			[DwtPoint]*			Location at which to popup the dialog. Defaults to being 
+ * 											centered within its parent.
+ *        view 			[DwtControl]*		control whose element is to be reparented
+ *        dragHandleId	[string]*			ID of element used as drag handle
  */
 DwtBaseDialog = function(params) {
 	if (arguments.length == 0) { return; }
@@ -88,22 +84,14 @@ DwtBaseDialog = function(params) {
 
 	// reset tab index
     this.setZIndex(Dwt.Z_HIDDEN); // not displayed until popup() called
-	this._position(DwtBaseDialog.__nowhereLoc);
+	this._positionDialog(DwtBaseDialog.__nowhereLoc);
 }
 
-/**
- * @private
- */
 DwtBaseDialog.PARAMS = ["parent", "className", "title", "zIndex", "mode", "loc", "view", "dragHandleId"];
 
 DwtBaseDialog.prototype = new DwtComposite;
 DwtBaseDialog.prototype.constructor = DwtBaseDialog;
 
-/**
- * Returns a string representation of the class.
- * 
- * @return {String}		a string representation of the class
- */
 DwtBaseDialog.prototype.toString =
 function() {
 	return "DwtBaseDialog";
@@ -115,40 +103,27 @@ function() {
 
 // modes
 
-/**
- * Defines a "modeless" dialog.
- * 
- * @type {Number}
- */
+/** Modeless dialog
+ * @type number */
 DwtBaseDialog.MODELESS = 1;
 
-/**
- * Defines a "modal" dialog.
- * 
- * @type {Number}
- */
+/** Modal dialog
+ * @type number */
 DwtBaseDialog.MODAL = 2;
 
-/**
- * @private
- */
+/**@private*/
 DwtBaseDialog.__nowhereLoc = new DwtPoint(Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
 
 //
 // Data
 //
 
-/**
- * @private
- */
 DwtBaseDialog.prototype.TEMPLATE = "dwt.Widgets#DwtBaseDialog";
 
 /**
  * <strong>Note:</strong>
  * This member variable will be set by sub-classes that want a control bar
  * to appear below the dialog contents.
- * 
- * @private
  */
 DwtBaseDialog.prototype.CONTROLS_TEMPLATE = null;
 
@@ -156,58 +131,39 @@ DwtBaseDialog.prototype.CONTROLS_TEMPLATE = null;
 // Public methods
 //
 
-/**
- * Adds a popup listener.
- * 
- * @param		{Object}	listener		the listener to add
- */
 DwtBaseDialog.prototype.addPopupListener =
 function(listener) {
 	this.addListener(DwtEvent.POPUP, listener);
 }
 
-/**
- * Removes a popup listener.
- * 
- * @param		{Object}	listener		the listener to remove
- */
 DwtBaseDialog.prototype.removePopupListener = 
 function(listener) {
 	this.removeListener(DwtEvent.POPUP, listener);
 }
 
-/**
- * Adds a popdown listener.
- * 
- * @param		{Object}	listener		the listener to add
- */
 DwtBaseDialog.prototype.addPopdownListener = 
 function(listener) {
 	this.addListener(DwtEvent.POPDOWN, listener);
 }
 
-/**
- * Removes a popdown listener.
- * 
- * @param		{Object}	listener		the listener to remove
- */
 DwtBaseDialog.prototype.removePopdownListener = 
 function(listener) {
 	this.removeListener(DwtEvent.POPDOWN, listener);
 }
 
 /**
-* Popup the dialog, makes the dialog visible in places. Everything under the dialog will
-* become veiled if we are modal. Note: popping up a dialog will block
+* Makes the dialog visible, and places it. Everything under the dialog will
+* become veiled if we are modal. Note also that popping up a dialog will block
 * keyboard actions from being delivered to the global key action handler (if one
-* is registered).
+* is registered). To unblock this call <code>DwtKeyboadManager.prototype.
 *
-* @param {Object}		loc		the desired location
+* @param loc	the desired location
 */
 DwtBaseDialog.prototype.popup =
 function(loc) {
 	if (this._poppedUp) { return; }
 
+	this.applyCaretHack();
 	this.cleanup(true);
 	var thisZ = this._zIndex;
 
@@ -222,13 +178,11 @@ function(loc) {
 	if (loc) {
 		this._loc.x = loc.x;
 		this._loc.y = loc.y;
+		this._positionDialog(loc);
+	} else {
+		this._positionDialog();
 	}
-	this._position(loc);
-
-    //reset TAB focus before popup of dialog.
-    //method be over-written to focus a different member.
-    this._resetTabFocus();
-
+	
 	this.setZIndex(thisZ);
 	this._poppedUp = true;
 
@@ -236,22 +190,11 @@ function(loc) {
 	var kbMgr = this._shell.getKeyboardMgr();
 	kbMgr.pushTabGroup(this._tabGroup);
 	kbMgr.pushDefaultHandler(this);
+	this._tabGroup.resetFocusMember(true);
 
 	this.notifyListeners(DwtEvent.POPUP, this);
 };
 
-/**
- * @private
- */
-DwtBaseDialog.prototype._resetTabFocus =
-function(){
-    this._tabGroup.resetFocusMember(true);
-};
-
-/**
- * Focus on the dialog.
- * 
- */
 DwtBaseDialog.prototype.focus = 
 function () {
 	// if someone is listening for the focus to happen, give control to them,
@@ -266,19 +209,14 @@ function () {
 	}
 };
 
-/**
- * Cheks if the dialog is poppped-up.
- * 
- * @return	{Boolean}	<code>true</code> if the dialog is popped-up; <code>false</code> otherwise
- */
 DwtBaseDialog.prototype.isPoppedUp =
 function () {
 	return this._poppedUp;
 };
 
+
 /**
-* Popdown and hide the dialog.
-* 
+* Hides the dialog
 */
 DwtBaseDialog.prototype.popdown =
 function() {
@@ -291,7 +229,7 @@ function() {
 	    var myZIndex = this._zIndex;
 		this.setZIndex(Dwt.Z_HIDDEN);
 		//TODO we should not create an object everytime we popdown a dialog (ditto w/popup)
-		this._position(DwtBaseDialog.__nowhereLoc);
+		this._positionDialog(DwtBaseDialog.__nowhereLoc);
 		if (this._mode == DwtBaseDialog.MODAL) {
 			this._undoModality(myZIndex);
 		} else {
@@ -309,10 +247,10 @@ function() {
 };
 
 /**
- * Sets the content of the dialog to a new view. Essentially re-parents
+ * Sets the content of the dialog to a new view (DwtControl). Essentially reparents
  * The supplied control's HTML element to the dialogs HTML element
  * 
- * @param {DwtControl} newView		the control whose element is to be re-parented.
+ * @param {DwtControl} newView Control whose element is to be reparented.
  */
 DwtBaseDialog.prototype.setView =
 function(newView) {
@@ -323,9 +261,8 @@ function(newView) {
 };
 
 /**
-* Resets the dialog back to its original state. Subclasses should override this method
-* to add any additional behavior, but should still call up into this method.
-* 
+* Sets the dialog back to its original state. Subclasses should override this method
+* to add any additional behaviour, but should still call up into this method.
 */
 DwtBaseDialog.prototype.reset =
 function() {
@@ -333,9 +270,7 @@ function() {
 }
 
 /**
-* Cleans up the dialog so it can be used again later.
-* 
-* @param	{Boolean}		bPoppedUp		if <code>true</code>, the dialog is popped-up; <code>false</code> otherwise
+* cleans up the dialog so it can be used again later
 */
 DwtBaseDialog.prototype.cleanup =
 function(bPoppedUp) {
@@ -352,13 +287,7 @@ function(bPoppedUp) {
 	}
 }
 
-/**
- * Sets the title.
- * 
- * @param	{String}		title		the title
- */
-DwtBaseDialog.prototype.setTitle =
-function(title) {
+DwtBaseDialog.prototype.setTitle = function(title) {
     if (this._titleEl) {
         this._titleEl.innerHTML = title || "";
     }
@@ -367,7 +296,7 @@ function(title) {
 /**
 * Sets the dialog content (below the title, above the buttons).
 *
-* @param {String}		text		the dialog content
+* @param text		dialog content
 */
 DwtBaseDialog.prototype.setContent =
 function(text) {
@@ -377,29 +306,17 @@ function(text) {
 	}
 }
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._getContentDiv =
 function() {
 	return this._contentEl;
 };
 
-/**
- * Adds an enter listener.
- * 
- * @param	{Object}	listener		the listener to add
- */
+
 DwtBaseDialog.prototype.addEnterListener =
 function(listener) {
 	this.addListener(DwtEvent.ENTER, listener);
 };
 
-/**
- * Gets the active dialog.
- * 
- * @return	{DwtBaseDialog}		the active dialog
- */
 DwtBaseDialog.getActiveDialog = 
 function() {
 	var dialog = null;
@@ -417,47 +334,32 @@ function() {
 // Protected methods
 //
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._initializeDragging =
 function(dragHandleId) {
 	var dragHandle = document.getElementById(dragHandleId);
 	if (dragHandle) {
-		var control = DwtControl.fromElementId(window._dwtShellId);
-		if (control) {
-			var p = Dwt.getSize(control.getHtmlElement());
-			var dragObj = document.getElementById(this._htmlElId);
-			var size = this.getSize();
-			var dragEndCb = new AjxCallback(this, this._dragEnd);
-			var dragCb = new AjxCallback(this, this._duringDrag);
-			var dragStartCb = new AjxCallback(this, this._dragStart);
+		var p = Dwt.getSize(DwtControl.fromElementId(window._dwtShellId).getHtmlElement());
+		var dragObj = document.getElementById(this._htmlElId);
+		var size = this.getSize();
+		var dragEndCb = new AjxCallback(this, this._dragEnd);
+		var dragCb = new AjxCallback(this, this._duringDrag);
+		var dragStartCb = new AjxCallback(this, this._dragStart);
 
-			DwtDraggable.init(dragHandle, dragObj, 0,
-							  document.body.offsetWidth - 10, 0, document.body.offsetHeight - 10, dragStartCb, dragCb, dragEndCb);
-		}
+ 		DwtDraggable.init(dragHandle, dragObj, 0,
+ 						  document.body.offsetWidth - 10, 0, document.body.offsetHeight - 10, dragStartCb, dragCb, dragEndCb);
 	}
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._getContentHtml =
 function() {
     return "";
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._createHtml = function(templateId) {
     var data = { id: this._htmlElId };
     this._createHtmlFromTemplate(templateId || this.TEMPLATE, data);
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
     // set default params
     data.dragId = this._dragHandleId;
@@ -481,9 +383,6 @@ DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
     this.setContent(this._getContentHtml());
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._setModalEffect =
 function() {
 	// place veil under this dialog
@@ -505,9 +404,6 @@ function() {
 	return thisZ;
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._undoModality =
 function (myZIndex) {
 	var veilZ = this._shell._veilOverlay.veilZ;
@@ -519,6 +415,27 @@ function (myZIndex) {
 	if (this._shell._veilOverlay.activeDialogs.length > 0 ) {
 		this._shell._veilOverlay.activeDialogs[0].focus();
 	}
+};
+
+DwtBaseDialog.prototype._positionDialog = 
+function (loc) {
+	var sizeShell = this._shell.getSize();
+	var sizeThis = this.getSize();
+	var x, y;
+	if (loc == null) {
+		// if no location, go for the middle
+		x = Math.round((sizeShell.x - sizeThis.x) / 2);
+		y = Math.round((sizeShell.y - sizeThis.y) / 2);
+	} else {
+		x = loc.x;
+		y = loc.y;
+	}
+	// try to stay within shell boundaries
+	if ((x + sizeThis.x) > sizeShell.x)
+		x = sizeShell.x - sizeThis.x;
+	if ((y + sizeThis.y) > sizeShell.y)
+		y = sizeShell.y - sizeThis.y;
+	this.setLocation(x, y);
 };
 
 /**
@@ -533,9 +450,6 @@ function() {
 	// overload me
 }
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._dragStart = 
 function (x, y){
 	// fix for bug 3177
@@ -546,9 +460,6 @@ function (x, y){
 	}
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._dragEnd =
 function(x, y) {
  	// save dropped position so popup(null) will not re-center dialog box
@@ -556,17 +467,11 @@ function(x, y) {
 	this._loc.y = y;
 }
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._duringDrag =
 function(x, y) {
 	// overload me
 };
 
-/**
- * @private
- */
 DwtBaseDialog.prototype._doesContainElement = 
 function (element) {
 	return Dwt.contains(this.getHtmlElement(), element);

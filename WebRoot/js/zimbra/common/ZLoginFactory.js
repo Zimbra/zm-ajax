@@ -1,5 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -193,22 +195,22 @@ ZLoginFactory.getLoginDialogHTML = function (params) {
 							"<table class='zLoginTable' width='100%' cellpadding=4>",
 								"<tr id='ZLoginUserTr'", (params.showUserField ? "" : "style='display:none'"), "><td class='zLoginLabelContainer'>", params.userNameMsg, "</td>",
 									"<td class='zLoginFieldContainer' colspan=2>",
-										"<input id='", ZLoginFactory.USER_ID, "' class='zLoginField' autocomplete=OFF type=text tabIndex=1>",
+										Dwt.CARET_HACK_BEGIN, "<input id='", ZLoginFactory.USER_ID, "' class='zLoginField' autocomplete=OFF type=text tabIndex=1>", Dwt.CARET_HACK_END,
 									"</td>",
 								"</tr>",
 								"<tr id='ZLoginPasswordTr' ", (params.showPasswordField ? "" : "style='display:none'"), "><td class='zLoginLabelContainer'>", params.passwordMsg, "</td>",
 									"<td class='zLoginFieldContainer' colspan=2>",
-										"<input id='", ZLoginFactory.PASSWORD_ID, "' class='zLoginField' autocomplete=OFF type=password tabIndex=2>",
+										Dwt.CARET_HACK_BEGIN, "<input id='", ZLoginFactory.PASSWORD_ID, "' class='zLoginField' autocomplete=OFF type=password tabIndex=2>", Dwt.CARET_HACK_END, 
 									"</td>",
 								"</tr>",
 								"<tr id='", ZLoginFactory.NEW_PASSWORD_TR_ID, "' ", (params.showNewPasswordFields ? "" : "style='display:none'"), "><td class='zLoginLabelContainer'>", params.newPassword1Msg, "</td>",
 									"<td class='zLoginFieldContainer' colspan=2>",
-										"<input id='", ZLoginFactory.NEW_PASSWORD_ID, "' class='zLoginField' autocomplete=OFF type=password tabIndex=2>",
+										Dwt.CARET_HACK_BEGIN, "<input id='", ZLoginFactory.NEW_PASSWORD_ID, "' class='zLoginField' autocomplete=OFF type=password tabIndex=2>", Dwt.CARET_HACK_END, 
 									"</td>",
 								"</tr>",
 								"<tr id='", ZLoginFactory.PASSWORD_CONFIRM_TR_ID, "' ", (params.showNewPasswordFields ? "" : "style='display:none'"), "><td class='zLoginLabelContainer'>", params.newPassword2Msg, "</td>",
 									"<td class='zLoginFieldContainer' colspan=2>",
-										"<input id='", ZLoginFactory.PASSWORD_CONFIRM_ID, "' class='zLoginField' autocomplete=OFF type=password tabIndex=2>", 
+										Dwt.CARET_HACK_BEGIN, "<input id='", ZLoginFactory.PASSWORD_CONFIRM_ID, "' class='zLoginField' autocomplete=OFF type=password tabIndex=2>", Dwt.CARET_HACK_END, 
 									"</td>",
 								"</tr>",
 								"<tr id='ZLoginLicenseMsgContainer' ", (params.showLicenseMsg ? "" : "style='display:none'"), ">",

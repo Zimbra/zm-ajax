@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -118,14 +120,6 @@ Dwt.SCROLL = 3;
  * @type Int*/
 Dwt.FIXED_SCROLL = 4;
 
-/** Only show scrollbars on Y when content overflows
- * @type Int*/
-Dwt.SCROLL_Y = 5;
-
-/** Only show scrollbars on X when content overflows
- * @type Int*/
-Dwt.SCROLL_X = 6;
-
 
 // z-index order
 /** hidden layer. Elements at this layer will be hidden from view
@@ -138,9 +132,17 @@ Dwt.Z_HIDDEN = 100;
 Dwt.Z_CURTAIN = 200;
 
 
+/** DwtWindowManager inside of a view.  It holds modeless dialogs (DwtResizableWindow).
+ */
+Dwt.Z_VIEW_WINDOW_MANAGER = 290;
+
 /** Visible layer. Elements at this layer will be in view
  * @type Int*/
 Dwt.Z_VIEW = 300;
+
+/** DwtWindowManager.  It holds modeless dialogs (DwtResizableWindow).
+ */
+Dwt.Z_WINDOW_MANAGER = 490;
 
 /** Popup menu layer. Used by the menu components
  * @type Int*/
@@ -210,18 +212,27 @@ Dwt.DND_DROP_COPY = 1;
  */
 Dwt.DND_DROP_MOVE = 2;
 
-/**
- * Ballpark figure for width of a scrollbar 
- */
-Dwt.SCROLLBAR_WIDTH = 22;
-
 
 // Keys used for retrieving data
 // TODO JSDoc
 Dwt.KEY_OBJECT = "_object_";
 Dwt.KEY_ID = "_id_";
 
-/** z-index increment unit. Used by components if they need to bump their z-index
+
+/** Constants related to the hack to make the blinking cursor show up in Firefox.
+ * There is an explanation of this hack in Firefox's bug database:
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=167801#c6
+ */
+Dwt.CARET_HACK_ENABLED = AjxEnv.isFirefox && !AjxEnv.isFirefox3up;
+if (Dwt.CARET_HACK_ENABLED) {
+	Dwt.CARET_HACK_BEGIN = "<div style='overflow:auto;'>";
+	Dwt.CARET_HACK_END = "</div>";
+} else {
+	Dwt.CARET_HACK_BEGIN = "";
+	Dwt.CARET_HACK_END = "";
+}
+
+/** z-index increment unit. Used by compenets if they need to bump their z-index
  * @type Int
  */
 Dwt._Z_INC = 1;
@@ -350,7 +361,9 @@ function(htmlElement, style) {
  */
 Dwt.getBounds =
 function(htmlElement, rect) {
-	var tmpPt = DwtPoint.tmp;
+	if (!Dwt.__tmpPoint)
+		Dwt.__tmpPoint = new DwtPoint(0, 0);
+	var tmpPt = Dwt.__tmpPoint;
 
 	Dwt.getLocation(htmlElement, tmpPt);
 	var locX = tmpPt.x;
@@ -503,18 +516,8 @@ function(htmlElement) {
 		return Dwt.SCROLL;
 	else if (overflow =="scroll")
 		return Dwt.FIXED_SCROLL;
-	else {
-        var overflowX =  DwtCssStyle.getProperty(htmlElement, "overflowX");
-        var overflowY =  DwtCssStyle.getProperty(htmlElement, "overflowY");
-        if(overflow == ''){
-            if(overflowX == 'scroll'){
-                return Dwt.SCROLL_X;
-            } else if(overflowY == 'scroll'){
-                return Dwt.SCROLL_Y;
-            }
-        }
+	else
 		return Dwt.VISIBLE;
-    }
 };
 
 /**
@@ -539,13 +542,7 @@ function(htmlElement, scrollStyle) {
 		htmlElement.style.overflow = "auto";
 	else if (scrollStyle == Dwt.FIXED_SCROLL)
 		htmlElement.style.overflow = "scroll";
-    else if (scrollStyle == Dwt.SCROLL_Y) {
-		htmlElement.style.overflowX = "hidden";
-        htmlElement.style.overflowY = "auto";
-    } else if (scrollStyle == Dwt.SCROLL_X) {
-		htmlElement.style.overflowY = "hidden";
-        htmlElement.style.overflowX = "auto";
-    } else
+	else
 		htmlElement.style.overflow = "visible";
 };
 
@@ -654,21 +651,11 @@ function(htmlElement) {
 Dwt.setVisible =
 function(htmlElement, visible) {
     if(visible){
-		if (htmlElement.nodeName.match(/tr/i)) {
-			htmlElement.style.display = Dwt.DISPLAY_TABLE_ROW;
-		}
-		else if (htmlElement.nodeName.match(/td|th/i)) {
-			htmlElement.style.display = Dwt.DISPLAY_TABLE_CELL;
-		}
-		else {
-			htmlElement.style.display = htmlElement.getAttribute("x-display") ||
-										Dwt.DISPLAY_BLOCK;
-		}
+        var isRow = htmlElement.nodeName.match(/tr/i);
+        var isCell = htmlElement.nodeName.match(/td|th/i);
+        var display = isRow ? Dwt.DISPLAY_TABLE_ROW : (isCell ? Dwt.DISPLAY_TABLE_CELL : Dwt.DISPLAY_BLOCK);
+        htmlElement.style.display = display;
     }else{
-	    var display = DwtCssStyle.getComputedStyleObject(htmlElement).display;
-	    if (display != "none") {
-			htmlElement.setAttribute("x-display", display);
-	    }
         htmlElement.style.display = Dwt.DISPLAY_NONE;
     }
 };
@@ -1084,12 +1071,8 @@ Dwt.setSelectionText = function(input, text) {
 };
 
 Dwt.instanceOf =
-function(objOrClassName, className) {
-	if (typeof objOrClassName == "string") {
-		return window[objOrClassName] &&
-		       (objOrClassName == className || window[objOrClassName].prototype instanceof window[className]);
-	}
-	return (window[className] && objOrClassName instanceof window[className]);
+function(obj, className) {
+	return (window[className] && obj instanceof window[className]);
 };
 
 /**
@@ -1237,7 +1220,3 @@ Dwt.setFavIcon = function(iconURL) {
 	}
 };
 
-Dwt.enableDesignMode =
-function(doc, on) {
-	doc.designMode = on ? "on" : "off";
-};

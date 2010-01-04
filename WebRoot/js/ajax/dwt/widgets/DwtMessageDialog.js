@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,32 +11,26 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
-/**
- * @overview
- * 
- * This file contains classes for a message dialog.
- */
 
 /**
+ * Creates a new message dialog.
+ * @constructor
  * @class
- * 
- * Creates a new message dialog. This class represents a reusable message dialog box.
- * Messages can be informational, warning, or critical.
+ * This class represents a reusable message dialog box. Messages can be informational, warning, or
+ * critical.
  * 
  * @author Ross Dargahi
  * 
- * @param {Hash}		params			a hash of params
- * <ul>
- * <li>parent	{DwtComposite}	the parent widget (the shell)</li>
- * <li>className {String}		the CSS class</li>
- * <li>buttons	{Array}			the buttons to show. Defaults to {DwtDialog.OK_BUTTON} button</li>
- * <li>extraButtons	{Array}  	a list of {DwtDialog_ButtonDescriptor} objects describing custom buttons to add to the dialog</li>
- * </ul>
- * 
- * @extends	DwtDialog
+ * @param params			[hash]				hash of params:
+ *        parent			[DwtComposite] 		parent widget (the shell)
+ *        className			[string]*			CSS class
+ *        buttons			[array]*			Buttons to show. Defaults to OK button.
+ *        extraButtons		[array]  			list of <i>DwtDialog_ButtonDescriptor</i> objects describing
+ *										 		custom buttons to add to the dialog
  */
 DwtMessageDialog = function(params) {
 	if (arguments.length == 0) { return; }
@@ -54,17 +49,8 @@ DwtMessageDialog.PARAMS = ["parent", "className", "buttons", "extraButtons"];
 DwtMessageDialog.prototype = new DwtDialog;
 DwtMessageDialog.prototype.constructor = DwtMessageDialog;
 
-/**
- * Defines the "critical" style.
- */
 DwtMessageDialog.CRITICAL_STYLE = 1;
-/**
- * Defines the "info" style.
- */
 DwtMessageDialog.INFO_STYLE = 2;
-/**
- * Defines the "warning" style.
- */
 DwtMessageDialog.WARNING_STYLE = 3;
 
 DwtMessageDialog.TITLE = {};
@@ -80,11 +66,6 @@ DwtMessageDialog.ICON[DwtMessageDialog.WARNING_STYLE] = "Warning_32";
 
 // Public methods
 
-/**
- * Returns a string representation of the object.
- * 
- * @return		{String}		a string representation of the object
- */
 DwtMessageDialog.prototype.toString = 
 function() {
 	return "DwtMessageDialog";
@@ -93,9 +74,9 @@ function() {
 /**
 * Sets the message style (info/warning/critical) and content.
 *
-* @param {String}	msgStr		the message text
-* @param {constant}	style		the style (see <code>_STYLE</code> constants)
-* @param {String}	title		the dialog box title
+* @param msgStr		message text
+* @param style		style (info/warning/critical)
+* @param title		dialog box title
 */
 DwtMessageDialog.prototype.setMessage =
 function(msgStr, style, title) {
@@ -105,7 +86,7 @@ function(msgStr, style, title) {
 	if (msgStr) {
 		var html = [];
 		var i = 0;
-		html[i++] = "<table cellspacing=0 cellpadding=0 border=0><tr><td valign='top'>";
+		html[i++] = "<table cellspacing=0 cellpadding=0 border=0 width='100%'><tr><td valign='top'>";
 		html[i++] = AjxImg.getImageHtml(DwtMessageDialog.ICON[style]);
 		html[i++] = "</td><td class='DwtMsgArea'>";
 		html[i++] = msgStr;
@@ -116,12 +97,6 @@ function(msgStr, style, title) {
 	}
 };
 
-/**
- * Sets the dialog size.
- * 
- * @param	{int}	width		the width (in pixels)
- * @param	{int}	height		the height (in pixels)
- */
 DwtMessageDialog.prototype.setSize =
 function(width, height) {
 	var msgCell = document.getElementById(this._msgCellId);
@@ -131,8 +106,7 @@ function(width, height) {
 };
 
 /**
-* Resets the message dialog. This should be performed to "reuse" the dialog.
-* 
+* Resets the message dialog so it can be reused.
 */
 DwtMessageDialog.prototype.reset = 
 function() {
@@ -141,12 +115,8 @@ function() {
 };
 
 /**
- * Handles the dialog key action. If the user hits the "Esc" key and no "Cancel" button is present,
- * the key action is treated it as a press of the "OK" button.
- * 
- * @param	{Object}		actionCode	the key action code
- * @param	{DwtKeyEvent}	ev	the key event
- * @see		DwtKeyMap
+ * If user hits Esc and there's no Cancel button, treat it as a press
+ * of the OK button.
  */
 DwtMessageDialog.prototype.handleKeyAction =
 function(actionCode, ev) {
@@ -167,17 +137,11 @@ function(actionCode, ev) {
 
 // Private methods
 
-/**
- * @private
- */
 DwtMessageDialog.prototype._contentHtml = 
 function() {
 	return "<div id='" + this._msgCellId + "' class='DwtMsgDialog'></div>";
 };
 
-/**
- * @private
- */
 DwtMessageDialog.prototype._enterListener =
 function(ev) {
 	this._runEnterCallback();

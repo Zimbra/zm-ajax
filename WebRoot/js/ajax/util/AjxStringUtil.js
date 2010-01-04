@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -371,8 +373,14 @@ AjxStringUtil.urlComponentEncode = function(str) {
 AjxStringUtil.ENCODE_MAP = { '>' : '&gt;', '<' : '&lt;', '&' : '&amp;' };
 
 AjxStringUtil.htmlEncode =
-function(str, includeSpaces) {
+function(str, includeSpaces, onlyIfNotEncoded) {
 	if (!str) {return "";}
+    if(onlyIfNotEncoded){
+        var rgxStr = /&(lt|gt|amp"+(includeSpaces ? ("|nbsp") : "")+");/;
+        if(str.match(rgxStr)){
+            return str;
+        }
+    }
 
 	if (!AjxEnv.isSafari || AjxEnv.isSafariNightly) {
 		if (includeSpaces) {
@@ -1089,9 +1097,9 @@ function(sourceUri) {
  *	Parse the query string (part after the "?") and return it as a hash of key/value pairs.
  */
 AjxStringUtil.parseQueryString =
-function(sourceUri) {
+function() {
 
-	var location = sourceUri || ("" + window.location);
+	var location = "" + window.location;
 	var idx = location.indexOf("?");
 	if (idx == -1) { return null; }
 	var qs = location.substring(idx + 1).replace(/#.*$/, '');

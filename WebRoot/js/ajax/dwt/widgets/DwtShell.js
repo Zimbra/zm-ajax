@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -136,8 +138,6 @@ DwtShell.keyEvent 		= new DwtKeyEvent();
 DwtShell.mouseEvent 	= new DwtMouseEvent();
 DwtShell.selectionEvent = new DwtSelectionEvent(true);
 DwtShell.treeEvent 		= new DwtTreeEvent();
-
-DwtShell._GLOBAL_SELECTION = "GlobalSelection";
 
 // Public methods
 
@@ -345,21 +345,6 @@ function(listener) {
 		this._hasBlurHandler = true;
 	}
 	this.addListener(DwtEvent.ONBLUR, listener);
-};
-
-DwtShell.prototype.addGlobalSelectionListener =
-function(listener) {
-	this.addListener(DwtShell._GLOBAL_SELECTION, listener);
-};
-
-DwtShell.prototype.removeGlobalSelectionListener =
-function(listener) {
-	this.removeListener(DwtShell._GLOBAL_SELECTION, listener);
-};
-
-DwtShell.prototype.notifyGlobalSelection =
-function(event) {
-	this.notifyListeners(DwtShell._GLOBAL_SELECTION, event);
 };
 
 /**

@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -30,7 +32,6 @@ import javax.naming.NamingException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -40,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import com.zimbra.common.util.ZimbraLog;
 
-public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
+public class SetHeaderFilter implements Filter {
     
     // --------------------------------------------------------------
     // Class constants
@@ -76,15 +77,7 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
     private String mailUrl;
     private String mailUrlHome;
     private String mailUrlUser;
-
-	//
-	// Constructors
-	//
-
-	public SetHeaderFilter() {
-		super(ZimbraLog.webclient);
-	}
-
+    
     // --------------------------------------------------------------
     // init helper methods
     // --------------------------------------------------------------
@@ -155,8 +148,7 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
      *
      * @param filterConfig The filter configuration object
      */
-	public void init(FilterConfig filterConfig) throws ServletException {
-		super.init(filterConfig);
+    public void init(FilterConfig filterConfig) {
         this.config = filterConfig;
         if (filterConfig != null) {
             debug = getInitParameterInt("debug", 0);
@@ -205,8 +197,8 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
     * Take this filter out of service.
     */
     public void destroy() {
-		super.destroy();
         this.config = null;
+
     }
     
     private boolean isHttpRequest(ServletRequest request, 
@@ -238,19 +230,10 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
     public void doFilter ( ServletRequest request, ServletResponse response,
                            FilterChain chain ) throws IOException,
                                                       ServletException {
-		super.doFilter(request, response, chain);
-		// Clear logging context before each servlet request.
-		ZimbraLog.clearContext();
-    }
-
-	public boolean doFilter(ServletRequest request, ServletResponse response)
-	throws IOException, ServletException {
+        
         if (debug > 0) {
             System.out.println("@doFilter");
         }
-		if (!super.doFilter(request, response)) {
-			return false;
-		}
 
 	    /***/
         // TODO: We could pass all the init-params through but we only need one for now.
@@ -276,16 +259,15 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
             if (debug > 0){
                 System.out.println("not proceeding with filter");
             }
-			return true;
+            chain.doFilter(request, response);
+            return;
         }
         
         // CalDAV service discovery (bug 35008). 
         // redirect any WebDAV request sent to the root URI "/" to "/dav/"
         if (req.getPathInfo() == null && req.getMethod().equals("PROPFIND")) {
-            ServletContext targetContext = config.getServletContext().getContext("/service");
-            RequestDispatcher dispatcher = targetContext.getRequestDispatcher("/dav");
-            dispatcher.forward(req, resp);
-			return false;
+        	resp.sendRedirect("/dav/");
+        	return;
         }
         
         String uri = req.getRequestURI();
@@ -303,6 +285,7 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
             if (debug > 0) {
                 System.out.println("doFilter gets called wo compression");
             }
+            chain.doFilter(req, resp);
         } else {
             Matcher m = extensionPattern.matcher(uri);
             if (debug > 0) {
@@ -315,18 +298,17 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
                 // not sure why I can't set the headers after 
                 // the chain.doFilter call, but ...
                 // I can't.
-	            // [A] Because you can't write the headers after
-	            // [A] content has already been written to the
-	            // [A] response!
                 if (debug > 0) {
                     System.out.println("setting headers");                    
                 }
                 resp.setHeader(HEADER_CONTENT_ENCODING, HEADER_VAL_GZIP);
                 resp.setHeader(HEADER_VARY, HEADER_ACCEPT_ENCODING);
             }
+            chain.doFilter(req, resp);
         }
-
-		return true;
+        
+        // Clear logging context before each servlet request.
+        ZimbraLog.clearContext();
     }
 
     private void setRequestAttributes( HttpServletRequest req, HttpServletResponse resp,

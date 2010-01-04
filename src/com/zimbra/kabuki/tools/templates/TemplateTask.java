@@ -1,5 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.kabuki.tools.templates;
@@ -18,8 +20,6 @@ import java.io.*;
 import java.util.*;
 import org.apache.tools.ant.*;
 import org.apache.tools.ant.types.*;
-
-import com.zimbra.common.util.TemplateCompiler;
 
 
 public class TemplateTask
@@ -83,7 +83,7 @@ extends Task {
             DirectoryScanner scanner = fileSet.getDirectoryScanner(project);
             String[] filenames = scanner.getIncludedFiles();
 	        try {
-		        TemplateCompiler.compile(idir, odir, prefix, filenames, format,
+		        Template.convertFiles(idir, odir, prefix, filenames, format,
 				                      authoritative, define);
 	        } catch (IOException e) {
 		        System.err.println("error: "+e.getMessage());

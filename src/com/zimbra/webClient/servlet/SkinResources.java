@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -17,7 +19,6 @@ package com.zimbra.webClient.servlet;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.servlet.DiskCacheServlet;
@@ -38,12 +39,16 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.*;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.cs.account.Entry;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.kabuki.util.Colors;
 
 import java.awt.Color;
@@ -90,8 +95,6 @@ public class SkinResources
 	private static final String A_SKIN_LOGO_LOGIN_BANNER = "zimbraSkinLogoLoginBanner";
 	private static final String A_SKIN_LOGO_APP_BANNER = "zimbraSkinLogoAppBanner";
 	private static final String A_SKIN_LOGO_URL = "zimbraSkinLogoURL";
-
-	private static final String A_SKIN_FAVICON = "zimbraSkinFavicon";
 
 	private static final String A_HELP_ADMIN_URL = "zimbraHelpAdminURL";
 	private static final String A_HELP_ADVANCED_URL = "zimbraHelpAdvancedURL";
@@ -260,11 +263,10 @@ public class SkinResources
 
 				// write buffer to cache file
 				if (!debug) {
-			                file = createCacheFile(cacheId, type);
+					file = File.createTempFile("res-", "."+type, getCacheDir());
 					if (ZimbraLog.webclient.isDebugEnabled()) ZimbraLog.webclient.debug("DEBUG: buffer file: "+file);
 					copy(buffer, file);
-					if (LC.zimbra_web_generate_gzip.booleanValue())
-						compress(file);
+					compress(file);
 					putCacheFile(cacheId, file);
 				}
             }
@@ -286,7 +288,6 @@ public class SkinResources
 	        }
             resp.setHeader("Cache-control", "public, max-age="+maxAge);
             resp.setContentType(contentType);
-
 			// NOTE: I cast the file length to an int which I think is
 			//       fine. If the aggregated contents are larger than
 			//       Integer.MAX_VALUE, then we've got other problems. ;)
@@ -395,16 +396,8 @@ public class SkinResources
         File skinDir = new File(skinDirname);
         File manifestFile = new File(skinDir, SKIN_MANIFEST);
 
-		String skinsDirname = LC.skins_directory.value();
-		if (skinsDirname == null) skinsDirname = "/zimbra";
-		int slashIndex = skinsDirname.lastIndexOf('/');
-		skinsDirname = skinsDirname.substring(0, slashIndex);
-		slashIndex = skinsDirname.lastIndexOf('/');
-		String appContextPath = skinsDirname.substring(slashIndex);
-
 		// domain overrides
-		Map<String,String> substOverrides = new HashMap<String,String>();
-	    substOverrides.put(Manifest.S_APP_CONTEXT_PATH, appContextPath);
+		Map<String,String> substOverrides = null;
 		try {
 			SoapProvisioning provisioning = new SoapProvisioning();
 			String soapUri =
@@ -412,31 +405,47 @@ public class SkinResources
 				LC.zimbra_zmprov_default_soap_server.value() +
 				':' +
 				LC.zimbra_admin_service_port.intValue() +
-				AdminConstants.ADMIN_SERVICE_URI
+				ZimbraServlet.ADMIN_SERVICE_URI
 			;
 			provisioning.soapSetURI(soapUri);
 			String serverName = getServerName(req);
-			Entry info = provisioning.getDomainInfo(DomainBy.virtualHostname, serverName);
-			if (info == null) {
-				info = provisioning.getConfig();
-			}
-			if (info != null) {
+			Domain domain = provisioning.getDomainInfo(DomainBy.virtualHostname, serverName);
+			if (domain != null) {
+				substOverrides = new HashMap<String,String>();
 				// colors
-				substOverrides.put(Manifest.S_SKIN_FOREGROUND_COLOR, info.getAttr(A_SKIN_FOREGROUND_COLOR));
-				substOverrides.put(Manifest.S_SKIN_BACKGROUND_COLOR, info.getAttr(A_SKIN_BACKGROUND_COLOR));
-				substOverrides.put(Manifest.S_SKIN_SECONDARY_COLOR, info.getAttr(A_SKIN_SECONDARY_COLOR));
-				substOverrides.put(Manifest.S_SKIN_SELECTION_COLOR, info.getAttr(A_SKIN_SELECTION_COLOR));
+				substOverrides.put(Manifest.S_SKIN_FOREGROUND_COLOR, domain.getAttr(A_SKIN_FOREGROUND_COLOR));
+				substOverrides.put(Manifest.S_SKIN_BACKGROUND_COLOR, domain.getAttr(A_SKIN_BACKGROUND_COLOR));
+				substOverrides.put(Manifest.S_SKIN_SECONDARY_COLOR, domain.getAttr(A_SKIN_SECONDARY_COLOR));
+				substOverrides.put(Manifest.S_SKIN_SELECTION_COLOR, domain.getAttr(A_SKIN_SELECTION_COLOR));
 				// images
-				substOverrides.put(Manifest.S_SKIN_LOGO_LOGIN_BANNER, info.getAttr(A_SKIN_LOGO_LOGIN_BANNER));
-				substOverrides.put(Manifest.S_SKIN_LOGO_APP_BANNER, info.getAttr(A_SKIN_LOGO_APP_BANNER));
-				substOverrides.put(Manifest.S_SKIN_LOGO_URL, info.getAttr(A_SKIN_LOGO_URL));
-				// favicon
-				substOverrides.put(Manifest.S_SKIN_FAVICON, info.getAttr(A_SKIN_FAVICON));
+				substOverrides.put(Manifest.S_SKIN_LOGO_LOGIN_BANNER, domain.getAttr(A_SKIN_LOGO_LOGIN_BANNER));
+				substOverrides.put(Manifest.S_SKIN_LOGO_APP_BANNER, domain.getAttr(A_SKIN_LOGO_APP_BANNER));
+				substOverrides.put(Manifest.S_SKIN_LOGO_URL, domain.getAttr(A_SKIN_LOGO_URL));
 				// help
-				substOverrides.put(Manifest.S_HELP_ADMIN_URL, info.getAttr(A_HELP_ADMIN_URL));
-				substOverrides.put(Manifest.S_HELP_ADVANCED_URL, info.getAttr(A_HELP_ADVANCED_URL));
-				substOverrides.put(Manifest.S_HELP_DELEGATED_URL, info.getAttr(A_HELP_DELEGATED_URL));
-				substOverrides.put(Manifest.S_HELP_STANDARD_URL, info.getAttr(A_HELP_STANDARD_URL));
+				substOverrides.put(Manifest.S_HELP_ADMIN_URL, domain.getAttr(A_HELP_ADMIN_URL));
+				substOverrides.put(Manifest.S_HELP_ADVANCED_URL, domain.getAttr(A_HELP_ADVANCED_URL));
+				substOverrides.put(Manifest.S_HELP_DELEGATED_URL, domain.getAttr(A_HELP_DELEGATED_URL));
+				substOverrides.put(Manifest.S_HELP_STANDARD_URL, domain.getAttr(A_HELP_STANDARD_URL));
+			}
+			else {
+				Config config = provisioning.getConfig();
+				if (config != null) {
+					substOverrides = new HashMap<String,String>();
+					// colors
+					substOverrides.put(Manifest.S_SKIN_FOREGROUND_COLOR, config.getAttr(A_SKIN_FOREGROUND_COLOR));
+					substOverrides.put(Manifest.S_SKIN_BACKGROUND_COLOR, config.getAttr(A_SKIN_BACKGROUND_COLOR));
+					substOverrides.put(Manifest.S_SKIN_SECONDARY_COLOR, config.getAttr(A_SKIN_SECONDARY_COLOR));
+					substOverrides.put(Manifest.S_SKIN_SELECTION_COLOR, config.getAttr(A_SKIN_SELECTION_COLOR));
+					// images
+					substOverrides.put(Manifest.S_SKIN_LOGO_LOGIN_BANNER, config.getAttr(A_SKIN_LOGO_LOGIN_BANNER));
+					substOverrides.put(Manifest.S_SKIN_LOGO_APP_BANNER, config.getAttr(A_SKIN_LOGO_APP_BANNER));
+					substOverrides.put(Manifest.S_SKIN_LOGO_URL, config.getAttr(A_SKIN_LOGO_URL));
+					// help
+					substOverrides.put(Manifest.S_HELP_ADMIN_URL, config.getAttr(A_HELP_ADMIN_URL));
+					substOverrides.put(Manifest.S_HELP_ADVANCED_URL, config.getAttr(A_HELP_ADVANCED_URL));
+					substOverrides.put(Manifest.S_HELP_DELEGATED_URL, config.getAttr(A_HELP_DELEGATED_URL));
+					substOverrides.put(Manifest.S_HELP_STANDARD_URL, config.getAttr(A_HELP_STANDARD_URL));
+				}
 			}
 		}
 		catch (Exception e) {
@@ -753,13 +762,13 @@ public class SkinResources
     }
 
     private String getSkin(HttpServletRequest req) {
-        String zimbraAdminURL = null;
-        
+        String zimbraAdminURL = "/zimbraAdmin";
         try {
             Context initCtx = new InitialContext();
             Context envCtx = (Context) initCtx.lookup("java:comp/env");
             zimbraAdminURL = (String) envCtx.lookup("adminUrl");
         } catch (NamingException ne) {
+            ne.printStackTrace();
         }
         if (zimbraAdminURL == null) {
             zimbraAdminURL = "/zimbraAdmin";
@@ -1045,14 +1054,10 @@ public class SkinResources
 		public static final String S_SKIN_LOGO_APP_BANNER = "AppBannerImg";
 		public static final String S_SKIN_LOGO_URL = "LogoURL";
 
-	    public static final String S_SKIN_FAVICON = "FavIcon";
-
 		private static final String S_HELP_ADMIN_URL = "HelpAdminURL";
 		private static final String S_HELP_ADVANCED_URL = "HelpAdvancedURL";
 		private static final String S_HELP_DELEGATED_URL = "HelpDelegatedURL";
 		private static final String S_HELP_STANDARD_URL = "HelpStandardURL";
-
-		private static final String S_APP_CONTEXT_PATH = "AppContextPath"; 
 
         private static final String E_SKIN = "skin";
         private static final String E_SUBSTITUTIONS = "substitutions";
@@ -1159,9 +1164,8 @@ public class SkinResources
 							}
 						}
 					}
-				} catch (OutOfMemoryError e) {
-                Zimbra.halt("out of memory", e);
-                } catch (Throwable t) {
+				}
+                catch (Throwable t) {
                     ZimbraLog.webclient.debug("ERROR loading subst file: " + file);
                 }
 
@@ -1625,7 +1629,7 @@ public class SkinResources
 		//
 		// replace occurances of @opacity(percentage)@ with CSS opacity value (correct for each platform)
 		//
-		//	TODO: does IE7 support regular opacity?   No!
+		//	TODO: does IE7 support regular opacity?
 		//
         private String outputOpacity(Stack<String> stack, String[] params) throws IOException {
 			float opacity;

@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 /**
@@ -50,7 +52,7 @@ function() {
 
 ZmErrorDialog.REPORT_BUTTON = ++DwtDialog.LAST_BUTTON;
 ZmErrorDialog.DETAIL_BUTTON = ++DwtDialog.LAST_BUTTON;
-ZmErrorDialog.DEFAULT_REPORT_URL = "//www.zimbra.com/e/";
+ZmErrorDialog.REPORT_URL = "//www.zimbra.com/e/";
 
 //
 // Data
@@ -196,12 +198,15 @@ function() {
 
 ZmErrorDialog.prototype._reportCallback =
 function() {
-	this._iframe = document.createElement("iframe");
-	this._iframe.style.width = this._iframe.style.height = 0;
-	this._iframe.style.visibility = "hidden";
+	// iframe initialization - recreate iframe if IE and reuse if FF
+	if (!this._iframe || AjxEnv.isIE) {
+		this._iframe = document.createElement("iframe");
+		this._iframe.style.width = this._iframe.style.height = 0;
+		this._iframe.style.visibility = "hidden";
 
-	var contentDiv = this._getContentDiv();
-	contentDiv.appendChild(this._iframe);
+		var contentDiv = this._getContentDiv();
+		contentDiv.appendChild(this._iframe);
+	}
 
 	var strPrefs = this._getUserPrefs();
 	var formId = Dwt.getNextId();
@@ -215,7 +220,7 @@ function() {
 	html[idx++] = formId;
 	html[idx++] = "' method='POST' action='";
 	html[idx++] = scheme;
-	html[idx++] = appCtxt.get(ZmSetting.ERROR_REPORT_URL) || ZmErrorDialog.DEFAULT_REPORT_URL;
+	html[idx++] = ZmErrorDialog.REPORT_URL;
 	html[idx++] = "'>";
 	html[idx++] = "<textarea name='details'>";
 	html[idx++] = this._detailStr;
@@ -244,7 +249,6 @@ function() {
 	var form = idoc.getElementById(formId);
 	if (form) {
 		form.submit();
-		appCtxt.setStatusMsg(ZmMsg.errorReportSent);
 	}
 
 	this.popdown();

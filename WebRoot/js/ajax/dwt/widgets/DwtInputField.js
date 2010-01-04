@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -33,7 +35,6 @@
  *        initialValue		[string]*			the initial value of the field
  *        size				[int]*				size of the input field (in characters)
  *        rows				[int]*				number of rows (more than 1 means textarea)
- *        forceMultiRow		[boolean]*			forces use of textarea even if rows == 1
  *        maxLen			[int]*				maximum length (in characters) of the input
  *        errorIconStyle	[constant]*			error icon style
  *        validationStyle	[constant]*			validation type
@@ -41,6 +42,9 @@
  *        validatorCtxtObj	[object]*			object context for validation function
  *        className			[string]*			CSS class
  *        posStyle			[constant]*			positioning style
+ *        skipCaretHack		[boolean]*			true to NOT do hack to make the caret show up in Firefox.
+ * 												The hack uses a block display div, so for an input that needs
+ * 												to be displayed inline, set this parameter to true.
  *        required          [boolean]*          True to mark as required.
  *        hint				[string]*			A hint to display in the input field when the value is empty.
  *        id				[string]*			an explicit ID to use for the control's DIV element
@@ -75,22 +79,26 @@ DwtInputField = function(params) {
 	var inputFieldId = params.inputID || Dwt.getNextId();
 	var errorIconId = Dwt.getNextId();
 	var htmlEl = this.getHtmlElement();
+	var doCursorHack = params.skipCaretHack;
+	var hackBegin = doCursorHack ? "" : Dwt.CARET_HACK_BEGIN;
+	var hackEnd = doCursorHack ? "" : Dwt.CARET_HACK_END;
 	if (this._errorIconStyle == DwtInputField.ERROR_ICON_NONE) {
-		if (params.forceMultiRow || (params.rows && params.rows > 1)) {
-			var htmlArr = ["<textarea id='", inputFieldId, "' rows=", params.rows];
+		if (params.rows && params.rows > 1) {
+			var htmlArr = [hackBegin, "<textarea id='", inputFieldId, "' rows=", params.rows];
 			var i = htmlArr.length;
-			if (params.forceMultiRow || params.size) {
+			if (params.size) {
 				htmlArr[i++] = " cols=";
-				htmlArr[i++] = params.size || 1;
+				htmlArr[i++] = params.size;
 			}
 			if (params.wrap) {
 				htmlArr[i++] = " wrap=";
 				htmlArr[i++] = params.wrap;
 			}
 			htmlArr[i++] = "></textarea>"
+			htmlArr[i++] = hackEnd;
 			htmlEl.innerHTML = htmlArr.join("");
 		} else {
-			htmlEl.innerHTML = ["<input id='",inputFieldId,"'>"].join("");
+			htmlEl.innerHTML = [hackBegin, "<input id='",inputFieldId,"'>", hackEnd].join("");
 		}
 
 	} else {
@@ -99,7 +107,7 @@ DwtInputField = function(params) {
 		if (this._errorIconStyle == DwtInputField.ERROR_ICON_LEFT)
 			htmlArr[i++] = ["<td style='padding-right:2px;'id='", errorIconId, "'></td>"].join("");
 
-		htmlArr[i++] = ["<td>", "<input id='", inputFieldId, "'>", "</td>"].join("");
+		htmlArr[i++] = ["<td>", hackBegin, "<input id='", inputFieldId, "'>", hackEnd, "</td>"].join("");
 
 		if (this._errorIconStyle == DwtInputField.ERROR_ICON_RIGHT)
 			htmlArr[i++] = ["<td style='padding-left:2px;' id='", errorIconId, "'></td>"].join("");
@@ -115,7 +123,7 @@ DwtInputField = function(params) {
 	}
 
 	this._tabGroup = new DwtTabGroup(this._htmlElId);
-	if (params.forceMultiRow || this._rows > 1) {
+	if (this._rows > 1) {
         this._inputField = document.getElementById(inputFieldId);
         this._inputField.onkeyup = DwtInputField._keyUpHdlr;
         this._inputField.onblur = DwtInputField._blurHdlr;
@@ -401,8 +409,8 @@ function() {
 	this.getInputElement().blur();
 };
 
-DwtInputField.prototype.setVisible = function(visible) {
-	DwtComposite.prototype.setVisible.apply(this, arguments);
+DwtInputField.prototype.setVisible = 
+function(visible) {
 	Dwt.setVisible(this.getInputElement(), visible);
 };
 
@@ -585,9 +593,8 @@ function(ev) {
 		obj._hasFocus = false;
 		if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
 			var val = obj._validateInput(obj.getValue());
-			if (val != null) {
+			if (val != null)
 				obj.setValue(val);
-			}
 		}
 		if (!obj._hintIsVisible && obj._hint) {
 			obj._showHint();
@@ -599,7 +606,7 @@ DwtInputField._focusHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
 	if (obj) {
-		var kbMgr = DwtShell.getShell(window).getKeyboardMgr().inputGotFocus(obj);
+		DwtShell.getShell(window).getKeyboardMgr().grabFocus(obj.getTabGroupMember());
 		if (obj._hintIsVisible) {
 			obj._hideHint('');
 		}
@@ -608,9 +615,7 @@ function(ev) {
 
 DwtInputField.prototype._hideHint = 
 function(value) {
-	var element = this.getInputElement();
-	element.value = value;
-	element.title = this._hint || "";
+	this.getInputElement().value = value;
 	this._hintIsVisible = false;
 	this._updateClassName();
 };
@@ -620,7 +625,6 @@ function() {
 	if (this._hint) {
 		var element = this.getInputElement();
 		if (!element.value) {
-			element.title = "";
 			element.value = this._hint;
 			this._hintIsVisible = true;
 			this._updateClassName();

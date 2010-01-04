@@ -1,5 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -39,7 +41,6 @@ public class ImageMergeTask
 	private File _outputDir = null;
 	private String _cssFile = null;
 	private String _cssPath = null;
-	private String _jsFile = null;
 	private File _cacheFile = null;
 
 	// optional
@@ -70,10 +71,6 @@ public class ImageMergeTask
 
 	public void setCssPath(String path) {
 		_cssPath = path;
-	}
-
-	public void setJsFile(String filename) {
-		_jsFile = filename;
 	}
 
 	public void setCacheFile(File file) {
@@ -159,11 +156,6 @@ public class ImageMergeTask
 		if (_cacheFile != null) {
 			argList.add("-f");
 			argList.add(_cacheFile.getAbsolutePath());
-		}
-
-		if (_jsFile != null) {
-			argList.add("-j");
-			argList.add(_jsFile);
 		}
 
 		if (!_layoutStyle.equals("auto")) {

@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -293,10 +295,12 @@ AjxTimezone.getShortName = function(clientId) {
 	}
 	return rule.shortName;
 };
-AjxTimezone.getMediumName = function(clientId) {
-	var rule = AjxTimezone.getRule(clientId);
+AjxTimezone.getMediumName = function(clientId,indx) {
+	var rule = AjxTimezone.getRule(clientId,null,indx);
 	if (!rule.mediumName) {
-		rule.mediumName = AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
+        var idWithOffset = [clientId,indx||"1"].join("_");
+        rule.mediumName = AjxMsg[idWithOffset] || AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
+
 	}
 	return rule.mediumName;
 };
@@ -305,22 +309,36 @@ AjxTimezone.getLongName = AjxTimezone.getMediumName;
 AjxTimezone.addRule = function(rule) {
     var serverId = rule.serverId;
     var clientId = rule.clientId;
-
-    AjxTimezone._CLIENT2SERVER[clientId] = serverId;
+    if(AjxTimezone._CLIENT2SERVER[clientId] !== undefined && AjxTimezone._CLIENT2RULE[clientId].standard.offset != rule.standard.offset){
+        AjxTimezone._CLIENT2SERVER_DUPS[clientId] = serverId;
+    }else{
+        AjxTimezone._CLIENT2SERVER[clientId] = serverId;
+    }
     AjxTimezone._SERVER2CLIENT[serverId] = clientId;
-    AjxTimezone._SHORT_NAMES[clientId] = AjxTimezone._generateShortName(rule.standard.offset);
-    AjxTimezone._CLIENT2RULE[clientId] = rule;
-
+    if(AjxTimezone._SHORT_NAMES[clientId] !== undefined && AjxTimezone._CLIENT2RULE[clientId].standard.offset != rule.standard.offset){
+        AjxTimezone._SHORT_NAMES_DUPS[clientId] = AjxTimezone._generateShortName(rule.standard.offset);
+    }else{
+        AjxTimezone._SHORT_NAMES[clientId] = AjxTimezone._generateShortName(rule.standard.offset);
+    }
+    if(AjxTimezone._CLIENT2RULE[clientId] !== undefined && AjxTimezone._CLIENT2RULE[clientId].standard.offset != rule.standard.offset){
+        AjxTimezone._CLIENT2RULE_DUPS[clientId] = rule;
+    }else{
+        AjxTimezone._CLIENT2RULE[clientId] = rule;
+    }
     var array = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
     array.push(rule);
 };
 
-AjxTimezone.getRule = function(clientId, tz) {
-	var rule = AjxTimezone._CLIENT2RULE[clientId];
+AjxTimezone.getRule = function(clientId, tz, indx) {
+    var rule = AjxTimezone._CLIENT2RULE[clientId];
+    if(indx){
+        rule = AjxTimezone._CLIENT2RULE_DUPS[clientId];        
+    }
     if (!rule) {
         // try to find the rule treating the clientId as the serverId
         clientId = AjxTimezone._SERVER2CLIENT[clientId];
         rule = AjxTimezone._CLIENT2RULE[clientId];
+        
     }
     if (!rule && tz) {
         var names = [ "standard", "daylight" ];
@@ -406,51 +424,32 @@ AjxTimezone.getAbbreviatedZoneChoices = function() {
 	if (!AjxTimezone._ABBR_ZONE_OPTIONS) {
 		AjxTimezone._ABBR_ZONE_OPTIONS = [];
 		for (var clientId in AjxTimezone._CLIENT2SERVER) {
-			var rule = AjxTimezone._CLIENT2RULE[clientId];
+            var rule = AjxTimezone._CLIENT2RULE[clientId];
 			var serverId = rule.serverId;
 			var option = {
 				displayValue: AjxTimezone.getMediumName(clientId),
 				value: serverId,
 				// these props used by sort comparator
 				standard: rule.standard,
-				serverid: serverId,
-                clientId: clientId
+				serverid: serverId
 			};
 			AjxTimezone._ABBR_ZONE_OPTIONS.push(option);
+            if(AjxTimezone._CLIENT2SERVER_DUPS[clientId]){
+                var rule = AjxTimezone._CLIENT2RULE_DUPS[clientId];
+                var serverId = rule.serverId;
+                var option = {
+                    displayValue: AjxTimezone.getMediumName(clientId,"2"),
+                    value: serverId,
+                    // these props used by sort comparator
+                    standard: rule.standard,
+                    serverid: serverId
+                };
+                AjxTimezone._ABBR_ZONE_OPTIONS.push(option);
+            }
 		}
 		AjxTimezone._ABBR_ZONE_OPTIONS.sort(AjxTimezone._BY_OFFSET);
 	}
 	return AjxTimezone._ABBR_ZONE_OPTIONS;
-};
-
-AjxTimezone.getMatchingTimezoneChoices = function() {
-	if (AjxTimezone._MATCHING_ZONE_OPTIONS) {
-		var count = AjxTimezone._MATCHING_ZONE_OPTIONS.length;
-		var total = AjxTimezone.STANDARD_RULES.length + AjxTimezone.DAYLIGHT_RULES.length;
-		if (count != total) {
-			AjxTimezone._MATCHING_ZONE_OPTIONS = null;
-		}
-	}
-	if (!AjxTimezone._MATCHING_ZONE_OPTIONS) {
-		AjxTimezone._MATCHING_ZONE_OPTIONS = [];
-		for (var i in AjxTimezone.MATCHING_RULES) {
-			var rule = AjxTimezone.MATCHING_RULES[i];
-			var clientId = rule.clientId;
-			var serverId = rule.serverId;
-            if(clientId == AjxTimezone.AUTO_DETECTED) continue;
-			var option = {
-				displayValue: AjxTimezone.getMediumName(clientId),
-				value: serverId,
-				// these props used by sort comparator
-				standard: rule.standard,
-				serverid: serverId,
-                clientId: clientId
-			};
-			AjxTimezone._MATCHING_ZONE_OPTIONS.push(option);
-		}
-		AjxTimezone._MATCHING_ZONE_OPTIONS.sort(AjxTimezone._BY_OFFSET);
-	}
-	return AjxTimezone._MATCHING_ZONE_OPTIONS;
 };
 
 AjxTimezone._BY_OFFSET = function(arule, brule) {
@@ -503,9 +502,12 @@ AjxTimezone.DEFAULT;
 AjxTimezone.DEFAULT_RULE;
 
 AjxTimezone._CLIENT2SERVER = {};
+AjxTimezone._CLIENT2SERVER_DUPS = {};
 AjxTimezone._SERVER2CLIENT = {};
 AjxTimezone._SHORT_NAMES = {};
+AjxTimezone._SHORT_NAMES_DUPS = {};
 AjxTimezone._CLIENT2RULE = {};
+AjxTimezone._CLIENT2RULE_DUPS = {};
 
 /** 
  * The data is specified using the server identifiers for historical
@@ -530,21 +532,13 @@ AjxTimezone.DAYLIGHT_RULES = [];
  * <strong>Note:</strong>
  * It looks like the current versions of FF always reflect the current
  * timezone w/o needing to restart the browser.
- * timezonePreference - optional value used to decide timezone rule in case of conflict 
  */
 AjxTimezone._guessMachineTimezone = 
-function(timezonePreference) {
+function() {
 	var dec1 = new Date(AjxTimezoneData.TRANSITION_YEAR, 11, 1, 0, 0, 0);
 	var jun1 = new Date(AjxTimezoneData.TRANSITION_YEAR, 5, 1, 0, 0, 0);
 	var dec1offset = -dec1.getTimezoneOffset();
 	var jun1offset = -jun1.getTimezoneOffset();
-
-    AjxTimezone.MATCHING_RULES = [];
-    AjxTimezone.TIMEZONE_CONFLICT = false;
-    var matchingRules = [];
-    var matchingRulesMap = {};
-    var offsetMatchingRules = [];
-    var daylightMatchingFound = false;
 
     // if the offset for jun is the same as the offset in december,
 	// then we have a timezone that doesn't deal with daylight savings.
@@ -553,11 +547,7 @@ function(timezonePreference) {
  		for (var i = 0; i < rules.length ; ++i ) {
             var rule = rules[i];
             if (rule.standard.offset == jun1offset) {
-				 if(!matchingRulesMap[rule.serverId]) {
-                     matchingRules.push(rule);
-                     matchingRulesMap[rule.serverId] = true;
-                 }
-                 AjxTimezone.MATCHING_RULES.push(rule);
+				return rule;
 			}
 		}
 	}
@@ -567,8 +557,6 @@ function(timezonePreference) {
 		var rules = AjxTimezone.DAYLIGHT_RULES;
 		var dst = Math.max(dec1offset, jun1offset);
 		var std = Math.min(dec1offset, jun1offset);
-        var now = new Date();
-        var currentOffset = -now.getTimezoneOffset();
         for (var i = 0; i < rules.length ; ++i ) {
 			var rule = rules[i];
 			if (rule.standard.offset == std && rule.daylight.offset == dst) {
@@ -581,43 +569,11 @@ function(timezonePreference) {
                 var d1 = new Date(dtrans[0], dtrans[1]-1, dtrans[2]+2);
                 if (-s1.getTimezoneOffset() == std && -d1.getTimezoneOffset() == dst &&
                     -s0.getTimezoneOffset() == dst && -d0.getTimezoneOffset() == std) {
-                    if(!matchingRulesMap[rule.serverId]) {
-                        matchingRules.push(rule);
-                        matchingRulesMap[rule.serverId] = true;
-                    }                    
-                    daylightMatchingFound = true;
+                    return rule;
                 }
-            }
-            //used for conflict resolution when server rules are wrong 
-            if (rule.standard.offset == currentOffset || rule.daylight.offset == currentOffset) {
-                    AjxTimezone.MATCHING_RULES.push(rule);
             }
 		}
 	}
-
-    //when there is a timezone conflict use the preference to find better match
-    if((matchingRules.length > 0) && timezonePreference != null) {
-        var rules = matchingRules; 
-        for(var i in rules) {
-            if(rules[i].serverId == timezonePreference) {
-                return rules[i];
-            }
-        }
-    }
-
-    if(matchingRules.length > 0) {
-        AjxTimezone.TIMEZONE_CONFLICT = (matchingRules.length > 1);  
-        return matchingRules[0];        
-    }
-
-    if((AjxTimezone.MATCHING_RULES.length > 0) && timezonePreference != null) {
-        var rules = AjxTimezone.MATCHING_RULES; 
-        for(var i in rules) {
-            if(rules[i].serverId == timezonePreference) {
-                return rules[i];
-            }
-        }
-    }
 
     // generate default rule
     return AjxTimezone._generateDefaultRule();
@@ -745,9 +701,9 @@ AjxTimezone._generateDefaultRule = function() {
 	}
 
 	// add generated rule to proper list
-	//AjxTimezoneData.TIMEZONE_RULES.unshift(rule);
-	//var rules = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
-	//rules.unshift(rule);
+	AjxTimezoneData.TIMEZONE_RULES.unshift(rule);
+	var rules = rule.daylight ? AjxTimezone.DAYLIGHT_RULES : AjxTimezone.STANDARD_RULES;
+	rules.unshift(rule);
 
 	return rule;
 };
@@ -766,7 +722,6 @@ AjxTimezone._generateShortName = function(offset, period) {
 // Static initialization
 
 AjxTimezone.DEFAULT_RULE = AjxTimezone._guessMachineTimezone();
-
 
 /*** DEBUG ***
 // This forces the client to create an auto-detected timezone rule,

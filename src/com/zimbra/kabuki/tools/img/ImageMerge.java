@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -35,7 +37,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-//import org.apache.commons.codec.binary.Base64;
 
 /*
  * Program to aggregate n GIFs into single GIF images.  This program
@@ -61,7 +62,6 @@ public class ImageMerge {
 	private String _outputDirName;
 	private PrintWriter _cssOut;
 	private PrintWriter _cacheFileOut;
-	private PrintWriter _jsOut;
 	private String _cssPath;
 	private boolean _isCopy;
 	private boolean _incDisableCss = false;	// NOTE: deprecated, but not removed in the code
@@ -98,10 +98,6 @@ public class ImageMerge {
 
 		option = new Option("s", "css-file", true, "css file name");
 		option.setRequired(true);
-		_mOptions.addOption(option);
-
-		option = new Option("j", "js-file", true, "JavaScript file name");
-		option.setRequired(false);
 		_mOptions.addOption(option);
 
 		option = new Option("f", "cache-file", true, "cache file name");
@@ -165,16 +161,6 @@ public class ImageMerge {
 		} else {
 			explainUsageAndExit();
 		}
-
-		if (cl != null && cl.hasOption("j")) {
-			File jsFile = new File(_outputDirName, cl.getOptionValue("j"));
-			boolean exists = jsFile.exists();
-			OutputStream jsFOS = new FileOutputStream(jsFile, true);
-			if (!exists) {
-				_jsOut = new PrintWriter(jsFOS);
-				_jsOut.println("if (!window.AjxImgData) AjxImgData = {};");
-			}
-		}
 	}
 
 
@@ -226,10 +212,6 @@ public class ImageMerge {
 		_cssOut.close();
 		if (_cacheFileOut != null) {
 			_cacheFileOut.close();
-		}
-
-		if (_jsOut != null) {
-			_jsOut.close();
 		}
 
 		if (ovalue != null) {
@@ -420,7 +402,8 @@ public class ImageMerge {
 				curImage.setCombinedColumn(0);
 				curImage.setCombinedRow(0);
 				// add to the CSS output
-				printInfo(curImage, curImage.getWidth(), curImage.getHeight(), combinedFilename, false);
+				_cssOut.println(curImage.getCssString(curImage.getWidth(),
+						curImage.getHeight(), combinedFilename, _incDisableCss));
 			}
 
 			//TODO: No need to copy files in the new build, but may need to later...
@@ -608,7 +591,7 @@ public class ImageMerge {
 				System.out.println("*** Unmerged file: "+img.getFilename());
 				bad = true;
 			}
-			printInfo(img, combinedWidth, combinedHeight, combinedFileName, bad);
+			_cssOut.println(img.getCssString(combinedWidth, combinedHeight, combinedFileName, _incDisableCss, bad));
 			String thisFile = _cssPath + combinedFileName;
 			if (_cacheFileOut != null && !lastFile.equals(thisFile)) {
 				_cacheFileOut.println("<img alt=\"\" src='" + thisFile + "?v=@jsVersion@'>");
@@ -616,71 +599,6 @@ public class ImageMerge {
 			}
 		}
 	}
-
-	private void printInfo(DecodedImage img, int w, int h, String filename, boolean unmerged) {
-		_cssOut.println(img.getCssString(w, h, filename, _incDisableCss, unmerged));
-		String name = img.getName();
-		if (_jsOut != null && (name.endsWith("Overlay") || name.endsWith("Mask"))) {
-			// TODO: should we output the info for all of the images???
-			_jsOut.print("AjxImgData[\"");
-			_jsOut.print(name);
-			_jsOut.print("\"]=");
-			_jsOut.print("{");
-			_jsOut.print("t:");
-			_jsOut.print(-img.getTop());
-			_jsOut.print(",");
-			_jsOut.print("l:");
-			_jsOut.print(img.getLeft());
-			_jsOut.print(",");
-			_jsOut.print("w:");
-			_jsOut.print(img.getWidth());
-			_jsOut.print(",");
-			_jsOut.print("h:");
-			_jsOut.print(img.getHeight());
-			_jsOut.print(",");
-			_jsOut.print("f:\"");
-			if (_cssPath != null) {
-				_jsOut.print(_cssPath);
-				if (!_cssPath.endsWith("/")) {
-					_jsOut.print("/");
-				}
-			}
-			_jsOut.print(filename);
-			_jsOut.print("\"");
-			// NOTE: I tried to generate data urls for the overlay images
-			// NOTE: since we can't merge PNGs properly. But this causes
-			// NOTE: a DOM security exception in FF and Saf when used to
-			// NOTE: composite the canvas and request *its* data url.
-//			if (name.endsWith("Overlay")) {
-//				_jsOut.print(",");
-//				_jsOut.print("d:\"");
-//				try {
-//					File file = new File(img.getFilename());
-//					String data = encodeBase64(file);
-//					String type = img.getFilename().replaceAll("^.*\\.(.*)$","$1");
-//					_jsOut.print("data:image/"+type+";base64,");
-//					_jsOut.print(data);
-//				}
-//				catch (IOException e) {
-//					// ignore
-//				}
-//				_jsOut.print("\"");
-//			}
-			_jsOut.print("};");
-			_jsOut.println();
-		}
-	}
-
-//	private String encodeBase64(File file) throws IOException {
-//		InputStream in = new FileInputStream(file);
-//		byte[] data = new byte[(int)file.length()];
-//		int offset = 0;
-//		int count;
-//		while (offset < data.length && (count = in.read(data, offset, data.length-offset)) != -1) {
-//			offset += count;
-//		}
-//		return new String(Base64.encodeBase64(data));
-//	}
 
 	private void processFullColorImages(File aggFile,
 										DecodedFullColorImage originals[],
@@ -704,7 +622,7 @@ public class ImageMerge {
 				combinedHeight + " image...");
 
 		// create the combined image and write other images into it
-		BufferedImage buffImg = new BufferedImage(combinedWidth, combinedHeight, BufferedImage.TYPE_4BYTE_ABGR);
+		BufferedImage buffImg = new BufferedImage(combinedWidth, combinedHeight, BufferedImage.TYPE_3BYTE_BGR);
 		for (int i = 0; i < fileCount; i++)
 			// add this image's bits to the combined image
 			addFullColorImageBits(buffImg, originals[i]);

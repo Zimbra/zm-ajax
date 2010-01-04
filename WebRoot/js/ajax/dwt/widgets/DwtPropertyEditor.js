@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -251,7 +253,7 @@ DwtPropertyEditor.prototype._createProperty = function(prop, parent) {
 	// indent if needed
 	tr.className = "level-" + level;
 
-	if (prop.visible == "false")
+	if (prop.visible === false)
 		tr.className += " invisible";
 
 	if (prop.readonly)
@@ -496,7 +498,7 @@ DwtPropertyEditor.prototype._createInputField = function(prop, target) {
 	this._currentFieldCell = target;
 	var type = DwtPropertyEditor.DWT_INPUT_FIELD_TYPES[prop.type]
 		|| DwtInputField.STRING;
-	var field = new DwtInputField({parent: this, type: type, initialValue: prop.value, maxLen: prop.maxLength, rows: prop.rows});
+	var field = new DwtInputField({parent: this, type: type, initialValue: prop.value, maxLen: prop.maxLength});
 	if (type == DwtInputField.INTEGER || type == DwtInputField.FLOAT) {
 		field.setValidNumberRange(prop.minValue || null,
 					  prop.maxValue || null);
