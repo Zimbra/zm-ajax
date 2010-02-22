@@ -1560,11 +1560,6 @@ function(ev) {
 	}
 };
 
-DwtListView.prototype._mouseUpAction =
-function(mouseEv, div) {
-	return true;
-};
-
 DwtListView.prototype._mouseDownListener =
 function(ev) {
 	var div = this.getTargetItemDiv(ev);
@@ -1582,11 +1577,6 @@ function(ev) {
 	this._mouseDownAction(ev, div);
 };
 
-DwtListView.prototype._mouseDownAction =
-function(mouseEv, div) {
-	return true;
-};
-
 DwtListView.prototype._mouseUpListener =
 function(ev) {
 	var div = this.getTargetItemDiv(ev);
@@ -1596,6 +1586,7 @@ function(ev) {
 
 	if (!div || div != this._clickDiv || wasDraggingCol || wasDraggingSash) {
 		delete this._clickDiv;
+		this._mouseUpAction(ev, div);
 		return;
 	}
 	delete this._clickDiv;
@@ -1616,7 +1607,12 @@ function(ev) {
 			this._itemClicked(div, ev);
 		}
 	}
+	this._mouseUpAction(ev, div);
 };
+
+// allow subclasses to set props on mouse event
+DwtListView.prototype._mouseDownAction = function(mouseEv, div) {};
+DwtListView.prototype._mouseUpAction = function(mouseEv, div) {};
 
 DwtListView.prototype._doubleClickAction =
 function(mouseEv, div) {return true;}

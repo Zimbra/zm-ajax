@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2005, 2006, 2007, 2008, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,6 +49,7 @@ function() {
 	AjxEnv.isFirefox1up = false;
 	AjxEnv.isFirefox1_5up = false;
 	AjxEnv.isFirefox3up = false;
+	AjxEnv.isFirefox3_6up = false;
 	AjxEnv.isMozilla = false;
 	AjxEnv.isMozilla1_4up = false;
 	AjxEnv.isSafari = false;
@@ -64,7 +65,7 @@ function() {
     AjxEnv.is1024x768orLower = screen && (screen.width <= 1024 && screen.height <= 768);
 };
 
-AjxEnv.parseUA = 
+AjxEnv.parseUA =
 function() {
 	AjxEnv.reset();
 
@@ -174,7 +175,11 @@ function() {
 		AjxEnv.isFirefox1_5up	= (AjxEnv.isFirefox && browserVersion >= 1.5);
 		AjxEnv.isFirefox2_0up	= (AjxEnv.isFirefox && browserVersion >= 2.0);
 		AjxEnv.isFirefox3up		= (AjxEnv.isFirefox && browserVersion >= 3.0);
-		AjxEnv.isSafari3		= ((AjxEnv.isSafari && browserVersion >= 3.0) || AjxEnv.isChrome);
+		AjxEnv.isFirefox3_6up	= (AjxEnv.isFirefox && browserVersion >= 3.6);
+		AjxEnv.isSafari2		= (AjxEnv.isSafari && browserVersion >= 2.0 && browserVersion < 3.0);
+		AjxEnv.isSafari3		= (AjxEnv.isSafari && browserVersion >= 3.0 && browserVersion < 4.0) || AjxEnv.isChrome;
+        AjxEnv.isSafari4        = (AjxEnv.isSafari && browserVersion >= 4.0);
+		AjxEnv.isSafari3up		= (AjxEnv.isSafari && browserVersion >= 3.0) || AjxEnv.isChrome;
 
 		AjxEnv.browser = "[unknown]";
 		if (AjxEnv.isOpera) 				{	AjxEnv.browser = "OPERA";	}
