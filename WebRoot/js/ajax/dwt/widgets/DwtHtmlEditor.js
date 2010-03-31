@@ -1267,7 +1267,6 @@ function(ev) {
 			// hack so that kbMgr can handle editor shortcuts; grabFocus() does not work
 			// for IE here - focus goes back to the previous element
 			kbMgr.__focusObj = this;
-			kbMgr.__dwtCtrlHasFocus = true;
 		} else {
 			kbMgr.grabFocus(this);
 		}
