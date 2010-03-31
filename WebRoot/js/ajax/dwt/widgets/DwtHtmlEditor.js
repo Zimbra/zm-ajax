@@ -1567,11 +1567,22 @@ function(iFrameDoc) {
 	if (!iFrameDoc) { return; }
 
 	try {
-		iFrameDoc.designMode = "on";
+		if (!AjxEnv.isIE) {
+			iFrameDoc.designMode = "on";
+		} else {
+			var editorBody = iFrameDoc.body;
+			if (!editorBody || editorBody.contentEditable === undefined) {
+				iFrameDoc.designMode = "on";
+			} else {
+				editorBody.contentEditable = true;
+			}
+		}
+
 		// Probably a regression of FF 1.5.0.1/Linux requires us to
 		// reset event handlers here (Zimbra bug: 6545).
- 		if (AjxEnv.isGeckoBased && (AjxEnv.isLinux || AjxEnv.isMac))
+ 		if (AjxEnv.isGeckoBased && (AjxEnv.isLinux || AjxEnv.isMac)) {
  			this._registerEditorEventHandlers(document.getElementById(this._iFrameId), iFrameDoc);
+		 }
 	} catch (ex) {
 		// Gecko may take some time to enable design mode..
 		if (AjxEnv.isGeckoBased || AjxEnv.isSafari) {
