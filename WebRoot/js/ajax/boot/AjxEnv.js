@@ -53,6 +53,10 @@ function() {
 	AjxEnv.isMozilla = false;
 	AjxEnv.isMozilla1_4up = false;
 	AjxEnv.isSafari = false;
+    AjxEnv.isSafari3 = false;
+    AjxEnv.isSafari4 = false;
+	AjxEnv.isSafari3up = false;
+    AjxEnv.isSafari4up = false;
 	AjxEnv.isCamino = false;
 	AjxEnv.isChrome = false;
 	AjxEnv.isGeckoBased = false;
@@ -180,6 +184,7 @@ function() {
 		AjxEnv.isSafari3		= (AjxEnv.isSafari && browserVersion >= 3.0 && browserVersion < 4.0) || AjxEnv.isChrome;
         AjxEnv.isSafari4        = (AjxEnv.isSafari && browserVersion >= 4.0);
 		AjxEnv.isSafari3up		= (AjxEnv.isSafari && browserVersion >= 3.0) || AjxEnv.isChrome;
+        AjxEnv.isSafari4up		= (AjxEnv.isSafari && browserVersion >= 4.0) || AjxEnv.isChrome;
 
 		AjxEnv.browser = "[unknown]";
 		if (AjxEnv.isOpera) 				{	AjxEnv.browser = "OPERA";	}
