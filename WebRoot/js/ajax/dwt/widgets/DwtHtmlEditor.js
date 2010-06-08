@@ -246,7 +246,7 @@ function(src) {
 
 DwtHtmlEditor.prototype.isHtmlEditingSupported =
 function() {
-	return (!!(AjxEnv.isGeckoBased || AjxEnv.isIE || AjxEnv.isSafari3));
+	return (!!(AjxEnv.isGeckoBased || AjxEnv.isIE || AjxEnv.isSafari3up));
 }
 
 /**
