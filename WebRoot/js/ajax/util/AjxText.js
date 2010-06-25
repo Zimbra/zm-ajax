@@ -364,11 +364,6 @@ AjxFormat.Segment._parseInt = function(o, f, adjust, s, index, fixedlen, radix) 
  * (5 'M's) denotes a <em>short</em> month name. This matches the extended 
  * pattern found in the Common Locale Data Repository (CLDR) found at: 
  * http://www.unicode.org/cldr/.
- *
- * @param {string} pattern The date format pattern.
- *
- * @class
- * @constructor
  */
 AjxDateFormat = function(pattern) {
     if (arguments.length == 0) { return; }
@@ -472,32 +467,16 @@ AjxDateFormat.prototype.toString = function() {
 
 // Constants
 
-/** Short date/time format style. */
 AjxDateFormat.SHORT = 0;
-/** Medium date/time format style. */
 AjxDateFormat.MEDIUM = 1;
-/** Long date/time format style. */
 AjxDateFormat.LONG = 2;
-/** Full date/time format style. */
 AjxDateFormat.FULL = 3;
-/** Default date/time format style. */
 AjxDateFormat.DEFAULT = AjxDateFormat.MEDIUM;
 
 AjxDateFormat._META_CHARS = "GyMwWDdFEaHkKhmsSzZ";
 
 // Static methods
 
-/**
- * Get a date formatter.
- *
- * @param style The format style.
- * @return {AjxDateFormat} The date formatter.
- *
- * @see {AjxDateFormat.SHORT}
- * @see {AjxDateFormat.MEDIUM}
- * @see {AjxDateFormat.LONG}
- * @see {AjxDateFormat.FULL}
- */
 AjxDateFormat.getDateInstance = function(style) {
 	// lazily create formatters
 	style = style != null ? style : AjxDateFormat.DEFAULT;
@@ -507,17 +486,6 @@ AjxDateFormat.getDateInstance = function(style) {
 	return AjxDateFormat._DATE_FORMATTERS[style];
 };
 
-/**
- * Get a time formatter.
- *
- * @param style The format style.
- * @return {AjxDateFormat} The time formatter.
- *
- * @see {AjxDateFormat.SHORT}
- * @see {AjxDateFormat.MEDIUM}
- * @see {AjxDateFormat.LONG}
- * @see {AjxDateFormat.FULL}
- */
 AjxDateFormat.getTimeInstance = function(style) {
 	// lazily create formatters
 	style = style != null ? style : AjxDateFormat.DEFAULT;
@@ -527,18 +495,6 @@ AjxDateFormat.getTimeInstance = function(style) {
 	return AjxDateFormat._TIME_FORMATTERS[style];
 };
 
-/**
- * Get a date and time formatter.
- *
- * @param dateStyle The format style for the date.
- * @param timeStyle The format style for the time.
- * @return {AjxDateFormat} The date and time formatter. 
- *
- * @see {AjxDateFormat.SHORT}
- * @see {AjxDateFormat.MEDIUM}
- * @see {AjxDateFormat.LONG}
- * @see {AjxDateFormat.FULL}
- */
 AjxDateFormat.getDateTimeInstance = function(dateStyle, timeStyle) {
 	// lazily create formatters
 	dateStyle = dateStyle != null ? dateStyle : AjxDateFormat.DEFAULT;
@@ -554,24 +510,9 @@ AjxDateFormat.getDateTimeInstance = function(dateStyle, timeStyle) {
 	return AjxDateFormat._DATETIME_FORMATTERS[style];
 };
 
-/**
- * Format a date. Equivalent to <code>new AjxDateFormat(pattern).format(date)</code>.
- *
- * @param {string} pattern  The format.
- * @param {Date}   date     The date to format.
- * @return {string} The formatted string.
- */
 AjxDateFormat.format = function(pattern, date) {
 	return new AjxDateFormat(pattern).format(date);
 };
-
-/**
- * Parse a date. Equivalent to <code>new AjxDateFormat(pattern).parse(dateStr)</code>.
- *
- * @param {string} pattern  The format.
- * @param {string} dateStr  The input string to parse.
- * @return {Date} The parsed date object.
- */
 AjxDateFormat.parse = function(pattern, dateStr) {
 	return new AjxDateFormat(pattern).parse(dateStr);
 };
@@ -601,9 +542,6 @@ AjxDateFormat.initialize = function() {
 /** 
  * Parses the given string and returns a date. If the string cannot be
  * parsed as a date, <code>null</code> is returned.
- *
- * @param {string} s The string to parse.
- * @return {Date} The parsed date object.
  */
 AjxDateFormat.prototype.parse = function(s) {
 	var object = null;
@@ -1150,8 +1088,6 @@ AjxDateFormat.TimezoneSegment.prototype.format = function(date) {
 //
 
 /**
- * Message formatter based on the Java <code>MessageFormat</code> class. 
- * <p>
  * <strong>Note:</strong>
  * This implementation augments Java's <code>MessageFormat</code> patterns
  * to support list formatting. The following forms differ from the originals
@@ -1166,11 +1102,6 @@ AjxDateFormat.TimezoneSegment.prototype.format = function(date) {
  * <i>ListFormatType</i>:
  *       list
  * </pre>
- *
- * @param {string} pattern The message format pattern.
- *
- * @class
- * @constructor
  */
 AjxMessageFormat = function(pattern) {
     if (arguments.length == 0) { return; }
@@ -1258,26 +1189,12 @@ AjxMessageFormat.prototype.toString = function() {
 
 // Static methods
 
-/**
- * Format a message pattern with replacement parameters. Equivalent to
- * <code>new AjxMessageFormat(pattern).format(params)</code>.
- *
- * @param {string} pattern  Message pattern.
- * @param {Array}  params   Replacement parameters.
- * @return {string} Formatted message.
- */
 AjxMessageFormat.format = function(pattern, params) {
 	return new AjxMessageFormat(pattern).format(params);
 };
 
 // Public methods
 
-/**
- * Format with replacement parameters.
- *
- * @param {Array}  params   Replacement parameters.
- * @return {string} Formatted message.
- */
 AjxMessageFormat.prototype.format = function(params) {
 	if (!(params instanceof Array)) {
 		params = [ params ];
@@ -1428,18 +1345,14 @@ AjxMessageFormat.MessageSegment._split = function(s, delimiter) {
 //
 
 /**
- * Number formatter based on Java's <code>DecimalFormat</code>.
- *
- * @param {string}  pattern       The number pattern.
- * @param {boolean} skipNegFormat Specifies whether to skip the generation of this
- *                                format's negative value formatter.
- *                                <p>
- *                                <strong>Note:</strong>
- *                                This parameter is only used by the implementation
- *                                and should not be passed by application code
- *                                instantiating a custom number format.
- * @class
- * @constructor
+ * @param pattern       The number pattern.
+ * @param skipNegFormat Specifies whether to skip the generation of this
+ *                      format's negative value formatter. 
+ *                      <p>
+ *                      <strong>Note:</strong> 
+ *                      This parameter is only used by the implementation 
+ *                      and should not be passed by application code 
+ *                      instantiating a custom number format.
  */
 AjxNumberFormat = function(pattern, skipNegFormat) {
     if (arguments.length == 0) { return; }
@@ -1566,52 +1479,25 @@ AjxNumberFormat.prototype._negativeFormatter;
 
 // Static functions
 
-/**
- * Get general number formatter.
- *
- * @return {AjxNumberFormat} Number formatter.
- */
 AjxNumberFormat.getInstance = function() {
 	if (!AjxNumberFormat._FORMATTERS[AjxNumberFormat._NUMBER]) {
 		AjxNumberFormat._FORMATTERS[AjxNumberFormat._NUMBER] = new AjxNumberFormat(I18nMsg.formatNumber);
 	}
 	return AjxNumberFormat._FORMATTERS[AjxNumberFormat._NUMBER];
 };
-/**
- * Get general number formatter.
- * <strong>Note:</strong>
- * Same as <code>AjxNumberFormat.getInstance()</code>.
- *
- * @return {AjxNumberFormat} Number formatter.
- */
 AjxNumberFormat.getNumberInstance = AjxNumberFormat.getInstance;
-/**
- * Get currency number formatter.
- *
- * @return {AjxNumberFormat} Number formatter.
- */
 AjxNumberFormat.getCurrencyInstance = function() {
 	if (!AjxNumberFormat._FORMATTERS[AjxNumberFormat._CURRENCY]) {
 		AjxNumberFormat._FORMATTERS[AjxNumberFormat._CURRENCY] = new AjxNumberFormat(I18nMsg.formatNumberCurrency);
 	}
 	return AjxNumberFormat._FORMATTERS[AjxNumberFormat._CURRENCY];
 };
-/**
- * Get integer number formatter.
- *
- * @return {AjxNumberFormat} Number formatter.
- */
 AjxNumberFormat.getIntegerInstance = function() {
 	if (!AjxNumberFormat._FORMATTERS[AjxNumberFormat._INTEGER]) {
 		AjxNumberFormat._FORMATTERS[AjxNumberFormat._INTEGER] = new AjxNumberFormat(I18nMsg.formatNumberInteger);
 	}
 	return AjxNumberFormat._FORMATTERS[AjxNumberFormat._INTEGER];
 };
-/**
- * Get percent number formatter.
- *
- * @return {AjxNumberFormat} Number formatter.
- */
 AjxNumberFormat.getPercentInstance = function() {
 	if (!AjxNumberFormat._FORMATTERS[AjxNumberFormat._PERCENT]) {
 		AjxNumberFormat._FORMATTERS[AjxNumberFormat._PERCENT] = new AjxNumberFormat(I18nMsg.formatNumberPercent);
@@ -1619,14 +1505,6 @@ AjxNumberFormat.getPercentInstance = function() {
 	return AjxNumberFormat._FORMATTERS[AjxNumberFormat._PERCENT];
 };
 
-/**
- * Formats a number based on a given pattern. Equivalent to
- * <code>new AjxNumberFormat(pattern).format(number)</code>.
- *
- * @param {string}  pattern The format pattern.
- * @param {number}  number  The number to format.
- * @return {string} The formatted number string.
- */
 AjxNumberFormat.format = function(pattern, number) {
 	return new AjxNumberFormat(pattern).format(number);
 };
@@ -1637,12 +1515,6 @@ AjxNumberFormat.initialize = function() {
 
 // Public methods
 
-/**
- * Formats a number.
- *
- * @param {number}  number  The number to format.
- * @return {string} The formatted number string.
- */
 AjxNumberFormat.prototype.format = function(number) {
 	if (number < 0 && this._negativeFormatter) {
 		return this._negativeFormatter.format(number);
@@ -1788,9 +1660,6 @@ AjxNumberFormat.NumberSegment.prototype._normalize = function(s) {
 //
 
 /**
- * Choice formatter typically used to format plurals. This class is
- * modeled after Java's <code>ChoiceFormat</code>.
- * <p>
  * The arguments passed to this constructor can be either:
  * <ul>
  * <li>A single argument that represents a string pattern that specifies the 
@@ -1799,11 +1668,6 @@ AjxNumberFormat.NumberSegment.prototype._normalize = function(s) {
  * </ul>
  * <p>
  * For complete details, see the JavaDoc for java.text.ChoiceFormat.
- *
- * @param {string} pattern Format pattern.
- *
- * @class
- * @constructor
  */
 AjxChoiceFormat = function(pattern) {
     if (arguments.length == 0) { return; }
@@ -1881,17 +1745,14 @@ AjxChoiceFormat.prototype.getFormats = function() {
 };
 
 /**
- * Format a number based on the choice pattern.
- *
- * @param {number|Array} number Specifies the number to format. If called
+ * @param number [number|Array] Specifies the number to format. If called
  *                              from a message segment, this argument is
  *                              the array of arguments passed to the message
  *                              formatter.
- * @param {number}       index  Optional. If called from a message format,
+ * @param index  [number]       Optional. If called from a message format,
  *                              this argument is the index into the array that
  *                              is passed as the first argument. The value at
  *                              the index in the array is the number to format.
- * @return {string} The formatted choice.
  */
 AjxChoiceFormat.prototype.format = function(number, index) {
 	var num = number instanceof Array ? number[index] : number;
@@ -1930,11 +1791,11 @@ AjxChoiceFormat.prototype.format = function(number, index) {
  * This format is <em>not</em> one of the standard formatter classes 
  * available in Java. 
  *
- * @param {AjxFormat} formatter     The formatter.
- * @param {string}    separator     Optional. The list separator string. If
+ * @param formatter     [AjxFormat] The formatter.
+ * @param separator     [string]    Optional. The list separator string. If 
  *                                  not specified, <code>AjxMsg.separatorList</code> 
  *                                  is used.
- * @param {string}    lastSeparator Optional. The list separator string for
+ * @param lastSeparator [string]    Optional. The list separator string for
  *                                  the last item in the list (e.g. " and ").
  *                                  If not specified, <code>AjxMsg.separatorListLast</code>
  *                                  is used.
@@ -1957,12 +1818,6 @@ AjxListFormat.prototype._lastSeparator;
 
 // Public methods
 
-/**
- * Formats a list of items.
- *
- * @param {Array} array Array of objects to be formatted in a list.
- * @return {string} The formatted list string.
- */
 AjxListFormat.prototype.format = function(array) {
 	array = array instanceof Array ? array : [ array ];
 	var list = [];

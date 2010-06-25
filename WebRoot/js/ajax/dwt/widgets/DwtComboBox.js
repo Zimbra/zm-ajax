@@ -328,7 +328,6 @@ function(oel, nel, inheritClass, inheritStyle) {
  * @param	{string}       params.className		the CSS class
  * 
  * @extends		DwtButton
- * @private
  */
 DwtComboBoxButton = function(params) {
 	params = Dwt.getParams(arguments, DwtComboBoxButton.PARAMS);
