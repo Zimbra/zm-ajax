@@ -310,8 +310,13 @@ function(date, skipNotify, forceRollOver, dblClick) {
 			// I think it should respect what the user passed in, and only change
 			// the parts of the date that it is responsible for.
 			//newDate.setHours(0,0,0,0);
-			newDate.setHours(this._date.getHours(), this._date.getMinutes(), this._date.getSeconds(), 0);
+            //handle daylight saving
+            if(AjxDateUtil.isDayShifted(newDate)) {
+                AjxDateUtil.rollToNextDay(newDate);
+            }
+            newDate.setHours(this._date.getHours(), this._date.getMinutes(), this._date.getSeconds(), 0);            
 		}
+
 		this._date = newDate;
 		if (!layout && !this._readOnly) {
 			this._setSelectedDate();
