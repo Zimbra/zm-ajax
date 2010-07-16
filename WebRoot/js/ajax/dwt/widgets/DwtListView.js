@@ -1917,13 +1917,23 @@ function(params) {
 	this.notifyListeners(DwtEvent.ONMOUSEUP, mev);
 };
 
+/**
+ * Sets the anchor row for selection and keyboard nav.
+ *
+ * @private
+ *
+ * @param {boolean|Element}		next	row to make anchor, or if true, move anchor
+ * 										to next row
+ */
 DwtListView.prototype._setKbFocusElement =
 function(next) {
 	// If there are no elements in the list, then bail
 	if (!this._list) { return; }
 
 	var orig = this._kbAnchor;
-	if (this._kbAnchor) {
+	if (next && next !== true) {
+		this._kbAnchor = next;
+	} else if (this._kbAnchor) {
 		this._kbAnchor = this._getSiblingElement(this._kbAnchor, next);
 	} else {
 		this._kbAnchor = this._parentEl.firstChild;
@@ -2101,7 +2111,8 @@ function(clickedCol, ev) {
 
 	var list = this.getList();
 	var size = list ? list.size() : null;
-	if (!size) { return; }
+	var customQuery = this._columnHasCustomQuery(hdr);
+	if (!size && !customQuery) { return; }
 
 	// reset order by sorting preference
 	this._bSortAsc = (hdr._id == this._currentColId) ? !this._bSortAsc : this._getDefaultSortbyForCol(hdr);
@@ -2110,9 +2121,15 @@ function(clickedCol, ev) {
 	this._setSortedColStyle(hdr._id);
 
 	// call sorting callback if more than one item to sort
-	if (size >= 1){
+	if (size >= 1 || customQuery) {
 		this._sortColumn(hdr, this._bSortAsc);
 	}
+};
+
+DwtListView.prototype._columnHasCustomQuery =
+function(columnItem) {
+	// overload me
+	return false;
 };
 
 DwtListView.prototype._sortColumn =

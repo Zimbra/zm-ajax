@@ -334,7 +334,7 @@ function(domElement, attrName) {
 };
 
 /**
- * Finds an ancestor element with the given attr.
+ * Finds an ancestor element with a value for the given attr.
  * 
  * @param {DOMElement} domElement the DOM element (typically an HTML element)
  * @param {string}	attrName	the attribute name
@@ -342,8 +342,10 @@ function(domElement, attrName) {
  */
 Dwt.findAncestor =
 function(domElement, attrName) {
-	while (domElement && (Dwt.getAttr(domElement, attrName) == null)) {
+	var attr = Dwt.getAttr(domElement, attrName);
+	while (domElement && (attr == null || attr == "")) {
 		domElement = domElement.parentNode;
+		attr = Dwt.getAttr(domElement, attrName);
 	}
 	return domElement;
 };
@@ -970,9 +972,11 @@ function(cell) {
  */
 Dwt.delClass =
 function(el, del, add) {
-	if (el == null) { return };
 
-	if (typeof del == "string") {
+	if (el == null) { return };
+	if (!del && !add) { return; }
+
+	if (typeof del == "string" && del.length) {
 		del = Dwt._DELCLASS_CACHE[del] || (Dwt._DELCLASS_CACHE[del] = new RegExp("\\b" + del + "\\b", "ig"));
 	}
 	var className = el.className || "";
@@ -1188,8 +1192,21 @@ function(val, check) {
 /////////////
 //	NEW STUFF FROM OWEN
 /////////////
-Dwt.byId = function(id) {
-	return (typeof id == "string" ? document.getElementById(id) : id);
+Dwt.byId = function(id, ancestor) {
+	if (!ancestor) {
+		return (typeof id == "string" ? document.getElementById(id) : id);
+	} else {
+		// Find node with id that descends from ancestor (also works on DOM trees that are not attached to the document object)
+		if (ancestor == id || ancestor.id == id)
+			return ancestor;
+		for (var i=0; i<ancestor.childNodes.length; i++) {
+			if (ancestor.childNodes[i].nodeType == 1) {
+				var cnode = Dwt.byId(id, ancestor.childNodes[i]);
+				if (cnode) return cnode;
+			}
+		}
+		return null;
+	}
 }
 Dwt.byTag = function(tagName) {
 	return document.getElementsByTagName(tagName);
