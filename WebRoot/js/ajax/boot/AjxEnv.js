@@ -146,11 +146,6 @@ AjxEnv.is800x600orLower;
 /** Screen size is less then 1024x768. */
 AjxEnv.is1024x768orLower;
 
-
-/** HTML5 Support **/
-AjxEnv.supportsHTML5File;
-
-
 //
 // Public functions
 //
@@ -206,9 +201,6 @@ function() {
 	AjxEnv.useTransparentPNGs = false;
 	AjxEnv.isDesktop = false;
 	AjxEnv.isDesktop2up = false;
-
-    //HTML5
-    AjxEnv.supportsHTML5File = false;
 
 	// screen resolution - ADD MORE RESOLUTION CHECKS AS NEEDED HERE:
 	AjxEnv.is800x600orLower = screen && (screen.width <= 800 && screen.height <= 600);
@@ -389,9 +381,6 @@ function() {
 		// if not safari v3 or the nightly, assume we're dealing with v2  :/
 		AjxEnv.isSafari2 = !AjxEnv.isSafari3 && !AjxEnv.isSafariNightly;
 	}
-
-    //HTML5
-    AjxEnv.supportsHTML5File = ( window.FileReader/*Firefox*/ || AjxEnv.isChrome || AjxEnv.isSafari4up );
 };
 
 // code provided by webkit authors to determine if nightly browser
