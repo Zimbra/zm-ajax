@@ -35,24 +35,8 @@ function(val) {
 	return val ? String(val) : "";
 };
 
-/**
- * Capitalizes the specified string by upper-casing the first character
- * and lower-casing the rest of the string.
- *
- * @param {string} str  The string to capitalize.
- */
 AjxStringUtil.capitalize = function(str) {
-	return str.length > 0 ? str.charAt(0).toUpperCase() + str.substr(1).toLowerCase() : "";
-};
-
-/**
- * Capitalizes all the words in the specified string by upper-casing the first
- * character of each word and lower-casing the rest of the word.
- *
- * @param {string} str  The string to capitalize.
- */
-AjxStringUtil.capitalizeWords = function(str) {
-    return AjxUtil.map(str.split(/\s+/g), AjxStringUtil.capitalize).join(" ");
+	return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
 };
 
 /**
@@ -75,19 +59,6 @@ function(text, sep, camel) {
 		newText.push(wds[i].substring(0, 1).toUpperCase() + wds[i].substring(1).toLowerCase());
 	}
 	return newText.join("");
-};
-
-/**
- * Converts the given mixed-case text to a string of one or more words
- * separated by spaces.
- *
- * @param {string} text The mixed-case text.
- * @param {string} sep  (Optional) The separator between words. Default
- *                      is a single space.
- */
-AjxStringUtil.fromMixed = function(text, sep) {
-    sep = ["$1", sep || " ", "$2"].join("");
-    return text.replace(/([a-z])([A-Z]+)/g, sep).trim();
 };
 
 /**
@@ -1521,7 +1492,7 @@ function(obj, recurse, showFuncs, omit) {
 				if (nextObj == window || nextObj == document || (!AjxEnv.isIE && nextObj instanceof Node)){
 					value = nextObj.toString();
 				}
-				if ((typeof(nextObj) == "function")){
+				if ((typeof(nextObj) == "function")) {
 					if (showFuncs) {
 						value = "[function]";
 					} else {
@@ -1533,7 +1504,9 @@ function(obj, recurse, showFuncs, omit) {
 					text += ",";
 				}
 				text += "\n" + indent;
-				if (value != null) {
+				if (omit && omit[key]) {
+					text += key + ": [" + key + "]";
+				} else if (value != null) {
 					text += key + ": " + value;
 				} else {
 					text += key + ": " + this._prettyPrint(nextObj, recurse, showFuncs, omit, indentLevel + 2, true, stopRecursion);
