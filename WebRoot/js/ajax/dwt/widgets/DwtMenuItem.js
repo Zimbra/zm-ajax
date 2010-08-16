@@ -1,4 +1,3 @@
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
@@ -213,12 +212,6 @@ function(shortcut) {
 	}
 };
 
-// Set whether the item is selectable even when it has an open submenu
-DwtMenuItem.prototype.setSelectableWithSubmenu =
-function(selectable) {
-	this._selectableWithSubmenu = selectable;
-};
-
 //
 // Protected methods
 //
@@ -353,7 +346,7 @@ function(event) {
 		return;
 	}
 	if (!this.isStyle(DwtMenuItem.CASCADE_STYLE)) {
-		if (this._selectableWithSubmenu || !this._menu || !this._menu.isPoppedUp || !this._menu.isPoppedUp()) {
+		if (!this._menu || !this._menu.isPoppedUp || !this._menu.isPoppedUp()) {
 			DwtMenu.closeActiveMenu();
 		}
 	}
