@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
@@ -70,7 +71,7 @@ DwtMenuItem = function(params) {
 	}
 };
 
-DwtMenuItem.PARAMS = ["parent", "style", "radioGroupId", "index", "className", "posStyle"];
+DwtMenuItem.PARAMS = ["parent", "style", "radioGroupId", "index", "className", "posStyle", "id"];
 
 DwtMenuItem.prototype = new DwtButton;
 DwtMenuItem.prototype.constructor = DwtMenuItem;
@@ -212,6 +213,12 @@ function(shortcut) {
 	}
 };
 
+// Set whether the item is selectable even when it has an open submenu
+DwtMenuItem.prototype.setSelectableWithSubmenu =
+function(selectable) {
+	this._selectableWithSubmenu = selectable;
+};
+
 //
 // Protected methods
 //
@@ -298,7 +305,7 @@ function(delay, kbGenerated) {
 		x = pb.x + pb.width + vBorder;
 		hBorder = (ppHtmlElement.style.borderTopWidth == "") ? 0 : parseInt(ppHtmlElement.style.borderTopWidth);
 		y = pb.y + hBorder;
-		x = ((x + s.x) >= ws.x) ? pb.x - s.x - vBorder: x;
+		//x = ((x + s.x) >= ws.x) ? pb.x - s.x - vBorder : x;
 	}
 	menu.popup(delay, x, y, kbGenerated);
 };
@@ -346,7 +353,7 @@ function(event) {
 		return;
 	}
 	if (!this.isStyle(DwtMenuItem.CASCADE_STYLE)) {
-		if (!this._menu || !this._menu.isPoppedUp || !this._menu.isPoppedUp()) {
+		if (this._selectableWithSubmenu || !this._menu || !this._menu.isPoppedUp || !this._menu.isPoppedUp()) {
 			DwtMenu.closeActiveMenu();
 		}
 	}
