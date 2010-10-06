@@ -204,11 +204,7 @@ function() {
 	} else {
 		this._moveCaretToTopHtml(true);
 	}
-	if (focused) {
-		try {
-			focused.focus();
-		} catch (e) {}
-	}
+	if (focused) focused.focus();
 };
 
 DwtHtmlEditor.prototype._moveCaretToTopHtml =

@@ -29,7 +29,6 @@ AjxStringUtil = function() {
 AjxStringUtil.TRIM_RE = /^\s+|\s+$/g;
 AjxStringUtil.COMPRESS_RE = /\s+/g;
 AjxStringUtil.ELLIPSIS = " ... ";
-AjxStringUtil.LIST_SEP = ", ";
 
 AjxStringUtil.makeString =
 function(val) {
@@ -1522,7 +1521,7 @@ function(obj, recurse, showFuncs, omit) {
 				if (nextObj == window || nextObj == document || (!AjxEnv.isIE && nextObj instanceof Node)){
 					value = nextObj.toString();
 				}
-				if ((typeof(nextObj) == "function")) {
+				if ((typeof(nextObj) == "function")){
 					if (showFuncs) {
 						value = "[function]";
 					} else {
@@ -1534,9 +1533,7 @@ function(obj, recurse, showFuncs, omit) {
 					text += ",";
 				}
 				text += "\n" + indent;
-				if (omit && omit[key]) {
-					text += key + ": [" + key + "]";
-				} else if (value != null) {
+				if (value != null) {
 					text += key + ": " + value;
 				} else {
 					text += key + ": " + this._prettyPrint(nextObj, recurse, showFuncs, omit, indentLevel + 2, true, stopRecursion);
@@ -1566,54 +1563,4 @@ function(str){
 	s = s.replace(/\xA0/g, '&nbsp;');
 
 	return s;
-};
-
-// hidden SPANs for measuring regular and bold strings
-AjxStringUtil._testSpan;
-AjxStringUtil._testSpanBold;
-
-// cached string measurements
-AjxStringUtil.WIDTH			= {};		// regular strings
-AjxStringUtil.WIDTH_BOLD	= {};		// bold strings
-AjxStringUtil.MAX_CACHE		= 1000;		// max total number of cached strings
-AjxStringUtil._cacheSize	= 0;		// current number of cached strings
-
-/**
- * Returns the width in pixels of the given string.
- *
- * @param {string}	str		string to measure
- * @param {boolean}	bold	if true, string should be measured in bold font
- */
-AjxStringUtil.getWidth =
-function(str, bold) {
-
-	if (!AjxStringUtil._testSpan) {
-		var span1 = AjxStringUtil._testSpan = document.createElement("SPAN");
-		var span2 = AjxStringUtil._testSpanBold = document.createElement("SPAN");
-		span1.style.position = span2.style.position = Dwt.ABSOLUTE_STYLE;
-		var shellEl = appCtxt.getShell().getHtmlElement();
-		shellEl.appendChild(span1);
-		shellEl.appendChild(span2);
-		Dwt.setLocation(span1, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-		Dwt.setLocation(span2, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-		span2.style.fontWeight = "bold";
-	}
-
-	var cache = bold ? AjxStringUtil.WIDTH_BOLD : AjxStringUtil.WIDTH;
-	if (cache[str]) {
-		return cache[str];
-	}
-
-	if (AjxStringUtil._cacheSize >= AjxStringUtil.MAX_CACHE) {
-		AjxStringUtil.WIDTH = {};
-		AjxStringUtil.WIDTH_BOLD = {};
-		AjxStringUtil._cacheSize = 0;
-	}
-
-	var span = bold ? AjxStringUtil._testSpanBold : AjxStringUtil._testSpan;
-	span.innerHTML = str;
-	var w = cache[str] = Dwt.getSize(span).x;
-	AjxStringUtil._cacheSize++;
-
-	return w;
 };
