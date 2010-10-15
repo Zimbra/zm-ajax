@@ -16,15 +16,12 @@
 
 package com.zimbra.kabuki.tools.img;
 
-import java.io.IOException;
-
-public class ImageMergeException extends IOException {
+public class ImageMergeException extends Exception {
 
     public ImageMergeException(String msg, 
                                Throwable cause) 
     {
-        super(msg);
-        setStackTrace(cause.getStackTrace());
+        super(msg, cause);
     }
 
     public ImageMergeException(String msg) {

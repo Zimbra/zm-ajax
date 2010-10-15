@@ -33,16 +33,13 @@
  * @param {hash}	params		a hash of parameters
  * @param       {DwtComposite}	params.parent		the parent widget
  * @param {constant}      params.style			the menu style
- * @param {string}        params.className		the CSS class
+ * @param {string}      params.className		the CSS class
  * @param {constant}      params.posStyle		the positioning style (see {@link DwtControl})
- * @param {constant}      params.layout			layout to use: DwtMenu.LAYOUT_STACK, DwtMenu.LAYOUT_CASCADE or DwtMenu.LAYOUT_SCROLL. A value of [true] defaults to DwtMenu.LAYOUT_CASCADE and a value of [false] defaults to DwtMenu.LAYOUT_STACK.
- * @param {int}		  params.maxRows=0	    	if >0 and layout = LAYOUT_CASCADE or DwtMenu.LAYOUT_SCROLL, define how many rows are allowed before cascading/scrolling
- * @param {boolean}		params.congruent		if the parent is a DwtMenuItem, align so that the submenu "merges" with the parent menu
+ * @param {boolean}      [params.cascade=true]		if <code>true</code>, menu should cascade (i.e. multiple columns)
  * 
  * @extends		DwtComposite
  */
 DwtMenu = function(params) {
-	this._created = false;
 	if (arguments.length == 0) { return; }
 	params = Dwt.getParams(arguments, DwtMenu.PARAMS);
 
@@ -64,14 +61,7 @@ DwtMenu = function(params) {
 	}
 	params.className = params.className || "DwtMenu";
 
-	this._layoutStyle = params.layout == null || params.layout;
-	if (this._layoutStyle === true) {
-		this._layoutStyle = DwtMenu.LAYOUT_CASCADE;
-	} else if (this._layoutStyle === false) {
-		this._layoutStyle = DwtMenu.LAYOUT_STACK;
-	}
-	this._maxRows = this._layoutStyle && params.maxRows || 0;
-	this._congruent = params.congruent;
+	this._cascade = params.cascade == null || params.cascade;
 
 	// Hack to force us to hang off of the shell for positioning.
 	params.parent = (parent instanceof DwtShell) ? parent : parent.shell;
@@ -79,7 +69,7 @@ DwtMenu = function(params) {
 	this.parent = parent;
 
 	var isPopup = (this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE);
-	if (isPopup && (this._layoutStyle == DwtMenu.LAYOUT_STACK)) {
+	if (isPopup && !this._cascade) {
 		this.setScrollStyle(DwtControl.SCROLL);
 	}
 
@@ -104,68 +94,7 @@ DwtMenu = function(params) {
 		this._table = document.createElement("table");
 		this._table.border = this._table.cellPadding = this._table.cellSpacing = 0;
 		this._table.className = "DwtMenuTable";
-		this._table.id = Dwt.getNextId();
-		if(this._layoutStyle == DwtMenu.LAYOUT_SCROLL) {
-			this._table.style.position = "relative";
-			
-			this._topScroller = document.createElement("div");
-			this._topScroller.className = "DwtMenuScrollTop";
-			this._topScroller.id = Dwt.getNextId();
-			
-			this._imgDivTop = document.createElement("div");
-			this._imgDivTop.className ="ImgUpArrowSmall";
-			this._topScroller.appendChild(this._imgDivTop);
-			Dwt.setHandler(this._imgDivTop, DwtEvent.ONMOUSEOUT, function(e) { if (!e) e = window.event; e.cancelBubble = true;	if (e.stopPropagation) e.stopPropagation();} );
-			Dwt.setHandler(this._imgDivTop, DwtEvent.ONMOUSEOVER, function(e) { if (!e) e = window.event; e.cancelBubble = true;	if (e.stopPropagation) e.stopPropagation();} );
-			htmlElement.appendChild(this._topScroller);
-
-			this._tableContainer = document.createElement("div");
-			this._tableContainer.appendChild(this._table);
-			htmlElement.appendChild(this._tableContainer);
-
-			this._bottomScroller = document.createElement("div");
-			this._bottomScroller.className = "DwtMenuScrollBottom";
-			this._bottomScroller.id = Dwt.getNextId();
-			
-			this._imgDivBottom = document.createElement("div");
-			this._imgDivBottom.className ="ImgDownArrowSmall";
-			Dwt.setHandler(this._imgDivBottom, DwtEvent.ONMOUSEOUT, function(e) { if (!e) e = window.event; e.cancelBubble = true;	if (e.stopPropagation) e.stopPropagation();} );
-			Dwt.setHandler(this._imgDivBottom, DwtEvent.ONMOUSEOVER, function(e) { if (!e) e = window.event; e.cancelBubble = true;	if (e.stopPropagation) e.stopPropagation();} );
-			this._bottomScroller.appendChild(this._imgDivBottom);
-			htmlElement.appendChild(this._bottomScroller);
-
-			//scroll up
-			var scrollUpStartListener = AjxCallback.simpleClosure(this._scroll, this, this._table.id, true, false);
-			var scrollUpStopListener = AjxCallback.simpleClosure(this._scroll, this, this._table.id, false, false);
-			var mouseOutTopListener = AjxCallback.simpleClosure(this._handleMouseOut, this, this._topScroller.id, this._table.id);
-			var mouseOutBottomListener = AjxCallback.simpleClosure(this._handleMouseOut, this, this._bottomScroller.id, this._table.id);
-
-			Dwt.setHandler(this._topScroller, DwtEvent.ONMOUSEDOWN, scrollUpStartListener);
-			Dwt.setHandler(this._topScroller, DwtEvent.ONMOUSEUP, scrollUpStopListener);
-			if (!AjxEnv.isIE) {
-				Dwt.setHandler(this._topScroller, DwtEvent.ONMOUSEOUT, mouseOutTopListener);
-			} else {
-				Dwt.setHandler(this._topScroller, DwtEvent.ONMOUSELEAVE, scrollUpStopListener);
-			}
-
-			//scroll down
-			var scrollDownStartListener = AjxCallback.simpleClosure(this._scroll, this, this._table.id, true, true);
-			var scrollDownStopListener = AjxCallback.simpleClosure(this._scroll, this, this._table.id, false, true);
-
-			Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEDOWN, scrollDownStartListener);
-			Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEUP, scrollDownStopListener);
-			if (!AjxEnv.isIE) {
-				Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEOUT, mouseOutBottomListener);
-			} else {
-				Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSELEAVE, scrollDownStopListener);
-			}
-
-			var wheelListener = AjxCallback.simpleClosure(this._handleScroll, this, this._table.id);
-			Dwt.setHandler(htmlElement, DwtEvent.ONMOUSEWHEEL, wheelListener);
-
-		} else {
-			htmlElement.appendChild(this._table);
-		}
+		htmlElement.appendChild(this._table);
 		this._table.backgroundColor = DwtCssStyle.getProperty(htmlElement, "background-color");
 	}
 
@@ -210,15 +139,9 @@ DwtMenu = function(params) {
 	// keystrokes in the menu.
 	this._tabGroup = new DwtTabGroup(this.toString(), true);
 	this._tabGroup.addMember(this);
-	this._created = true;
-
-    // When items are added, the menu listens to selection events
-    // and will propagate the event to listeners that are registered
-    // on the menu itself.
-    this._itemSelectionListener = new AjxListener(this, this._propagateItemSelection);
 };
 
-DwtMenu.PARAMS = ["parent", "style", "className", "posStyle", "cascade", "id"];
+DwtMenu.PARAMS = ["parent", "style", "className", "posStyle", "cascade"];
 
 DwtMenu.prototype = new DwtComposite;
 DwtMenu.prototype.constructor = DwtMenu;
@@ -257,10 +180,6 @@ DwtMenu.HAS_ICON = "ZHasIcon";
 DwtMenu.HAS_CHECK = "ZHasCheck";
 DwtMenu.HAS_SUBMENU = "ZHasSubMenu";
 
-DwtMenu.LAYOUT_STACK 	= 0;
-DwtMenu.LAYOUT_CASCADE 	= 1;
-DwtMenu.LAYOUT_SCROLL 	= 2;
-
 DwtMenu._activeMenuUp = false;
 DwtMenu._activeMenuIds = new AjxVector();
 DwtMenu._activeMenus = new AjxVector() ;
@@ -274,22 +193,6 @@ function() {
 	if (!(this.parent instanceof DwtShell)) {
 		this.shell.removeChild(this);	
 	}
-};
-
-/**
- * Adds a selection listener.
- * @param {AjxListener} listener The listener.
- */
-DwtMenu.prototype.addSelectionListener = function(listener) {
-    this.addListener(DwtEvent.SELECTION, listener);
-};
-
-/**
- * Removes a selection listener.
- * @param {AjxListener} listener The listener.
- */
-DwtMenu.prototype.removeSelectionListener = function(listener) {
-    this.removeListener(DwtEvent.SELECTION, listener);
 };
 
 /**
@@ -330,11 +233,6 @@ function(listener) {
 DwtMenu.prototype.removePopdownListener = 
 function(listener) {
 	this.removeListener(DwtEvent.POPDOWN, listener);
-};
-
-DwtMenu.prototype.setWidth = 
-function(width) {
-	this._width = width;
 };
 
 /**
@@ -450,272 +348,88 @@ function(msec) {
 
 DwtMenu.prototype.render =
 function(x, y) {
+
 	var windowSize = this.shell.getSize();
 	var mySize = this.getSize();
-	var htmlEl = this.getHtmlElement();
 
 	// bug 9583 - can't query border size so just subtract generic padding
 	windowSize.y -= 10 + (AjxEnv.isIE ? 20 : 0);
 	windowSize.x -= 28;
 
-	var isScroll = this._layoutStyle == DwtMenu.LAYOUT_SCROLL;
 	var isPopup = (this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE);
-	var isCascade = this._layoutStyle == DwtMenu.LAYOUT_CASCADE;
-	if (this._table) {
-		if (isPopup && isCascade) {
-			var space = windowSize.y;
-			var newY = null;
-			var rows = this._table.rows;
-			var numRows = rows.length;
-			var maxRows = this._maxRows;
-			var height = mySize.y;
-			var requiredSpace = space - 25; // Account for space on top & bottom of menu.
-			for (var i = numRows - 1; i >= 0; i--) {
-				height -= Dwt.getSize(rows[i]).y;
-				if (height < requiredSpace) {
-					break;
-				}
+	var isCascade = this._cascade;
+	if (isPopup && isCascade) {
+		var space = windowSize.y;
+		var newY = null;
+		var rows = this._table.rows;
+		var numRows = rows.length;
+		var height = mySize.y;
+		var requiredSpace = space - 25; // Account for space on top & bottom of menu.
+		for (var i = numRows - 1; i >= 0; i--) {
+			height -= Dwt.getSize(rows[i]).y;
+			if (height < requiredSpace) {
+				break;
 			}
-			var count = maxRows ? Math.min(i + 1, maxRows) : (i + 1);
-			for (var j = count; j < numRows; j++) {
-				var row = rows[(j - count) % count];
+		}
+		var count = i + 1;
+		for (var j = count; j < numRows; j++) {
+			var row = rows[(j - count) % count];
+			var cell = row.insertCell(-1);
+			cell.className = "DwtMenuCascadeCell";
+			var child = rows[j].cells[0].firstChild;
+			while (child != null) {
+				cell.appendChild(child);
+				child = child.nextSibling;
+			}
+		}
+		for (j = rows.length - 1; j >= count; j--) {
+			this._table.deleteRow(count);
+		}
+		var offset = numRows % count;
+		if (offset > 0) {
+			for (var j = offset; j < count; j++) {
+				var row = rows[j];
 				var cell = row.insertCell(-1);
 				cell.className = "DwtMenuCascadeCell";
-				var child = rows[j].cells[0].firstChild;
-				while (child != null) {
-					cell.appendChild(child);
-					child = child.nextSibling;
-				}
+				cell.empty = true;
+				cell.innerHTML = "&nbsp;";
 			}
-			for (j = rows.length - 1; j >= count; j--) {
-				this._table.deleteRow(count);
-			}
-			var offset = numRows % count;
-			if (offset > 0) {
-				for (var j = offset; j < count; j++) {
-					var row = rows[j];
-					var cell = row.insertCell(-1);
-					cell.className = "DwtMenuCascadeCell";
-					cell.empty = true;
-					cell.innerHTML = "&nbsp;";
-				}
-			}
+		}
 
-			mySize = this.getSize();
-			if (newY) {
-				y = newY - mySize.y;
-			}
-		} else if (isPopup && isScroll) {
-			var rows = this._table.rows;
-			var numRows = rows.length;
-			var maxRows = this._maxRows;
-			var limRows = maxRows ? Math.min(maxRows, numRows) : numRows;
-			var availableSpace = windowSize.y - 25; // Account for space on top & bottom of menu.
-
-			var height = 20; //for scroll buttons
-			for (var i = 0; i < limRows; i++) {
-				var rowSize = Dwt.getSize(rows[i]).y;
-				if (height + rowSize <= availableSpace)
-					height += rowSize;
-				else
-					break;
-			}
-			mySize.y = height;
+		mySize = this.getSize();
+		if (newY) {
+			y = newY - mySize.y;
 		}
 	}
-	var newW = "auto";
-	var newH = "auto";
-	if (isPopup && isScroll) {
-		newH = mySize.y;
-		if (this._tableContainer)
-			this._tableContainer.style.height = (newH - 20) +"px";
-	} else if ((isPopup && isCascade) || y + mySize.y < windowSize.y - 5 ) {
-		newH = "auto";
-	} else {
-		newH = windowSize.y - y - 5;
+	else if (isPopup && !isCascade) {
+		if (y + mySize.y > windowSize.y) {
+			mySize.y = windowSize.y - y;
+		}
 	}
-    if(isScroll) {
-	    if (this._table) {
-		    this._table.style.width = mySize.x;
-        }
-        newW = mySize.x;
-    }
-    this.setSize(newW, newH);
+
+	// Popup menu type
+	var newX = x + mySize.x >= windowSize.x ? windowSize.x - mySize.x : x;
+	var newY = isPopup && y + mySize.y >= windowSize.y ? windowSize.y - mySize.y : y;
+	this.setLocation(newX, newY);
+
+	var newW = "auto";
+	var newH = (isPopup && isCascade) || y + mySize.y < windowSize.y - 5 ? "auto" : windowSize.y - y - 5;
+	this.setSize(newW, newH);
+
 	// NOTE: This hack is needed for FF/Moz because the containing div
 	//	   allows the inner table to overflow. When the menu cascades
 	//	   and the menu items get pushed off of the visible area, the
 	//	   div's border doesn't surround the menu items. This hack
 	//	   forces the outer div's width to surround the table.
-
-	if ((AjxEnv.isGeckoBased || AjxEnv.isSafari || (this._origStyle == DwtMenu.CALENDAR_PICKER_STYLE)) && this._table && !isScroll) {
+	if ((AjxEnv.isGeckoBased || AjxEnv.isSafari || (this._origStyle == DwtMenu.CALENDAR_PICKER_STYLE)) && this._table) {
+		var htmlEl = this.getHtmlElement();
 		htmlEl.style.width = (mySize.x + (isPopup && !isCascade ? 10 : 0)) + "px";
 	}
-
-	// Popup menu type
-	var newX = x + mySize.x >= windowSize.x ? windowSize.x - mySize.x : x;
-	if (this.parent instanceof DwtMenuItem) {
-		Dwt.delClass(htmlEl, "DwtMenu-congruentLeft");
-		Dwt.delClass(htmlEl, "DwtMenu-congruentRight");
-
-		var pbound = this.parent.getBounds();
-		var pmstyle = DwtCssStyle.getComputedStyleObject(this.parent.parent.getHtmlElement()); // Get the style for the DwtMenu holding the parent DwtMenuItem
-		var tstyle = DwtCssStyle.getComputedStyleObject(htmlEl); // Get the style for this menu (includes skinning)
-
-		//if the cascading extends over the edge of the screen, cascade to the left
-		if ( ((newX > pbound.x && newX < pbound.x + pbound.width) || (pbound.x > newX && pbound.x < newX + mySize.x)) && pbound.x >= mySize.x && pbound.y+pbound.height > mySize.y) {
-			var totalWidth = parseInt(tstyle.width);
-			if (!AjxEnv.isIE)
-				totalWidth += parseInt(tstyle.paddingLeft) + parseInt(tstyle.paddingRight) + parseInt(tstyle.borderLeftWidth) + parseInt(tstyle.borderRightWidth);
-			newX = (parseInt(pmstyle.left) || pbound.x) - (totalWidth || mySize.x);
-			if (this._congruent) {
-				var offset;
-				if (AjxEnv.isIE)
-					offset = parseInt(tstyle.borderLeftWidth);
-				else
-					offset = parseInt(tstyle.borderLeftWidth) + parseInt(tstyle.borderRightWidth);
-				if (!isNaN(offset)) {
-					newX += offset;
-					Dwt.addClass(htmlEl, "DwtMenu-congruentLeft");
-				}
-			}
-
-		} else { // Cascade to the right
-			newX = (parseInt(pmstyle.left) + parseInt(pmstyle.width) || (pbound.x + pbound.width));
-			if (this._congruent) {
-				var offset = parseInt(pmstyle.paddingRight) + parseInt(tstyle.paddingLeft) + parseInt(tstyle.borderLeftWidth);
-				if (!isNaN(offset)) {
-					newX += offset;
-					Dwt.addClass(htmlEl, "DwtMenu-congruentRight");
-				}
-			}
-		}
-	}
-	var newY = isPopup && y + mySize.y >= windowSize.y ? windowSize.y - mySize.y : y;
-
-	if (this.parent instanceof DwtMenuItem && this._congruent) {
-		var offset = (parseInt(tstyle.paddingTop) || 0) - (parseInt(tstyle.borderTopWidth) || 0);
-		if (offset>0)
-			newY -= offset;
-	}
-
-	this.setLocation(newX, newY);
 };
 
 DwtMenu.prototype.getKeyMapName = 
 function() {
 	return "DwtMenu";
-};
-
-DwtMenu.prototype._handleScroll =
-function(divID, ev) {
-	if (!ev) ev = window.event;
-	var div = Dwt.byId(divID);
-	if (div && ev) {
-	 	ev = ev ? ev : window.event;
-	  	var wheelData = ev.detail ? ev.detail * -1 : ev.wheelDelta / 40;
-		var rows = div.rows;
-		var step = Dwt.getSize(rows[0]).y || 10;
-		if (wheelData > 0) { //scroll up
-			this._doScroll(div, +step)
-		} else if (wheelData < 0) { //scroll down
-			this._doScroll(div, -step)
-		}
-	}
-};
-
-DwtMenu.prototype._handleMouseOut = 
-function(divID, tableID, ev) {
-	if (divID && ev.type && ev.type == "mouseout" && !AjxEnv.isIE) {
-		var div = divID ? Dwt.byId(divID) : null;
-		fromEl = ev.target;
-		if (fromEl != div) {
-			return;
-		}
-		toEl = ev.relatedTarget;
-		while (toEl) {
-			toEl = toEl.parentNode;
-			if (toEl == div) {
-				return;
-			}
-		}
-		this._scroll(tableID, false, false, null);
-	}
-};
-
-DwtMenu.prototype._scroll =
-function(divID, scrolling, direction, ev) {
-	var div = divID ? document.getElementById(divID) : null;
-	if(div && scrolling) {
-		var rows = div.rows;
-		var step = Dwt.getSize(rows[0]).y || 10;
-		if(this._direction != direction || !this._scrollTimer) {
-			this._direction = direction;
-			if (this._scrollTimer)    {
-				clearInterval(this._scrollTimer);
-				this._scrollTimer = null;
-			}
-	
-			if (direction) { //scroll down
-				this._scrollTimer = setInterval(AjxCallback.simpleClosure(this._doScroll, this, div, -step), 100);
-				this._doScroll(div, -step)
-
-			} else { //scroll up
-				this._scrollTimer = setInterval(AjxCallback.simpleClosure(this._doScroll, this, div, step), 100);
-				this._doScroll(div, step)
-			}
-		}
-	} else {
-		if (this._scrollTimer)    {
-			clearInterval(this._scrollTimer);
-			this._scrollTimer = null;
-		}
-	}
-};
-
-DwtMenu.prototype._doScroll =
-function(div, step) {
-	if (div && step && div.parentNode.style.height) {
-		var old = parseInt(div.style.top) || 0;
-		if (step < 0) { //scroll down
-			var rows = this._table.rows || null;
-			var height = Dwt.getSize(rows[0]).y;
-			var max = div.scrollHeight - (parseInt(div.parentNode.style.height || rows.length*height) || 0);
-			if (Math.abs(old+step) <= max) {
-				div.style.top = (old+step)+"px";
-			} else {
-				div.style.top = (-max) +"px";
-			}
-		} else { //scroll up
-			if ((step+old) < 0) {
-				div.style.top = (step+old)+"px";
-			} else {
-				div.style.top = "0px";
-			}
-		}
-	}
-};
-
-DwtMenu.prototype.scrollToIndex = 
-function(index) {
-	//when scrollToIndex is first called this._table.parentNode's height might not be set - hence we set it now
-	var rows = this._table.rows;
-	var numRows = rows.length;
-	var maxRows = this._maxRows;
-	var height = 0;
-	for (var i = 0; i <= maxRows; i++) {
-		height += Dwt.getSize(rows[i]).y;
-	}
-	this._table.parentNode.style.height = height + "px";
-	var isScroll = this._layoutStyle == DwtMenu.LAYOUT_SCROLL;
-	if(this._created && isScroll && index !== null) {
-		var rows = this._table.rows || null;
-		var old = parseInt(this._table.style.top) || 0;
-		if (rows && index < rows.length) {
-			var height = Dwt.getSize(rows[0]).y;
-			step = -(index * height) - (old);
-			this._doScroll(this._table, step);
-		}
-	}
 };
 
 DwtMenu.prototype.handleKeyAction =
@@ -883,10 +597,6 @@ function(child) {
 		}
 	}
 	this._children.remove(child);
-
-    if (child.removeSelectionListener) {
-        child.removeSelectionListener(this._itemSelectionListener);
-    }
 };
 
 DwtMenu.prototype.addChild = 
@@ -897,10 +607,6 @@ function(child) {
 	if (Dwt.instanceOf(child, "DwtColorPicker") || Dwt.instanceOf(child, "DwtCalendar") ||
 	    (this._style == DwtMenu.GENERIC_WIDGET_STYLE))
 		this._addItem(child);
-
-    if (child.addSelectionListener) {
-        child.addSelectionListener(this._itemSelectionListener);
-    }
 };
 
 // All children are added now, including menu items. Previously, it wasn't
@@ -961,12 +667,6 @@ function(child, skipNotify) {
 	}
 };
 
-DwtMenu.prototype._propagateItemSelection = function(evt) {
-    if (this.isListenerRegistered(DwtEvent.SELECTION)) {
-        this.notifyListeners(DwtEvent.SELECTION, evt);
-    }
-};
-
 DwtMenu.prototype._menuHasCheckedItems =
 function() {
 	return this._menuItemsHaveChecks;
@@ -1021,7 +721,7 @@ DwtMenu.prototype._popdownSubmenus = function() {
 	var sz = this._children.size();
 	var a = this._children.getArray();
 	for (var i = 0; i < sz; i++) {
-		if (a[i]._popdownMenu) a[i]._popdownMenu();
+		a[i]._popdownMenu();
 	}
 };
 
@@ -1037,14 +737,9 @@ function(x, y, kbGenerated) {
 
 	this.render(x, y);
 
-	var isScroll = this._layoutStyle == DwtMenu.LAYOUT_SCROLL;
 	var isPopup = (this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE);
-	var isCascade = this._layoutStyle == DwtMenu.LAYOUT_CASCADE;
-	if( !isScroll ) {
-		this.setScrollStyle(isPopup && isCascade ? Dwt.CLIP : Dwt.SCROLL);
-	} else if (this._tableContainer) {
-		Dwt.setScrollStyle(this._tableContainer, Dwt.CLIP);
-	}
+	var isCascade = this._cascade;
+	this.setScrollStyle(isPopup && isCascade ? Dwt.CLIP : Dwt.SCROLL);
 	
 	this.notifyListeners(DwtEvent.POPUP, this);
 
@@ -1102,14 +797,10 @@ function(x, y, kbGenerated) {
 
 DwtMenu.prototype.getSize =
 function(incScroll) {
-	var size;
 	if (this._table) {
-		size = Dwt.getSize(this._table, incScroll);
-	} else {
-		size = DwtComposite.prototype.getSize.call(this, incScroll);
+		return Dwt.getSize(this._table, incScroll);
 	}
-	if (this._width && this._width > size.x) size.x = this._width;
-	return size;
+	return DwtComposite.prototype.getSize.call(this, incScroll);
 };
 
 DwtMenu.prototype._doPopdown =
