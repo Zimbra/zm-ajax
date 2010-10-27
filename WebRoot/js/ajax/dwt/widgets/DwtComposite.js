@@ -87,7 +87,7 @@ function() {
 
 	var children = this._children.getArray();
 	while (children.length > 0)
-        children.pop().dispose();
+		children[0].dispose();
 
 	DwtControl.prototype.dispose.call(this);
 }

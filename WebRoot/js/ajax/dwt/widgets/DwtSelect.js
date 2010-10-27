@@ -27,7 +27,7 @@
  * @param {array}      params.options 		a list of options. This can be either an array of {@link DwtSelectOption} or {String} objects.
  * @param {string}      params.className		the CSS class
  * @param {constant}      params.posStyle		the positioning style (see {@link DwtControl})
- * @param {boolean}      [layout=true]		layout to use: DwtMenu.LAYOUT_STACK, DwtMenu.LAYOUT_CASCADE or DwtMenu.LAYOUT_SCROLL. A value of [true] defaults to DwtMenu.LAYOUT_CASCADE and a value of [false] defaults to DwtMenu.LAYOUT_STACK.
+ * @param {boolean}      [cascade=true]		if <code>true</code>, menu should cascade (i.e. multiple columns).
  *        
  * @extends		DwtButton
  */
@@ -48,8 +48,7 @@ DwtSelect = function(params) {
     this._options = new AjxVector();
     this._optionValuesToIndices = {};
     this._selectedValue = this._selectedOption = null;
-	this._maxRows = params.maxRows || 0;
-	this._layout = params.layout;
+	this._cascade = params.cascade == null || params.cascade;
 
     // add options
     var options = params.options;
@@ -70,7 +69,7 @@ DwtSelect = function(params) {
     this.setMenu(this._menuCallback, true);
 };
 
-DwtSelect.PARAMS = ["parent", "options", "style", "className", "layout"];
+DwtSelect.PARAMS = ["parent", "options", "style", "className"];
 
 DwtSelect.prototype = new DwtButton;
 DwtSelect.prototype.constructor = DwtSelect;
@@ -128,19 +127,17 @@ function(element) {
  * @param {string|DwtSelectOption}		option			a {String} for the option value or the {@link DwtSelectOption} object
  * @param {boolean}	[selected]		indicates whether option should be the selected option
  * @param {Object}	value			if the option parameter is a {@link DwtSelectOption}, this will override the value already set in the option.
- * @param {String}  image	(optional)
  * @return 	{number} a handle to the newly added option
  */
 DwtSelect.prototype.addOption =
-function(option, selected, value, image) {
+function(option, selected, value) {
 	if (!option) { return -1; }
-	image = image || null;
 
 	var opt = null;
 	var val = null;
 	if (typeof(option) == 'string') {
 		val = value != null ? value : option;
-		opt = new DwtSelectOption(val, selected, option, this, null, image);
+		opt = new DwtSelectOption(val, selected, option, this, null, null);
 	} else {
 		if (option instanceof DwtSelectOption) {
 			opt = option;
@@ -157,9 +154,8 @@ function(option, selected, value, image) {
 	}
 
 	this._options.add(opt);
-	if (this._options.size() == 1 || selected) {
+	if (this._options.size() == 1 || selected)
 		this._setSelectedOption(opt);
-	}
 
 	// Insert the option into the table that's below the button.
 	// This is what gives the button the same size as the select menu.
@@ -179,18 +175,6 @@ function(option, selected, value, image) {
     // return the index of the option.
     this._optionValuesToIndices[opt.getValue()] = this._options.size() - 1;
     return (this._options.size() - 1);
-};
-
-DwtSelect.prototype.removeOption =
-function(value) {
-
-	var option = this.getOptionWithValue(value);
-	if (!option) { return; }
-	this._options.remove(option);
-	var index = this._optionValuesToIndices[value];
-	if (index != null) {
-		this._pseudoItemsEl.deleteRow(index);
-	}
 };
 
 DwtSelect.prototype.popup =
@@ -221,7 +205,6 @@ function() {
 DwtSelect.prototype.rename =
 function(value, newValue) {
 	var option = this.getOptionWithValue(value);
-	if (!option) { return; }
 	option._displayValue = newValue;
 
 	if (this.__selectedOption && (this.__selectedOption._value == value))	{
@@ -241,7 +224,6 @@ function(value, newValue) {
 DwtSelect.prototype.enableOption =
 function(value, enabled) {
 	var option = this.getOptionWithValue(value);
-	if (!option) { return; }
 	if (option.enabled != enabled) {
 		option.enabled = enabled;
 		var item = option.getItem();
@@ -504,14 +486,6 @@ function(anId) {
 
 // other
 
-/* use this in case you want the button to take as little space as needed, and not be aligned with the size of the drop-down.
-	Especially useful in cases where we mess up the button (remove the text) such as in ZmFreeBusySchedulerView 
- */
-DwtSelect.prototype.dynamicButtonWidth = 
-function() {
-	this._pseudoItemsEl.style.display =  "none";
-}
-
 DwtSelect.prototype._createHtmlFromTemplate =
 function(templateId, data) {
     // wrap params
@@ -526,7 +500,7 @@ function(templateId, data) {
     DwtButton.prototype._createHtmlFromTemplate.call(this, containerTemplateId, containerData);
     this._selectEl = document.getElementById(data.id+"_select_container");
     this._pseudoItemsEl = document.getElementById(data.id+"_pseudoitems_container");
-	this._pseudoItemsEl.style.display = "block"; /* this has to be block for it to affect the layout. it is not seen because it's visibility hidden for the TDs inside, and also "overflow:hidden" (so mouse over the hidden stuff does not highlight) */
+    this._pseudoItemsEl.style.display="none";
     // set classes
     var el = this.getHtmlElement();
     this._containerEl = el;
@@ -630,9 +604,6 @@ function(newOption) {
     if (newOption) {
 		newOption.select();
 		this._currentSelectionId = newOption.getIdentifier();
-		var menu = this.getMenu();
-		if (menu)
-			menu.setSelectedItem(newOption.getItem());
     }
 };
 
@@ -700,11 +671,6 @@ DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, 
 
 	this._internalObjectId = DwtSelect._assignId(this);
 	this.enabled = true;
-};
-
-DwtSelectOption.prototype.toString =
-function() {
-    return "DwtSelectOption";
 };
 
 /**
@@ -824,7 +790,7 @@ function() {
  * @extends		DwtMenu
  */
 DwtSelectMenu = function(parent) {
-    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout, maxRows:parent._maxRows});
+    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", cascade:parent._cascade});
 };
 DwtSelectMenu.prototype = new DwtMenu;
 DwtSelectMenu.prototype.constructor = DwtSelectMenu;

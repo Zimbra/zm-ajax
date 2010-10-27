@@ -1061,11 +1061,7 @@ function(ev) {
 			if (this.parent instanceof DwtMenu)
 				DwtMenu.closeActiveMenu();
 
-            var sDate = new Date(target._year, target._month, target._day);
-            if(sDate.getDate() != target._day) {
-                sDate.setDate(target._day);                 
-            }
-			if (this.setDate(sDate)) { return; }
+			if (this.setDate(new Date(target._year, target._month, target._day))) { return; }
 
 			this._setClassName(target, DwtCalendar._HOVERED);
 		} else if (target.id.charAt(0) == 'b') {

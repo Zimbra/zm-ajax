@@ -123,20 +123,8 @@ function(msgStr, detailStr, style, title) {
 	// clear the 'detailsVisible' flag and reset the title of the 'showDetails' button
 	this._detailsVisible = false;
 	this._button[ZmErrorDialog.DETAIL_BUTTON].setText(this._showDetailsMsg);
-	
-	// Set the content, enveloped
-	this._updateContent();
-};
 
-/**
- * Sets/updates the content
- */
-ZmErrorDialog.prototype._updateContent = 
-function() {
-	var data = {message: this._msgStr, detail: this._detailStr, showDetails: this._detailsVisible};
-	var html = AjxTemplate.expand("zimbra.Widgets#ZmErrorDialogContent", data);
-	this.setSize(Dwt.CLEAR, this._detailsVisible ? "300" : Dwt.CLEAR);
-	DwtMessageDialog.prototype.setMessage.call(this, html, this._msgStyle, this._msgTitle);
+	DwtMessageDialog.prototype.setMessage.call(this, msgStr, style, title);
 };
 
 /**
@@ -318,6 +306,14 @@ function() {
 ZmErrorDialog.prototype._showDetail = 
 function() {
 	this._detailsVisible = !this._detailsVisible;
-	this._updateContent();
+
+	var msg = this._msgStr;
+	if (this._detailsVisible) {
+		msg += "<hr>" + this._detailStr;
+		this.setSize(Dwt.CLEAR, "300");
+	} else {
+		this.setSize(Dwt.CLEAR, Dwt.CLEAR);
+	}
+	DwtMessageDialog.prototype.setMessage.call(this, msg, this._msgStyle, this._msgTitle);
 	this._button[ZmErrorDialog.DETAIL_BUTTON].setText(this._detailsVisible ? this._hideDetailsMsg : this._showDetailsMsg);
 };
