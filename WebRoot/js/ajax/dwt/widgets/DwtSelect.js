@@ -209,9 +209,7 @@ function(option) {
 	if (index != null) {
 		this._pseudoItemsEl.deleteRow(index);
 		if (this._selectedOption == option) {
-			var size = this._options.size();
-			var newSelIndex = (index >= size) ? size - 1 : index;
-			this._setSelectedOption(this._options.get(newSelIndex));
+			this._setSelectedOption(this._options.get(index));
 		}
 	}
 
@@ -620,7 +618,7 @@ function(ev) {
 	this._setSelectedOption(opt);
 
 	// notify our listeners
-    var args = {};
+    var args = new Object();
     args.selectObj = this;
     args.newValue = opt.getValue();
     args.oldValue = oldValue;
@@ -639,9 +637,6 @@ function() {
 
 DwtSelect.prototype._setSelectedOption = 
 function(option) {
-
-	if (!option) { return; }
-
 	var displayValue = option.getSelectedValue() || option.getDisplayValue();
 	var image = option.getImage();
 	if (this._selectedOption != option) {
