@@ -203,18 +203,20 @@ function(option) {
 	this.setMenu(this._menuCallback, true);
 
 	this._options.remove(option);
+	var size = this._options.size();
 
 	var value = option.getValue();
 	var index = this._optionValuesToIndices[value];
 	if (index != null) {
 		this._pseudoItemsEl.deleteRow(index);
-		if (this._selectedOption == option) {
-			this._setSelectedOption(this._options.get(index));
+		if (this._selectedOption == option && size > 0) {
+			var newSelIndex = (index >= size) ? size - 1 : index;
+			this._setSelectedOption(this._options.get(newSelIndex));
 		}
 	}
 
 	delete this._optionValuesToIndices[value];
-	for (var i = index, len = this._options.size(); i < len; i++) {
+	for (var i = index; i < size; i++) {
 		var option = this._options.get(i);
 		this._optionValuesToIndices[option.getValue()] = i;
 	}
