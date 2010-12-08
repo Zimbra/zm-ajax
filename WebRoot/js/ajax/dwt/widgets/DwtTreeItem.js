@@ -95,7 +95,7 @@ DwtTreeItem = function(params) {
 
 	// if our parent is DwtTree or our parent is initialized and is not deferred
 	// type or is expanded, then initialize ourself, else wait
-	if (parent instanceof DwtTree || (parent._initialized && (!parent._deferred || parent._expanded)) || !params.deferred) {
+	if (parent instanceof DwtTree || (parent._initialized && (!parent._deferred || parent._expanded))) {
 		this._initialize(params.index);
 	} else {
 		parent._addDeferredChild(this, params.index);
@@ -236,11 +236,6 @@ function() {
 DwtTreeItem.prototype.getItems =
 function() {
 	return this._children.getArray();
-};
-
-DwtTreeItem.prototype.getChildIndex =
-function(item) {
-	return this._children.indexOf(item);
 };
 
 /**

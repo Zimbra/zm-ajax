@@ -2251,15 +2251,7 @@ Textarea_XFormItem.prototype.setElementDisabledProperty = function (enable) {
 	this.getElement().readOnly = (enable != true)
 }
 
-Textarea_XFormItem.prototype.getKeyPressHandlerHTML = function () {
 
-        var keydownEv = "onkeydown";
-        if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
-                keydownEv = "onkeypress";
-        }
-        return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
-                                                   " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
-};
 
 /**
  * @class defines XFormItem type _CHECKBOX_
@@ -2282,8 +2274,6 @@ Checkbox_XFormItem.prototype.falseValue = _UNDEFINED_;
 Checkbox_XFormItem.prototype.focusable = true;
 Checkbox_XFormItem.prototype.visibilityChecks = [XFormItem.prototype.hasReadPermission];
 Checkbox_XFormItem.prototype.enableDisableChecks = [XFormItem.prototype.hasWritePermission];
-Checkbox_XFormItem.prototype.nowrap = false;
-Checkbox_XFormItem.prototype.labelWrap = true;
 //	methods
 Checkbox_XFormItem.prototype.outputHTML = function (html, currentCol) {
 	// figure out how to show the checkbox as checked or not
@@ -4292,7 +4282,7 @@ Dwt_ColorPicker_XFormItem.prototype.updateWidget = function (newValue) {
 	if(!this.widget)
 		return;
 		
-	//if(window.console && window.console.log) console.log ("new color = " + newValue) ;
+	//if (AjxEnv.hasFirebug) console.log ("new color = " + newValue) ;
 	if (newValue != null) {
 		this.widget.setColor(newValue);
 	}else { //ensure the empty color can be set in the UI

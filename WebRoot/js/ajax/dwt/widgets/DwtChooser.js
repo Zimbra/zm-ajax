@@ -691,8 +691,8 @@ function(width, height) {
 			sh = th = this._listSize ? this._listSize : (height == Dwt.DEFAULT) ? height : Math.floor(((height - btnSz.y) / 2) - 12);
 		}
 	}
-	this.sourceListView.setSize((w == Dwt.DEFAULT) ? w : w+2, sh);
-	this.targetListView.setSize((w == Dwt.DEFAULT) ? w : w+2, th);
+	this.sourceListView.setSize(w+2, sh);
+	this.targetListView.setSize(w+2, th);
 };
 
 /**
@@ -1047,13 +1047,11 @@ function(view, item) {
 
 DwtChooser.prototype._getEmailFromText =
 function() {
-	if (this._hasTextField) {
-		var text = this._textField.getValue();
-		var email = AjxEmailAddress.parse(text);
-		if (email) {
-			email.id = Dwt.getNextId();
-			return email;
-		}
+	var text = this._textField.getValue();
+	var email = AjxEmailAddress.parse(text);
+	if (email) {
+		email.id = Dwt.getNextId();
+		return email;
 	}
 };
 

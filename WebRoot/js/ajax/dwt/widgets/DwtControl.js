@@ -1198,15 +1198,11 @@ function(htmlEl)  {
 		if (s == '[xpconnect wrapped native prototype]' || s == '[object XULElement]') { return null; }
 	}
 
-	try{
-		while (htmlEl) {
-			if (htmlEl.id && DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlEl.id]) {
-				return DwtControl.ALL_BY_ID[htmlEl.id];
-			}
-			htmlEl = htmlEl.parentNode;
+	while (htmlEl) {
+		if (htmlEl.id && DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlEl.id]) {
+			return DwtControl.ALL_BY_ID[htmlEl.id];
 		}
-	} catch(e) {
-		//In some FF, we might get permission denied error. Ignore it.
+		htmlEl = htmlEl.parentNode;
 	}
 	return null;
 };
@@ -1818,19 +1814,9 @@ function(oel, nel, inheritClass, inheritStyle) {
         Dwt.addClass(nel, oel.className);
     }
     if (inheritStyle == null || inheritStyle) {
-        var style = oel.getAttribute("style") || oel.style;
+        var style = oel.getAttribute("style");
         if (style) {
-            if (AjxUtil.isString(style)) { // All non-IE browsers
-                nel.setAttribute("style", [nel.getAttribute("style"),style].join(";"));
-            } else {
-                for (var attribute in style) {
-                    if (style[attribute]) {
-						try {
-                        	nel.style[attribute] = style[attribute];
-						} catch (e) {}
-                    }
-                }
-            }
+            nel.setAttribute("style", [nel.getAttribute("style"),style].join(";"))
         }
     }
 };
@@ -2469,7 +2455,7 @@ function() {
  */
 DwtControl.prototype.__doBlur =
 function() {
-	DBG.println("focus", "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
+	DBG.println("kbnav", "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
 	this._hasFocus = false;
 	if (this.isListenerRegistered(DwtEvent.ONBLUR)) {
 		var ev = DwtShell.focusEvent;
@@ -2489,7 +2475,7 @@ function() {
  */
 DwtControl.prototype.__doFocus =
 function() {
-	DBG.println("focus", "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
+	DBG.println("kbnav", "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
 	this._hasFocus = true;
 	if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
 		var ev = DwtShell.focusEvent;

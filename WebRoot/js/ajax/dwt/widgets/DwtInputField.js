@@ -346,20 +346,14 @@ function(value, noValidate) {
 	this._inputField.value = value;
 	if(!noValidate) {
 		value = this._validateInput(value);
-		if (value != null) {
+		if (value != null)
 			this._inputField.value = value;
-		}
 	}
 	if (this._hintIsVisible && value) {
 		this._hideHint(value);
 	} else if (!value) {
 		this._showHint();
 	}
-};
-
-DwtInputField.prototype.clear =
-function() {
-	this.setValue("");
 };
 
 /**

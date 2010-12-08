@@ -204,11 +204,7 @@ function() {
 	} else {
 		this._moveCaretToTopHtml(true);
 	}
-	if (focused) {
-		try {
-			focused.focus();
-		} catch (e) {}
-	}
+	if (focused) focused.focus();
 };
 
 DwtHtmlEditor.prototype._moveCaretToTopHtml =
@@ -343,36 +339,18 @@ function(text, select) {
 
 DwtHtmlEditor.prototype.insertImage =
 function(src, dontExecCommand, width, height) {
-    if (dontExecCommand) {
+    if(dontExecCommand){
         var doc = this._getIframeDoc();
 	    var img = doc.createElement("img");
-
-        //avoid mixed content security warning with IE
-        if (src && src.indexOf("cid:") == 0) {
-            img.setAttribute("dfsrc", src);
-        }
-        else {
-            img.setAttribute("src", src);
-        }
-        
-        if (width) {
-			img.width = width;
-		}
-		else {
-			img.removeAttribute('width');
-		}
-		if (height) {
-			img.height = height;
-		}
-		else {
-			img.removeAttribute('height');
-		}
-		img.style.border = "0"; // set border explicitly to 0, since otherwise a border is added implicitly in case it's wrapped with a link 
-		var df = doc.createDocumentFragment();
+        img.src = src;
+        if(width) img.width = width;
+        else img.removeAttribute('width');
+        if(height) img.height = height;
+        else img.removeAttribute('height');
+        var df = doc.createDocumentFragment();
 	    df.appendChild(img);
 	    this._insertNodeAtSelection(df);
-    }
-    else {
+    }else{
         this._execCommand(DwtHtmlEditor.IMAGE, src);
     }
 };
@@ -645,27 +623,8 @@ function(html) {
 	}
 };
 
-
-DwtHtmlEditor.prototype._getSelectionHtml =
-function(selection) {
-	var range = selection.createRange();
-	var range = selection.createRange();
-	var type = selection.type.toLowerCase();
-	if (type == "text") {
-		return range.htmlText;
-	}
-	else if (type == "control") {
-		var html = "";
-		for (i = 0; i < range.length; i++) {
-			html += range(i).innerHTML;
-		}
-		return html;
-	}
-	return null;
-}
-
 DwtHtmlEditor.prototype._insertNodeAtSelection =
-function(node, select, returnSelectionHtml) {
+function(node, select) {
 	this.focus();
 	if (!AjxEnv.isIE) {
 		var range = this._getRange();
@@ -685,9 +644,6 @@ function(node, select, returnSelectionHtml) {
 		}
 	} else {
 		var sel = this._getRange();
-		if (returnSelectionHtml) {
-			var selectionHtml = this._getSelectionHtml(sel)
-		}
 		var range = sel.createRange();
 		var id = "FOO-" + Dwt.getNextId();
 		try {
@@ -702,7 +658,6 @@ function(node, select, returnSelectionHtml) {
  		var el = this._getIframeDoc().getElementById(id);
  		el.parentNode.insertBefore(node, el);
  		el.parentNode.removeChild(el);
-		return selectionHtml;
 	}
 };
 
@@ -1703,7 +1658,7 @@ DwtHtmlEditor.prototype.insertLink = function(params) {
     var doc  = this._getIframeDoc();
     var content =  (AjxEnv.isIE && doc && doc.body) ? (doc.body.innerHTML) : "";
 
-    if (AjxEnv.isIE && content == ""){
+    if(AjxEnv.isIE && content == ""){
 
         var a = doc.createElement("a");
         a.href = params.url;
@@ -1715,25 +1670,19 @@ DwtHtmlEditor.prototype.insertLink = function(params) {
         doc.body.appendChild(a);
         return a;
 
-    } else {
+    }else{
         var url = "javascript:" + Dwt.getNextId();
 
         if (AjxEnv.isIE) { // IE *ought to* be able to handle the general case, but regularly screws it up anyway.
             var node = this._getIframeDoc().createElement("a");
             node.href = url;
-			var keepInnerHtml = !params.text || params.text == params.url;
-			var selectionHtml = this._insertNodeAtSelection(node, false, keepInnerHtml);
-			if (selectionHtml) {
-				node.innerHTML = selectionHtml;
-			}
-			else {
-				node.innerHTML = params.text;
-			}
+            if (params.text)
+                node.innerHTML = params.text;
+            this._insertNodeAtSelection(node, false);
             this.selectNodeContents(node);
         } else {
-            if (params.text) {
+            if (params.text)
                 this.insertText(params.text, true);
-			}
             this._execCommand("createlink", url);
         }
 
@@ -1748,9 +1697,8 @@ DwtHtmlEditor.prototype.insertLink = function(params) {
 
         if (link) {
             link.href = params.url;
-            if (params.title) {
+            if (params.title)
                 link.title = params.title;
-			}
         }
         return link;
     }
@@ -1759,15 +1707,11 @@ DwtHtmlEditor.prototype.insertLink = function(params) {
 // if the caret/selection is currently a link, select it and return its properties
 // otherwise, at least return the selected text, if any.
 DwtHtmlEditor.prototype.getLinkProps = function() {
-		this.focus();
-
         var a = this.getNearestElement("a");
-        if (a) {
+        if (a)
                 this.selectNodeContents(a);
-		}
         var range = this._getRange();
-
-        var props = { text: AjxEnv.isIE ? range.createRange().text : range.toString() };
+        var props = { text: AjxEnv.isIE ? range.text : range.toString() };
         if (a) {
                 props.url = a.href;
                 props.title = a.title;

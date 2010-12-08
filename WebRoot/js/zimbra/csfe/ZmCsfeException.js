@@ -181,10 +181,6 @@ ZmCsfeException.TOO_MANY_IDENTITIES					= "account.TOO_MANY_IDENTITIES";
 ZmCsfeException.TOO_MANY_SEARCH_RESULTS				= "account.TOO_MANY_SEARCH_RESULTS";
 ZmCsfeException.NO_SUCH_COS 						= "account.NO_SUCH_COS";
 
-ZmCsfeException.NO_SUCH_VOLUME						= "volume.NO_SUCH_VOLUME";
-ZmCsfeException.ALREADY_EXISTS						= "volume.ALREADY_EXISTS";
-ZmCsfeException.VOLUME_NO_SUCH_PATH					= "volume.NO_SUCH_PATH";
-
 ZmCsfeException.MAIL_ALREADY_EXISTS					= "mail.ALREADY_EXISTS";
 ZmCsfeException.MAIL_IMMUTABLE						= "mail.IMMUTABLE_OBJECT";
 ZmCsfeException.MAIL_INVALID_NAME					= "mail.INVALID_NAME";
@@ -207,10 +203,7 @@ ZmCsfeException.MAIL_UNABLE_TO_IMPORT_APPOINTMENTS	= "mail.MAIL_UNABLE_TO_IMPORT
 ZmCsfeException.MAIL_UNABLE_TO_IMPORT_CONTACTS		= "mail.UNABLE_TO_IMPORT_CONTACTS";
 ZmCsfeException.MODIFY_CONFLICT						= "mail.MODIFY_CONFLICT";
 ZmCsfeException.TOO_MANY_TAGS						= "mail.TOO_MANY_TAGS";
-ZmCsfeException.CANNOT_RENAME                       = "mail.CANNOT_RENAME";
-ZmCsfeException.CANNOT_UNLOCK                       = "mail.CANNOT_UNLOCK";
-ZmCsfeException.CANNOT_LOCK                         = "mail.CANNOT_LOCK";
-ZmCsfeException.LOCKED                              = "mail.LOCKED";
-
 
 ZmCsfeException.OFFLINE_ONLINE_ONLY_OP				= "offline.ONLINE_ONLY_OP";
+
+ZmCsfeException.VOLUME_NO_SUCH_PATH = "volume.NO_SUCH_PATH";

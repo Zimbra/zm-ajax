@@ -29,7 +29,6 @@ AjxStringUtil = function() {
 AjxStringUtil.TRIM_RE = /^\s+|\s+$/g;
 AjxStringUtil.COMPRESS_RE = /\s+/g;
 AjxStringUtil.ELLIPSIS = " ... ";
-AjxStringUtil.LIST_SEP = ", ";
 
 AjxStringUtil.makeString =
 function(val) {
@@ -88,7 +87,7 @@ function(text, sep, camel) {
  */
 AjxStringUtil.fromMixed = function(text, sep) {
     sep = ["$1", sep || " ", "$2"].join("");
-    return AjxStringUtil.trim(text.replace(/([a-z])([A-Z]+)/g, sep));
+    return text.replace(/([a-z])([A-Z]+)/g, sep).trim();
 };
 
 /**
@@ -217,27 +216,6 @@ function(str, dels) {
 };
 
 /**
- *
- * splits the line into words, keeping leading whitespace with each word
- *
- * @param line the text to split
- *
- * @return {array} the array of words
- */
-AjxStringUtil.splitKeepLeadingWhitespace =
-function(line) {
-
-	var wordWithLeadingSpaces = /\s*\S+/g;
-	var words = [];
-	var result;
-	while (result = wordWithLeadingSpaces.exec(line)) {
-		var word = result[0];
-		words.push(word);
-	}
-	return words;
-};
-
-/**
  * Wraps text to the given length and optionally quotes it. The level of quoting in the
  * source text is preserved based on the prefixes. Special lines such as email headers
  * always start a new line.
@@ -279,14 +257,15 @@ function(params) {
 	// the word's prefix, whether it's a paragraph break, and whether it's
 	// special (cannot be wrapped into a previous line)
 	for (var l = 0, llen = lines.length; l < llen; l++) {
-		var line = lines[l];
+		var line = AjxStringUtil.trim(lines[l]);
 		// get this line's prefix
 		var m = line.match(/^([\s>\|]+)/);
 		var prefix = m ? m[1] : "";
 		if (prefix) {
 			line = line.substr(prefix.length);
 		}
-		var wds = AjxStringUtil.splitKeepLeadingWhitespace(line);
+		line = line.replace(/\s+/g, " ");	// compress all space into single spaces
+		var wds = line.split(" ");
 		if (wds && wds[0] && wds[0].length) {
 			var isSpecial = AjxStringUtil.MSG_SEP_RE.test(line) || AjxStringUtil.COLON_RE.test(line) ||
 							AjxStringUtil.HDR_RE.test(line) || AjxStringUtil.SIG_RE.test(line);
@@ -1098,10 +1077,6 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor) {
 		idx = this._traverse(tmp, text, idx, listType, listLevel, bulletNum, ctxt, convertor);
 	}
 
-	if (convertor && convertor["/"+nodeName]) {
-		text[idx++] = convertor["/"+nodeName](el);
-	}
-
 	if (nodeName == "h1" || nodeName == "h2" || nodeName == "h3" || nodeName == "h4"
 		|| nodeName == "h5" || nodeName == "h6") {
 			text[idx++] = "\n";
@@ -1393,10 +1368,6 @@ function(o) {
 	var _string = function (s) {
 		return '"' + s.replace(AjxStringUtil._SPECIAL_CHARS, _char) + '"';
 	}
-
-	if (o === null) {
-		return 'null';
-	}
 	
 	// String
 	if (t === 'string') {
@@ -1550,7 +1521,7 @@ function(obj, recurse, showFuncs, omit) {
 				if (nextObj == window || nextObj == document || (!AjxEnv.isIE && nextObj instanceof Node)){
 					value = nextObj.toString();
 				}
-				if ((typeof(nextObj) == "function")) {
+				if ((typeof(nextObj) == "function")){
 					if (showFuncs) {
 						value = "[function]";
 					} else {
@@ -1562,9 +1533,7 @@ function(obj, recurse, showFuncs, omit) {
 					text += ",";
 				}
 				text += "\n" + indent;
-				if (omit && omit[key]) {
-					text += key + ": [" + key + "]";
-				} else if (value != null) {
+				if (value != null) {
 					text += key + ": " + value;
 				} else {
 					text += key + ": " + this._prettyPrint(nextObj, recurse, showFuncs, omit, indentLevel + 2, true, stopRecursion);
@@ -1594,54 +1563,4 @@ function(str){
 	s = s.replace(/\xA0/g, '&nbsp;');
 
 	return s;
-};
-
-// hidden SPANs for measuring regular and bold strings
-AjxStringUtil._testSpan;
-AjxStringUtil._testSpanBold;
-
-// cached string measurements
-AjxStringUtil.WIDTH			= {};		// regular strings
-AjxStringUtil.WIDTH_BOLD	= {};		// bold strings
-AjxStringUtil.MAX_CACHE		= 1000;		// max total number of cached strings
-AjxStringUtil._cacheSize	= 0;		// current number of cached strings
-
-/**
- * Returns the width in pixels of the given string.
- *
- * @param {string}	str		string to measure
- * @param {boolean}	bold	if true, string should be measured in bold font
- */
-AjxStringUtil.getWidth =
-function(str, bold) {
-
-	if (!AjxStringUtil._testSpan) {
-		var span1 = AjxStringUtil._testSpan = document.createElement("SPAN");
-		var span2 = AjxStringUtil._testSpanBold = document.createElement("SPAN");
-		span1.style.position = span2.style.position = Dwt.ABSOLUTE_STYLE;
-		var shellEl = appCtxt.getShell().getHtmlElement();
-		shellEl.appendChild(span1);
-		shellEl.appendChild(span2);
-		Dwt.setLocation(span1, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-		Dwt.setLocation(span2, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-		span2.style.fontWeight = "bold";
-	}
-
-	var cache = bold ? AjxStringUtil.WIDTH_BOLD : AjxStringUtil.WIDTH;
-	if (cache[str]) {
-		return cache[str];
-	}
-
-	if (AjxStringUtil._cacheSize >= AjxStringUtil.MAX_CACHE) {
-		AjxStringUtil.WIDTH = {};
-		AjxStringUtil.WIDTH_BOLD = {};
-		AjxStringUtil._cacheSize = 0;
-	}
-
-	var span = bold ? AjxStringUtil._testSpanBold : AjxStringUtil._testSpan;
-	span.innerHTML = str;
-	var w = cache[str] = Dwt.getSize(span).x;
-	AjxStringUtil._cacheSize++;
-
-	return w;
 };

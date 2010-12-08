@@ -147,15 +147,7 @@ function(str) {
 
 AjxXmlDoc.prototype.loadFromUrl =
 function(url) {
-	if(AjxEnv.isChrome || AjxEnv.isSafari) {
-		var xmlhttp = new window.XMLHttpRequest();
-		xmlhttp.open("GET", url, false);
-		xmlhttp.send(null);
-		var xmlDoc = xmlhttp.responseXML;
-		this._doc = xmlDoc;
-	} else {
-		this._doc.load(url);
-	}
+	this._doc.load(url);
 }
 
 /**

@@ -127,17 +127,6 @@ AjxTimezone = function() {};
 // Static methods
 //
 
-AjxTimezone.convertTimezone = function(date, fromClientId, toClientId) {
-	if (fromClientId == toClientId) {
-		return date;
-	}
-	var offset1 = AjxTimezone.getOffset(toClientId, date);
-	var offset2 = AjxTimezone.getOffset(fromClientId, date);
-	//returning a new Date object since we might not always want to modify the parameter Date object
-	return new Date(date.getTime() + (offset1 - offset2) * 60 * 1000);
-};
-
-
 AjxTimezone.getTransition = function(onset, year) {
 	var trans = [ year || new Date().getFullYear(), onset.mon, 1 ];
 	if (onset.mday) {
@@ -286,7 +275,7 @@ function() {
 		AjxTimezone._PREF_ZONE_OPTIONS = [];
 		AjxTimezone.getAbbreviatedZoneChoices();
 		for (var i = 0; i < AjxTimezone._ABBR_ZONE_OPTIONS.length; i++) {
-			AjxTimezone._PREF_ZONE_OPTIONS.push(AjxTimezone._ABBR_ZONE_OPTIONS[i].value); //use value is better, serverID is usd by compare operator.
+			AjxTimezone._PREF_ZONE_OPTIONS.push(AjxTimezone._ABBR_ZONE_OPTIONS[i].serverid);
 		}
 	}
 	return AjxTimezone._PREF_ZONE_OPTIONS;
@@ -301,20 +290,18 @@ AjxTimezone.getClientId = function(serverId) {
 
 AjxTimezone.getShortName = function(clientId) {
 	var rule = AjxTimezone.getRule(clientId);
-    if (rule && rule.shortName) return rule.shortName;
-    var generatedShortName = ["GMT",AjxTimezone._SHORT_NAMES[clientId]].join("");
-    if(rule) rule.shortName = generatedShortName;
-	return generatedShortName;
+	if (!rule.shortName) {
+		rule.shortName = ["GMT",AjxTimezone._SHORT_NAMES[clientId]].join("");
+	}
+	return rule.shortName;
 };
-
 AjxTimezone.getMediumName = function(clientId) {
 	var rule = AjxTimezone.getRule(clientId);
-    if (rule && rule.mediumName) return rule.mediumName;
-    var generatedMediumName = AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
-    if(rule) rule.mediumName = generatedMediumName;
-	return generatedMediumName;
+	if (!rule.mediumName) {
+		rule.mediumName = AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
+	}
+	return rule.mediumName;
 };
-
 AjxTimezone.getLongName = AjxTimezone.getMediumName;
 
 AjxTimezone.addRule = function(rule) {
@@ -428,7 +415,7 @@ AjxTimezone.getAbbreviatedZoneChoices = function() {
 				value: serverId,
 				// these props used by sort comparator
 				standard: rule.standard,
-				serverId: serverId, //In _BY_OFFSET, the attribute name is serverId.
+				serverid: serverId,
                 clientId: clientId
 			};
 			AjxTimezone._ABBR_ZONE_OPTIONS.push(option);
@@ -458,7 +445,7 @@ AjxTimezone.getMatchingTimezoneChoices = function() {
 				value: serverId,
 				// these props used by sort comparator
 				standard: rule.standard,
-				serverId: serverId, //In _BY_OFFSET, the attribute name is serverId.
+				serverid: serverId,
                 clientId: clientId
 			};
 			AjxTimezone._MATCHING_ZONE_OPTIONS.push(option);

@@ -383,15 +383,13 @@ function (hoverImageInfo) {
 * @param {string}	followIconStyle		the style of menu item (should be checked or radio style) for
 *							which the button icon should reflect the menu item icon
 * @param {boolean}	popupAbove         if <code>true</code>, pop up the menu above the button
-* @param {boolean}	popupRight         if <code>true</code>, align the right edge of the menu to the right edge of the button
 */
 DwtButton.prototype.setMenu =
-function(menuOrCallback, shouldToggle, followIconStyle, popupAbove, popupRight) {
+function(menuOrCallback, shouldToggle, followIconStyle, popupAbove) {
 	this._menu = menuOrCallback;
 	this._shouldToggleMenu = (shouldToggle === true);
 	this._followIconStyle = followIconStyle;
 	this._popupAbove = popupAbove;
-	this._popupRight = popupRight;
 	if (this._menu) {
         if (this._dropDownEl) {
 			var idx = (this._imageCell) ? 1 : 0;
@@ -543,15 +541,8 @@ function(menu) {
 	// since buttons are often absolutely positioned, and menus aren't, we need x,y relative to window
 	var parentLocation = Dwt.toWindow(parentElement, 0, 0);
 	var leftBorder = (parentElement.style.borderLeftWidth == "") ? 0 : parseInt(parentElement.style.borderLeftWidth);
-
-	var x;
-	if (this._popupRight) {
-		x = parentLocation.x + parentBounds.width - menuSize.x;
-	} else {
-		x = parentLocation.x + leftBorder;
-		x = ((x + menuSize.x) >= windowSize.x) ? windowSize.x - menuSize.x : x;
-	}
-
+	var x = parentLocation.x + leftBorder;
+	x = ((x + menuSize.x) >= windowSize.x) ? windowSize.x - menuSize.x : x;
 	var y;
 	if (this._popupAbove) {
 		y = parentLocation.y - menuSize.y;
@@ -880,17 +871,7 @@ function(ev) {
         button.isListenerRegistered(DwtEvent.SELECTION)) {
 		AjxImg.setImage(dropDown, button._dropDownHovImg);
     }
-	// bug fix 48266 IE hack, solution is similar to bug 36253
-	// Just rewrite the el's Child's className to trigger IE to render it
-	// In mouserOut, it seems the IE can render it automatically. 	
-	if(AjxEnv.isIE){
-	   	if(ev && ev.target && ev.target.firstChild){
-			var el = ev.target.firstChild;
-			var cname = el.className;
-			el.className = "";
-			el.className = cname;
-		} 
-	}    	
+
     ev._stopPropagation = true;
 };
 

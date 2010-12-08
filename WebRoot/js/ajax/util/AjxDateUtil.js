@@ -263,10 +263,6 @@ function(now, dateMSec) {
 	return AjxDateUtil.simpleComputeDateStr(date);
 };
 
-AjxDateUtil.computeDateStrNoYear =
-function(date) {
-    return AjxDateUtil._dateFormatNoYear.format(date);
-};
 
 // Example output: "Today, 9:44 AM" "Yesterday, 12:22 PM" "Sun, 1/11/01 1:11 PM"
 AjxDateUtil.computeWordyDateStr =
@@ -546,12 +542,12 @@ function(date, useUTC) {
 };
 
 AjxDateUtil.parseServerTime = 
-function(serverStr, date, noSpecialUtcCase) {
+function(serverStr, date) {
 	if (serverStr.charAt(8) == 'T') {
 		var hh = parseInt(serverStr.substr(9,2), 10);
 		var mm = parseInt(serverStr.substr(11,2), 10);
 		var ss = parseInt(serverStr.substr(13,2), 10);
-		if (!noSpecialUtcCase && serverStr.charAt(15) == 'Z') {
+		if (serverStr.charAt(15) == 'Z') {
 			mm += AjxTimezone.getOffset(AjxTimezone.DEFAULT, date);
 		}
 		date.setHours(hh, mm, ss, 0);
@@ -617,7 +613,7 @@ AjxDateUtil.TZDSegment.prototype.parse = function(o, s, i) {
 };
 
 AjxDateUtil.parseServerDateTime = 
-function(serverStr, noSpecialUtcCase) {
+function(serverStr) {
 	if (serverStr == null) return null;
 
 	var d = new Date();
@@ -628,7 +624,7 @@ function(serverStr, noSpecialUtcCase) {
 	d.setMonth(MM - 1);
 	d.setMonth(MM - 1); // DON'T remove second call to setMonth (see bug #3839)
 	d.setDate(dd);
-	AjxDateUtil.parseServerTime(serverStr, d, noSpecialUtcCase);
+	AjxDateUtil.parseServerTime(serverStr, d);
 	return d;
 };
 
@@ -1271,13 +1267,7 @@ function(value) {
 	if (value.length == 2) {
 		var d = new Date;
 		d.setYear(parseInt(value, 10));
-        var fullYear = d.getFullYear();
-        if (fullYear <= AjxMsg.dateParsing2DigitStartYear) {
-            value = String(fullYear + 100);
-        }
-        else {
-            value = String(fullYear).substr(0,2) + value;
-        }
+		value = String(d.getFullYear()).substr(0,2) + value;
 	}
 	return parseInt(value, 10);
 };
