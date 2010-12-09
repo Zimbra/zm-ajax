@@ -1969,6 +1969,7 @@ function(itemDiv, ev) {
 
 		// save new left click selection
 		this._selectedItems.add(itemDiv);
+		this._selectedItem = this.getItemFromElement(itemDiv); //hack since selectedItems is also for checkboxed items but this item was just selected for view
 
 		this._selAnchor = this._kbAnchor = itemDiv;
 		Dwt.delClass(itemDiv, this._styleRe, this._selectedClass);
