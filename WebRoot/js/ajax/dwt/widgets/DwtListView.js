@@ -1106,7 +1106,7 @@ DwtListView.prototype.setListDivHeight =
 function (listViewHeight) {
 	if (this._listDiv && this._listColDiv) {
 		var headerHeight = Dwt.getSize (this._listColDiv).y ;
-		var listDivHeight = listViewHeight - headerHeight ;
+		var listDivHeight = listViewHeight - headerHeight - 10 ;
 		Dwt.setSize(this._listDiv, Dwt.DEFAULT, listDivHeight);
 	}
 };
