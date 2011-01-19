@@ -2251,7 +2251,15 @@ Textarea_XFormItem.prototype.setElementDisabledProperty = function (enable) {
 	this.getElement().readOnly = (enable != true)
 }
 
+Textarea_XFormItem.prototype.getKeyPressHandlerHTML = function () {
 
+        var keydownEv = "onkeydown";
+        if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
+                keydownEv = "onkeypress";
+        }
+        return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
+                                                   " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
+}
 
 /**
  * @class defines XFormItem type _CHECKBOX_
