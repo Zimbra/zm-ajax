@@ -974,16 +974,6 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 		}
 	}
 
-    // size control
-    if (itemDef.width || itemDef.height) {
-        if (control instanceof DwtInputField) {
-            Dwt.setSize(control.getInputElement(), itemDef.width, itemDef.height);
-        }
-        else {
-            control.setSize(itemDef.width, itemDef.height);
-        }
-    }
-
 	// return control
 	return control;
 };
