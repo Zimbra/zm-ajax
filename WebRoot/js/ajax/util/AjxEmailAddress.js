@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -131,7 +131,8 @@ function(str) {
 	var addr, name;
 	var str = AjxStringUtil.trim(str);
 	var prelimOkay = AjxEmailAddress._prelimCheck(str);
-	if (!(prelimOkay && str.match(AjxEmailAddress.addrPat))) {
+	var contiDotOkay = AjxEmailAddress._continuousDotCheck(str);
+	if (!(prelimOkay && contiDotOkay && str.match(AjxEmailAddress.addrPat))) {
 		DBG.println(AjxDebug.DBG2, "mailbox match failed: " + str);
 		return null;
 	}
@@ -215,11 +216,8 @@ function(emailStr, type, strict) {
  * @param {string}	str		an email string
  * @return	{boolean}	<code>true</code> if the string is valid
  */
-AjxEmailAddress.isValid =
-function(str) {
-	str = AjxStringUtil.trim(str);
-	var prelimOkay = AjxEmailAddress._prelimCheck(str);
-	return (prelimOkay && (str.match(AjxEmailAddress.addrPat) != null));
+AjxEmailAddress.isValid = function(str) {
+	return AjxEmailAddress.parse(str) != null;
 };
 
 AjxEmailAddress._prelimCheck =
@@ -230,6 +228,27 @@ function(str) {
 	var atIndex = str.indexOf('@');
 	var dotIndex = str.lastIndexOf('.');
 	return ((atIndex != -1) && (dotIndex != -1) && (dotIndex > atIndex) && (dotIndex != str.length - 1));
+};
+
+/**
+* Checks if the email adress has two consecutive dots like: firstname..lastname@domain.com
+* @returns true if there are consecutive dots in email address, or else returns true
+*/
+AjxEmailAddress._continuousDotCheck =
+function(str) {
+	var address;
+	// getting address
+	var addrStartIndex = str.lastIndexOf('<');
+	if (addrStartIndex >= 0) {
+		var addrEndIndex = str.lastIndexOf('>');
+		if (addrEndIndex >= 0 && addrStartIndex < addrEndIndex) {
+			address = str.substring(addrStartIndex + 1, addrEndIndex);
+		}
+	}
+	if(!address){
+		address = str;
+	}
+	return address.indexOf("..") == -1;
 };
 
 /**
