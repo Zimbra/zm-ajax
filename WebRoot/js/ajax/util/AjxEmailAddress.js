@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -216,11 +216,8 @@ function(emailStr, type, strict) {
  * @param {string}	str		an email string
  * @return	{boolean}	<code>true</code> if the string is valid
  */
-AjxEmailAddress.isValid =
-function(str) {
-	str = AjxStringUtil.trim(str);
-	var prelimOkay = AjxEmailAddress._prelimCheck(str);
-	return (prelimOkay && (str.match(AjxEmailAddress.addrPat) != null));
+AjxEmailAddress.isValid = function(str) {
+	return AjxEmailAddress.parse(str) != null;
 };
 
 AjxEmailAddress._prelimCheck =
