@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -652,6 +652,23 @@ AjxStringUtil.htmlEncodeSpace =
 function(str) {
 	if (!str) { return ""; }
 	return str.replace(/[&]/g, '&amp;').replace(/ /g, '&nbsp;').replace(/[<]/g, '&lt;').replace(/[>]/g, '&gt;');
+};
+
+/**
+ * Encode
+ * @param base {string} Ruby base.
+ * @param text {string} Ruby text (aka furigana).
+ */
+AjxStringUtil.htmlRubyEncode = function(base, text) {
+    if (base && text) {
+        return [
+            "<ruby>",
+                "<rb>",AjxStringUtil.htmlEncode(base),"</rb> ",
+                "<rp>(</rp><rt>",AjxStringUtil.htmlEncode(text),"</rt><rp>)</rp>",
+            "</ruby>"
+        ].join("");
+    }
+    return AjxStringUtil.htmlEncode(base || text || "");
 };
 
 // this function makes sure a leading space is preservered, takes care of tabs,
