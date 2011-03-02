@@ -4199,9 +4199,6 @@ Dwt_Button_XFormItem.prototype.constructWidget = function () {
 				if(textLength > 0){
 					labelContent = labelContent.substring(0, maxNumberOfLetters) + "...";
 				}
-				else{
-					labelContent = "";
-				}
 			}
 			 
 			el =  widget.getHtmlElement();
