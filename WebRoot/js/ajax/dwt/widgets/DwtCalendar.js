@@ -441,8 +441,7 @@ function(workingDaysArray) {
 /**
  * Enables/disables the highlight (i.e. "bolding") on the dates in <code>&lt;dates&gt;</code>.
  *
- * @param {object} dates associative array of {@link Date} objects for
- * which to enable/disable highlighting
+ * @param {array}	dates	an array of {@link Date} objects for which to enable/disable highlighting
  * @param {boolean}	enable 	if <code>true</code>, enable highlighting
  * @param {boolean}	clear 	if <code>true</code>, clear current highlighting
  */
@@ -464,19 +463,16 @@ function(dates, enable, clear) {
 
 	var cellId;
 	for (var i in dates) {
-        // NOTE: Protect from prototype extensions.
-        if (dates.hasOwnProperty(i)) {
-            aDate = dates[i];
-            cellId = this._date2CellId[aDate.getFullYear() * 10000 + aDate.getMonth() * 100 + aDate.getDate()];
+		aDate = dates[i];
+		cellId = this._date2CellId[aDate.getFullYear() * 10000 + aDate.getMonth() * 100 + aDate.getDate()];
 
-            if (cellId) {
-                cell = document.getElementById(cellId);
-                if (cell._isHilited != enable) {
-                    cell._isHilited = enable;
-                    this._setClassName(cell, DwtCalendar._NORMAL);
-                }
-            }
-        }
+		if (cellId) {
+			cell = document.getElementById(cellId);
+			if (cell._isHilited != enable) {
+				cell._isHilited = enable;
+				this._setClassName(cell, DwtCalendar._NORMAL);
+			}
+		}
 	}
 };
 
