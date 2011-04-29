@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -1582,7 +1582,9 @@ function(obj, recurse, showFuncs, omit) {
 			stopRecursion = !recurse;
 			var keys = new Array();
 			for (var i in obj) {
-				keys.push(i);
+                if (obj.hasOwnProperty(i)) {
+                    keys.push(i);
+                }
 			}
 
 			if (isArray) {
@@ -1665,9 +1667,10 @@ AjxStringUtil._cacheSize	= 0;		// current number of cached strings
  *
  * @param {string}	str		string to measure
  * @param {boolean}	bold	if true, string should be measured in bold font
+ * @param {string|number}   font size to measure string in. If unset, use default font size
  */
 AjxStringUtil.getWidth =
-function(str, bold) {
+function(str, bold, fontSize) {
 
 	if (!AjxStringUtil._testSpan) {
 		var span1 = AjxStringUtil._testSpan = document.createElement("SPAN");
@@ -1681,9 +1684,14 @@ function(str, bold) {
 		span2.style.fontWeight = "bold";
 	}
 
+	if (AjxUtil.isString(fontSize)) {
+		fontSize = fontSize.replace(/px$/,"");
+	}
+	var sz = "" + (fontSize || 0); // 0 means "default";
+	
 	var cache = bold ? AjxStringUtil.WIDTH_BOLD : AjxStringUtil.WIDTH;
-	if (cache[str]) {
-		return cache[str];
+	if (cache[str] && cache[str][sz]) {
+		return cache[str][sz];
 	}
 
 	if (AjxStringUtil._cacheSize >= AjxStringUtil.MAX_CACHE) {
@@ -1694,7 +1702,13 @@ function(str, bold) {
 
 	var span = bold ? AjxStringUtil._testSpanBold : AjxStringUtil._testSpan;
 	span.innerHTML = str;
-	var w = cache[str] = Dwt.getSize(span).x;
+	span.style.fontSize = fontSize ? (fontSize+"px") : null;
+
+	if (!cache[str]) {
+		cache[str] = {};
+	}
+
+	var w = cache[str][sz] = Dwt.getSize(span).x;
 	AjxStringUtil._cacheSize++;
 
 	return w;
