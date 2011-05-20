@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -95,6 +95,7 @@ AjxDebug.CALENDAR		= "calendar";	// for troubleshooting calendar errors
 AjxDebug.REPLY			= "reply";		// bug 56308
 AjxDebug.SCROLL			= "scroll"; 	// bug 55775
 AjxDebug.BAD_JSON		= "bad_json"; 	// bug 57066
+AjxDebug.FILTER         = "filter";     // bug 59158
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
 AjxDebug.BUFFER_MAX[AjxDebug.RPC]			= 200;
@@ -104,6 +105,7 @@ AjxDebug.BUFFER_MAX[AjxDebug.CALENDAR]		= 400;
 AjxDebug.BUFFER_MAX[AjxDebug.REPLY]			= 100;
 AjxDebug.BUFFER_MAX[AjxDebug.SCROLL]		= 100;
 AjxDebug.BUFFER_MAX[AjxDebug.BAD_JSON]		= 200;
+AjxDebug.BUFFER_MAX[AjxDebug.FILTER]        = 100;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
 
@@ -533,7 +535,7 @@ function(force) {
 			this._document.close();
 			
 			var ta = new AjxTimedAction(this, AjxDebug.prototype._finishInitWindow);
-			AjxTimedAction.scheduleAction(ta, 2500);
+			AjxTimedAction.scheduleAction(ta, 1500);
 		} else {
 			this._finishInitWindow();
 
