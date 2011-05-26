@@ -229,22 +229,20 @@ function(imageName, styleStr, attrStr, wrapInTable, _disabled) {
 /**
  * Gets the "image" as an HTML string.
  *
- * @param imageName		     the image you want to render
- * @param imageStyleStr      optional style info (for example, "display:inline")
- * @param attrStr		     optional attributes (for example, "id=X748")
- * @param label			     the text that follows this image
- * @param containerClassName class to use instead of the default inlineIcon class
- * @return	{string}	     the image string
+ * @param imageName		the image you want to render
+ * @param styleStr		optional style info (for example, "display:inline")
+ * @param attrStr		optional attributes (for example, "id=X748")
+ * @param label			the text that follows this image
+ * @return	{string}	the image string
  */
 AjxImg.getImageSpanHtml =
-function(imageName, imageStyleStr, attrStr, label, containerClassName) {
-    containerClassName = containerClassName || "inlineIcon";
+function(imageName, styleStr, attrStr, label) {
+	var className = AjxImg.getClassForImage(imageName);
+
 	var html = [
         "<span style='white-space:nowrap'>",
-        "<span class='",
-        containerClassName,
-        "'>",
-        AjxImg.getImageHtml(imageName, imageStyleStr, attrStr),
+        "<span class='inlineIcon'>",
+        AjxImg.getImageHtml(imageName, styleStr, attrStr),
         (label || ""),
         "</span>",
         "</span>"
