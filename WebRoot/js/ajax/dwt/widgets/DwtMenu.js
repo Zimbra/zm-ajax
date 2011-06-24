@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -293,10 +293,8 @@ function(key, id) {
 	var items = this.getItems();
 	for (var i = 0; i < items.length; i++) {
 		var itemId = items[i].getData(key);
-		if (itemId == id) {
-			items[i].index = i; //needed in some caller
+		if (itemId == id)
 			return items[i];
-		}
 	}
 	return null;
 };
