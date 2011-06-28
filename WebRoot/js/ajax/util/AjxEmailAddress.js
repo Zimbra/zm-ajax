@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,8 +36,9 @@ AjxEmailAddress = function(address, type, name, dispName, isGroup) {
 	this.type = type || AjxEmailAddress.TO;
 	this.isGroup = isGroup;
 	this.canExpand = false;
-    this.isAjxEmailAddress = true;
 };
+
+AjxEmailAddress.prototype.isAjxEmailAddress = true;
 
 /**
  * Defines the "from" type.
@@ -324,7 +325,7 @@ function(str) {
 						doAdd = test.match(AjxEmailAddress.boundAddrPat);
 					}
 					if (doAdd) {
-						addrList.push(test);
+						addrList.push(AjxStringUtil.trim(test));
 						delimPos = pos;
 						startPos += test.length + 1;
 					}
@@ -341,7 +342,7 @@ function(str) {
 			}
 		}
 		if (delimPos == sub.length) {
-			addrList.push(sub);
+			addrList.push(AjxStringUtil.trim(sub));
 			startPos += sub.length + 1;
 		}
 	}
