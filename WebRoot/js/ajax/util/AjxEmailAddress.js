@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,9 +36,8 @@ AjxEmailAddress = function(address, type, name, dispName, isGroup) {
 	this.type = type || AjxEmailAddress.TO;
 	this.isGroup = isGroup;
 	this.canExpand = false;
+    this.isAjxEmailAddress = true;
 };
-
-AjxEmailAddress.prototype.isAjxEmailAddress = true;
 
 /**
  * Defines the "from" type.
@@ -59,7 +58,6 @@ AjxEmailAddress.BCC			= "BCC";
 AjxEmailAddress.REPLY_TO	= "REPLY_TO";
 AjxEmailAddress.SENDER		= "SENDER";
 AjxEmailAddress.READ_RECEIPT= "READ_RECEIPT";
-AjxEmailAddress.RESENT_FROM = "RESENT_FROM";
 
 AjxEmailAddress.TYPE_STRING = {};
 AjxEmailAddress.TYPE_STRING[AjxEmailAddress.FROM]			= "from";
@@ -69,17 +67,15 @@ AjxEmailAddress.TYPE_STRING[AjxEmailAddress.BCC]			= "bcc";
 AjxEmailAddress.TYPE_STRING[AjxEmailAddress.REPLY_TO]		= "replyTo";
 AjxEmailAddress.TYPE_STRING[AjxEmailAddress.SENDER]			= "sender";
 AjxEmailAddress.TYPE_STRING[AjxEmailAddress.READ_RECEIPT]	= "readReceipt";
-AjxEmailAddress.TYPE_STRING[AjxEmailAddress.RESENT_FROM]	= "resentFrom";
 
 AjxEmailAddress.fromSoapType = {};
-AjxEmailAddress.fromSoapType["f"]  = AjxEmailAddress.FROM;
-AjxEmailAddress.fromSoapType["t"]  = AjxEmailAddress.TO;
-AjxEmailAddress.fromSoapType["c"]  = AjxEmailAddress.CC;
-AjxEmailAddress.fromSoapType["b"]  = AjxEmailAddress.BCC;
-AjxEmailAddress.fromSoapType["r"]  = AjxEmailAddress.REPLY_TO;
-AjxEmailAddress.fromSoapType["s"]  = AjxEmailAddress.SENDER;
-AjxEmailAddress.fromSoapType["n"]  = AjxEmailAddress.READ_RECEIPT;
-AjxEmailAddress.fromSoapType["rf"] = AjxEmailAddress.RESENT_FROM;
+AjxEmailAddress.fromSoapType["f"] = AjxEmailAddress.FROM;
+AjxEmailAddress.fromSoapType["t"] = AjxEmailAddress.TO;
+AjxEmailAddress.fromSoapType["c"] = AjxEmailAddress.CC;
+AjxEmailAddress.fromSoapType["b"] = AjxEmailAddress.BCC;
+AjxEmailAddress.fromSoapType["r"] = AjxEmailAddress.REPLY_TO;
+AjxEmailAddress.fromSoapType["s"] = AjxEmailAddress.SENDER;
+AjxEmailAddress.fromSoapType["n"] = AjxEmailAddress.READ_RECEIPT;
 
 AjxEmailAddress.toSoapType = {};
 AjxEmailAddress.toSoapType[AjxEmailAddress.FROM]		= "f";
@@ -328,7 +324,7 @@ function(str) {
 						doAdd = test.match(AjxEmailAddress.boundAddrPat);
 					}
 					if (doAdd) {
-						addrList.push(AjxStringUtil.trim(test));
+						addrList.push(test);
 						delimPos = pos;
 						startPos += test.length + 1;
 					}
@@ -345,7 +341,7 @@ function(str) {
 			}
 		}
 		if (delimPos == sub.length) {
-			addrList.push(AjxStringUtil.trim(sub));
+			addrList.push(sub);
 			startPos += sub.length + 1;
 		}
 	}
