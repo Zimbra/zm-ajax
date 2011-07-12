@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -1417,17 +1417,114 @@ AjxStringUtil._CHARS = {
 };
 
 /**
- * Pretty-prints a JS object. Preferred over JSON.stringify for the debug-related dumping
- * of an object for several reasons:
- * 		- doesn't have an enclosing object, which shifts everything over one level
- * 		- doesn't put quotes around keys
- * 		- shows indexes for arrays (downside is that prevents output from being eval-able)
+ * Converts a JS object to a string representation. Adapted from YAHOO.lang.JSON.stringify() in YUI 2.5.0, with the
+ * following differences:
+ * 		- does not support whitelist or depth limit
+ * 		- no special conversion for Date objects
  * 
- * @param obj
- * @param recurse
- * @param showFuncs
- * @param omit
+ * @param o		[object]	object to convert to string
+ * 
+ * @private
  */
+AjxStringUtil.objToString =
+function(o) {
+	var t = typeof o,
+	i,len,j, // array iteration
+	k,v,     // object iteration
+	vt,      // typeof v during iteration
+	a,       // composition array for performance over string concat
+	pstack = []; // Processing stack used for cyclical ref detection
+
+	// escape encode special characters
+	var _char = function (c) {
+		if (!AjxStringUtil._CHARS[c]) {
+			var a = c.charCodeAt();
+			AjxStringUtil._CHARS[c] = '\\u00' + Math.floor(a / 16).toString(16) + (a % 16).toString(16);
+		}
+		return AjxStringUtil._CHARS[c];
+	};
+
+	var _string = function (s) {
+		return '"' + s.replace(AjxStringUtil._SPECIAL_CHARS, _char) + '"';
+	}
+
+	if (o === null) {
+		return 'null';
+	}
+	
+	// String
+	if (t === 'string') {
+		return _string(o);
+	}
+
+	// native boolean and Boolean instance
+	if (t === 'boolean' || o instanceof Boolean) {
+		return String(o);
+	}
+
+	// native number and Number instance
+	if (t === 'number' || o instanceof Number) {
+		return isFinite(o) ? String(o) : 'null';
+	}
+
+	// Array
+	//Special check ( t==='object' && o.length && typeof o.push === "function") becoz when objects are passed from child window to parent window they loose their types.
+	//Parent window considers every object/custome object/array as 'object' type.
+    if (AjxUtil.isArray(o) || (t === 'object' &&  o.length) ) {
+		// Check for cyclical references
+		for (i = pstack.length - 1; i >= 0; --i) {
+			if (pstack[i] === o) {
+				return 'null';
+			}
+		}
+	
+		// Add the array to the processing stack
+		pstack[pstack.length] = o;
+	
+		a = [];
+		for (i = o.length - 1; i >= 0; --i) {
+			a[i] = AjxStringUtil.objToString(o[i]);
+		}
+	
+		// remove the array from the stack
+		pstack.pop();
+	
+		return '[' + a.join(',') + ']';
+	}
+
+	// Object
+	if (t === 'object' && o) {
+		// Check for cyclical references
+		for (i = pstack.length - 1; i >= 0; --i) {
+			if (pstack[i] === o) {
+				return 'null';
+			}
+		}
+
+		// Add the object to the  processing stack
+		pstack[pstack.length] = o;
+
+		a = [];
+		j = 0;
+		for (k in o) {
+			if (typeof k === 'string' && o.hasOwnProperty(k)) {
+				v = o[k];
+				vt = typeof v;
+				if (vt !== 'undefined' && vt !== 'function') {
+					a[j++] = _string(k) + ':' + AjxStringUtil.objToString(v);
+				}
+			}
+		}
+
+		// Remove the object from processing stack
+		pstack.pop();
+
+		return '{' + a.join(',') + '}';
+	}
+
+	return 'null';
+};
+
 AjxStringUtil.prettyPrint =
 function(obj, recurse, showFuncs, omit) {
 
@@ -1485,9 +1582,7 @@ function(obj, recurse, showFuncs, omit) {
 			stopRecursion = !recurse;
 			var keys = new Array();
 			for (var i in obj) {
-                if (obj.hasOwnProperty(i)) {
-                    keys.push(i);
-                }
+				keys.push(i);
 			}
 
 			if (isArray) {
@@ -1570,10 +1665,9 @@ AjxStringUtil._cacheSize	= 0;		// current number of cached strings
  *
  * @param {string}	str		string to measure
  * @param {boolean}	bold	if true, string should be measured in bold font
- * @param {string|number}   font size to measure string in. If unset, use default font size
  */
 AjxStringUtil.getWidth =
-function(str, bold, fontSize) {
+function(str, bold) {
 
 	if (!AjxStringUtil._testSpan) {
 		var span1 = AjxStringUtil._testSpan = document.createElement("SPAN");
@@ -1587,14 +1681,9 @@ function(str, bold, fontSize) {
 		span2.style.fontWeight = "bold";
 	}
 
-	if (AjxUtil.isString(fontSize)) {
-		fontSize = fontSize.replace(/px$/,"");
-	}
-	var sz = "" + (fontSize || 0); // 0 means "default";
-	
 	var cache = bold ? AjxStringUtil.WIDTH_BOLD : AjxStringUtil.WIDTH;
-	if (cache[str] && cache[str][sz]) {
-		return cache[str][sz];
+	if (cache[str]) {
+		return cache[str];
 	}
 
 	if (AjxStringUtil._cacheSize >= AjxStringUtil.MAX_CACHE) {
@@ -1605,13 +1694,7 @@ function(str, bold, fontSize) {
 
 	var span = bold ? AjxStringUtil._testSpanBold : AjxStringUtil._testSpan;
 	span.innerHTML = str;
-	span.style.fontSize = fontSize ? (fontSize+"px") : null;
-
-	if (!cache[str]) {
-		cache[str] = {};
-	}
-
-	var w = cache[str][sz] = Dwt.getSize(span).x;
+	var w = cache[str] = Dwt.getSize(span).x;
 	AjxStringUtil._cacheSize++;
 
 	return w;
