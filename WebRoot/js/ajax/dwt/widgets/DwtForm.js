@@ -909,7 +909,7 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 		    var onblur = AjxCallback.simpleClosure(this._input2model2handler, this, id, blurhandler);
 		    control.setHandler(DwtEvent.ONBLUR, onblur);
         }
-		
+
 		control.setHint(itemDef.hint);
 	}
 

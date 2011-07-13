@@ -116,10 +116,10 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 		}
 		var tempThis = this;
 		this.__httpReq.onreadystatechange = function(ev) {
-				if (window.AjxRpcRequest) {
-					AjxRpcRequest.__handleResponse(tempThis, callback);
-				}
+			if (window.AjxRpcRequest) {
+				AjxRpcRequest.__handleResponse(tempThis, callback);
 			}
+		}
 	} else {
 		// IE appears to run handler even on sync requests, so we need to clear it
 		this.__httpReq.onreadystatechange = function(ev) {};
@@ -127,10 +127,13 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 
 	if (requestHeaders) {
 		for (var i in requestHeaders) {
-			this.__httpReq.setRequestHeader(i, requestHeaders[i]);
+            if (requestHeaders.hasOwnProperty(i)) {
+                this.__httpReq.setRequestHeader(i, requestHeaders[i]);
+            }
 		}
 	}
 
+	DBG.println("req", "RPC send: " + this.id);
 	this.__httpReq.send(requestStr);
 	if (asyncMode) {
 		return this.id;
@@ -150,8 +153,9 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 AjxRpcRequest.prototype.cancel =
 function() {
 	AjxRpc.freeRpcCtxt(this);
-    //bug 55911
-    if (AjxEnv.isFirefox3_5up){
+    if (AjxEnv.isFirefox3_5up) {
+		// bug 55911
+		DBG.println("req", "FF - clearing onreadystatechange for: " + this.id);
         this.__httpReq.onreadystatechange = function(){};
         DBG.println(AjxDebug.DBG1, "AjxRpcRequest.prototype.cancel: clearing onreadystatechange before abort");
     }
