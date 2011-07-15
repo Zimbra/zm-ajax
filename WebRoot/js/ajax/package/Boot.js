@@ -1,4 +1,3 @@
-AjxPackage.require("ajax.boot.AjxJson");
 AjxPackage.require("ajax.boot.AjxEnv");
 AjxPackage.require("ajax.boot.AjxCallback");
 AjxPackage.require("ajax.boot.AjxLoader");
