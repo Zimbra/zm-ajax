@@ -174,7 +174,7 @@ function(imageName, styleStr, attrStr, wrapInTable, _disabled) {
                     // NOTE: Keep in sync with output of ImageMerger.java.
                     "<div class='IEImage' style='display:inline-block;position:relative;overflow:hidden;",size,styleStr,"' ",attrStr,">",
                         "<div class='IEImageMask' style='overflow:hidden;position:relative;",size,"'>",
-                            "<img src='",mask.f,"?v=",window.cacheKillerVersion,"' border=0 style='position:absolute;",location,clip,filter,"'>",
+                            "<img src='",mask.f,"?v=",cacheKillerVersion,"' border=0 style='position:absolute;",location,clip,filter,"'>",
                         "</div>",
                         "<div class='IEImageOverlay ",overlayName,"' style='",size,";position:absolute;top:0;left:0;'></div>",
                     "</div>"
@@ -229,22 +229,20 @@ function(imageName, styleStr, attrStr, wrapInTable, _disabled) {
 /**
  * Gets the "image" as an HTML string.
  *
- * @param imageName		     the image you want to render
- * @param imageStyleStr      optional style info (for example, "display:inline")
- * @param attrStr		     optional attributes (for example, "id=X748")
- * @param label			     the text that follows this image
- * @param containerClassName class to use instead of the default inlineIcon class
- * @return	{string}	     the image string
+ * @param imageName		the image you want to render
+ * @param styleStr		optional style info (for example, "display:inline")
+ * @param attrStr		optional attributes (for example, "id=X748")
+ * @param label			the text that follows this image
+ * @return	{string}	the image string
  */
 AjxImg.getImageSpanHtml =
-function(imageName, imageStyleStr, attrStr, label, containerClassName) {
-    containerClassName = containerClassName || "inlineIcon";
+function(imageName, styleStr, attrStr, label) {
+	var className = AjxImg.getClassForImage(imageName);
+
 	var html = [
         "<span style='white-space:nowrap'>",
-        "<span class='",
-        containerClassName,
-        "'>",
-        AjxImg.getImageHtml(imageName, imageStyleStr, attrStr),
+        "<span class='inlineIcon'>",
+        AjxImg.getImageHtml(imageName, styleStr, attrStr),
         (label || ""),
         "</span>",
         "</span>"
