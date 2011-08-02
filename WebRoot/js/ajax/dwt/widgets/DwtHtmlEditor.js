@@ -859,12 +859,8 @@ function() {
 		this._registerEditorEventHandlers(document.getElementById(this._iFrameId), doc);
 	};
 
-	if (AjxEnv.isIE || AjxEnv.isChrome) {
-		// IE needs a timeout
-		setTimeout(AjxCallback.simpleClosure(cont, this, doc), DwtHtmlEditor._INITDELAY);
-	} else {
-		cont.call(this, doc);
-	}
+    // most browsers need time out here
+	setTimeout(AjxCallback.simpleClosure(cont, this, doc), DwtHtmlEditor._INITDELAY * 4);
 };
 
 DwtHtmlEditor.prototype._focus =
