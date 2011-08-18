@@ -349,6 +349,8 @@ XFormItem.prototype.openSelectionLabel = "";
 // error handling
 XFormItem.prototype.errorLocation = _SELF_;
 
+// show help tooltip icon
+XFormItem.prototype.helpTooltip = false;
 //
 // Methods
 //
@@ -1056,11 +1058,25 @@ XFormItem.prototype.outputLabelCellHTML = function (html,  rowSpan, labelLocatio
 								"<label for='", this.getId(), "'>", label, "</label>"
 				);
 		}else{
-			html.append( "<td id=\"", this.getId(),"___label\"", 
-				this.getLabelCssString(), 
-				(rowSpan > 1 ? " rowspan=" + rowSpan : ""), ">", 
-				label
-			);
+            if(!this.getInheritedProperty("helpTooltip") ||
+               !this.getInheritedProperty("showHelpTooltip") ||
+               !this.getInheritedProperty("hideHelpTooltip") ){
+                html.append( "<td id=\"", this.getId(),"___label\"",
+                    this.getLabelCssString(),
+                    (rowSpan > 1 ? " rowspan=" + rowSpan : ""), ">",
+                    label
+                );
+            }else{
+                html.append( "<td id=\"", this.getId(),"___label\"",
+                    this.getLabelCssString(),
+                    " onclick=\"", "XFormItem.prototype.showHelpTooltip" ,
+			        ".call(" ,   this.getGlobalRef(), ", event );\" ",
+                    " onmouseout=\"", "XFormItem.prototype.hideHelpTooltip" ,
+			        ".call(" ,   this.getGlobalRef(), ", event );\" ",
+                    (rowSpan > 1 ? " rowspan=" + rowSpan : ""), ">",
+                    label
+                );
+            }
 		}
 		if (this.getRequired()) {
 			html.append("<span class='redAsteric'>*</span>");
@@ -1984,7 +2000,6 @@ function (event) {
 	var tooltip = shell.getToolTip();
 	tooltip.popdown();
 }
-
 
 
 
@@ -3450,7 +3465,11 @@ Repeat_XFormItem.prototype.getAddButton = function () {
 		var width = this.getInheritedProperty("addButtonWidth");		
 		if (width)
 			this.addButton.width = width ;
-			
+
+        var cssStyle = this.getInheritedProperty("addButtonCSSStyle");
+		if (cssStyle)
+			this.addButton.cssStyle = cssStyle ;
+
 		if(showAddOnNextRow) {
 			this.addButton.colSpan = "*";
 		}
@@ -4146,6 +4165,7 @@ Dwt_Button_XFormItem.estimateMyWidth = function (label,withIcon,extraMargin) {
 //	type defaults
 Dwt_Button_XFormItem.prototype.labelLocation = DwtLabel.IMAGE_LEFT | DwtLabel.ALIGN_CENTER;
 Dwt_Button_XFormItem.prototype.writeElementDiv = false;
+Dwt_Button_XFormItem.prototype.autoPadding= true;
 //	methods
 
 Dwt_Button_XFormItem.prototype.insertWidget = function (form, widget, element) {
@@ -4206,10 +4226,11 @@ Dwt_Button_XFormItem.prototype.constructWidget = function () {
 			}
 			 
 			el =  widget.getHtmlElement();
-                        var tableEl = el.firstChild;
-                       	if(!tableEl.style.width){
-                        	tableEl.style.width = "100%";
-                        }
+            var tableEl = el.firstChild;
+            var isAutoPadding = this.getInheritedProperty("autoPadding");
+            if(!tableEl.style.width && isAutoPadding){
+                 tableEl.style.width = "100%";
+            }
 
 		}		
 	}catch(ex){
@@ -4526,7 +4547,7 @@ Dwt_List_XFormItem.prototype.constructWidget = function () {
 			widget.setSize(width, height);
 		
 		//set the listDiv height
-		if (height) {
+		if (height && height != Dwt.DEFAULT) {
 			widget.setListDivHeight (height) ;
 		}
 	}		
