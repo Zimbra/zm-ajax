@@ -891,7 +891,7 @@ function(content) {
 	// occur if we go back to using onload, so maybe something got fixed in FF.
 	// iFrame.onload = cont;
 
-    if( AjxEnv.isChrome ){
+    if( this._isPasteEnabled ){
         var pastecont = AjxCallback.simpleClosure(this._registerPasteEvent, this);
         iFrame.onload = pastecont;
     }
