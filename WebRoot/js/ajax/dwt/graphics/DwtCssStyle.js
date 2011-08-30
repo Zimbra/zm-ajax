@@ -111,7 +111,7 @@ function(htmlElement, cssPropName) {
 			return cssDecl.getPropertyValue(cssPropName);
 		}
 	}
-	
+
 	// Convert CSS -> DOM name for IE etc
 	var tokens = cssPropName.split("-");
 	// Shift one word off the array and capitalize the rest
