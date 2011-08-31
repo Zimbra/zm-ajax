@@ -244,10 +244,6 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 				menu.style.height = wh-WINDOW_GUTTER-parseInt(menu.style.top);								
 				this.menuDirection = OSelect1_XFormItem.MENU_DIR_DOWN;
 			}
-
-            if(!AjxEnv.isIE){
-                menu.style.height = parseInt(menu.style.height) - 11;
-            }
 			menu.style.overflow="auto";	
 			menu.getElementsByTagName("table")[0].className = this.getChoiceScrollTableCssClass();
 			menu.getElementsByTagName("table")[0].width="100%";
@@ -255,11 +251,6 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 	} else {
 		menu.getElementsByTagName("table")[0].className = this.getChoiceTableCssClass();
 	}
-
-    if(!AjxEnv.isIE && menu.clientWidth && menu.scrollWidth && (menu.scrollWidth > menu.clientWidth)){
-        menu.style.overflow="auto";
-    }
-
 	menu.style.zIndex = 1000000;
 	if (this.$hideListener == null) {
 		this.$hideListener = new AjxListener(this, this.oMouseUp);
@@ -445,7 +436,7 @@ OSelect1_XFormItem.prototype.getBounds = function(anElement, containerElement) {
 	var myBounds = new Object();
 	myBounds.left = 0;
 	myBounds.top = 0;
-	myBounds.width = anElement.clientWidth ? anElement.clientWidth: anElement.offsetWidth;
+	myBounds.width = anElement.clientWidth;
 	myBounds.height = anElement.offsetHeight;
 
 	if(!containerElement) {
