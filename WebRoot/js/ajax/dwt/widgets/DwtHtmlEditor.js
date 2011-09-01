@@ -1811,7 +1811,7 @@ DwtHtmlEditor.prototype.insertLink = function(params) {
 				node.innerHTML = selectionHtml;
 			}
 			else {
-				node.innerHTML = params.text;
+				node.innerText = params.text;
 			}
             this.selectNodeContents(node);
         } else {
