@@ -229,9 +229,30 @@ function (enabledImg, disImg, hovImg, depImg) {
  * Sets the Drop Down Hover Image
  */
 DwtButton.prototype.setDropDownHovImage =
-function(hovImg) {
+function(hovImg)
+{
     this._dropDownHovImg = hovImg;    
 }
+
+/**
+ * @private
+ */
+DwtButton.prototype._addEventListeners =
+function(listeners, events) {
+	for (var i = 0; i < events.length; i++) {
+		this.addListener(event, listeners[event]);
+	}
+};
+
+/**
+ * @private
+ */
+DwtButton.prototype._removeEventListeners =
+function(listeners, events) {
+	for (var i = 0; i < events.length; i++) {
+		this.removeListener(event, listeners[event]);
+	}
+};
 
 /**
  * @private
@@ -819,8 +840,8 @@ function(ev) {
 	mouseEv.setFromDhtmlEvent(ev);
 
 	if (mouseEv.button == DwtMouseEvent.LEFT) {
-	    if (this._dropDownHovImg && !this.noMenuBar) {
-			AjxImg.setImage(this, this._dropDownHovImg);
+	    if (this._hovImg && !this.noMenuBar) {
+			AjxImg.setImage(this, this._hovImg);
 	    }
 
 		DwtEventManager.notifyListeners(DwtEvent.ONMOUSEDOWN, mouseEv);
