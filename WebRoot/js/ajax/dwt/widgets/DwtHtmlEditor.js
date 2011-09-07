@@ -54,10 +54,6 @@ DwtHtmlEditor.PARAMS = ["parent", "className", "posStyle", "content", "mode", "b
 DwtHtmlEditor.prototype = new DwtComposite();
 DwtHtmlEditor.prototype.constructor = DwtHtmlEditor;
 
-DwtHtmlEditor.prototype.isDwtHtmlEditor = true;
-DwtHtmlEditor.prototype.isInputControl = true;
-DwtHtmlEditor.prototype.toString = function() { return "DwtHtmlEditor"; };
-
 // Modes
 /**
  * Defines the "HTML" mode.
