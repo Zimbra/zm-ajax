@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -1333,7 +1333,6 @@ function(htmlEl,html){
  */
 Dwt.setFavIcon =
 function(iconURL) {
-	return; // Unsupported on IE. Too CPU heavy on FF. Now seems too CPU heavy on Chrome too. Let's disable this.
 
 	// Look for an existing fav icon to modify.
 	var favIcon = null;
@@ -1473,6 +1472,34 @@ function(el1, el2) {
 	var bottom1 = top1 + size1.y, bottom2 = top2 + size2.y;
 
 	return !(left1 > right2 || right1 < left2 || top1 > bottom2 || bottom1 < top2);
+};
+
+/**
+ * Resets the scrollTop of container (if necessary) to ensure that element is visible.
+ * 
+ * @param {Element}		element		the element to be made visible
+ * @param {Element}		container	the containing element to possibly scroll
+ * @private
+ */
+Dwt.scrollIntoView =
+function(element, container) {
+	
+	if (!element || !container) { return; }
+	
+	var elementTop = Dwt.toWindow(element, 0, 0, null, null, DwtPoint.tmp).y;
+	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y + container.scrollTop;
+
+	var diff = elementTop - containerTop;
+	if (diff < 0) {
+		container.scrollTop += diff;
+	} else {
+		var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
+		var elementH = Dwt.getSize(element, DwtPoint.tmp).y;
+		diff = (elementTop + elementH) - (containerTop + containerH);
+		if (diff > 0) {
+			container.scrollTop += diff;
+		}
+	}
 };
 
 /**

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -354,21 +354,21 @@ DwtControl.DEFAULT = Dwt.DEFAULT;
  * 
  * @private
  */
-DwtControl._NO_DRAG = 1;
+DwtControl._NO_DRAG = "NO_DRAG";
 
 /**
  * Defines "drag" in progress.
  *
  * @private
  */
-DwtControl._DRAGGING = 2;
+DwtControl._DRAGGING = "DRAGGING";
 
 /**
  * Defines "drag rejected".
  * 
  * @private
  */
-DwtControl._DRAG_REJECTED = 3;
+DwtControl._DRAG_REJECTED = "DRAG_REJECTED";
 
 /**
  * Defines "drag threshold".
@@ -583,6 +583,7 @@ function() {
 	var ev = new DwtDisposeEvent();
 	ev.dwtObj = this;
 	this.notifyListeners(DwtEvent.DISPOSE, ev);
+    this._eventMgr.clearAllEvents();
 };
 
 /**
@@ -2385,34 +2386,6 @@ function(loc) {
 		y = sizeShell.y - sizeThis.y;
 	}
 	this.setLocation(x, y);
-};
-
-/**
- * Resets the scrollTop of container (if necessary) to ensure that element is visible.
- * 
- * @param {Element}		element		the element to be made visible
- * @param {Element}		container	the containing element to possibly scroll
- * @private
- */
-DwtControl._scrollIntoView =
-function(element, container) {
-	
-	if (!element || !container) { return; }
-	
-	var elementTop = Dwt.toWindow(element, 0, 0, null, null, DwtPoint.tmp).y;
-	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y + container.scrollTop;
-
-	var diff = elementTop - containerTop;
-	if (diff < 0) {
-		container.scrollTop += diff;
-	} else {
-		var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
-		var elementH = Dwt.getSize(element, DwtPoint.tmp).y;
-		diff = (elementTop + elementH) - (containerTop + containerH);
-		if (diff > 0) {
-			container.scrollTop += diff;
-		}
-	}
 };
 
 /**
