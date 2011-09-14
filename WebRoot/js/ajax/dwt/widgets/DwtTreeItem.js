@@ -428,11 +428,6 @@ DwtTreeItem.prototype.handleKeyAction =
 function(actionCode, ev) {
 
 	switch (actionCode) {
-		
-		case DwtKeyMap.ENTER:
-			this._tree.setEnterSelection(this, true);
-			break;
-
 
 		case DwtKeyMap.NEXT: {
 			var ti = this._tree._getNextTreeItem(true);
@@ -730,20 +725,6 @@ function() {
 		this._textCell.className = this._preDragClassName;
 	}
 };
-
-/**
- *   This is for bug 45129.
- *   In the DwControl's focusByMouseDownEvent, it focuses the TreeItem 
- *   And change TreeItem's color. But sometimes when mousedown and mouseup
- *   haven't been matched on the one element. It will cause multiple selection. 
- *   For in the mouseup handle function, we has done focus if we find both mouse 
- *   down and up happened on the same element. So when the mouse is down, we just
- *   do nothing.
- */
-DwtTreeItem.prototype._focusByMouseDownEvent =
-function(ev) {
-	
-}
 
 DwtTreeItem._nodeIconMouseDownHdlr =
 function(ev) {
