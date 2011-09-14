@@ -48,9 +48,6 @@
  * @param {string}      params.inputId			an explicit ID to use for the control's INPUT element
  * 
  * @extends		DwtComposite
- * 
- * TODO: Use HTML5 feature of placeholder text for inputs (not supported by IE):
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#the-placeholder-attribute
  */
 DwtInputField = function(params) {
 
@@ -158,9 +155,10 @@ DwtInputField = function(params) {
 DwtInputField.prototype = new DwtComposite;
 DwtInputField.prototype.constructor = DwtInputField;
 
-DwtInputField.prototype.isDwtInputField = true;
-DwtInputField.prototype.isInputControl = true;
-DwtInputField.prototype.toString = function() { return "DwtInputField"; };
+DwtInputField.prototype.toString =
+function() {
+	return "DwtInputField";
+};
 
 //
 // Constants
