@@ -4549,20 +4549,17 @@ var Dom = YAHOO.util.Dom,
                     buttons: [
                         { group: 'fontstyle', label: 'Font Name and Size',
                             buttons: [
-                                { type: 'select', label: 'Sans Serif', value: 'fontname', disabled: true,
-                                    menu: [
-                                        { text: 'Sans Serif', value: 'arial, helvetica, sans-serif', checked: true },
-                                        { text: 'Serif', value: 'times new roman, new york, times, serif' },
-                                        { text: 'Wide Block', value: 'arial black,avant garde' },
-                                        { text: 'Monospaced', value: 'courier new, courier, monaco, monospace, sans-serif' },
-                                        { text: 'Comic', value: 'comic sans ms, comic sans, sans-serif' },
-                                        { text: 'Console', value: 'lucida console, sans-serif' },
-                                        { text: 'Garamond', value: 'garamond, new york, times, serif' },
-                                        { text: 'Elegant', value: 'georgia, serif' },
-                                        { text: 'Professional', value: 'tahoma, new york, times, serif' },
-                                        { text: 'Terminal', value: 'terminal, monaco' },
-                                        { text: 'Modern', value: 'trebuchet ms, sans-serif' },
-                                        { text: 'Wide', value: 'verdana, helvetica, sans-serif' }
+                                { type: 'select', label: p_oAttributes.defaultFont || 'Arial', value: 'fontname', disabled: true,
+                                    menu: p_oAttributes.fonts || [
+                                        { text: 'Arial', checked: true },
+                                        { text: 'Arial Black' },
+                                        { text: 'Comic Sans MS' },
+                                        { text: 'Courier New' },
+                                        { text: 'Lucida Console' },
+                                        { text: 'Tahoma' },
+                                        { text: 'Times New Roman' },
+                                        { text: 'Trebuchet MS' },
+                                        { text: 'Verdana' }
                                     ]
                                 },
                                 { type: 'spin', label: '13', value: 'fontsize', range: [ 9, 75 ], disabled: true }
@@ -5382,8 +5379,9 @@ var Dom = YAHOO.util.Dom,
             }
 
             if (fn_button) {
-                for (var b = 0; b < fn_button._configs.menu.value.length; b++) {
-                    if (family && fn_button._configs.menu.value[b].text.toLowerCase() == family.toLowerCase()) {
+                var entries = fn_button._configs.menu.value;
+                for (var b = 0; b < entries.length; b++) {
+                    if (family && (entries[b].value && entries[b].value.toLowerCase() == family.toLowerCase()) || (entries[b].text && entries[b].text.toLowerCase() == family.toLowerCase())) {
                         validFont = true;
                         family = fn_button._configs.menu.value[b].text; //Put the proper menu name in the button
                     }
