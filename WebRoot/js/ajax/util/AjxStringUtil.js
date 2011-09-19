@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -1417,17 +1417,114 @@ AjxStringUtil._CHARS = {
 };
 
 /**
- * Pretty-prints a JS object. Preferred over JSON.stringify for the debug-related dumping
- * of an object for several reasons:
- * 		- doesn't have an enclosing object, which shifts everything over one level
- * 		- doesn't put quotes around keys
- * 		- shows indexes for arrays (downside is that prevents output from being eval-able)
+ * Converts a JS object to a string representation. Adapted from YAHOO.lang.JSON.stringify() in YUI 2.5.0, with the
+ * following differences:
+ * 		- does not support whitelist or depth limit
+ * 		- no special conversion for Date objects
  * 
- * @param obj
- * @param recurse
- * @param showFuncs
- * @param omit
+ * @param o		[object]	object to convert to string
+ * 
+ * @private
  */
+AjxStringUtil.objToString =
+function(o) {
+	var t = typeof o,
+	i,len,j, // array iteration
+	k,v,     // object iteration
+	vt,      // typeof v during iteration
+	a,       // composition array for performance over string concat
+	pstack = []; // Processing stack used for cyclical ref detection
+
+	// escape encode special characters
+	var _char = function (c) {
+		if (!AjxStringUtil._CHARS[c]) {
+			var a = c.charCodeAt();
+			AjxStringUtil._CHARS[c] = '\\u00' + Math.floor(a / 16).toString(16) + (a % 16).toString(16);
+		}
+		return AjxStringUtil._CHARS[c];
+	};
+
+	var _string = function (s) {
+		return '"' + s.replace(AjxStringUtil._SPECIAL_CHARS, _char) + '"';
+	}
+
+	if (o === null) {
+		return 'null';
+	}
+	
+	// String
+	if (t === 'string') {
+		return _string(o);
+	}
+
+	// native boolean and Boolean instance
+	if (t === 'boolean' || o instanceof Boolean) {
+		return String(o);
+	}
+
+	// native number and Number instance
+	if (t === 'number' || o instanceof Number) {
+		return isFinite(o) ? String(o) : 'null';
+	}
+
+	// Array
+	//Special check ( t==='object' && o.length && typeof o.push === "function") becoz when objects are passed from child window to parent window they loose their types.
+	//Parent window considers every object/custome object/array as 'object' type.
+    if (AjxUtil.isArray(o) || (t === 'object' &&  o.length) ) {
+		// Check for cyclical references
+		for (i = pstack.length - 1; i >= 0; --i) {
+			if (pstack[i] === o) {
+				return 'null';
+			}
+		}
+	
+		// Add the array to the processing stack
+		pstack[pstack.length] = o;
+	
+		a = [];
+		for (i = o.length - 1; i >= 0; --i) {
+			a[i] = AjxStringUtil.objToString(o[i]);
+		}
+	
+		// remove the array from the stack
+		pstack.pop();
+	
+		return '[' + a.join(',') + ']';
+	}
+
+	// Object
+	if (t === 'object' && o) {
+		// Check for cyclical references
+		for (i = pstack.length - 1; i >= 0; --i) {
+			if (pstack[i] === o) {
+				return 'null';
+			}
+		}
+
+		// Add the object to the  processing stack
+		pstack[pstack.length] = o;
+
+		a = [];
+		j = 0;
+		for (k in o) {
+			if (typeof k === 'string' && o.hasOwnProperty(k)) {
+				v = o[k];
+				vt = typeof v;
+				if (vt !== 'undefined' && vt !== 'function') {
+					a[j++] = _string(k) + ':' + AjxStringUtil.objToString(v);
+				}
+			}
+		}
+
+		// Remove the object from processing stack
+		pstack.pop();
+
+		return '{' + a.join(',') + '}';
+	}
+
+	return 'null';
+};
+
 AjxStringUtil.prettyPrint =
 function(obj, recurse, showFuncs, omit) {
 
@@ -1485,9 +1582,7 @@ function(obj, recurse, showFuncs, omit) {
 			stopRecursion = !recurse;
 			var keys = new Array();
 			for (var i in obj) {
-                if (obj.hasOwnProperty(i)) {
-                    keys.push(i);
-                }
+				keys.push(i);
 			}
 
 			if (isArray) {
@@ -1570,10 +1665,9 @@ AjxStringUtil._cacheSize	= 0;		// current number of cached strings
  *
  * @param {string}	str		string to measure
  * @param {boolean}	bold	if true, string should be measured in bold font
- * @param {string|number}   font size to measure string in. If unset, use default font size
  */
 AjxStringUtil.getWidth =
-function(str, bold, fontSize) {
+function(str, bold) {
 
 	if (!AjxStringUtil._testSpan) {
 		var span1 = AjxStringUtil._testSpan = document.createElement("SPAN");
@@ -1587,14 +1681,9 @@ function(str, bold, fontSize) {
 		span2.style.fontWeight = "bold";
 	}
 
-	if (AjxUtil.isString(fontSize)) {
-		fontSize = fontSize.replace(/px$/,"");
-	}
-	var sz = "" + (fontSize || 0); // 0 means "default";
-	
 	var cache = bold ? AjxStringUtil.WIDTH_BOLD : AjxStringUtil.WIDTH;
-	if (cache[str] && cache[str][sz]) {
-		return cache[str][sz];
+	if (cache[str]) {
+		return cache[str];
 	}
 
 	if (AjxStringUtil._cacheSize >= AjxStringUtil.MAX_CACHE) {
@@ -1605,13 +1694,7 @@ function(str, bold, fontSize) {
 
 	var span = bold ? AjxStringUtil._testSpanBold : AjxStringUtil._testSpan;
 	span.innerHTML = str;
-	span.style.fontSize = fontSize ? (fontSize+"px") : null;
-
-	if (!cache[str]) {
-		cache[str] = {};
-	}
-
-	var w = cache[str][sz] = Dwt.getSize(span).x;
+	var w = cache[str] = Dwt.getSize(span).x;
 	AjxStringUtil._cacheSize++;
 
 	return w;
@@ -1702,248 +1785,4 @@ function(name, value, prependSpace, useDoubleQuotes, jsEscape, htmlEscape) {
     retVal += AjxStringUtil.quoteString(value, useDoubleQuotes);
 
     return retVal;
-};
-
-// regexes for parsing msg body content so we can figure out what was quoted and what's new
-AjxStringUtil.MSG_REGEXES = [
-	{
-		// the two most popular quote characters, < and |
-		type:	"QUOTED",
-		regex:	/^\s*(>|\|)/
-	},
-	{
-		// marker for Original or Forwarded message, used by ZCS and others
-		type:	"ORIG_SEP_STRONG",
-		regex:	new RegExp("^\\s*--+\\s*(" + AjxMsg.origMsg + "|" + AjxMsg.forwardedMessage + ")\\s*--+\\s*$", "i")
-	},
-	{
-		// in case a client doesn't use the exact words above
-		type:	"ORIG_SEP_WEAK",
-		regex:	/^\s*--+\s*[\w\s]+\s*--+$/
-	},
-	{
-		// one of the commonly quoted email headers
-		type:	"HEADER",
-		regex:	new RegExp("^\\s*(" + [AjxMsg.from, AjxMsg.to, AjxMsg.subject, AjxMsg.date, AjxMsg.sent, AjxMsg.cc].join("|") + ")")
-	},
-	{
-		// some clients use a series of underscores as a text-mode separator
-		type:	"LINE",
-		regex:	/^\s*_{5,}\s*$/
-	},
-	{
-		// prefatory summary such as '"John Doe" <jdoe@a.com> wrote:'
-		// recognized by the word "wrote" at the end, and the presence of an email
-		type:	"WROTE_STRONG",
-		regex:	new RegExp("^.*\\w+@\\w+.*" + AjxMsg.wrote + "\\s*$")
-	},
-	{
-		// in case client doesn't use the word "wrote" (maybe "scribbled" or something cute like that)
-		type:	"WROTE_WEAK",
-		regex:	/^.*\w+@\w+.*:\s*$/
-	},
-	{
-		// single line with [snipped] or such
-		type:	"BRACKET",
-		regex:	/^\s*\[\w ]\s*$/
-	}/*,
-	{
-		// internet style signature separator
-		type:	"SIG_SEP",
-		regex:	/^- ?-[^-]\s*$/
-	}*/
-];
-
-AjxStringUtil.MSG_REGEXES_HTML = [
-	{
-		// HTML-encoded <, or a |
-		type:	"QUOTED",
-		regex:	/^\s*(&gt;|\|)/
-	},
-	{
-		// ZCS HTML separator
-		type:	"ORIG_SEP_STRONG",
-		regex:	/^<hr id="zwchr">/
-	},
-	{
-		// Outlook
-		type:	"ORIG_SEP_STRONG",
-		regex:	/^<hr size="2" width="100%" align="center">/
-	},
-	{
-		// generic separator (eg Outlook)
-		type:	"ORIG_SEP_WEAK",
-		regex:	/^<hr/
-	}
-];
-
-// recognize blank lines
-AjxStringUtil.BLANK_RE = /^\s*$/;
-
-// for finding preface split across two lines
-AjxStringUtil.WROTE_RE = new RegExp("\\b" + AjxMsg.wrote + "\\s*$");
-AjxStringUtil.EMAIL_RE = /[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+/;
-
-/**
- * Analyze the text and return what appears to be original (as opposed to quoted) content. We
- * look for separators commonly used by mail clients, as well as prefixes that indicate that
- * a line is being quoted.
- * 
- * This is particularly tricky in HTML, since we have to look at both tags and content, and
- * because HTML content is a tree rather than a set of serial lines. We don't convert HTML to
- * a tree and walk it. It's easier for now to convert to a set of lines and approach it much
- * like we do text. That means we may have some unclosed tags in what we return, but browsers
- * are used to that.
- * 
- * TODO: real HTML parsing
- * TODO: this probably doesn't work in PRE sections
- * 
- * @param {string}	text		message body content
- */
-AjxStringUtil.getOriginalContent =
-function(text, isHtml) {
-
-	if (!text) { return ""; }
-	var results = [];
-	
-	isHtml = isHtml || /<br|<div|<html/i.test(text);
-	
-	var lines = isHtml ? text.replace("<", "\n<", "g").split("\n") :
-						 text.split(AjxStringUtil.SPLIT_RE);
-	
-	var curType;
-	var curBlock = [];
-	for (var i = 0; i < lines.length; i++) {
-		var type = "UNKNOWN";
-		var line = lines[i];
-		
-		if (isHtml && line.toLowerCase().indexOf("<blockquote") == 0) {
-			results.push({type:curType, block:curBlock.join("\n")});
-			curBlock = [];
-			type = curType = "QUOTED";
-			curBlock.push(line);
-			while (line.toLowerCase().indexOf("</blockquote>") == -1 && (i < lines.length - 1)) {
-				line = lines[++i];
-				curBlock.push(line);
-			}
-			continue;
-		}
-		
-		// for HTML, test the line with the tags left in
-		var tagMatch = false;
-		if (isHtml) {
-			for (var j = 0; j < AjxStringUtil.MSG_REGEXES_HTML.length; j++) {
-				var msgTest = AjxStringUtil.MSG_REGEXES_HTML[j];
-				var regex = msgTest.regex;
-				if (regex.test(line.toLowerCase())) {
-					type = msgTest.type;
-					tagMatch = true;
-					break;	// first match wins
-				}
-			}
-		}
-
-		// for HTML, remove the tags so that we test the content
-		var testLine = isHtml ? AjxStringUtil.stripTags(line) : line;
-		if (type == "UNKNOWN") {
-			for (var j = 0; j < AjxStringUtil.MSG_REGEXES.length; j++) {
-				var msgTest = AjxStringUtil.MSG_REGEXES[j];
-				var regex = msgTest.regex;
-				if (regex.test(testLine.toLowerCase())) {
-					type = msgTest.type;
-					break;	// first match wins
-				}
-			}
-		}
-		
-		// WROTE can run across several lines. If we detect "wrote:" at the end of a line, look back
-		// at contiguous non-blank lines for an email address.
-		if (AjxStringUtil.WROTE_RE.test(testLine) && type != "WROTE_STRONG" && type != "WROTE_WEAK") {
-			var testBlock = [], isWrote = false;
-			for (var j = curBlock.length - 1; j >= 0; j--) {
-				var line1 = curBlock[j];
-				var testLine1 = isHtml ? AjxStringUtil.stripTags(line1) : line1;
-				if (AjxStringUtil.BLANK_RE.test(testLine1)) {
-					break;
-				}
-				curBlock.pop();
-				testBlock.unshift(line1);
-			}
-			for (var j = 0; j < testBlock.length; j++) {
-				var line1 = testBlock[j];
-				var testLine1 = isHtml ? AjxStringUtil.stripTags(line1) : line1;
-				if (AjxStringUtil.EMAIL_RE.test(testLine1)) {
-					isWrote = true;
-				}
-			}
-			if (isWrote) {
-				type = "WROTE_STRONG";
-				line = [testBlock.join("\n"), line].join("\n");
-			}
-		}
-		
-		// blank lines are just added to the current block
-		if (!tagMatch && AjxStringUtil.BLANK_RE.test(testLine)) {
-			curBlock.push(line);
-			continue;
-		}
-		
-		// see if we're switching to a new type; if so, package up what we have so far
-		if (curType) {
-			if (curType != type) {
-				var lastResult = results[results.length - 1];
-				// for HTML, consider UNKNOWN following HEADER to be part of HEADER (since the header
-				// and its value are typically surrounded by different sets of tags)
-				if (isHtml && (lastResult && lastResult.type == "HEADER") && curType == "UNKNOWN") {
-					lastResult.block = [lastResult.block, curBlock.join("\n")].join("\n");
-				}
-				else {
-					results.push({type:curType, block:curBlock.join("\n")});
-				}
-				curBlock = [];
-				curType = type;
-			}
-		}
-		else {
-			curType = type;
-		}
-		curBlock.push(line);
-	}
-	if (curBlock.length) {
-		var lastResult = results[results.length - 1];
-		if (isHtml && (lastResult && lastResult.type == "HEADER") && curType == "UNKNOWN") {
-			lastResult.block = [lastResult.block, curBlock.join("\n")].join("\n");
-		}
-		else {
-			results.push({type:curType, block:curBlock.join("\n")});
-		}
-	}
-	
-	var count = {};
-	var firstUnknown;
-	for (var i = 0; i < results.length; i++) {
-		var result = results[i];
-		var type = result.type;
-		count[type] = (count[type] != null) ? count[type] + 1 : 1;
-		if (!firstUnknown && type == "UNKNOWN") {
-			firstUnknown = result.block;
-		}
-	}
-	
-	// Done parsing. See if we have a sequence of blocks that identifies original vs quoted content.
-	var original;
-	var numBlocks = results.length;
-	if ((numBlocks == 2 && count["UNKNOWN"] == 1 && count["QUOTED"] == 1) ||
-		(numBlocks >= 2 && results[0].type == "UNKNOWN" && results[1].type == "ORIG_SEP_STRONG") ||
-		(numBlocks >= 3 && results[0].type == "UNKNOWN" && results[1].type == "ORIG_SEP_WEAK" && results[2].type == "HEADER") ||
-		(numBlocks >= 3 && results[0].type == "UNKNOWN" && results[1].type == "LINE" && results[2].type == "HEADER") ||
-		(numBlocks >= 3 && results[0].type == "UNKNOWN" && results[1].type == "WROTE_WEAK" && results[2].type == "QUOTED") ||
-		(numBlocks >= 2 && results[0].type == "UNKNOWN" && results[1].type == "WROTE_STRONG") ||
-		(numBlocks >= 2 && results[0].type == "WROTE_STRONG" && count["UNKNOWN"] == 1)) {
-
-		original = firstUnknown;
-	}
-
-	return original || text;
-};
-
+}

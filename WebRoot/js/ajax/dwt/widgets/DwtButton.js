@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -229,9 +229,30 @@ function (enabledImg, disImg, hovImg, depImg) {
  * Sets the Drop Down Hover Image
  */
 DwtButton.prototype.setDropDownHovImage =
-function(hovImg) {
+function(hovImg)
+{
     this._dropDownHovImg = hovImg;    
 }
+
+/**
+ * @private
+ */
+DwtButton.prototype._addEventListeners =
+function(listeners, events) {
+	for (var i = 0; i < events.length; i++) {
+		this.addListener(event, listeners[event]);
+	}
+};
+
+/**
+ * @private
+ */
+DwtButton.prototype._removeEventListeners =
+function(listeners, events) {
+	for (var i = 0; i < events.length; i++) {
+		this.removeListener(event, listeners[event]);
+	}
+};
 
 /**
  * @private
@@ -819,8 +840,8 @@ function(ev) {
 	mouseEv.setFromDhtmlEvent(ev);
 
 	if (mouseEv.button == DwtMouseEvent.LEFT) {
-	    if (this._dropDownHovImg && !this.noMenuBar) {
-			AjxImg.setImage(this, this._dropDownHovImg);
+	    if (this._hovImg && !this.noMenuBar) {
+			AjxImg.setImage(this, this._hovImg);
 	    }
 
 		DwtEventManager.notifyListeners(DwtEvent.ONMOUSEDOWN, mouseEv);
