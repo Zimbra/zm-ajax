@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -48,9 +48,6 @@
  * @param {string}      params.inputId			an explicit ID to use for the control's INPUT element
  * 
  * @extends		DwtComposite
- * 
- * TODO: Use HTML5 feature of placeholder text for inputs (not supported by IE):
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#the-placeholder-attribute
  */
 DwtInputField = function(params) {
 
@@ -158,9 +155,10 @@ DwtInputField = function(params) {
 DwtInputField.prototype = new DwtComposite;
 DwtInputField.prototype.constructor = DwtInputField;
 
-DwtInputField.prototype.isDwtInputField = true;
-DwtInputField.prototype.isInputControl = true;
-DwtInputField.prototype.toString = function() { return "DwtInputField"; };
+DwtInputField.prototype.toString =
+function() {
+	return "DwtInputField";
+};
 
 //
 // Constants
@@ -721,7 +719,6 @@ function(ev) {
 			obj._showHint();
 		}
 	}
-	obj.notifyListeners(DwtEvent.ONBLUR, ev)
 };
 
 DwtInputField._focusHdlr =
@@ -733,7 +730,6 @@ function(ev) {
 			obj._hideHint('');
 		}
 	}
-	obj.notifyListeners(DwtEvent.ONFOCUS, ev)
 };
 
 DwtInputField._keyDownHdlr =

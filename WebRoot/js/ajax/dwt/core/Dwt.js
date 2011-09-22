@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -753,7 +753,7 @@ Dwt.__MSIE_OPACITY_RE = /alpha\(opacity=(\d+)\)/;
 Dwt.getOpacity =
 function(htmlElement) {
 	if (AjxEnv.isIE) {
-		var filter = Dwt.getIEFilter(htmlElement, "alpha");
+		var filter = htmlElement.style.filter;
 		var m = Dwt.__MSIE_OPACITY_RE.exec(filter) || [ filter, "100" ];
 		return Number(m[1]);
 	}
@@ -763,7 +763,7 @@ function(htmlElement) {
 Dwt.setOpacity =
 function(htmlElement, opacity) {
 	if (AjxEnv.isIE) {
-        Dwt.alterIEFilter(htmlElement, "alpha", "alpha(opacity="+opacity+")");
+		htmlElement.style.filter = "alpha(opacity="+opacity+")";
 	} else {
 		htmlElement.style.opacity = opacity/100;
 	}
@@ -1333,6 +1333,7 @@ function(htmlEl,html){
  */
 Dwt.setFavIcon =
 function(iconURL) {
+	return; // Unsupported on IE. Too CPU heavy on FF. Now seems too CPU heavy on Chrome too. Let's disable this.
 
 	// Look for an existing fav icon to modify.
 	var favIcon = null;
@@ -1475,34 +1476,6 @@ function(el1, el2) {
 };
 
 /**
- * Resets the scrollTop of container (if necessary) to ensure that element is visible.
- * 
- * @param {Element}		element		the element to be made visible
- * @param {Element}		container	the containing element to possibly scroll
- * @private
- */
-Dwt.scrollIntoView =
-function(element, container) {
-	
-	if (!element || !container) { return; }
-	
-	var elementTop = Dwt.toWindow(element, 0, 0, null, null, DwtPoint.tmp).y;
-	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y + container.scrollTop;
-
-	var diff = elementTop - containerTop;
-	if (diff < 0) {
-		container.scrollTop += diff;
-	} else {
-		var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
-		var elementH = Dwt.getSize(element, DwtPoint.tmp).y;
-		diff = (elementTop + elementH) - (containerTop + containerH);
-		if (diff > 0) {
-			container.scrollTop += diff;
-		}
-	}
-};
-
-/**
  * Sets up a hidden div for performance metrics.  Use to set the start of object rendering
  * @param id {String}
  * @param date {Date}
@@ -1549,128 +1522,3 @@ function(id, date) {
 	}
 	div.innerHTML = date.getTime();
 };
-
-
-// Css for Templates
-Dwt.createLinearGradientCss =
-function(startColor, endColor, direction) {
-    var gradientCss = null;
-    var gradient = this.createLinearGradientInfo(startColor, endColor, direction);
-    if (gradient.field) {
-        gradientCss = gradient.field + ":" + gradient.css + ";";
-    }
-    return gradientCss;
-}
-
-/**
- * -- FF 3.6+
- *    background: -moz-linear-gradient(black, white);
- * -- Safari 4+, Chrome 2+
- *    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #000000), color-stop(100%, #ffffff));
- * -- Safari 5.1+, Chrome 10+
- *    background: -webkit-linear-gradient(top, black, white);
- * -- Opera 11.10
- *    background: -o-linear-gradient(black, white);
- * -- IE6 & IE7
- *    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#000000', endColorstr='#ffffff');
- * -- IE8 & IE9
- *    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#000000', endColorstr='#ffffff')";
- * -- IE10
- *    background: -ms-linear-gradient(black, white);
- * -- the standard
- *    background: linear-gradient(black, white);
- */
-Dwt.createLinearGradientInfo =
-function(startColor, endColor, direction) {
-
-    var cssDirection;
-    var gradient = {};
-    if (AjxEnv.isIE) {
-        cssDirection = (direction == 'v') ? 0 : 1;
-        gradient.field = "filter";
-        gradient.name  = "DXImageTransform.Microsoft.Gradient";
-        gradient.css   = "progid:" + gradient.name + "(" +
-                         "GradientType=" + cssDirection + ",startColorstr='" + startColor +
-                         "',endColorstr='" + endColor + "')";
-    } else if (AjxEnv.isFirefox3_6up) {
-        cssDirection = (direction == 'v') ? 'top' : 'left';
-        gradient.field = "background";
-        gradient.css   = "-moz-linear-gradient(" + cssDirection + "," + startColor + ", "  + endColor + ")";
-    } else if ((AjxEnv.isSafari && AjxEnv.isSafari5_1up) || AjxEnv.isChrome10up) {
-        cssDirection = (direction == 'v') ? 'top' : 'left';
-        gradient.field = "background";
-        gradient.css   = "-webkit-linear-gradient(" + cssDirection + ","+
-                          startColor + ", " + endColor + ")";
-    } else if ((AjxEnv.isSafari && AjxEnv.isSafari4up) || AjxEnv.isChrome2up) {
-        var startPt = 'left top';
-        var endPt   = (direction == 'v') ? "left bottom" : "right top";
-        gradient.field = "background";
-        gradient.css   = "-webkit-gradient(linear, " + startPt + ", " + endPt +
-                         ", color-stop(0%, " + startColor + "), color-stop(100%, " + endColor + "))";
-    }
-    return gradient;
-}
-
-Dwt.setLinearGradient =
-function(htmlElement, startColor, endColor, direction) {
-    var gradient = Dwt.createLinearGradientInfo(startColor, endColor, direction);
-    if (AjxEnv.isIE) {
-        Dwt.alterIEFilter(htmlElement, gradient.name, gradient.css);
-    } else {
-        htmlElement.style[gradient.field] = gradient.css;
-    }
-}
-
-Dwt.alterIEFilter =
-function(htmlElement, filterName, newFilter) {
-    if (htmlElement.style.filter) {
-        var found = false;
-        var filters = htmlElement.style.filter.split(" ");
-        for (var i = 0; i < filters.length; i++) {
-            if (filters[i].indexOf(filterName) != -1) {
-                filters[i] = newFilter;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            filters[filters.length] = newFilter;
-        }
-        htmlElement.style.filter = filters.join(" ");
-    } else {
-       htmlElement.style.filter = newFilter;
-    }
-}
-
-Dwt.getIEFilter =
-function(htmlElement, filterName) {
-    var filter = "";
-    if (htmlElement.style.filter) {
-        var filters = htmlElement.style.filter.split(" ");
-        for (var i = 0; i < filters.length; i++) {
-            if (filters[i].indexOf(filterName) != -1) {
-                filter = filters[i];
-                break;
-            }
-        }
-    }
-    return filter
-}
-
-// Used for an unattached DOM subtree.
-Dwt.getDescendant =
-function(htmlElement, id) {
-    var descendant = null;
-    for (var i = 0; i < htmlElement.childNodes.length; i++) {
-        var child = htmlElement.childNodes[i];
-        if (child.id == id) {
-            descendant = child;
-        } else {
-            descendant = Dwt.getDescendant(child, id);
-        }
-        if (descendant != null) {
-            break;
-        }
-    }
-    return descendant
-}
