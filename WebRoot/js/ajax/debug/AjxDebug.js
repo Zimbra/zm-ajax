@@ -98,6 +98,7 @@ AjxDebug.BAD_JSON		= "bad_json"; 	// bug 57066
 AjxDebug.FILTER         = "filter";     // bug 59158
 AjxDebug.REMINDER       = "reminder";   // bug 60692
 AjxDebug.TAG_ICON       = "tagIcon";    // bug 62155
+AjxDebug.DATA_URI       = "dataUri";    // bug 64693
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
 AjxDebug.BUFFER_MAX[AjxDebug.RPC]			= 200;
@@ -110,6 +111,7 @@ AjxDebug.BUFFER_MAX[AjxDebug.BAD_JSON]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.FILTER]        = 100;
 AjxDebug.BUFFER_MAX[AjxDebug.REMINDER]      = 200;
 AjxDebug.BUFFER_MAX[AjxDebug.TAG_ICON]      = 200;
+AjxDebug.BUFFER_MAX[AjxDebug.DATA_URI]      = 200;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
 
