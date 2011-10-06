@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -124,15 +124,10 @@ AjxEnv.isSafari4;
 AjxEnv.isSafari4up;
 /** Safari version 5 (or higher). */
 AjxEnv.isSafari5up;
-/** Safari version 5.1 (or higher). */
-AjxEnv.isSafari5_1up;
 /** Camino. */
 AjxEnv.isCamino;
 /** Chrome. */
 AjxEnv.isChrome;
-AjxEnv.isChrome2up;
-AjxEnv.isChrome7;
-AjxEnv.isChrome10up;
 /** Gecko-based. */
 AjxEnv.isGeckoBased;
 /** WebKit-based. */
@@ -205,13 +200,9 @@ function() {
     AjxEnv.isSafari4 = false;
 	AjxEnv.isSafari3up = false;
 	AjxEnv.isSafari4up = false;
-    AjxEnv.isSafari5up = false;
-    AjxEnv.isSafari5_1up = false;
+	AjxEnv.isSafari5up = false;
 	AjxEnv.isCamino = false;
 	AjxEnv.isChrome = false;
-    AjxEnv.isChrome2up = false;
-    AjxEnv.isChrome7 = false;
-    AjxEnv.isChrome10up = false;
 	AjxEnv.isGeckoBased = false;
 	AjxEnv.isWebKitBased = false;
 	AjxEnv.isOpera = false;
@@ -350,12 +341,9 @@ function() {
         AjxEnv.isSafari4        = (AjxEnv.isSafari && browserVersion >= 4.0);
 		AjxEnv.isSafari3up		= (AjxEnv.isSafari && browserVersion >= 3.0) || AjxEnv.isChrome;
 		AjxEnv.isSafari4up		= (AjxEnv.isSafari && browserVersion >= 4.0) || AjxEnv.isChrome;
-        AjxEnv.isSafari5up	    = (AjxEnv.isSafari && browserVersion >= 5.0) || AjxEnv.isChrome;
-        AjxEnv.isSafari5_1up	= (AjxEnv.isSafari && browserVersion >= 5.1) || AjxEnv.isChrome;
+		AjxEnv.isSafari5up		= (AjxEnv.isSafari && browserVersion >= 5.0) || AjxEnv.isChrome;
 		AjxEnv.isDesktop2up		= (AjxEnv.isDesktop && browserVersion >= 2.0);
-        AjxEnv.isChrome2up		= (AjxEnv.isChrome && browserVersion >= 2.0);
-        AjxEnv.isChrome7		= (AjxEnv.isChrome && browserVersion >= 7.0);
-        AjxEnv.isChrome10up		= (AjxEnv.isChrome && browserVersion >= 10.0);
+		AjxEnv.isChrome7		= (AjxEnv.isChrome && browserVersion >= 7.0);
 
 		AjxEnv.browser = "[unknown]";
 		if (AjxEnv.isOpera) 				{	AjxEnv.browser = "OPERA";	}
@@ -436,58 +424,3 @@ function() {
 
 
 AjxEnv.parseUA();
-
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
-/*
-if ( !Function.prototype.bind ) {
-  Function.prototype.bind = function( obj ) {
-    var slice = [].slice,
-        args = slice.call(arguments, 1),
-        self = this,
-        nop = function () {},
-        bound = function () {
-          return self.apply( this instanceof nop ? this : ( obj || {} ),
-                              args.concat( slice.call(arguments) ) );   
-        };
-    nop.prototype = self.prototype;
-    bound.prototype = new nop();
-    return bound;
-  };
-}
-*/
-
-// An alternative, simpler implementation. Not sure whether it does everything that the above version does,
-// but it should work fine as a basic closure-style callback.
-if (!Function.prototype.bind) {
-	Function.prototype.bind = function(thisObj) {
-		var that = this;
-		var args;
-                
-		if (arguments.length > 1) {
-			// optimization: create the extra array object only if needed. 
-			args = Array.prototype.slice.call(arguments, 1);
-		}
-                
-		return function () {
-			var allArgs = args;
-
-			// optimization: concat array only if needed
-			if (arguments.length > 0) {
-				allArgs = (args && args.length) ? args.concat(Array.prototype.slice.call(arguments)) : arguments;
-			}
-
-			// for some reason, IE does not like the undefined allArgs hence the below condition.
-			return allArgs ? that.apply(thisObj, allArgs) : that.apply(thisObj);
-		};
-	};
-}
-
-/**
- * This should be a temporary hack as we transition from AjxCallback to bind(). Rather
- * than change hundreds of call sites with 'callback.run()' to see if the callback is
- * an AjxCallback or a closure, add a run() method to Function which just invokes the
- * closure.
- */
-Function.prototype.run = function() {
-	return this.apply(this, arguments);
-};

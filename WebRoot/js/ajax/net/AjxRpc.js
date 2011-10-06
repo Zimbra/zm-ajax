@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -91,11 +91,11 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 			newEx.detail = ex.message;
 			newEx.code = AjxException.NETWORK_ERROR;
 			newEx.msg = "Network error";
-		} else if (ex.code == 101){
+		} else if (ex instanceof XMLHttpRequestException && ex.code == 101){
 			// Chrome 
 			newEx.detail = ex.message;
-			newEx.code = AjxException.NETWORK_ERROR;
-			newEx.msg = "Network error";
+            newEx.code = AjxException.NETWORK_ERROR;
+            newEx.msg = "Network error";
 		} else {
 			newEx.detail = ex.toString();
 			newEx.code = AjxException.UNKNOWN_ERROR;
@@ -120,19 +120,10 @@ AjxRpc.freeRpcCtxt =
 function(rpcCtxt) {
 	// we're done using this rpcCtxt. Add it back to the pool
 	if (AjxRpc.__rpcOutstanding[rpcCtxt.id]) {
-		DBG.println("req", "--- freeing rpcCtxt " + rpcCtxt.id);
+		DBG.println(AjxDebug.DBG2, "--- freeing rpcCtxt " + rpcCtxt.id);
 		AjxRpc.__rpcCache.push(rpcCtxt);
 		delete AjxRpc.__rpcOutstanding[rpcCtxt.id];
 	}
-};
-
-AjxRpc.removeRpcCtxt =
-function(rpcCtxt) {
-	DBG.println("req", "REMOVE rpcCtxt " + rpcCtxt.id);
-	if (AjxRpc.__rpcOutstanding[rpcCtxt.id]) {
-		delete AjxRpc.__rpcOutstanding[rpcCtxt.id];
-	}
-	AjxUtil.arrayRemove(AjxRpc.__rpcCache, rpcCtxt);
 };
 
 /**
@@ -162,7 +153,7 @@ function() {
 
 	if (AjxRpc.__rpcCache.length > 0) {
 		rpcCtxt = AjxRpc.__rpcCache.pop();
-		DBG.println("req", "reusing RPC ID " + rpcCtxt.id);
+		DBG.println(AjxDebug.DBG2, "reusing RPC ID " + rpcCtxt.id);
 		AjxDebug.println(AjxDebug.RPC, "reusing RPC ID " + rpcCtxt.id);
 	} else {
 		if (AjxRpc.__RPC_COUNT < AjxRpc.__RPC_CACHE_MAX) {
@@ -170,7 +161,7 @@ function() {
 			var id = "__RpcCtxt_" + AjxRpc.__RPC_COUNT;
 			rpcCtxt = new AjxRpcRequest(id);
 			AjxRpc.__RPC_COUNT++;
-			DBG.println("req", "Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
+			DBG.println(AjxDebug.DBG1, "Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
 			AjxDebug.println(AjxDebug.RPC, "Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
 		} else {
 			// yikes, we're out of rpc's! Look for an old one to kill.

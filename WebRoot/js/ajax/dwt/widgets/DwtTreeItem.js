@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -428,11 +428,6 @@ DwtTreeItem.prototype.handleKeyAction =
 function(actionCode, ev) {
 
 	switch (actionCode) {
-		
-		case DwtKeyMap.ENTER:
-			this._tree.setEnterSelection(this, true);
-			break;
-
 
 		case DwtKeyMap.NEXT: {
 			var ti = this._tree._getNextTreeItem(true);
@@ -730,20 +725,6 @@ function() {
 		this._textCell.className = this._preDragClassName;
 	}
 };
-
-/**
- *   This is for bug 45129.
- *   In the DwControl's focusByMouseDownEvent, it focuses the TreeItem 
- *   And change TreeItem's color. But sometimes when mousedown and mouseup
- *   haven't been matched on the one element. It will cause multiple selection. 
- *   For in the mouseup handle function, we has done focus if we find both mouse 
- *   down and up happened on the same element. So when the mouse is down, we just
- *   do nothing.
- */
-DwtTreeItem.prototype._focusByMouseDownEvent =
-function(ev) {
-	
-}
 
 DwtTreeItem._nodeIconMouseDownHdlr =
 function(ev) {

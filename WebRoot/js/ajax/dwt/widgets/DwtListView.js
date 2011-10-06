@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,29 +43,15 @@ DwtListView = function(params) {
 	if (params.headerList) {
 		var htmlElement = this.getHtmlElement();
 
-        var html = new Array(50);
-        var idx = 0;
-        var headId = Dwt.getNextId();
-        var colId = Dwt.getNextId();
-        html[idx++] = "<table width='100%' cellspacing='0' cellpadding='0'><tr><td ";
-        html[idx++] = "id=" + headId;
-        html[idx++] = "></td></tr><tr><td ";
-        html[idx++] = "id=" + colId;
-        html[idx++] = "></td></tr></table>";
-        htmlElement.innerHTML = html.join("");
+		this._listColDiv = document.createElement("div");
+		this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
+		this._listColDiv.className = "DwtListView-ColHeader";
+		htmlElement.appendChild(this._listColDiv);
 
-        var headHtml = document.getElementById(headId);
-        this._listColDiv = document.createElement("div");
-        this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
-        this._listColDiv.className = "DwtListView-ColHeader";
-        headHtml.appendChild(this._listColDiv);
-
-        var colHtml = document.getElementById(colId);
-        this._listDiv = document.createElement("div");
-        this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
-        this._listDiv.className = "DwtListView-Rows";
-        colHtml.appendChild(this._listDiv);
-
+		this._listDiv = document.createElement("div");
+		this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
+		this._listDiv.className = "DwtListView-Rows";
+		htmlElement.appendChild(this._listDiv);
 
 		// setup vars needed for sorting
 		this._bSortAsc = false;
@@ -1926,7 +1912,7 @@ function(element, next) {
  */
 DwtListView.prototype._scrollList =
 function(itemDiv) {
-	Dwt.scrollIntoView(itemDiv, itemDiv.parentNode);
+	DwtControl._scrollIntoView(itemDiv, itemDiv.parentNode);
 };
 
 DwtListView.prototype._setRowHeight =
