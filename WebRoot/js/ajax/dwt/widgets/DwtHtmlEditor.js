@@ -1683,7 +1683,8 @@ DwtHtmlEditor.prototype.insertLink = function(params) {
             var node = this._getIframeDoc().createElement("a");
             node.href = url;
             if (params.text)
-                node.innerHTML = params.text;
+                node.innerText = params.text;
+			
             this._insertNodeAtSelection(node, false);
             this.selectNodeContents(node);
         } else {
