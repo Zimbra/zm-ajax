@@ -823,10 +823,23 @@ function(content) {
 	var cont = AjxCallback.simpleClosure(this._finishHtmlModeInit, this);
 	setTimeout(cont, DwtHtmlEditor._INITDELAY);
 
+    if( this._isPasteEnabled ){
+        var pastecont = AjxCallback.simpleClosure(this._registerPasteEvent, this);
+        iFrame.onload = pastecont;
+    }
+
 	iFrame.src = this._blankIframeSrc || "";
 	htmlEl.appendChild(iFrame);
 
 	return iFrame;
+};
+
+DwtHtmlEditor.prototype._registerPasteEvent = function(){
+    var editor = this,
+        doc = editor._getIframeDoc();
+    //Always unregister event handler as safari and chrome fires multiple times if registered multiple
+    editor._unregisterEditorEventHandler(doc,"paste");
+    editor._registerEditorEventHandler(doc,"paste");
 };
 
 DwtHtmlEditor.prototype._finishHtmlModeInit =
