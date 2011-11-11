@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -592,8 +592,8 @@ DwtSelect.prototype._createMenu =
 function() {
     var menu = new DwtSelectMenu(this);
     for (var i = 0, len = this._options.size(); i < len; ++i) {
-	var option = this._options.get(i);
-	var mi = new DwtSelectMenuItem(menu, Dwt.getNextId(option._value + "_"));
+		var mi = new DwtSelectMenuItem(menu);
+		var option = this._options.get(i);
         var image = option.getImage();
         if (image) {
             mi.setImage(image);
@@ -873,8 +873,7 @@ function() {
  * @extends		DwtMenu
  */
 DwtSelectMenu = function(parent) {
-    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout, maxRows:parent._maxRows, id:Dwt.getNextId(parent.getHTMLElId() + "_Menu_")});
-// Dwt.getNextId should be removed once Bug 66510 is fixed
+    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout, maxRows:parent._maxRows});
 };
 DwtSelectMenu.prototype = new DwtMenu;
 DwtSelectMenu.prototype.constructor = DwtSelectMenu;
@@ -896,8 +895,8 @@ function() {
  * 
  * @extends 	DwtMenuItem
  */
-DwtSelectMenuItem = function(parent, id) {
-    DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem", id: id});
+DwtSelectMenuItem = function(parent) {
+    DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem"});
 };
 DwtSelectMenuItem.prototype = new DwtMenuItem;
 DwtSelectMenuItem.prototype.constructor = DwtSelectMenuItem;

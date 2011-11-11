@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -380,7 +380,6 @@ AjxDateFormat = function(pattern) {
 			case AjxDateFormat.MEDIUM: pattern = I18nMsg.formatDateMedium; break;
 			case AjxDateFormat.LONG: pattern = I18nMsg.formatDateLong; break;
 			case AjxDateFormat.FULL: pattern = I18nMsg.formatDateFull; break;
-            case AjxDateFormat.NUMBER: pattern = I18nMsg.formatDateNumber; break;
 		}
 	}	
 	for (var i = 0; i < pattern.length; i++) {
@@ -486,8 +485,6 @@ AjxDateFormat.DEFAULT = AjxDateFormat.MEDIUM;
 
 AjxDateFormat._META_CHARS = "GyMwWDdFEaHkKhmsSzZ";
 
-/** Number date . */
-AjxDateFormat.NUMBER = 4;
 // Static methods
 
 /**
@@ -583,7 +580,7 @@ AjxDateFormat.initialize = function() {
 	// format
 	AjxDateFormat._dateFormats = [
 		I18nMsg.formatDateShort, I18nMsg.formatDateMedium,
-		I18nMsg.formatDateLong, I18nMsg.formatDateFull,I18nMsg.formatDateNumber
+		I18nMsg.formatDateLong, I18nMsg.formatDateFull
 	];
 	AjxDateFormat._timeFormats = [
 		I18nMsg.formatTimeShort, I18nMsg.formatTimeMedium,
@@ -1985,16 +1982,13 @@ AjxChoiceFormat.prototype.format = function(number, index) {
  *                                  the last item in the list (e.g. " and ").
  *                                  If not specified, <code>AjxMsg.separatorListLast</code>
  *                                  is used.
- * @param {string}    twoSeparator	Optional. Separator used if the list consists of 
- * 									exactly two items. If not specified, <code>AjxMsg.listSeparatorTwo</code>
- * 									is used.	
  */
-AjxListFormat = function(formatter, separator, lastSeparator, twoSeparator) {
+AjxListFormat = function(formatter, separator, lastSeparator) {
+    if (arguments.length == 0) { return; }
 	AjxFormat.call(this, formatter ? formatter.toPattern() : "");
 	this._formatter = formatter;
 	this._separator = separator || AjxMsg.listSeparator;
 	this._lastSeparator = lastSeparator || AjxMsg.listSeparatorLast;
-	this._twoSeparator = twoSeparator || AjxMsg.listSeparatorTwo;
 }
 AjxListFormat.prototype = new AjxFormat;
 AjxListFormat.prototype.constructor = AjxListFormat;
@@ -2018,8 +2012,7 @@ AjxListFormat.prototype.format = function(array) {
 	var list = [];
 	for (var i = 0; i < array.length; i++) {
 		if (i > 0) {
-			list.push((i < array.length - 1) ? this._separator : (list.length == 2) ?
-					this._twoSeparator : this._lastSeparator);
+			list.push(i < array.length - 1 ? this._separator : this._lastSeparator);
 		}
 		var item = array[i];
 		list.push(this._formatter ? this._formatter.format(item) : String(item));

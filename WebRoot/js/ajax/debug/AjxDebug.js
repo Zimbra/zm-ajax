@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -95,8 +95,7 @@ AjxDebug.CALENDAR		= "calendar";	// for troubleshooting calendar errors
 AjxDebug.REPLY			= "reply";		// bug 56308
 AjxDebug.SCROLL			= "scroll"; 	// bug 55775
 AjxDebug.BAD_JSON		= "bad_json"; 	// bug 57066
-AjxDebug.PREFS			= "prefs";		// bug 60942
-AjxDebug.PROGRESS       = "progress";  //progress dialog
+AjxDebug.FILTER         = "filter";     // bug 59158
 AjxDebug.REMINDER       = "reminder";   // bug 60692
 AjxDebug.TAG_ICON       = "tagIcon";    // bug 62155
 AjxDebug.DATA_URI       = "dataUri";    // bug 64693
@@ -109,10 +108,9 @@ AjxDebug.BUFFER_MAX[AjxDebug.CALENDAR]		= 400;
 AjxDebug.BUFFER_MAX[AjxDebug.REPLY]			= 400;
 AjxDebug.BUFFER_MAX[AjxDebug.SCROLL]		= 100;
 AjxDebug.BUFFER_MAX[AjxDebug.BAD_JSON]		= 200;
-AjxDebug.BUFFER_MAX[AjxDebug.PREFS] 		= 200;
+AjxDebug.BUFFER_MAX[AjxDebug.FILTER]        = 100;
 AjxDebug.BUFFER_MAX[AjxDebug.REMINDER]      = 200;
 AjxDebug.BUFFER_MAX[AjxDebug.TAG_ICON]      = 200;
-AjxDebug.BUFFER_MAX[AjxDebug.PROGRESS]      = 200;
 AjxDebug.BUFFER_MAX[AjxDebug.DATA_URI]      = 200;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
@@ -544,7 +542,7 @@ function(force) {
 			this._document.close();
 			
 			var ta = new AjxTimedAction(this, AjxDebug.prototype._finishInitWindow);
-			AjxTimedAction.scheduleAction(ta, 2500);
+			AjxTimedAction.scheduleAction(ta, 1500);
 		} else {
 			this._finishInitWindow();
 
