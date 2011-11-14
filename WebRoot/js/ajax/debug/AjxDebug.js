@@ -968,7 +968,30 @@ function(params) {
 	if (params.methodNameStr == "NoOpRequest" || params.methodNameStr == "NoOpResponse") { return; }
 
 	var ts = AjxDebug._getTimeStamp();
-	var msg = ["<b>", params.methodNameStr, params.asyncMode ? "" : " (SYNCHRONOUS)" , " - ", ts, "</b>"].join("");
+	var extra = "";
+	if (params.methodNameStr == "BatchRequest") {
+		// show the sub-requests that make up the batch command
+		var reqNames = [];
+		if (params.jsonObj) {
+			for (var i in params.jsonObj.BatchRequest) {
+				if (i.indexOf("Request") > 0) {
+					reqNames.push(i);
+				}
+			}
+		}
+		else if (params.soapDoc) {
+			var reqs = params.soapDoc._methodEl && params.soapDoc._methodEl.childNodes;
+			if (reqs && reqs.length) {
+				for (var i = 0; i < reqs.length; i++) {
+					reqNames.push(reqs[i].localName);
+				}
+			}
+		}
+		if (reqNames.length) {
+			extra = " (" + reqNames.join(",") + ")";
+		}
+	}
+	var msg = ["<b>", params.methodNameStr, extra, " - ", ts, "</b>"].join("");
 	for (var type in AjxDebug.BUFFER) {
 		if (type == AjxDebug.DEFAULT_TYPE) { continue; }
 		AjxDebug.println(type, msg);
