@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -349,8 +349,6 @@ XFormItem.prototype.openSelectionLabel = "";
 // error handling
 XFormItem.prototype.errorLocation = _SELF_;
 
-// show help tooltip icon
-XFormItem.prototype.helpTooltip = false;
 //
 // Methods
 //
@@ -1058,25 +1056,11 @@ XFormItem.prototype.outputLabelCellHTML = function (html,  rowSpan, labelLocatio
 								"<label for='", this.getId(), "'>", label, "</label>"
 				);
 		}else{
-            if(!this.getInheritedProperty("helpTooltip") ||
-               !this.getInheritedProperty("showHelpTooltip") ||
-               !this.getInheritedProperty("hideHelpTooltip") ){
-                html.append( "<td id=\"", this.getId(),"___label\"",
-                    this.getLabelCssString(),
-                    (rowSpan > 1 ? " rowspan=" + rowSpan : ""), ">",
-                    label
-                );
-            }else{
-                html.append( "<td id=\"", this.getId(),"___label\"",
-                    this.getLabelCssString(),
-                    " onclick=\"", "XFormItem.prototype.showHelpTooltip" ,
-			        ".call(" ,   this.getGlobalRef(), ", event );\" ",
-                    " onmouseout=\"", "XFormItem.prototype.hideHelpTooltip" ,
-			        ".call(" ,   this.getGlobalRef(), ", event );\" ",
-                    (rowSpan > 1 ? " rowspan=" + rowSpan : ""), ">",
-                    label
-                );
-            }
+			html.append( "<td id=\"", this.getId(),"___label\"", 
+				this.getLabelCssString(), 
+				(rowSpan > 1 ? " rowspan=" + rowSpan : ""), ">", 
+				label
+			);
 		}
 		if (this.getRequired()) {
 			html.append("<span class='redAsteric'>*</span>");
@@ -1555,16 +1539,6 @@ XFormItem.prototype.rowSpan = 1;
 XFormItem.prototype.getRowSpan = function () {
 	return this.getInheritedProperty("rowSpan");
 }
-
-/* displayGrid:
-*    1) true: display grid border
-*    2) false: don't display grid border
-*    3) _UNDEFINED_: inherid the parent's setting
-* */
-XFormItem.prototype.displayGrid = _UNDEFINED_;
-XFormItem.prototype.getDisplayGrid = function () {
-	return this.getInheritedProperty("displayGrid");
-}
 // END NEW TABLE LAYOUT STUFF
 
 // error handling
@@ -2019,6 +1993,7 @@ function (event) {
 
 
 
+
 /**
  * @class defines XFormItem type _OUTPUT_
  * @constructor
@@ -2073,18 +2048,8 @@ Output_XFormItem.prototype.getDisplayValue = function(newValue) {
 
 Output_XFormItem.prototype.updateElement = function (newValue) {
 	var el = this.getElement();
-	if(el) {
-	    //set the onClick event handler
-	    var clickMethod = this.getClickHandlerHTML();
-	    var htmlWithEvent = null ;
-	    if (clickMethod != null && clickMethod != "") {
-		    htmlWithEvent = "<div " + this.getClickHandlerHTML() +
-		 				">" + newValue + "</div>" ;
-	    }
-
-        newValue = htmlWithEvent || newValue;
+	if(el)
 		this.getElement().innerHTML = newValue;
-    }
 }
 
 Output_XFormItem.prototype.initFormItem = function () {
@@ -2110,6 +2075,9 @@ Output_XFormItem.prototype.dirtyDisplay = function () {
 
 // set up how disabling works for this item type
 Output_XFormItem.prototype.setElementEnabled = XFormItem.prototype.setElementEnabledCssClass;
+
+
+
 
 
 /**
@@ -2307,10 +2275,10 @@ XFormItemFactory.createItemType("_CHECKBOX_", "checkbox", Checkbox_XFormItem, XF
 //	type defaults
 Checkbox_XFormItem.prototype._inputType = "checkbox";
 Checkbox_XFormItem.prototype.elementChangeHandler = "onclick";
-Checkbox_XFormItem.prototype.labelLocation = (appNewUI?_LEFT_:_RIGHT_);
+Checkbox_XFormItem.prototype.labelLocation = _RIGHT_;
 Checkbox_XFormItem.prototype.cssClass = "xform_checkbox";
 Checkbox_XFormItem.prototype.labelCssClass = "xform_checkbox";
-Checkbox_XFormItem.prototype.align = (appNewUI?_LEFT_:_RIGHT_);
+Checkbox_XFormItem.prototype.align = _RIGHT_;
 Checkbox_XFormItem.prototype.trueValue = _UNDEFINED_;		// Don't set in proto so model can override
 Checkbox_XFormItem.prototype.falseValue = _UNDEFINED_;
 Checkbox_XFormItem.prototype.focusable = true;
@@ -2371,18 +2339,6 @@ Checkbox_XFormItem.prototype.getElementValueGetterHTML = function () {
 }
 
 
-Checkbox_XFormItem.prototype.outputContainerTDEndHTML = function (html) {
-    var tdLabel = this.getInheritedProperty("subLabel");
-    // for compatible with old UI
-    if(appNewUI && tdLabel && tdLabel != "") {
-        tdLabel = " " + tdLabel;
-    } else if (appNewUI && tdLabel == null)
-        tdLabel = " Enabled";
-    else tdLabel = "";
-
-    html.append(tdLabel + "</td id=\"",  this.getId(), "___container\">");
-}
-
 // set up how disabling works for this item type
 //	XXXX eventually we want to disable our label as well...
 Checkbox_XFormItem.prototype.setElementEnabled = XFormItem.prototype.setElementDisabledProperty;
@@ -2402,9 +2358,6 @@ XFormItemFactory.createItemType("_RADIO_", "radio", Radio_XFormItem, Checkbox_XF
 Radio_XFormItem.prototype._inputType = "radio";
 Radio_XFormItem.prototype.focusable = true;
 Radio_XFormItem.prototype.groupname=null;
-Radio_XFormItem.prototype.subLabel = (appNewUI?"":null);
-Radio_XFormItem.prototype.align = _RIGHT_;
-Radio_XFormItem.prototype.labelLocation = _RIGHT_;
 //	methods
 
 Radio_XFormItem.prototype.updateElement = function(newValue) {
@@ -2790,11 +2743,10 @@ Dwt_Image_XFormItem.prototype.updateElement = function (src) {
  		var style = this.getCssStyle();
 		style = style || "";
 		styleStr = "style='position:relative;'";
-
 		if (src) {
-			output = ["<div class='", src, "' ", styleStr, this.getClickHandlerHTML(), " ></div>"].join("");
+			output = ["<div class='", src, "' ", styleStr, " ></div>"].join("");
 		} else {
-			output = ["<div ", styleStr, this.getClickHandlerHTML(), " ></div>"].join("");
+			output = ["<div ", styleStr, " ></div>"].join(""); 		
 		}
  	}
  	this.getContainer().innerHTML = output;
@@ -3104,232 +3056,6 @@ Group_XFormItem.prototype.updateVisibility = function () {
 }
 
 
-
-Step_Choices_XFormItem = function() {}
-XFormItemFactory.createItemType("_STEPCHOICE_", "stepchoices", Step_Choices_XFormItem, Group_XFormItem);
-
-Step_Choices_XFormItem.prototype.numCols = 1;
-Step_Choices_XFormItem.prototype.initFormItem = function() {
-	XFormItem.prototype.initFormItem.call(this);
-
-    this.signUpForEvents();
-    var label = this.getNormalizedLabels();
-    var values = this.getNormalizedValues();
-    this.items = [];
-    var currentItem;
-    for (var i = 0; i < label.length; i++) {
-        currentItem = {type:_OUTPUT_, value:label[i], sourceValue: values[i]};
-        this.items.push(currentItem);
-    }
-}
-
-Step_Choices_XFormItem.prototype.updateElement = function (newValue) {
-    var items = this.getItems();
-    var el;
-    for ( var i = 0; i < items.length; i++) {
-        el = items[i].getElement();
-        if (items[i].getInheritedProperty("sourceValue") == newValue) {
-            Dwt.addClass(el, "AdminOutputTabSelect");
-            Dwt.delClass(el, "AdminOutputTab");
-        } else {
-            Dwt.delClass(el, "AdminOutputTabSelect");
-            Dwt.addClass(el, "AdminOutputTab");
-        }
-    }
-}
-
-
-HomeGroup_XFormItem = function() {
-    this.expanded = true;
-}
-XFormItemFactory.createItemType("_HOMEGROUP_", "homegroup", HomeGroup_XFormItem, Group_XFormItem)
-
-//	type defaults
-HomeGroup_XFormItem.prototype.headCss = "homeGroupHeader";
-HomeGroup_XFormItem.prototype.bodyCss = "homeGroupBody";
-HomeGroup_XFormItem.prototype.numCols = 1;
-HomeGroup_XFormItem.prototype.width = "90%";
-HomeGroup_XFormItem.prototype.cssStyle = "margin-left:5%; margin-top: 10px;";
-HomeGroup_XFormItem.prototype.headerLabel = "Home Group";
-HomeGroup_XFormItem.prototype.expandedImg =  "ImgNodeExpanded";
-HomeGroup_XFormItem.prototype.collapsedImg =  "ImgNodeCollapsed";
-HomeGroup_XFormItem.prototype.initializeItems = function () {
-    this.items = [];
-    this.items[0] = this.getHeaderItems();
-    this.items[1] = this.getContentItems();
-    var content = this.items[1].items;
-    var choices = this.getInheritedProperty("contentChoices");
-    if (!choices[0].label)
-        this.items[1].numCols = 1;
-    for (var i = 0; i < choices.length; i ++) {
-        var currentItem = {type:_OUTPUT_, label: choices[i].label,
-                        value: choices[i].value, containerCssStyle:"color:blue;cursor:pointer"};
-        if (choices[i].onClick) {
-            currentItem.onClick = choices[i].onClick;
-        }
-        content.push(currentItem);
-    }
-    Group_XFormItem.prototype.initializeItems.call(this);
-}
-
-HomeGroup_XFormItem.prototype.onClick = function(ev) {
-    var homeItem = this.getParentItem().getParentItem();
-    var contentContainer = homeItem.items[1];
-    if (homeItem.expanded) {
-        homeItem.expanded = false;
-        this.updateElement(homeItem.collapsedImg);
-        contentContainer.hide();
-    } else {
-        homeItem.expanded = true;
-        this.updateElement(homeItem.expandedImg);
-        contentContainer.show();
-    }
-}
-
-HomeGroup_XFormItem.prototype.getHeaderItems =
-function () {
-    var headerLabel = this.getInheritedProperty("headerLabel");
-    var headerCss = this.getInheritedProperty("headCss");
-    var headerItems = { type:_COMPOSITE_, numCols:3, width:"100%",
-            colSizes:["20px", "100%", "20px"],
-            items:[
-                {type:_DWT_IMAGE_, value: this.expandedImg, onClick:this.onClick},
-                {type:_OUTPUT_, value: headerLabel},
-                {type:_AJX_IMAGE_, value: "BorderNone"}
-            ],
-            cssClass:headerCss
-        };
-    return headerItems;
-}
-
-HomeGroup_XFormItem.prototype.getContentItems =
-function () {
-    var bodyCss = this.getInheritedProperty("bodyCss");
-    var contentItems = { type:_GROUP_, items:[], cssClass:bodyCss
-    };
-    contentItems.items = [];
-    return contentItems;
-}
-
-CollapsedGroup_XFormItem = function() {
-    this.expanded = true;
-}
-XFormItemFactory.createItemType("_COLLAPSED_GROUP_", "collapsedgroup", CollapsedGroup_XFormItem, Group_XFormItem)
-
-//	type defaults
-CollapsedGroup_XFormItem.prototype.headCss = "gridGroupHeader";
-CollapsedGroup_XFormItem.prototype.gridLabelCss = "gridGroupBodyLabel";
-CollapsedGroup_XFormItem.prototype.colSizes = "100%";
-CollapsedGroup_XFormItem.prototype.numCols = 1;
-CollapsedGroup_XFormItem.prototype.width = "100%";
-CollapsedGroup_XFormItem.prototype.defaultDisplay = true;
-CollapsedGroup_XFormItem.prototype.displayGrid = true;
-CollapsedGroup_XFormItem.prototype.displayLabelItem = false;
-CollapsedGroup_XFormItem.prototype.cssStyle = "margin-top: 10px;";
-CollapsedGroup_XFormItem.prototype.headerLabel = "Collapsed Group";
-CollapsedGroup_XFormItem.prototype.expandedImg =  "ImgNodeExpanded";
-CollapsedGroup_XFormItem.prototype.collapsedImg =  "ImgNodeCollapsed";
-CollapsedGroup_XFormItem.prototype.initializeItems = function () {
-    var gridLabelCss = this.getInheritedProperty("gridLabelCss");
-    var oldItems = this.getItems();
-    this.items = [];
-    if(this.__attributes.label) {
-        this.headerLabel = this.__attributes.label;
-    }
-    this.items[0] = this.getHeaderItems();
-    this.items[1] = this.getContentItems();
-    if(!this.items[1] || this.items[1].items.length == 0) {
-        if(oldItems) {
-            for(var i = 0; i < oldItems.length; i++) {
-                oldItems[i].displayGrid = false;
-                if(oldItems[i].type == "radio")
-                    continue;  // don't deal with _RADIO_
-                if(oldItems[i].label || oldItems[i].txtBoxLabel)
-                    oldItems[i].labelCssStyle = "text-align:left; background-color:#DEE5F1 !important;padding-left:10px;";
-                    //oldItems[i].labelCssClass = gridLabelCss;
-            }
-            this.items[1].items =  oldItems;
-        }
-    }
-
-    Group_XFormItem.prototype.initializeItems.call(this);
-}
-
-CollapsedGroup_XFormItem.prototype.onClick = function(ev) {
-    var headerItem =  this.getParentItem();
-    var collapsedItem = headerItem.getParentItem();
-    var headerContainer = headerItem.items[2];
-    var contentContainer = collapsedItem.items[1];
-    var displayLabelItem = collapsedItem.getInheritedProperty("displayLabelItem");
-    if (collapsedItem.expanded) {
-        collapsedItem.expanded = false;
-        this.updateElement(collapsedItem.collapsedImg);
-        contentContainer.hide();
-        if(displayLabelItem)
-            headerContainer.show();
-    } else {
-        collapsedItem.expanded = true;
-        this.updateElement(collapsedItem.expandedImg);
-        contentContainer.show();
-        headerContainer.hide();
-    }
-}
-
-CollapsedGroup_XFormItem.prototype.getHeaderItems =
-function () {
-    var headerLabel = this.getInheritedProperty("headerLabel");
-    var headerLabelWidth = this.getInheritedProperty("headerLabelWidth");
-    var headerCss = this.getInheritedProperty("headCss");
-    var headItems = this.getInheritedProperty("headerItems") || [];
-    var headerItems = { type:_COMPOSITE_, numCols:3, width:"100%",
-            colSizes:["20px", headerLabelWidth || "100%", "100%"], colSpan:"*", displayGrid:false,
-            items:[
-                {type:_DWT_IMAGE_, value: this.expandedImg, onClick:this.onClick},
-                {type:_OUTPUT_, value: headerLabel},
-                {type:_GROUP_, items: headItems}
-            ],
-            cssClass:headerCss
-        };
-    return headerItems;
-}
-
-CollapsedGroup_XFormItem.prototype.getContentItems =
-function () {
-    var colsize = this.getInheritedProperty("colSizes");
-    var numcols = this.getInheritedProperty("numCols");
-    var contentItems = { type:_GROUP_, items:[], colSpan:"*", colSizes:colsize,numCols:numcols, width:"100%"
-    };
-    var content =  this.getInheritedProperty("contentItems");
-    if(content)
-        contentItems.items = content;
-    return contentItems;
-}
-
-CollapsedGroup_XFormItem.prototype.updateVisibility = function () {
-
-    XFormItem.prototype.updateVisibility.call(this);
-    var display = this.getInheritedProperty("defaultDisplay");
-    var displayLabelItem = this.getInheritedProperty("displayLabelItem");
-    if(display) {
-        this.items[0].items[2].hide();
-        this.items[1].show();
-        this.items[0].items[0].value = this.expandedImg;
-        this.expanded = true;
-    } else {
-        if(displayLabelItem)
-            this.items[0].items[2].show();
-        else this.items[0].items[2].hide();
-        this.items[1].hide();
-        this.items[0].items[0].__attributes.value = this.collapsedImg;
-        this.expanded = false;
-    }
-}
-
-CollapsedGroup_XFormItem.prototype.getLabel = function () {
-    return null;
-}
-
-
 /**
  * @class defines XFormItem type _GROUPER_
  * Draws a simple border around the group, with the label placed over the border
@@ -3397,7 +3123,6 @@ CollapsableRadioGrouper_XFormItem.prototype.getLabel = function () {
  */
 Case_XFormItem = function() {
 	Group_XFormItem.call(this);
-
 }
 XFormItemFactory.createItemType("_CASE_", "case", Case_XFormItem, Group_XFormItem);
 
@@ -3458,12 +3183,6 @@ Case_XFormItem.prototype._outputHTML = function () {
 			}
 		}
 	}	
-
-    if(this.cacheInheritedMethod("getCustomPaddingStyle", "$getCustomPaddingStyle")) {
-        var paddingStyle = this.cacheInheritedMethod("getCustomPaddingStyle", "$getCustomPaddingStyle").call(this);
-        if(paddingStyle)
-            element.style.cssText += paddingStyle;
-    }
 
 	if (AjxEnv.isIE) {
 		var tempDiv = this.createElement("temp",null,"div","");
@@ -3556,31 +3275,8 @@ TopGrouper_XFormItem.prototype.outputHTMLEnd = function (html,  currentCol) {
 		);
 }
 
-if (appNewUI) {
-    XFormItemFactory.createItemType("_TOP_GROUPER_", "top_grouper", TopGrouper_XFormItem, CollapsedGroup_XFormItem);
-}
 
-BaseTopGrouper_XFormItem = function() {}
-XFormItemFactory.createItemType("_BASE_TOP_GROUPER_", "base_top_grouper", BaseTopGrouper_XFormItem, RadioGrouper_XFormItem)
-BaseTopGrouper_XFormItem.prototype.borderCssClass = "TopGrouperBorder";
-BaseTopGrouper_XFormItem.prototype.labelCssClass = "GrouperLabel";
-BaseTopGrouper_XFormItem.prototype.labelLocation = _INLINE_;		// managed manually by this class
-BaseTopGrouper_XFormItem.prototype.insetCssClass = "GrouperInset";
 
-// output the label
-BaseTopGrouper_XFormItem.prototype.outputHTMLStart = function (html,   currentCol) {
-    html.append(
-            "<div class=", this.getBorderCssClass(), ">",
-                "<div ", this.getLabelCssString(),">", this.getLabel(), "</div>",
-                "<div class=", this.getInsetCssClass(),">"
-        );
-}
-
-BaseTopGrouper_XFormItem.prototype.outputHTMLEnd = function (html,  currentCol) {
-    html.append(
-            "</div></div>"
-        );
-    }
 
 /**
  * @class defines XFormItem type _SWITCH_
@@ -3754,11 +3450,7 @@ Repeat_XFormItem.prototype.getAddButton = function () {
 		var width = this.getInheritedProperty("addButtonWidth");		
 		if (width)
 			this.addButton.width = width ;
-
-        var cssStyle = this.getInheritedProperty("addButtonCSSStyle");
-		if (cssStyle)
-			this.addButton.cssStyle = cssStyle ;
-
+			
 		if(showAddOnNextRow) {
 			this.addButton.colSpan = "*";
 		}
@@ -4021,65 +3713,6 @@ Composite_XFormItem.onFieldChange = function(value, event, form) {
 	}
 }
 
-
-SetupGroup_XFormItem = function() {
-}
-SetupGroup_XFormItem.prototype.width="100%";
-XFormItemFactory.createItemType("_SETUPGROUP_", "setupgroup", SetupGroup_XFormItem, Composite_XFormItem)
-SetupGroup_XFormItem.prototype.initializeItems = function () {
-    var headerLabels = this.getInheritedProperty("headerLabels");
-    var contentItems = this.getInheritedProperty("contentItems");
-    this.items = [];
-    this.width="100%";
-
-    if (headerLabels.length!= 0 && headerLabels.length == contentItems.length) {
-        var firstlabel = 1;
-        for (var i = 0; i < headerLabels.length; i++) {
-            var result =  this.constructSingleGroup(headerLabels[i], contentItems[i], firstlabel);
-            if (result != undefined) {
-                this.items.push(result);
-                firstlabel ++;
-            }
-        }
-    }
-    this.numCols = this.items.length;
-    if (this.numCols > 1)  {
-        var colSize =Math.floor(100/(this.numCols));
-        var lastCol = 100 - colSize* (this.numCols - 1);
-        var colArr = [];
-        for (var i = 0; i < this.numCols - 1; i ++) {
-            colArr.push(colSize + "%");
-        }
-        colArr.push(lastCol + "%");
-        this.colSizes = colArr;
-    }
-    Composite_XFormItem.prototype.initializeItems.call(this);
-}
-
-SetupGroup_XFormItem.prototype.constructSingleGroup = function (headerLabel, contentItem, index) {
-    var currentGroup = {type:_GROUP_, numCols:2, width: "100%", valign:_TOP_, items:[]};
-    var labelMessage = (index) + "  " + headerLabel;
-    var headerItem = {type:_OUTPUT_, colSpan: "*", value: labelMessage, cssClass: "ZaHomeSetupTitle"};
-    currentGroup.items.push(headerItem);
-    var singleContentItem;
-    var isAdd = false;
-    var labelNumber = 1;
-    var currentLabel ;
-    for (var i = 0; i < contentItem.length; i++) {
-        if (contentItem[i] && contentItem[i].value) {
-            isAdd = true;
-            currentLabel = labelNumber + ".";
-            labelNumber ++;
-            singleContentItem = {type:_OUTPUT_, label: currentLabel, value: contentItem[i].value, onClick: contentItem[i].onClick, labelCssClass:"ZaHomeLinkItemLabel", containerCssClass:"ZaLinkedItem"};
-            currentGroup.items.push(singleContentItem);
-        }
-    }
-
-    if (!isAdd)
-        return undefined;
-    else
-        return currentGroup;
-}
 //Composite_XFormItem.prototype.getErrorContainer = function () {
 //	
 //}
@@ -4345,7 +3978,6 @@ Datetime_XFormItem.prototype.items = Datetime_XFormItem._datetimeFormatToItems(
 	{type:_TIME_, ref:".", labelLocation:_NONE_}
 );
 
-
 /**
  * @class defines XFormItem type _WIDGET_ADAPTOR_
  *	An adaptor for using any random (non-DWT) widget in an xform
@@ -4503,13 +4135,8 @@ Dwt_Adaptor_XFormItem.prototype._addCssStylesToDwtWidget = function () {
 Dwt_Button_XFormItem = function() {}
 XFormItemFactory.createItemType("_DWT_BUTTON_", "dwt_button", Dwt_Button_XFormItem, Dwt_Adaptor_XFormItem)
 Dwt_Button_XFormItem.estimateMyWidth = function (label,withIcon,extraMargin) {
-    var width;
-    if(ZaZimbraAdmin.LOCALE=="ja"||ZaZimbraAdmin.LOCALE=="ko"||ZaZimbraAdmin.LOCALE=="zh_CN"||ZaZimbraAdmin.LOCALE=="zh_HK")
-         width = (String(label).length)*XForm.FONT_WIDTH1 + (String(label).length)*XForm.FONT_WIDTH2 + 14;
-    else
-	     width = (String(label).length/2)*XForm.FONT_WIDTH1 + (String(label).length/2)*XForm.FONT_WIDTH2 + 14;
-
-    if(withIcon)
+	var width = (String(label).length/2)*XForm.FONT_WIDTH1 + (String(label).length/2)*XForm.FONT_WIDTH2 + 14;
+	if(withIcon)
 		width = width + 24;
 	
 	if(extraMargin>0)
@@ -4519,7 +4146,6 @@ Dwt_Button_XFormItem.estimateMyWidth = function (label,withIcon,extraMargin) {
 //	type defaults
 Dwt_Button_XFormItem.prototype.labelLocation = DwtLabel.IMAGE_LEFT | DwtLabel.ALIGN_CENTER;
 Dwt_Button_XFormItem.prototype.writeElementDiv = false;
-Dwt_Button_XFormItem.prototype.autoPadding= true;
 //	methods
 
 Dwt_Button_XFormItem.prototype.insertWidget = function (form, widget, element) {
@@ -4580,11 +4206,10 @@ Dwt_Button_XFormItem.prototype.constructWidget = function () {
 			}
 			 
 			el =  widget.getHtmlElement();
-            var tableEl = el.firstChild;
-            var isAutoPadding = this.getInheritedProperty("autoPadding");
-            if(!tableEl.style.width && isAutoPadding){
-                 tableEl.style.width = "100%";
-            }
+                        var tableEl = el.firstChild;
+                       	if(!tableEl.style.width){
+                        	tableEl.style.width = "100%";
+                        }
 
 		}		
 	}catch(ex){
@@ -4778,7 +4403,6 @@ Dwt_Date_XFormItem.prototype.updateWidget = function (newValue) {
 	this.widget.__cal.setDate(newValue,true);
 };
 
-
 Dwt_Date_XFormItem.prototype._calOnChange = function (event) {
 	var value = event.detail;
 	var cal = event.item;
@@ -4788,8 +4412,7 @@ Dwt_Date_XFormItem.prototype._calOnChange = function (event) {
 
 Dwt_Date_XFormItem.prototype.getButtonLabel = function (newValue) {
 	if (newValue == null || !(newValue instanceof Date)) return "";
-        var formatter = AjxDateFormat.getDateInstance(AjxDateFormat.NUMBER);
-	return formatter.format(newValue) ;//(newValue.getMonth()+1) + "/" + newValue.getDate() + "/" + (newValue.getFullYear());
+	return (newValue.getMonth()+1) + "/" + newValue.getDate() + "/" + (newValue.getFullYear());
 };
 
 
@@ -4825,11 +4448,10 @@ XFormItemFactory.createItemType("_DWT_DATETIME_", "dwt_datetime", Dwt_Datetime_X
 Dwt_Datetime_XFormItem.prototype.numCols = 3;
 Dwt_Datetime_XFormItem.prototype.useParentTable = false;
 Dwt_Datetime_XFormItem.prototype.cssClass =  "xform_dwt_datetime";
-Dwt_Datetime_XFormItem.initialize = function(){
-   Dwt_Datetime_XFormItem.prototype.items = Datetime_XFormItem._datetimeFormatToItems(
+Dwt_Datetime_XFormItem.prototype.items = Datetime_XFormItem._datetimeFormatToItems(
 	AjxMsg.xformDateTimeFormat,
 	{type:_DWT_DATE_, ref:".", labelLocation:_NONE_, errorLocation:_PARENT_,
-	 elementChanged:
+	 elementChanged: 
 	 function (newDate, currentDate, event) {
 	 	currentDate = currentDate ? currentDate : new Date();
 		newDate.setHours(currentDate.getHours(), currentDate.getMinutes(), currentDate.getSeconds(), 0);
@@ -4838,7 +4460,7 @@ Dwt_Datetime_XFormItem.initialize = function(){
 			elementChangedMethod.call(this.getParentItem(),newDate, currentDate, event);
 	 }
 	},
-	{type:_DWT_TIME_, ref:".", labelLocation:_NONE_, errorLocation:_PARENT_,
+	{type:_DWT_TIME_, ref:".", labelLocation:_NONE_, errorLocation:_PARENT_, 
 	 elementChanged:
 	 function (newDate, currentDate, event) {
 		currentDate = currentDate ? currentDate : new Date();
@@ -4848,8 +4470,6 @@ Dwt_Datetime_XFormItem.initialize = function(){
 	 }
 	}
 );
-}
-Dwt_Datetime_XFormItem.initialize();
 
 
 /**
@@ -4906,7 +4526,7 @@ Dwt_List_XFormItem.prototype.constructWidget = function () {
 			widget.setSize(width, height);
 		
 		//set the listDiv height
-		if (height && height != Dwt.DEFAULT) {
+		if (height) {
 			widget.setListDivHeight (height) ;
 		}
 	}		
