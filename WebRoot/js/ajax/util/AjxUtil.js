@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -355,6 +355,7 @@ function(list) {
 
 AjxUtil.arrayAsHash =
 function(array, valueOrFunc) {
+	array = AjxUtil.toArray(array);
 	var hash = {};
 	var func = typeof valueOrFunc == "function" && valueOrFunc;
 	var value = valueOrFunc || true; 
@@ -401,6 +402,11 @@ function(array, object, strict) {
 		}
 	}
 	return -1;
+};
+
+AjxUtil.arrayContains =
+function(array, object, strict) {
+	return AjxUtil.indexOf(array, object, strict) != -1;
 };
 
 AjxUtil.keys = function(object, acceptFunc) {

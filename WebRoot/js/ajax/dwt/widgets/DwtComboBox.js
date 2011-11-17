@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,6 +36,7 @@ DwtComboBox = function(params) {
     DwtComposite.call(this, params);
     
     this.input = null;
+	this._menu = null;
     this._button = null;
     
     this._textToValue = {}; // Map of text strings to their values.
@@ -55,10 +56,8 @@ DwtComboBox.PARAMS = ["parent", "inputParams", "className", "posStyle", "dialog"
 DwtComboBox.prototype = new DwtComposite;
 DwtComboBox.prototype.constructor = DwtComboBox;
 
-DwtComboBox.prototype.toString =
-function() {
-    return "DwtComboBox";
-};
+DwtComboBox.prototype.isDwtComboBox = true;
+DwtComboBox.prototype.toString = function() { return "DwtComboBox"; };
 
 //
 // Data
@@ -206,13 +205,14 @@ DwtComboBox.prototype.focus = function() {
     this.input.focus();
 };
 
+
 //
 // Protected methods
 //
 
 DwtComboBox.prototype._createMenu =
 function() {
-    var menu = new DwtMenu({parent:this});
+    var menu = this._menu = new DwtMenu({parent:this});
     for (var i in this._textToValue) {
     	var item = this._createMenuItem(menu, i);
         var value = this._textToValue[i];
@@ -240,6 +240,7 @@ function(ev) {
 	var ovalue = this.input.getValue();
 	var nvalue = menuItem.getText();
 	this.input.setValue(nvalue);
+	this._menu.popdown();
 
 	// notify our listeners
 	var event = DwtUiEvent.getEvent(ev);
