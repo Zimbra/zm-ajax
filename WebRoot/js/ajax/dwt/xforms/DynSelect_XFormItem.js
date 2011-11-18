@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -255,7 +255,7 @@ DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 			" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').onClick(event)\"",
 			" onselectstart=\"return false\"",
 			">",
-			"<table ", this.getTableCssString(), ">", 
+			"<table ", this.getTableCssString(), " cellspacing='0'>", 
 				"<tr><td width=100%>",inputHtml,"</td>",
 				"</tr>", 
 			"</table>", 
@@ -283,7 +283,7 @@ DynSelect_XFormItem.prototype.onClick = function(event) {
 	if(!this.edited && this.getInheritedProperty("editable")) {
 		this.showInputTooltip(event);
 	} else {
-		if(choices && choices.values && choices.values.length) {
+		if(choices && choices.values && choices.values.length && !(choices.values[0] instanceof XFormChoices)) {
 			this.showMenu();
 		}
 	}
