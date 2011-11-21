@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -94,7 +94,7 @@ function(msgs) {
 		logOffMsg : msgs["loginAsDiff"] || "",
 		logOffAction : "",
 		
-		showButton : true,
+		showButton : false,
 		buttonName : msgs["login"] || "",
 		
 		copyrightText : msgs["splashScreenCopyright"] || ""
@@ -176,9 +176,6 @@ ZLoginFactory.getLoginDialogHTML = function (params) {
 					"<td></td>",
                                         "<td><span class='Img ImgInformation_xtra_small'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><label for='", ZLoginFactory.MORE_ID, "'>",params.moreMsg,"</label></td>",
 		"</tr>",
- 		"<tr ", (params.showLoading ? " " : "style='display:none'"), ">",
-		 			"<td colspan=2 class='ZLoadingMessage'>" , params.loadingMsg, "</td>",
-		 "</tr>",
                 "<tr ", (params.showUserField ? " " : "style='display:none'"), ">",
 		 			"<td><label for='", ZLoginFactory.USER_ID, "'>",params.userNameMsg,"</label></td>",
 		 			"<td><input id='", ZLoginFactory.USER_ID, "' name='", ZLoginFactory.USER_ID, "' class='zLoginField' type='text' size='40'  autocomplete=OFF/></td>",
@@ -201,7 +198,7 @@ ZLoginFactory.getLoginDialogHTML = function (params) {
                 "<tr>",
 	                "<td>&nbsp;</td>",
 	                "<td style='text-align:right'>",
-	               	    "<input id='", ZLoginFactory.LOGIN_BUTTON_ID, "' type='button' onclick='", params.loginAction, ";return false' class='DwtButton' value='",params.buttonName,(params.showButton ?"' style='float:right;'/>" :"' style='display:none'/>"),
+	                	"<input id='", ZLoginFactory.LOGIN_BUTTON_ID, "' type='button' onclick='", params.loginAction, ";return false' class='DwtButton' value='",params.buttonName,"' style='float:left;'/>",
 	                    "<input id='", ZLoginFactory.REMEMBER_ME_ID, "' value='1' type='checkbox' name='", ZLoginFactory.REMEMBER_ME_ID, "'  ", (params.showRememberMeCheckbox ? "" : "style='display:none'"), "/>",
 	                    "<label ", (params.showRememberMeCheckbox ? "" : "style='display:none'"), " for='", ZLoginFactory.REMEMBER_ME_ID, "'>", params.rememberMeMsg, "</label>",
 	                "</td>",
