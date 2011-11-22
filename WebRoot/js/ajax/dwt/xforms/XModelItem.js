@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -847,43 +847,19 @@ XModelItemFactory.createItemType("_LIST_", "list", List_XModelItem);
 List_XModelItem.prototype.getDefaultValue = function () {	return new Array(); };
 
 // type defaults and accessors
-List_XModelItem.prototype.outputType = _LIST_;	// 	_STRING_ == convert to a string
+List_XModelItem.prototype.outputType = _STRING_;	// 	_STRING_ == convert to a string
 													//	_LIST_ == convert to an array
-List_XModelItem.prototype.itemDelimiter = ","; 		//	delimiter for converting string values to arrays
-List_XModelItem.prototype.inputDelimiter = /[\s,\r\n]+/;		//	delimiter for converting string values to arrays
+List_XModelItem.prototype.itemDelimiter = ",";		//	delimiter for converting string values to arrays
+
 List_XModelItem.prototype.listItem = {type:_UNTYPED_};
 
 List_XModelItem.prototype.getOutputType = function () 	{	return this.outputType;			}
 List_XModelItem.prototype.getItemDelimiter = function() {	return this.itemDelimiter		}
-List_XModelItem.prototype.getInputDelimiter = function() {	return this.inputDelimiter		}
 List_XModelItem.prototype.getListItem = function () 	{	return this.listItem;			}
-List_XModelItem.prototype.getterScope = _MODELITEM_;
-List_XModelItem.prototype.setterScope = _MODELITEM_;
-List_XModelItem.prototype.getter = "getValue";
-List_XModelItem.prototype.setter = "setValue";
 
 
 
 //	methods
-List_XModelItem.prototype.getValue =  function(ins, current, ref) {
-	var value = eval("ins."+ref);
-	if(value && this.getOutputType() ==_STRING_ && value instanceof Array) {
-		return value.join(this.getItemDelimiter());
-	} else {
-		return value;
-	}
-}
-
-List_XModelItem.prototype.setValue = function(val, ins, current, ref) {
-	if(val && this.getOutputType() == _STRING_ && !(val instanceof Array)) {
-		var value = val.split(this.getInputDelimiter());
-		eval("ins."+ref+" = value");
-		return value;
-	} else {
-        var value = eval("ins."+ref+" = val");
-        return value;
-	}
-}
 
 List_XModelItem.prototype.initializeItems = function () {
 	var listItem = this.listItem;

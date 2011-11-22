@@ -1,6 +1,5 @@
 AjxPackage.require("ajax.dwt.events.DwtXFormsEvent");
 AjxPackage.require("ajax.dwt.events.DwtXModelEvent");
-AjxPackage.require("ajax.dwt.events.DwtIdleTimer");
 
 AjxPackage.require("ajax.dwt.xforms.XFormGlobal");
 AjxPackage.require("ajax.dwt.xforms.XModel");
