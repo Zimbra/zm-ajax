@@ -337,14 +337,13 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
     }
     
     private void secureCookieIfNecessary(HttpServletRequest req) {
-        
-        boolean currentHttps = req.getScheme().equals("https");
-        if (!currentHttps)
-            return;
-        
+         
         HttpSession httpSession = req.getSession(false);
-        if (httpSession != null)
+        if (httpSession != null) {
             return;
+        }
+        
+        boolean secureCookie = req.getScheme().equals("https");
         
         /*
          * This is a https req, and we don't have a session yet.
@@ -362,18 +361,22 @@ public class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter {
          */
         ServletContext servletContext = config.getServletContext();
         if (servletContext instanceof org.mortbay.jetty.handler.ContextHandler.SContext) {
-            org.mortbay.jetty.handler.ContextHandler.SContext sContext = (org.mortbay.jetty.handler.ContextHandler.SContext)servletContext;
+            org.mortbay.jetty.handler.ContextHandler.SContext sContext = 
+                (org.mortbay.jetty.handler.ContextHandler.SContext)servletContext;
             
             // get the WebAppContext
             org.mortbay.jetty.handler.ContextHandler contextHandler = sContext.getContextHandler();
             if (contextHandler instanceof org.mortbay.jetty.servlet.Context) {
-                org.mortbay.jetty.servlet.Context context= (org.mortbay.jetty.servlet.Context)contextHandler;
+                org.mortbay.jetty.servlet.Context context = 
+                    (org.mortbay.jetty.servlet.Context)contextHandler;
                 
                 // get SessionManager
                 org.mortbay.jetty.SessionManager sessionManager = context.getSessionHandler().getSessionManager();
                 if (sessionManager instanceof org.mortbay.jetty.servlet.AbstractSessionManager) {
-                    org.mortbay.jetty.servlet.AbstractSessionManager asm = (org.mortbay.jetty.servlet.AbstractSessionManager)sessionManager;
-                    asm.setSecureCookies(true);
+                    org.mortbay.jetty.servlet.AbstractSessionManager asm = 
+                        (org.mortbay.jetty.servlet.AbstractSessionManager)sessionManager;
+                    asm.setSecureCookies(secureCookie);
+                    asm.setHttpOnly(true);
                 }
             }
         }
