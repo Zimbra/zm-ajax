@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,15 +43,29 @@ DwtListView = function(params) {
 	if (params.headerList) {
 		var htmlElement = this.getHtmlElement();
 
-		this._listColDiv = document.createElement("div");
-		this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
-		this._listColDiv.className = "DwtListView-ColHeader";
-		htmlElement.appendChild(this._listColDiv);
+        var html = new Array(50);
+        var idx = 0;
+        var headId = Dwt.getNextId();
+        var colId = Dwt.getNextId();
+        html[idx++] = "<table width='100%'><tr><td ";
+        html[idx++] = "id=" + headId;
+        html[idx++] = "></td></tr><tr><td ";
+        html[idx++] = "id=" + colId;
+        html[idx++] = "></td></tr></table>";
+        htmlElement.innerHTML = html.join("");
 
-		this._listDiv = document.createElement("div");
-		this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
-		this._listDiv.className = "DwtListView-Rows";
-		htmlElement.appendChild(this._listDiv);
+        var headHtml = document.getElementById(headId);
+        this._listColDiv = document.createElement("div");
+        this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
+        this._listColDiv.className = "DwtListView-ColHeader";
+        headHtml.appendChild(this._listColDiv);
+
+        var colHtml = document.getElementById(colId);
+        this._listDiv = document.createElement("div");
+        this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
+        this._listDiv.className = "DwtListView-Rows";
+        colHtml.appendChild(this._listDiv);
+
 
 		// setup vars needed for sorting
 		this._bSortAsc = false;
@@ -204,7 +218,7 @@ function(defaultColumnSort) {
 
 	htmlArr[idx++] = "<table id='";
 	htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_TABLE, this._view);
-	htmlArr[idx++] = "' cellpadding=0 cellspacing=0 border=0 height=100%";
+	htmlArr[idx++] = "' height=100%";
 	htmlArr[idx++] = this._noMaximize ? ">" : " width=100%>";
 	htmlArr[idx++] = "<tr>";
 
@@ -304,7 +318,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	}
 
 	// add new table for icon/label/sorting arrow
-	htmlArr[idx++] = "<table border=0 cellpadding=0 cellspacing=0 width=100%><tr>";
+	htmlArr[idx++] = "<table width=100%><tr>";
 	if (headerCol._iconInfo) {
 		var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "'"].join("");
 		htmlArr[idx++] = "<td><center>";
@@ -337,7 +351,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	// ALWAYS add "sash" separators
 	if (i < (numCols - 1)) {
 		htmlArr[idx++] = "<td width=6>";
-		htmlArr[idx++] = "<table align=right border=0 cellpadding=0 cellspacing=0 width=6 height=100% id='";
+		htmlArr[idx++] = "<table align=right width=6 height=100% id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_SASH, this._view, field);
 		htmlArr[idx++] = "'><tr>";
 		htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
@@ -1124,16 +1138,15 @@ function (listViewHeight) {
 
 // Private methods
 
-// normalClass is always present on a list row
+// returns a regex that matches modified styles such as "Row-selected-actioned"
 DwtListView.prototype._getStyleRegex =
 function() {
-	return new RegExp("\\b(" + [this._disabledSelectedClass,
-								this._selectedClass,
-								this._kbFocusClass,
-								this._dndClass,
-								this._rightClickClass
-							   ].join("|") +
-					  ")\\b", "g");
+	return new RegExp("\\bRow(-(" + [DwtCssStyle.SELECTED,
+									 DwtCssStyle.ACTIONED,
+									 DwtCssStyle.FOCUSED,
+									 DwtCssStyle.DISABLED,
+									 DwtCssStyle.DRAG_PROXY].join("|") +
+					  "))+\\b", "g");
 };
 
 DwtListView.prototype._addRow =
@@ -1348,7 +1361,7 @@ function(base, item, params) {
  */
 DwtListView.prototype._getTable =
 function(htmlArr, idx, params) {
-	htmlArr[idx++] = "<table cellpadding=0 cellspacing=0 border=0 width=";
+	htmlArr[idx++] = "<table width=";
 	htmlArr[idx++] = !params.isDragProxy ? "100%>" : (this.getSize().x + ">");
 	return idx;
 };
@@ -1447,8 +1460,10 @@ function(colIdx, params) {
 	var headerList = params.headerList || this._headerList;
 	var width = headerList[colIdx]._width;
 	if (width) {
-		if (AjxEnv.isIE)		return (width + 2);
-		if (AjxEnv.isSafari)	return (width + 5);
+		if (width != "auto" && width > 0) {
+			if (AjxEnv.isIE)		return (width + 2);
+			if (AjxEnv.isSafari)	return (width + 5);
+		}
 		return width;
 	}
 	return null;
@@ -1912,7 +1927,7 @@ function(element, next) {
  */
 DwtListView.prototype._scrollList =
 function(itemDiv) {
-	DwtControl._scrollIntoView(itemDiv, itemDiv.parentNode);
+	Dwt.scrollIntoView(itemDiv, itemDiv.parentNode);
 };
 
 DwtListView.prototype._setRowHeight =
@@ -1966,7 +1981,7 @@ function(next) {
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 	}
 
-	if (this._kbAnchor) {
+	if (this._kbAnchor && !this._duringFocusByMouseDown) {
 		this._scrollList(this._kbAnchor);
 	}
 };
@@ -2029,7 +2044,8 @@ function(clickedEl, ev) {
 				Dwt.addClass(clickedEl, this._kbFocusClass);
 			}
 		}
-	} else {
+	}
+	else if (ev.button == DwtMouseEvent.LEFT) {
 		if (ev.ctrlKey) {
 			this.setMultiSelection(clickedEl, bContained, ev);
 		} else { // SHIFT KEY
@@ -2094,7 +2110,7 @@ function(clickedEl, ev) {
 		if (this._setListEvent(ev, this._selEv, clickedEl)) {
 			this._evtMgr.notifyListeners(DwtEvent.SELECTION, this._selEv);
 		}
-	} else if (ev.button == DwtMouseEvent.RIGHT && this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
+	} else if (ev.button == DwtMouseEvent.RIGHT && !ev.shiftKey && !ev.ctrlKey && this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
 		if (this._setListEvent(ev, this._actionEv, clickedEl)) {
 			this._evtMgr.notifyListeners(DwtEvent.ACTION, this._actionEv);
 		}
