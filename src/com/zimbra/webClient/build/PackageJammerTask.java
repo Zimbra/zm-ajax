@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,6 +32,7 @@ extends Task {
     private static final Pattern RE_DEFINE = Pattern.compile("^AjxPackage\\.define\\(['\"]([^'\"]+)['\"]\\);?");
     private static final Pattern RE_UNDEFINE = Pattern.compile("^AjxPackage\\.undefine\\(['\"]([^'\"]+)['\"]\\);?");
     private static final Pattern RE_REQUIRE = Pattern.compile("^AjxPackage\\.require\\(['\"]([^'\"]+)['\"](.*?)\\);?");
+    private static final Pattern RE_REQUIRE_OBJ = Pattern.compile("^AjxPackage\\.require\\((\\s*\\{\\s*name\\s*:\")?([^'\"]+)['\"](.*?)\\);?");
 
     private static final String OUTPUT_JS = "js";
     private static final String OUTPUT_HTML = "html";
@@ -336,7 +337,17 @@ extends Task {
 
     private String matchRequire(String s) {
         Matcher m = RE_REQUIRE.matcher(s);
-        return m.matches() ? m.group(1) : null;
+        if (m.matches()){
+            return m.group(1);
+        }
+
+        m = RE_REQUIRE_OBJ.matcher(s);
+
+        if (m.matches()){
+            return m.group(2);
+        }
+        return null;
+
     }
 
     private void log(String... ss) {

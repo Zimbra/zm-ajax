@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -109,6 +109,7 @@ AjxPackage.require("ajax.dwt.widgets.DwtToolTip");
 AjxPackage.require("ajax.dwt.widgets.DwtTreeItem");
 AjxPackage.require("ajax.dwt.widgets.DwtTree");
 AjxPackage.require("ajax.dwt.widgets.DwtCalendar");
+AjxPackage.require("ajax.dwt.widgets.DwtFolderChooser");
 AjxPackage.require("ajax.dwt.widgets.DwtPropertyPage");
 AjxPackage.require("ajax.dwt.widgets.DwtTabView");
 AjxPackage.require("ajax.dwt.widgets.DwtWizardDialog");
