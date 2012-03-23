@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -301,7 +301,7 @@ function(pkg, pkgWasLoaded, callback, args) {
 	}
 	
 	if (callback) {
- 		return callback.run1(args);
+ 		return callback.isAjxCallback ? callback.run1(args) : callback(args);
 	}
 };
 

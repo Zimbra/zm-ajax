@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,7 +43,9 @@
  * @extends		DwtComposite		
  */
 DwtTreeItem = function(params) {
+
     if (arguments.length == 0) { return; }    
+
     params = Dwt.getParams(arguments, DwtTreeItem.PARAMS);
 	var parent = params.parent;
 	if (parent instanceof DwtTree) {
@@ -60,6 +62,8 @@ DwtTreeItem = function(params) {
 	this._selectedFocusedClassName = [this._origClassName, DwtCssStyle.SELECTED, DwtCssStyle.FOCUSED].join("-");
 	this._actionedClassName = [this._origClassName, DwtCssStyle.ACTIONED].join("-");
 	this._dragOverClassName = [this._origClassName, DwtCssStyle.DRAG_OVER].join("-");
+    this._treeItemTextClass = "DwtTreeItem-Text";
+    this._treeItemExtraImgClass = "DwtTreeItem-ExtraImg";
 
 	params.deferred = (params.deferred !== false);
 	params.className = null;
@@ -79,12 +83,8 @@ DwtTreeItem = function(params) {
 	this._forceNotifyAction = Boolean(params.forceNotifyAction);
 	this._dndScrollCallback = params.dndScrollCallback;
 	this._dndScrollId = params.dndScrollId;
+    this._contextEnabled = (!(!(parent._optButton)) || parent._contextEnabled) && this._selectionEnabled;
 
-	// disable selection if checkbox style
-	if (this._tree.isCheckedStyle) {
-		this.enableSelection(false);
-		this._selectedClassName = this._origClassName;
-	}
 	if (params.singleClickAction) {
 		this._singleClickAction = true;
 		this._selectedFocusedClassName = this._selectedClassName = this._textClassName;
@@ -356,6 +356,8 @@ function(enable) {
 	this._selectedClassName = enable
 		? this._origClassName + "-" + DwtCssStyle.SELECTED
 		: this._origClassName;
+    this._contextEnabled = !(!(this.parent._optButton)) && this._selectionEnabled;
+
 };
 
 DwtTreeItem.prototype.enableAction =
@@ -428,6 +430,11 @@ DwtTreeItem.prototype.handleKeyAction =
 function(actionCode, ev) {
 
 	switch (actionCode) {
+		
+		case DwtKeyMap.ENTER:
+			this._tree.setEnterSelection(this, true);
+			break;
+
 
 		case DwtKeyMap.NEXT: {
 			var ti = this._tree._getNextTreeItem(true);
@@ -519,6 +526,10 @@ function(index, realizeDeferred, forceNode) {
 	this._textCell = document.getElementById(data.id + "_textCell");
 	this._extraCell = document.getElementById(data.id + "_extraCell");
 
+    if (!this._contextEnabled){
+        var tableNode = document.getElementById(data.id + "_table");
+        tableNode.style.tableLayout = "auto";
+    }
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
 		this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
@@ -726,6 +737,20 @@ function() {
 	}
 };
 
+/**
+ *   This is for bug 45129.
+ *   In the DwControl's focusByMouseDownEvent, it focuses the TreeItem 
+ *   And change TreeItem's color. But sometimes when mousedown and mouseup
+ *   haven't been matched on the one element. It will cause multiple selection. 
+ *   For in the mouseup handle function, we has done focus if we find both mouse 
+ *   down and up happened on the same element. So when the mouse is down, we just
+ *   do nothing.
+ */
+DwtTreeItem.prototype._focusByMouseDownEvent =
+function(ev) {
+	
+}
+
 DwtTreeItem._nodeIconMouseDownHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
@@ -812,6 +837,20 @@ function(item) {
 	return false;
 };
 
+DwtTreeItem.prototype._setTreeElementStyles =
+function(treeItem, img, focused){
+   if (!treeItem || !treeItem._contextEnabled) {
+        return;
+   }
+   var selected = focused ? "-focused" : "";
+   if (treeItem._extraCell){
+        AjxImg.setImage(treeItem._extraCell, img);
+        treeItem._extraCell.className = "DwtTreeItem-ExtraImg" + selected;
+   }
+   if (treeItem._textCell)
+        treeItem._textCell.className = "DwtTreeItem-Text" + selected;
+}
+
 DwtTreeItem.prototype._setSelected =
 function(selected, noFocus) {
 	if (this._selected != selected) {
@@ -819,15 +858,17 @@ function(selected, noFocus) {
 		if (!this._initialized) {
 			this._initialize();
 		}
-		if (!this._itemDiv) { return; }
-		if (selected && (this._selectionEnabled || this._forceNotifySelection) /*&& this._origClassName == "DwtTreeItem"*/) {
+		if (!this._itemDiv || !this._extraCell) { return; }
+		if (selected && (this._selectionEnabled || this._forceNotifySelection || this._checkBoxVisible) /*&& this._origClassName == "DwtTreeItem"*/) {
 			this._itemDiv.className = this._selectedClassName;
-			if (!noFocus) {
+            this._setTreeElementStyles(this, "DownArrowSmall", true);
+            if (!noFocus) {
 				this.focus();
 			}
 			return true;
 		} else {
-			this._itemDiv.className = this._origClassName;
+            this._setTreeElementStyles(this, "Blank_16", false);
+			this._itemDiv.className = this._origClassName;;
 			return false;
 		}
 	}
@@ -861,9 +902,8 @@ DwtTreeItem.prototype._focus =
 function() {
 	if (!this._itemDiv) { return; }
 	// focused tree item should always be selected as well
-	if (this._selectionEnabled) {
-		this._itemDiv.className = this._selectedFocusedClassName;
-	}
+	this._itemDiv.className = this._selectedFocusedClassName;
+    this._setTreeElementStyles(this, "DownArrowSmall", true);
 };
 
 DwtTreeItem.prototype._blur =
@@ -871,6 +911,7 @@ function() {
 	if (!this._itemDiv) { return; }
 	this._itemDiv.className = this._selected
 		? this._selectedClassName : this._origClassName;
+    this._setTreeElementStyles(this,  this._selected ? "DownArrowSmall" : "Blank_16", this._selected);
 };
 
 DwtTreeItem._mouseDownListener =
@@ -884,6 +925,7 @@ function(ev) {
 	} else if (ev.button == DwtMouseEvent.RIGHT && (treeItem._actionEnabled || treeItem._forceNotifyAction)) {
 		treeItem._gotMouseDownRight = true;
 	}
+
 };
 
 DwtTreeItem._mouseOutListener = 
@@ -897,6 +939,10 @@ function(ev) {
 	if (treeItem._singleClickAction && treeItem._textCell) {
 		treeItem._textCell.className = treeItem._textClassName;
 	}
+    if(!treeItem._selected){
+       treeItem._setTreeElementStyles(treeItem, "Blank_16", false);
+    }
+
 };
 
 DwtTreeItem._mouseOverListener =
@@ -908,6 +954,9 @@ function(ev) {
 	if (treeItem._singleClickAction && treeItem._textCell) {
 		treeItem._textCell.className = treeItem._hoverClassName;
 	}
+    if(!treeItem._selected){
+       treeItem._setTreeElementStyles(treeItem, "ColumnDownArrow", true);
+    }
 };
 
 DwtTreeItem._mouseUpListener =
@@ -962,6 +1011,11 @@ function(params) {
 	this._setMouseEvent(mev, params);
 	mev.kbNavEvent = params.kbNavEvent;
 	this.notifyListeners(DwtEvent.ONMOUSEUP, mev);
+};
+
+DwtTreeItem.prototype.getTooltipBase =
+function(hoverEv) {
+	return this._itemDiv;
 };
 
 DwtTreeItem._listeners = {};

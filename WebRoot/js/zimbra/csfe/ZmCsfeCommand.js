@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -27,15 +27,8 @@
 ZmCsfeCommand = function() {
 };
 
-/**
- * Returns a string representation of the object.
- * 
- * @return		{String}		a string representation of the object
- */
-ZmCsfeCommand.prototype.toString =
-function() {
-	return "ZmCsfeCommand";
-};
+ZmCsfeCommand.prototype.isZmCsfeCommand = true;
+ZmCsfeCommand.prototype.toString = function() { return "ZmCsfeCommand"; };
 
 // Static properties
 
@@ -130,17 +123,27 @@ function() {
 };
 
 /**
- * Sets the session id.
+ * Sets the session id and, if the session id is new, designates the previous
+ * session id as stale.
  * 
  * @param	{String}	sessionId		the session id
  * 
  */
 ZmCsfeCommand.setSessionId =
-function(id) {
-	var sid = (typeof id == "number") ? id : ZmCsfeCommand.extractSessionId(id);
-	if (sid) {
-		ZmCsfeCommand._sessionId = sid;
-	}
+function(sessionId) {
+    var sid = ZmCsfeCommand.extractSessionId(sessionId);
+    if (sid) {
+        if (sid && !ZmCsfeCommand._staleSession[sid]) {
+            if (sid != ZmCsfeCommand._sessionId) {
+                if (ZmCsfeCommand._sessionId) {
+                    // Mark the old session as stale...
+                    ZmCsfeCommand._staleSession[ZmCsfeCommand._sessionId] = true;
+                }
+                // ...before accepting the new session.
+                ZmCsfeCommand._sessionId = sid;
+            }
+        }
+    }
 };
 
 ZmCsfeCommand.clearSessionId =
@@ -148,11 +151,38 @@ function() {
 	ZmCsfeCommand._sessionId = null;
 };
 
+/**
+ * Isolates the parsing of the various forms of session types that we
+ * might have to handle.
+ *
+ * @param {mixed} session Any valid session object: string, number, object,
+ * or array.
+ * @return {Number|Null} If the input contained a valid session object, the
+ * session number will be returned. If the input is not valid, null will
+ * be returned.
+ */
 ZmCsfeCommand.extractSessionId =
 function(session) {
-	if (!session) { return null; }
-	var id = (session instanceof Array) ? session[0].id : session.id;
-	return id ? parseInt(id) : null;
+    var id;
+
+    if (session instanceof Array) {
+        // Array form
+	    session = session[0].id;
+    }
+    else if (session && session.id) {
+        // Object form
+        session = session.id;
+    }
+
+    // We either have extracted the id or were given some primitive form.
+    // Whatever we have at this point, attempt conversion and clean up response.
+    id = parseInt(session, 10);
+    // Normalize response
+    if (isNaN(id)) {
+        id = null;
+    }
+
+	return id;
 };
 
 /**
@@ -217,24 +247,26 @@ function(request) {
  * Sends a SOAP request to the server and processes the response. The request can be in the form
  * of a SOAP document, or a JSON object.
  *
- * @param {Hash}	params			a hash of parameters
- * @param	{AjxSoapDoc}	params.soapDoc			the SOAP document that represents the request
- * @param	{Object}	params.jsonObj			the JSON object that represents the request (alternative to soapDoc)
- * @param	{Boolean}	params.noAuthToken		if <code>true</code>, the check for an auth token is skipped
- * @param	{Boolean}	params.authToken		authToken to use instead of the local one
- * @param	{String}	params.serverUri			the URI to send the request to
- * @param	{String}	params.targetServer		the host that services the request
- * @param	{Boolean}	params.useXml			if <code>true</code>, an XML response is requested
- * @param	{Boolean}	params.noSession			if <code>true</code>, no session info is included
- * @param	{String}	params.changeToken		the current change token
- * @param	{int}	params.highestNotifySeen 	the sequence # of the highest notification we have processed
- * @param	{Boolean}	params.asyncMode			if <code>true</code>, request sent asynchronously
- * @param	{AjxCallback}	params.callback		the callback to run when response is received (async mode)
- * @param	{Boolean}	params.logRequest		if <code>true</code>, SOAP command name is appended to server URL
- * @param	{String}	params.accountId			the ID of account to execute on behalf of
- * @param	{String}	params.accountName		the name of account to execute on behalf of
- * @param	{Boolean}	params.skipAuthCheck		if <code>true</code> to skip auth check (i.e. do not check if auth token has changed)
- * @param	{constant}	params.resend			the reason for resending request
+ * @param	{Hash}			params				a hash of parameters:
+ * @param	{AjxSoapDoc}	soapDoc				the SOAP document that represents the request
+ * @param	{Object}		jsonObj				the JSON object that represents the request (alternative to soapDoc)
+ * @param	{Boolean}		noAuthToken			if <code>true</code>, the check for an auth token is skipped
+ * @param	{Boolean}		authToken			authToken to use instead of the local one
+ * @param	{String}		serverUri			the URI to send the request to
+ * @param	{String}		targetServer		the host that services the request
+ * @param	{Boolean}		useXml				if <code>true</code>, an XML response is requested
+ * @param	{Boolean}		noSession			if <code>true</code>, no session info is included
+ * @param	{String}		changeToken			the current change token
+ * @param	{int}			highestNotifySeen 	the sequence # of the highest notification we have processed
+ * @param	{Boolean}		asyncMode			if <code>true</code>, request sent asynchronously
+ * @param	{AjxCallback}	callback			the callback to run when response is received (async mode)
+ * @param	{Boolean}		logRequest			if <code>true</code>, SOAP command name is appended to server URL
+ * @param	{String}		accountId			the ID of account to execute on behalf of
+ * @param	{String}		accountName			the name of account to execute on behalf of
+ * @param	{Boolean}		skipAuthCheck		if <code>true</code> to skip auth check (i.e. do not check if auth token has changed)
+ * @param	{constant}		resend				the reason for resending request
+ * @param	{boolean}		useStringify1		use JSON.stringify1 (gets around IE child win issue with Array)
+ * @param	{boolean}		emptyResponseOkay	if true, empty or no response from server is not an erro
  */
 ZmCsfeCommand.prototype.invoke =
 function(params) {
@@ -301,11 +333,15 @@ function(params) {
  */
 ZmCsfeCommand.prototype.cancel =
 function() {
+	DBG.println("req", "CSFE cancel: " + this._rpcId);
 	if (!this._rpcId) { return; }
 	this.cancelled = true;
 	var req = AjxRpc.getRpcRequestById(this._rpcId);
 	if (req) {
 		req.cancel();
+		if (AjxEnv.isFirefox3_5up) {
+			AjxRpc.removeRpcCtxt(req);
+		}
 	}
 };
 
@@ -390,8 +426,8 @@ function(params) {
 	DBG.dumpObj(AjxDebug.DBG1, obj);
 
 	params.jsonRequestObj = obj;
-
-	return AjxStringUtil.objToString(obj);
+	
+	return params.useStringify1 ? JSON.stringify1(obj) : JSON.stringify(obj);
 };
 
 /**
@@ -523,9 +559,9 @@ function(params, result) {
 	}
 	this._en = new Date();
 
-	if (params.callback) {
+	if (params.callback && response) {
 		params.callback.run(response);
-	} else {
+	} else if (!params.emptyResponseOkay) {
 		DBG.println(AjxDebug.DBG1, "ZmCsfeCommand.prototype._runCallback: Missing callback!");
 	}
 };
@@ -565,8 +601,13 @@ function(response, params) {
 		try {
 			xmlResponse = true;
 			if (!(response.text || (response.xml && (typeof response.xml) == "string"))) {
-				// If we can't reach the server, req returns immediately with an empty response rather than waiting and timing out
-				throw new ZmCsfeException(null, ZmCsfeException.EMPTY_RESPONSE, params.methodNameStr);
+				if (params.emptyResponseOkay) {
+					return null;
+				}
+				else {
+					// If we can't reach the server, req returns immediately with an empty response rather than waiting and timing out
+					throw new ZmCsfeException(null, ZmCsfeException.EMPTY_RESPONSE, params.methodNameStr);
+				}
 			}
 			// responseXML is empty under IE
 			respDoc = (AjxEnv.isIE || response.xml == null) ? AjxSoapDoc.createFromXml(response.text) :
@@ -599,7 +640,7 @@ function(response, params) {
 		obj = respDoc._xmlDoc.toJSObject(true, false, true);
 	} else if (!restResponse) {
 		try {
-			eval("obj=" + respDoc);
+			obj = JSON.parse(respDoc);
 		} catch (ex) {
 			if (ex.name == "SyntaxError") {
 				ex = new ZmCsfeException(null, ZmCsfeException.BAD_JSON_RESPONSE, params.methodNameStr, respDoc);
@@ -651,15 +692,7 @@ function(response, params) {
 
 	// check for new session ID
 	var session = obj.Header && obj.Header.context && obj.Header.context.session;
-	var sid = session && ZmCsfeCommand.extractSessionId(session);
-	if (sid && !ZmCsfeCommand._staleSession[sid]) {
-		if (sid != ZmCsfeCommand._sessionId) {
-			if (ZmCsfeCommand._sessionId) {
-				ZmCsfeCommand._staleSession[ZmCsfeCommand._sessionId] = true;
-			}
-			ZmCsfeCommand.setSessionId(sid);
-		}
-	}
+    ZmCsfeCommand.setSessionId(session);
 
 	return params.asyncMode ? result : obj;
 };
