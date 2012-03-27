@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -44,14 +44,22 @@ AjxRpcRequest = function(id) {
 		: (new XMLHttpRequest());
 };
 
-AjxRpcRequest.prototype.isAjxRpcRequest = true;
-AjxRpcRequest.prototype.toString = function() { return "AjxRpcRequest"; };
-
+/**
+ * Defines the "timed out" exception.
+ */
 AjxRpcRequest.TIMEDOUT		= -1000;		// Timed out exception
-
 AjxRpcRequest.__inited		= false;
 AjxRpcRequest.__msxmlVers	= null;
 
+/**
+ * Returns a string representation of the object.
+ * 
+ * @return		{string}		a string representation of the object
+ */
+AjxRpcRequest.prototype.toString = 
+function() {
+	return "AjxRpcRequest";
+};
 
 /**
  * Sends this request to the target URL. If there is a callback, the request is
@@ -96,8 +104,7 @@ AjxRpcRequest.prototype.invoke =
 function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 
 	var asyncMode = (callback != null);
-	var m = requestStr && requestStr.match(/.*"(\w+Request)"/);
-	this.methodName = m ? m[1] : serverUrl || "";	// for debugging
+	this.requestStr = requestStr;	// for debugging
 
 	// An exception here will be caught by AjxRpc.invoke
 	this.__httpReq.open((useGet) ? "get" : "post", serverUrl, asyncMode);
@@ -109,10 +116,10 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 		}
 		var tempThis = this;
 		this.__httpReq.onreadystatechange = function(ev) {
-			if (window.AjxRpcRequest) {
-				AjxRpcRequest.__handleResponse(tempThis, callback);
+				if (window.AjxRpcRequest) {
+					AjxRpcRequest.__handleResponse(tempThis, callback);
+				}
 			}
-		}
 	} else {
 		// IE appears to run handler even on sync requests, so we need to clear it
 		this.__httpReq.onreadystatechange = function(ev) {};
@@ -120,13 +127,10 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 
 	if (requestHeaders) {
 		for (var i in requestHeaders) {
-            if (requestHeaders.hasOwnProperty(i)) {
-                this.__httpReq.setRequestHeader(i, requestHeaders[i]);
-            }
+			this.__httpReq.setRequestHeader(i, requestHeaders[i]);
 		}
 	}
 
-	AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " RPC send: " + this.id);
 	this.__httpReq.send(requestStr);
 	if (asyncMode) {
 		return this.id;
@@ -146,9 +150,10 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 AjxRpcRequest.prototype.cancel =
 function() {
 	AjxRpc.freeRpcCtxt(this);
-    if (AjxEnv.isFirefox3_5up) {
-		// bug 55911
+    //bug 55911
+    if (AjxEnv.isFirefox3_5up){
         this.__httpReq.onreadystatechange = function(){};
+        DBG.println(AjxDebug.DBG1, "AjxRpcRequest.prototype.cancel: clearing onreadystatechange before abort");
     }
     this.__httpReq.abort();
 };
@@ -186,9 +191,8 @@ function(req, callback) {
 
 		// If IE receives a 500 error, the object reference can be lost
 		DBG.println(AjxDebug.DBG1, "Async RPC request: Lost request object!!!");
-		AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " Async RPC request: Lost request object!!!");
+		AjxDebug.println(AjxDebug.RPC, "Async RPC request: Lost request object!!!");
 		callback.run( {text:null, xml:null, success:false, status:500} );
-		AjxRpc.freeRpcCtxt(req);
 		return;
 	}
 
@@ -210,13 +214,12 @@ function(req, callback) {
 			callback.run( {text:req.__httpReq.responseText, xml:req.__httpReq.responseXML, success:false, status:status, reqId:req.id} );
 		}
 
-		AjxRpc.freeRpcCtxt(req);
+		// ALWAYS cancel *LAST* otherwise bad things happen.
+		req.cancel();
 	}
 
 	} catch (ex) {
-		if (window.AjxException) {
-			AjxException.reportScriptError(ex);
-		}
+		AjxException.reportScriptError(ex);
 	}
 };
 

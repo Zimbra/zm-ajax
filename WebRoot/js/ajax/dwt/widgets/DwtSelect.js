@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -52,8 +52,6 @@ DwtSelect = function(params) {
     this._selectedValue = this._selectedOption = null;
 	this._maxRows = params.maxRows || 0;
 	this._layout = params.layout;
-    this._congruent = params.congruent;
-    this._hrCount = 0;
 
     // add options
     var options = params.options;
@@ -187,13 +185,6 @@ function(option, selected, value, image) {
     // return the index of the option.
     this._optionValuesToIndices[opt.getValue()] = this._options.size() - 1;
     return (this._options.size() - 1);
-};
-
-DwtSelect.prototype.addHR =
-function() {
-    opt = new DwtSelectOption("hr" + this._hrCount.toString(), false, "", this, null, null, null, true);
-    this._hrCount++;
-	this._options.add(opt);
 };
 
 /**
@@ -600,28 +591,21 @@ function(templateId, data) {
 DwtSelect.prototype._createMenu =
 function() {
     var menu = new DwtSelectMenu(this);
-    var mi;
     for (var i = 0, len = this._options.size(); i < len; ++i) {
-	    var option = this._options.get(i);
-        if (option._hr) {
-            mi = new DwtMenuItem({parent:menu, style:DwtMenuItem.SEPARATOR_STYLE});
-            mi.setEnabled(false);
-        } else {
-            var mi = new DwtSelectMenuItem(menu, Dwt.getNextId(option._value + "_"));
-            var image = option.getImage();
-            if (image) {
-                mi.setImage(image);
-            }
-            var text = option.getDisplayValue();
-            if (text) {
-                mi.setText(AjxStringUtil.htmlEncode(text));
-            }
-            mi.setEnabled(option.enabled);
-
-            mi.addSelectionListener(new AjxListener(this, this._handleOptionSelection));
-            mi._optionIndex = i;
+		var mi = new DwtSelectMenuItem(menu);
+		var option = this._options.get(i);
+        var image = option.getImage();
+        if (image) {
+            mi.setImage(image);
         }
-        mi._optionIndex = i;
+        var text = option.getDisplayValue();
+		if (text) {
+			mi.setText(AjxStringUtil.htmlEncode(text));
+		}
+		mi.setEnabled(option.enabled);
+
+		mi.addSelectionListener(new AjxListener(this, this._handleOptionSelection));
+		mi._optionIndex = i;
 		option.setItem(mi);
     }
 	return menu;
@@ -755,15 +739,13 @@ DwtSelectOptionData = function(value, displayValue, isSelected, selectedValue, i
  * @param {DwtSelect}	owner 	not used
  * @param {String}	optionalDOMId		not used
  * @param {String}	[selectedValue] 	the text value to use when this value is the currently selected value
- * @param {Boolean}	hr                  True => This option will be usd to create a unselectable horizontal rule
  */
-DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, image, selectedValue, hr) {
+DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, image, selectedValue) {
 	this._value = value;
 	this._selected = selected;
 	this._displayValue = displayValue;
 	this._image = image;
 	this._selectedValue = selectedValue;
-    this._hr = hr;
 
 	this._internalObjectId = DwtSelect._assignId(this);
 	this.enabled = true;
@@ -891,10 +873,7 @@ function() {
  * @extends		DwtMenu
  */
 DwtSelectMenu = function(parent) {
-    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout,
-        maxRows:parent._maxRows, congruent:parent._congruent,
-        id:Dwt.getNextId(parent.getHTMLElId() + "_Menu_")});
-// Dwt.getNextId should be removed once Bug 66510 is fixed
+    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout, maxRows:parent._maxRows});
 };
 DwtSelectMenu.prototype = new DwtMenu;
 DwtSelectMenu.prototype.constructor = DwtSelectMenu;
@@ -916,8 +895,8 @@ function() {
  * 
  * @extends 	DwtMenuItem
  */
-DwtSelectMenuItem = function(parent, id) {
-    DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem", id: id});
+DwtSelectMenuItem = function(parent) {
+    DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem"});
 };
 DwtSelectMenuItem.prototype = new DwtMenuItem;
 DwtSelectMenuItem.prototype.constructor = DwtSelectMenuItem;

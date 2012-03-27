@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,13 +32,9 @@ AjxRpc = function() {
 
 AjxRpc.__rpcCache		= [];		// The pool of RPC contexts available
 AjxRpc.__rpcOutstanding	= {};		// The pool of RPC contexts in use
-
-AjxRpc.__RPC_CACHE_MAX		= 50;		// maximum number of busy contexts we can have
-AjxRpc.__RPC_ID				= 0;		// used for context IDs
-AjxRpc.__RPC_IN_USE			= 0;		// number of contexts that are busy
-AjxRpc.__RPC_HIGH_WATER		= 0;		// high water mark for busy contexts
-AjxRpc.__RPC_REAP_AGE		= 300000;	// 5 minutes; mark any context older than this (in ms) as free
-AjxRpc.__RPC_REAP_INTERVAL	= 1800000;	// 30 minutes; run the reaper this often
+AjxRpc.__RPC_CACHE_MAX	= 50;		// maximum number of busy contexts we can have
+AjxRpc.__RPC_COUNT		= 0;
+AjxRpc.__RPC_REAP_AGE	= 300000;	// mark any context older than this (in ms) as free
 
 /**
  * Submits a request to a URL. The request is handled through a pool of request
@@ -66,7 +62,7 @@ AjxRpc.__RPC_REAP_INTERVAL	= 1800000;	// 30 minutes; run the reaper this often
  * 		<li>xml - the string response xml</li>
  * 		<li>success - boolean set to true</li>
  * 		</ul>
- * 		If there is an error, then the following will be returned
+ * 		If there is an eror, then the following will be returned
  * 		<ul>
  * 		<li>text - the string response text<li>
  * 		<li>xml - the string response xml </li>
@@ -95,22 +91,23 @@ function(requestStr, serverUrl, requestHeaders, callback, useGet, timeout) {
 			newEx.detail = ex.message;
 			newEx.code = AjxException.NETWORK_ERROR;
 			newEx.msg = "Network error";
-		} else if (ex.code == 101){
+		} else if (ex instanceof XMLHttpRequestException && ex.code == 101){
 			// Chrome 
 			newEx.detail = ex.message;
-			newEx.code = AjxException.NETWORK_ERROR;
-			newEx.msg = "Network error";
+            newEx.code = AjxException.NETWORK_ERROR;
+            newEx.msg = "Network error";
 		} else {
 			newEx.detail = ex.toString();
 			newEx.code = AjxException.UNKNOWN_ERROR;
 			newEx.msg = "Unknown Error";
 		}
-		// exception hit: we're done whether sync or async, free the context
-		AjxRpc.freeRpcCtxt(rpcCtxt);
+		if (!asyncMode) {
+			AjxRpc.freeRpcCtxt(rpcCtxt);
+		}
 		throw newEx;
 	}
 	if (!asyncMode) {
-		// we've returned from a sync request, free the context
+		// we're done using this rpcCtxt. Add it back to the pool
 		AjxRpc.freeRpcCtxt(rpcCtxt);
 	}
 	return response;
@@ -123,21 +120,10 @@ AjxRpc.freeRpcCtxt =
 function(rpcCtxt) {
 	// we're done using this rpcCtxt. Add it back to the pool
 	if (AjxRpc.__rpcOutstanding[rpcCtxt.id]) {
-		AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " --- freeing rpcCtxt " + rpcCtxt.id);
+		DBG.println(AjxDebug.DBG2, "--- freeing rpcCtxt " + rpcCtxt.id);
 		AjxRpc.__rpcCache.push(rpcCtxt);
 		delete AjxRpc.__rpcOutstanding[rpcCtxt.id];
-		AjxRpc.__RPC_IN_USE--;
 	}
-};
-
-AjxRpc.removeRpcCtxt =
-function(rpcCtxt) {
-	AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " REMOVE rpcCtxt " + rpcCtxt.id);
-	if (AjxRpc.__rpcOutstanding[rpcCtxt.id]) {
-		delete AjxRpc.__rpcOutstanding[rpcCtxt.id];
-		AjxRpc.__RPC_IN_USE--;
-	}
-	AjxUtil.arrayRemove(AjxRpc.__rpcCache, rpcCtxt);
 };
 
 /**
@@ -167,14 +153,16 @@ function() {
 
 	if (AjxRpc.__rpcCache.length > 0) {
 		rpcCtxt = AjxRpc.__rpcCache.pop();
-		AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " reusing RPC ID " + rpcCtxt.id);
+		DBG.println(AjxDebug.DBG2, "reusing RPC ID " + rpcCtxt.id);
+		AjxDebug.println(AjxDebug.RPC, "reusing RPC ID " + rpcCtxt.id);
 	} else {
-		if (AjxRpc.__RPC_IN_USE < AjxRpc.__RPC_CACHE_MAX) {
+		if (AjxRpc.__RPC_COUNT < AjxRpc.__RPC_CACHE_MAX) {
 			// we haven't reached our limit, so create a new AjxRpcRequest
-			var id = "__RpcCtxt_" + AjxRpc.__RPC_ID;
+			var id = "__RpcCtxt_" + AjxRpc.__RPC_COUNT;
 			rpcCtxt = new AjxRpcRequest(id);
-			AjxRpc.__RPC_ID++;
-			AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " Created RPC " + id);
+			AjxRpc.__RPC_COUNT++;
+			DBG.println(AjxDebug.DBG1, "Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
+			AjxDebug.println(AjxDebug.RPC, "Created RPC " + id + ", total created: " + AjxRpc.__RPC_COUNT);
 		} else {
 			// yikes, we're out of rpc's! Look for an old one to kill.
 			rpcCtxt = AjxRpc.__reap();
@@ -184,21 +172,19 @@ function() {
 				var text = [];
 				for (var i in AjxRpc.__rpcOutstanding) {
 					var rpcCtxt = AjxRpc.__rpcOutstanding[i];
-					text.push(rpcCtxt.methodName);
+					var req = rpcCtxt.requestStr;
+					if (req) {
+						text.push(req.replace(/"authToken":"\w*"/, '"authToken":"[removed]"'));
+					}
 				}
-				var detail = text.join("<br>") + "<br>";
-				AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " Out of RPC cache!!! Outstanding requests: " + detail);
+				var detail = text.join("<br><br>");
+				AjxDebug.println(AjxDebug.RPC, "Out of RPC cache!!! Outstanding requests: " + detail);
 				throw new AjxException("Out of RPC cache", AjxException.OUT_OF_RPC_CACHE, "AjxRpc.__getFreeRpcCtxt", detail);
 			}
 		}
 	}
 
 	AjxRpc.__rpcOutstanding[rpcCtxt.id] = rpcCtxt;
-	AjxRpc.__RPC_IN_USE++;
-	if (AjxRpc.__RPC_IN_USE > AjxRpc.__RPC_HIGH_WATER) {
-		AjxRpc.__RPC_HIGH_WATER = AjxRpc.__RPC_IN_USE;
-		AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " High water mark: " + AjxRpc.__RPC_HIGH_WATER);
-	}
 
 	// always reset timestamp before returning rpcCtxt
 	rpcCtxt.timestamp = (new Date()).getTime();
@@ -206,30 +192,23 @@ function() {
 };
 
 /**
- * Frees expired contexts.
- * 
- * @param {boolean}	all		if true, frees all expired contexts; otherwise, returns the first one it finds
+ * Searches for an "expired" rpc. If found, cancels it and returns it.
  * @private
  */
 AjxRpc.__reap =
-function(all) {
+function() {
 	var rpcCtxt;
 	var time = (new Date()).getTime();
-	AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " Running RPC context reaper");
+
 	for (var i in AjxRpc.__rpcOutstanding) {
 		rpcCtxt = AjxRpc.__rpcOutstanding[i];
-		if ((rpcCtxt.timestamp + AjxRpc.__RPC_REAP_AGE) < time) {
+		if (rpcCtxt.timestamp + AjxRpc.__RPC_REAP_AGE < time) {
 			DBG.println(AjxDebug.DBG1, "AjxRpc.__reap: cleared RPC context " + rpcCtxt.id);
-			AjxDebug.println(AjxDebug.RPC, AjxDebug._getTimeStamp() + " AjxRpc.__reap: cleared RPC context " + rpcCtxt.id);
+			AjxDebug.println(AjxDebug.RPC, "AjxRpc.__reap: cleared RPC context " + rpcCtxt.id);
 			rpcCtxt.cancel();
 			delete AjxRpc.__rpcOutstanding[i];
-			AjxRpc.__RPC_IN_USE--;
-			if (!all) {
-				return rpcCtxt;
-			}
+			return rpcCtxt;
 		}
 	}
 	return null;
 };
-
-window.setInterval(AjxRpc.__reap.bind(null, true), AjxRpc.__RPC_REAP_INTERVAL);
