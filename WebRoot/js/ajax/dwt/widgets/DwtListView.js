@@ -1448,7 +1448,9 @@ function(colIdx, params) {
 	var width = headerList[colIdx]._width;
 	if (width) {
 		if (AjxEnv.isIE)		return (width + 2);
-		if (AjxEnv.isSafari)	return (width + 5);
+		if (AjxEnv.isSafari && !AjxEnv.isChrome19up) {
+			return (width + 5);
+		}
 		return width;
 	}
 	return null;

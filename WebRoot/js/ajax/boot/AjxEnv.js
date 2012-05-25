@@ -128,6 +128,8 @@ AjxEnv.isSafari5up;
 AjxEnv.isCamino;
 /** Chrome. */
 AjxEnv.isChrome;
+/** Chrome version 19 and up. */
+AjxEnv.isChrome19up;
 /** Gecko-based. */
 AjxEnv.isGeckoBased;
 /** WebKit-based. */
@@ -203,6 +205,7 @@ function() {
 	AjxEnv.isSafari5up = false;
 	AjxEnv.isCamino = false;
 	AjxEnv.isChrome = false;
+	AjxEnv.isChrome19up = false;
 	AjxEnv.isGeckoBased = false;
 	AjxEnv.isWebKitBased = false;
 	AjxEnv.isOpera = false;
@@ -344,6 +347,7 @@ function() {
 		AjxEnv.isSafari5up		= (AjxEnv.isSafari && browserVersion >= 5.0) || AjxEnv.isChrome;
 		AjxEnv.isDesktop2up		= (AjxEnv.isDesktop && browserVersion >= 2.0);
 		AjxEnv.isChrome7		= (AjxEnv.isChrome && browserVersion >= 7.0);
+		AjxEnv.isChrome19up		= (AjxEnv.isChrome && browserVersion >= 19.0);		
 
 		AjxEnv.browser = "[unknown]";
 		if (AjxEnv.isOpera) 				{	AjxEnv.browser = "OPERA";	}
