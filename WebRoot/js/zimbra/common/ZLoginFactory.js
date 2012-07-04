@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -94,7 +94,7 @@ function(msgs) {
 		logOffMsg : msgs["loginAsDiff"] || "",
 		logOffAction : "",
 		
-		showButton : true,
+		showButton : false,
 		buttonName : msgs["login"] || "",
 		
 		copyrightText : msgs["splashScreenCopyright"] || ""
@@ -162,29 +162,23 @@ ZLoginFactory.getLoginButton = function () 		{	return this.get(ZLoginFactory.LOG
 ZLoginFactory.getLoginDialogHTML = function (params) {
 	var html = [
 		 "<div ", (params.showAbout ? " " : "class='center'"), ">",
-				"<div class='contentBox'>",
 				"<div class='ImgAltBanner'></div>",
 		 		"<h1><a href='http://www.zimbra.com/' id='bannerLink' target='_new'>",
 		 			"<span class='ImgLoginBanner'></span>",
 		 		"</a></h1>",
 		 		"<div id='ZLoginErrorPanel' ", (params.showError ? " " :  "style='display:none'"), ">",
 		 			"<table><tr><td width='40'><div class='ImgCritical_32'></div></td><td width='*'><span class='errorText' id='ZLoginErrorMsg'></span></td></tr></table>",
+		 			"<div style='clear:both;height:0px;'></div>",
 				"</div>",
 				"<form name='loginForm' method='POST'>",
 		 		"<table class='form' ", (params.showForm ? " " : "style='display:none'"),">",
-				"<tr ", (params.showMoreField ? " " : "style='display:none'"), ">",
+		 "<tr ", (params.showMoreField ? " " : "style='display:none'"), ">",
 					"<td></td>",
-					"<td><span class='Img ImgInformation_xtra_small'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><label for='", ZLoginFactory.MORE_ID, "'>",params.moreMsg,"</label></td>",
-				"</tr>",
-				"<tr ", (params.showLoading ? " " : "style='display:none'"), ">",
-		 			"<td colspan=2 class='ZLoadingMessage'>" , params.loadingMsg, "</td>",
-				"</tr>",
-				"<tr id='ZLoginLicenseMsgContainer' ", (params.showLicenseMsg ? " " : "style='display:none'"), ">",
-					"<td colspan=3 id='ZLoginLicenseMsg'>", params.licenseMsg, "</td>",
-				"</tr>",
+                                        "<td><span class='Img ImgInformation_xtra_small'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><label for='", ZLoginFactory.MORE_ID, "'>",params.moreMsg,"</label></td>",
+		"</tr>",
                 "<tr ", (params.showUserField ? " " : "style='display:none'"), ">",
 		 			"<td><label for='", ZLoginFactory.USER_ID, "'>",params.userNameMsg,"</label></td>",
-		 			"<td><input id='", ZLoginFactory.USER_ID, "' name='", ZLoginFactory.USER_ID, "' class='zLoginField' type='text' size='40' autocomplete=OFF/></td>",
+		 			"<td><input id='", ZLoginFactory.USER_ID, "' name='", ZLoginFactory.USER_ID, "' class='zLoginField' type='text' size='40'  autocomplete=OFF/></td>",
 		 		"</tr>",
 		 		"<tr ", (params.showPasswordField ? " " : "style='display:none'"), ">",
 		 			"<td><label for=",ZLoginFactory.PASSWORD_ID,">", params.passwordMsg,"</label></td>",
@@ -197,18 +191,21 @@ ZLoginFactory.getLoginDialogHTML = function (params) {
 		 		"<tr id=", ZLoginFactory.PASSWORD_CONFIRM_TR_ID, (params.showNewPasswordFields ? " " : " style='display:none'"), ">",
 		 			"<td><label for='", ZLoginFactory.PASSWORD_CONFIRM_ID, "'>", params.newPassword1Msg, "</label></td>",
 		 			"<td><input id='", ZLoginFactory.PASSWORD_CONFIRM_ID, "' class='zLoginField' name='", ZLoginFactory.PASSWORD_CONFIRM_ID, "' type='password' autocomplete=OFF size='40'/></td>",
-		 		"</tr>",		 		
+		 		"</tr>",
+				"<tr id='ZLoginLicenseMsgContainer' ", (params.showLicenseMsg ? " " : "style='display:none'"), ">",
+					"<td colspan=3 id='ZLoginLicenseMsg'>", params.licenseMsg, "</td>",
+				"</tr>",		 		
                 "<tr>",
 	                "<td>&nbsp;</td>",
-	                "<td class='submitTD'>",
-	               	    "<input id='", ZLoginFactory.LOGIN_BUTTON_ID, "' class='ZLoginButton DwtButton' type='button' onclick='", params.loginAction, ";return false' value='",params.buttonName,(params.showButton ?"'/>" :"' style='display:none'/>"),
+	                "<td style='text-align:right'>",
+	                	"<input id='", ZLoginFactory.LOGIN_BUTTON_ID, "' type='button' onclick='", params.loginAction, ";return false' class='DwtButton' value='",params.buttonName,"' style='float:left;'/>",
 	                    "<input id='", ZLoginFactory.REMEMBER_ME_ID, "' value='1' type='checkbox' name='", ZLoginFactory.REMEMBER_ME_ID, "'  ", (params.showRememberMeCheckbox ? "" : "style='display:none'"), "/>",
 	                    "<label ", (params.showRememberMeCheckbox ? "" : "style='display:none'"), " for='", ZLoginFactory.REMEMBER_ME_ID, "'>", params.rememberMeMsg, "</label>",
 	                "</td>",
                 "</tr>",	
     			"</table>",
-				"</div>",
     			"</form>",
+    			"<div class='decor1'></div>",
 				"<div id='ZLoginAboutPanel' ", (params.showAbout ? "" : "style='display:none'"), ">", params.aboutMsg,
 				"</div>",	
     			"<div id='ZLoginLongVersion' class='version' ", (params.showLongVersion ? "" : "style='display:none'"), ">", params.longVersion, "</div>",
@@ -216,9 +213,7 @@ ZLoginFactory.getLoginDialogHTML = function (params) {
 	"<div class='Footer'>",
 		"<div id='ZLoginNotice'>",params.clientLevelNotice,"</div>",
 		"<div class='copyright'>",params.copyrightText,"</div>",
-	"</div>",
-    "<div class='decor1Outer'><div class='decor1'></div></div>",   //css class 'center' have 'filter' attribute which make 'overflow:visible' not work in ie. so put this out of 'center'
-	"<div class='decor2'></div>"
+	"</div>"
 	].join("");
 	return html;
 }

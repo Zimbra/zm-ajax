@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -58,8 +58,6 @@ AjxUtil.HOST_NAME_RE = /^[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{1,})*(\.[A-Za-z0-9\-]
 AjxUtil.HOST_NAME_WITH_PORT_RE = /^[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})*:([0-9])+$/;
 AjxUtil.EMAIL_SHORT_RE = /^[^@\s]+$/;
 AjxUtil.EMAIL_FULL_RE = /^[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+$/;
-AjxUtil.FULL_URL_RE = /^[A-Za-z0-9]{2,}:\/\/[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*(:([0-9])+)?(\/[\w\.\|\^\*\[\]\{\}\(\)\-<>~,'#_;@:!%]+)*(\/)?(\?[\w\.\|\^\*\+\[\]\{\}\(\)\-<>~,'#_;@:!%&=]*)?$/;
-AjxUtil.IP_FULL_URL_RE = /^[A-Za-z0-9]{2,}:\/\/\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?(:([0-9])+)?(\/[\w\.\|\^\*\[\]\{\}\(\)\-<>~,'#_;@:!%]+)*(\/)?(\?[\w\.\|\^\*\+\[\]\{\}\(\)\-<>~,'#_;@:!%&=]*)?$/;
 AjxUtil.SHORT_URL_RE = /^[A-Za-z0-9]{2,}:\/\/[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*(:([0-9])+)?$/;
 AjxUtil.IP_SHORT_URL_RE = /^[A-Za-z0-9]{2,}:\/\/\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?(:([0-9])+)?$/;
 
@@ -357,7 +355,6 @@ function(list) {
 
 AjxUtil.arrayAsHash =
 function(array, valueOrFunc) {
-	array = AjxUtil.toArray(array);
 	var hash = {};
 	var func = typeof valueOrFunc == "function" && valueOrFunc;
 	var value = valueOrFunc || true; 
@@ -404,11 +401,6 @@ function(array, object, strict) {
 		}
 	}
 	return -1;
-};
-
-AjxUtil.arrayContains =
-function(array, object, strict) {
-	return AjxUtil.indexOf(array, object, strict) != -1;
 };
 
 AjxUtil.keys = function(object, acceptFunc) {
@@ -557,23 +549,6 @@ AjxUtil.byNumber = function(a, b) {
  */
 AjxUtil.byStringProp = function(prop, a, b) {
     return a[prop].localeCompare(b[prop]);
-};
-
-/**
- * returns the size of the given array, i.e. the number of elements in it, regardless of whether the array is associative or not.
- * so for example for array that is set simply by a = []; a[50] = "abc"; arraySize(a) == 1. For b = []; b["abc"] = "def"; arraySize(b) == 1 too.
- * Incredibly JavasCript does not have a built in simple way to get that.
- * @param arr
- */
-AjxUtil.arraySize =
-function(a) {
-	var size = 0;
-	for(var e in a) {
-		if (a.hasOwnProperty(e)) {
-			size ++;
-		}
-	}
-	return size;
 };
 
 /**
@@ -788,24 +763,13 @@ function(hash1, hash2, overwrite, ignore) {
 // can get lost in new window
 AjxUtil.isArray1 =
 function(arg) {
-	return !!(arg && (arg.length != null) && arg.splice && arg.slice);
+	return Boolean(arg && (arg.length != null) && arg.splice && arg.slice);
 };
 
 // converts the arg to an array if it isn't one
 AjxUtil.toArray =
 function(arg) {
-	if (!arg) {
-		return [];
-	}
-	else if (AjxUtil.isArray1(arg)) {
-		return arg;
-	}
-	else if (arg.isAjxVector) {
-		return arg.toArray();
-	}
-	else {
-		return [arg];
-	}
+	return AjxUtil.isArray1(arg) ? arg : (arg === undefined) ? [] : [arg];
 };
 
 /**
@@ -830,29 +794,4 @@ AjxUtil.get = function(object /* , propName1, ... */) {
         object = object[arguments[i]];
     }
     return object;
-};
-
-
-/**
- *  Convert non-ASCII characters to valid HTML UNICODE entities 
- * @param {string}
- * 
-*/
-AjxUtil.convertToEntities = function (source){
-	var result = '', temp, length = 0, i = 0;
-    
-    if (!source || !(length = source.length)) return source;
-    
-	for(i; i < length; ++i){
-		if(source.charCodeAt(i) > 127){
-			temp = source.charCodeAt(i).toString(10);
-			while(temp.length < 4){
-				temp = '0' + temp;
-			}
-			result += '&#' + temp + ';';
-		} else {
-			result += source.charAt(i);
-		}
-	}
-	return result;
 };

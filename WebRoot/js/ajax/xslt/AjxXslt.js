@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -140,7 +140,7 @@ function(dom) {
 	var ret;
 	if (AjxEnv.isIE) {
 		ret = this.transformIE(dom);
-	} else if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
+	} else if (AjxEnv.isNav) {
 		return this.transformNav(dom);  // already in dom
 	} else {
 		DBG.println(AjxDebug.DBG1, "No XSL transformation due to browser incompatibility.");

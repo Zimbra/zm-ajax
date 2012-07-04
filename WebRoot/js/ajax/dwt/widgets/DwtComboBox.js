@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,9 +26,6 @@
  * @param {hash}	inputParams		params for the input (see {@link DwtInputField})
  * @param {string}      className		the CSS class
  * @param {constant}      posStyle		the positioning style (see {@link DwtControl})
- * @param {int}     maxRows         The number of maxRows needed in drop down(see {@link DwtMenu})
- * @param {constant} layout         The layout of the drop down(see {@link DwtMenu})
- * @param {boolean} autoScroll    Set to true if auto scroll to the input text is needed. Defaults to false.
  * 
  * @extends		DwtComposite
  */
@@ -39,7 +36,6 @@ DwtComboBox = function(params) {
     DwtComposite.call(this, params);
     
     this.input = null;
-	this._menu = null;
     this._button = null;
     
     this._textToValue = {}; // Map of text strings to their values.
@@ -51,9 +47,6 @@ DwtComboBox = function(params) {
 	this._menuItemListenerObj = new AjxListener(this, this._menuItemListener);
 
     this._inputParams = params.inputParams;
-	this._maxRows = params.maxRows;
-	this._layout = params.layout;
-	this._autoScroll = params.autoScroll || false;
     this._createHtml();
 };
 
@@ -62,8 +55,10 @@ DwtComboBox.PARAMS = ["parent", "inputParams", "className", "posStyle", "dialog"
 DwtComboBox.prototype = new DwtComposite;
 DwtComboBox.prototype.constructor = DwtComboBox;
 
-DwtComboBox.prototype.isDwtComboBox = true;
-DwtComboBox.prototype.toString = function() { return "DwtComboBox"; };
+DwtComboBox.prototype.toString =
+function() {
+    return "DwtComboBox";
+};
 
 //
 // Data
@@ -211,21 +206,13 @@ DwtComboBox.prototype.focus = function() {
     this.input.focus();
 };
 
-
 //
 // Protected methods
 //
 
 DwtComboBox.prototype._createMenu =
 function() {
-	var params = {parent:this};
-	if (this._maxRows) {
-		params.maxRows = this._maxRows;
-	}
-	if (this._layout) {
-		params.layout = this._layout;
-	}
-    var menu = this._menu = new DwtMenu(params);
+    var menu = new DwtMenu({parent:this});
     for (var i in this._textToValue) {
     	var item = this._createMenuItem(menu, i);
         var value = this._textToValue[i];
@@ -253,7 +240,6 @@ function(ev) {
 	var ovalue = this.input.getValue();
 	var nvalue = menuItem.getText();
 	this.input.setValue(nvalue);
-	this._menu.popdown();
 
 	// notify our listeners
 	var event = DwtUiEvent.getEvent(ev);
@@ -275,21 +261,8 @@ DwtComboBox.prototype._handleKeyUp = function(ev) {
 	DwtInputField._keyUpHdlr(ev);
 	// notify our listeners
 	var event = DwtUiEvent.getEvent(ev);
-	var newValue = this.input.getValue();
-	event._args = { selectObj: this, newValue: newValue, oldValue: this.__ovalue };
+	event._args = { selectObj: this, newValue: this.input.getValue(), oldValue: this.__ovalue };
 	this.notifyListeners(DwtEvent.ONCHANGE, event);
-	if (this._menu && this._autoScroll && newValue != this.__ovalue) {
-		//if auto scroll is on then scroll to the index which starts with
-		//the value in input field
-		var index = 0;
-		for (var text in this._textToValue) {
-			if (text.indexOf(newValue) == 0) {
-				this._menu.scrollToIndex(index);
-				break;
-			}
-			index++;
-		}
-	}
 	return true;
 };
 
