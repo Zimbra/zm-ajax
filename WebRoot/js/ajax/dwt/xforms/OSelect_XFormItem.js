@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -51,7 +51,6 @@ OSelect1_XFormItem.prototype.labelWrap = true;
 //		* teach select1 that more than one value may be selected (same as select)
 //		* convert OSELECT_CHECK to just use showCheck?
 //		* does &radic; work everywhere?  Use an image?
-OSelect1_XFormItem.prototype.setMenuWidth = true;
 OSelect1_XFormItem.prototype.showCheck = false;
 OSelect1_XFormItem.prototype.checkHTML = "&radic;";
 OSelect1_XFormItem.MENU_DIR_DOWN=1;
@@ -140,22 +139,12 @@ OSelect1_XFormItem.prototype.getNoteElement = function () {
 }
 /*OSelect1_XFormItem.prototype.setError = function (message, childError) {
 	if(window.console && window.console.log) console.log("Showing error note");
-	var errLoc = this.getErrorLocation();
-	if (errLoc == _PARENT_ || errLoc == _INHERIT_){
-		this.getParentItem().setError(message, true);
-		return;
-	}
 	this.showNote(message, this.getErrorNoteCssClass());
 	this.__errorState = XFormItem.ERROR_STATE_ERROR;
 }
 
 OSelect1_XFormItem.prototype.clearError = function () {
 	if(window.console && window.console.log) console.log("Hiding error note");
-	var errLoc = this.getErrorLocation();
-	if (errLoc == _PARENT_ || errLoc == _INHERIT_){
-		this.getParentItem().clearError();
-		return;
-	}
 	this.hideNote();
 	this.__errorState = XFormItem.ERROR_STATE_VALID;
 }*/
@@ -215,25 +204,23 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 	var mBounds = this.getBounds(menu);
 	var menuHeight = mBounds.height;
 	var menuTop = mBounds.top;
-    if (this.getInheritedProperty("setMenuWidth") == true) {
-        if (AjxEnv.isIE) {
-            if(this.getInheritedProperty("editable")) {
-                menu.style.width = parseInt(bounds.width)+4;
-                menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 1;
-            } else {
-                menu.style.width = parseInt(bounds.width)+2;
-                menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 1;
-            }
-        } else {
-            if(this.getInheritedProperty("editable")) {
-                menu.style.width = parseInt(bounds.width)-5;
-                menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 6;
-            } else {
-                menu.style.width = parseInt(bounds.width)-3;
-                menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 4;
-            }
-        }
-    }
+	if (AjxEnv.isIE) {
+		if(this.getInheritedProperty("editable")) {
+			menu.style.width = parseInt(bounds.width)+4;
+			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 1;			
+		} else {
+			menu.style.width = parseInt(bounds.width)+2;
+			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 1;
+		}
+	} else {
+		if(this.getInheritedProperty("editable")) {
+			menu.style.width = parseInt(bounds.width)-5;
+			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 6;
+		} else {
+			menu.style.width = parseInt(bounds.width)-3;
+			menu.getElementsByTagName("table")[0].style.width = parseInt(bounds.width) - 4;			
+		}
+	}
 	if(menuHeight + menuTop > wh - WINDOW_GUTTER) {
 		//menu does not fit downwards - check if it fits upwards
 		if((bounds.top - menuHeight) > WINDOW_GUTTER) {
@@ -257,10 +244,6 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 				menu.style.height = wh-WINDOW_GUTTER-parseInt(menu.style.top);								
 				this.menuDirection = OSelect1_XFormItem.MENU_DIR_DOWN;
 			}
-
-            if(!AjxEnv.isIE){
-                menu.style.height = parseInt(menu.style.height) - 11;
-            }
 			menu.style.overflow="auto";	
 			menu.getElementsByTagName("table")[0].className = this.getChoiceScrollTableCssClass();
 			menu.getElementsByTagName("table")[0].width="100%";
@@ -268,11 +251,6 @@ OSelect1_XFormItem.prototype.showMenu = function() {
 	} else {
 		menu.getElementsByTagName("table")[0].className = this.getChoiceTableCssClass();
 	}
-
-    if(!AjxEnv.isIE && menu.clientWidth && menu.scrollWidth && (menu.scrollWidth > menu.clientWidth)){
-        menu.style.overflow="auto";
-    }
-
 	menu.style.zIndex = 1000000;
 	if (this.$hideListener == null) {
 		this.$hideListener = new AjxListener(this, this.oMouseUp);
@@ -458,7 +436,7 @@ OSelect1_XFormItem.prototype.getBounds = function(anElement, containerElement) {
 	var myBounds = new Object();
 	myBounds.left = 0;
 	myBounds.top = 0;
-	myBounds.width = anElement.clientWidth ? anElement.clientWidth: anElement.offsetWidth;
+	myBounds.width = anElement.clientWidth;
 	myBounds.height = anElement.offsetHeight;
 
 	if(!containerElement) {

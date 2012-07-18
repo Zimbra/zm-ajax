@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,29 +43,15 @@ DwtListView = function(params) {
 	if (params.headerList) {
 		var htmlElement = this.getHtmlElement();
 
-        var html = new Array(50);
-        var idx = 0;
-        var headId = Dwt.getNextId();
-        var colId = Dwt.getNextId();
-        html[idx++] = "<table width='100%'><tr><td ";
-        html[idx++] = "id=" + headId;
-        html[idx++] = "></td></tr><tr><td ";
-        html[idx++] = "id=" + colId;
-        html[idx++] = "></td></tr></table>";
-        htmlElement.innerHTML = html.join("");
+		this._listColDiv = document.createElement("div");
+		this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
+		this._listColDiv.className = "DwtListView-ColHeader";
+		htmlElement.appendChild(this._listColDiv);
 
-        var headHtml = document.getElementById(headId);
-        this._listColDiv = document.createElement("div");
-        this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
-        this._listColDiv.className = "DwtListView-ColHeader";
-        headHtml.appendChild(this._listColDiv);
-
-        var colHtml = document.getElementById(colId);
-        this._listDiv = document.createElement("div");
-        this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
-        this._listDiv.className = "DwtListView-Rows";
-        colHtml.appendChild(this._listDiv);
-
+		this._listDiv = document.createElement("div");
+		this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
+		this._listDiv.className = "DwtListView-Rows";
+		htmlElement.appendChild(this._listDiv);
 
 		// setup vars needed for sorting
 		this._bSortAsc = false;
@@ -77,12 +63,12 @@ DwtListView = function(params) {
 		
 	this._setMouseEventHdlrs();
 	
-	this._listenerMouseOver = this._mouseOverListener.bind(this);
-	this._listenerMouseOut = this._mouseOutListener.bind(this);
-	this._listenerMouseDown = this._mouseDownListener.bind(this);
-	this._listenerMouseUp = this._mouseUpListener.bind(this);
-	this._listenerMouseMove = this._mouseMoveListener.bind(this);
-	this._listenerDoubleClick = this._doubleClickListener.bind(this);
+	this._listenerMouseOver = new AjxListener(this, this._mouseOverListener);
+	this._listenerMouseOut = new AjxListener(this, this._mouseOutListener);
+	this._listenerMouseDown = new AjxListener(this, this._mouseDownListener);
+	this._listenerMouseUp = new AjxListener(this, this._mouseUpListener);
+	this._listenerMouseMove = new AjxListener(this, this._mouseMoveListener);
+	this._listenerDoubleClick = new AjxListener(this, this._doubleClickListener);
 	this.addListener(DwtEvent.ONMOUSEOVER, this._listenerMouseOver);
 	this.addListener(DwtEvent.ONMOUSEOUT, this._listenerMouseOut);
 	this.addListener(DwtEvent.ONMOUSEDOWN, this._listenerMouseDown);
@@ -126,8 +112,6 @@ DwtListView = function(params) {
 DwtListView.prototype = new DwtComposite;
 DwtListView.prototype.constructor = DwtListView;
 
-DwtListView.prototype.isDwtListView = true;
-DwtListView.prototype.toString = function() { return "DwtListView"; };
 
 // Consts
 
@@ -158,6 +142,10 @@ DwtListView._KBFOCUS_CLASS				= "_kfc";
 
 // Public methods
 
+DwtListView.prototype.toString =
+function() {
+	return "DwtListView";
+};
 
 DwtListView.prototype.dispose =
 function() {
@@ -216,7 +204,7 @@ function(defaultColumnSort) {
 
 	htmlArr[idx++] = "<table id='";
 	htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_TABLE, this._view);
-	htmlArr[idx++] = "' height=100%";
+	htmlArr[idx++] = "' cellpadding=0 cellspacing=0 border=0 height=100%";
 	htmlArr[idx++] = this._noMaximize ? ">" : " width=100%>";
 	htmlArr[idx++] = "<tr>";
 
@@ -292,9 +280,6 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 			htmlArr[idx++] = headerCol._widthUnits;
 		}
     }
-	if (headerCol._tooltip && DwtControl.useBrowserTooltips) {
-		htmlArr[idx++] = " title='" + headerCol._tooltip + "'";
-	}
 	htmlArr[idx++] = ">";
 	// must add a div to force clipping :(
 	htmlArr[idx++] = "<div";
@@ -319,7 +304,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	}
 
 	// add new table for icon/label/sorting arrow
-	htmlArr[idx++] = "<table width=100%><tr>";
+	htmlArr[idx++] = "<table border=0 cellpadding=0 cellspacing=0 width=100%><tr>";
 	if (headerCol._iconInfo) {
 		var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "'"].join("");
 		htmlArr[idx++] = "<td><center>";
@@ -352,7 +337,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	// ALWAYS add "sash" separators
 	if (i < (numCols - 1)) {
 		htmlArr[idx++] = "<td width=6>";
-		htmlArr[idx++] = "<table align=right width=6 height=100% id='";
+		htmlArr[idx++] = "<table align=right border=0 cellpadding=0 cellspacing=0 width=6 height=100% id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_SASH, this._view, field);
 		htmlArr[idx++] = "'><tr>";
 		htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
@@ -575,15 +560,17 @@ DwtListView.prototype.redrawItem =
 function(item) {
     var odiv = this._getElFromItem(item);
     if (odiv) {
-		var className = odiv.className;
         var ndiv = this._createItemHtml(item);
-		ndiv.className = className;	// preserve classes
         odiv.parentNode.replaceChild(ndiv, odiv);
-		// preserve selection
-		if (this._selectedItems.contains(odiv)) {
-			this._selectedItems.remove(odiv);
-			this.selectItem(item);
-		}
+
+        var selection = this.getSelectedItems().getArray();
+        for (var i = 0; i < selection.length; i++) {
+            var sitem = selection[i];
+            if (sitem === item) {
+                this.setSelectedItems([].concat(selection));
+                break;
+            }
+        }
     }
 };
 
@@ -1046,7 +1033,7 @@ function(list) {
 
 DwtListView.prototype.getKeyMapName =
 function() {
-	return DwtKeyMap.MAP_LIST;
+	return "DwtListView";
 };
 
 DwtListView.prototype.handleKeyAction =
@@ -1137,15 +1124,16 @@ function (listViewHeight) {
 
 // Private methods
 
-// returns a regex that matches modified styles such as "Row-selected-actioned"
+// normalClass is always present on a list row
 DwtListView.prototype._getStyleRegex =
 function() {
-	return new RegExp("\\bRow(-(" + [DwtCssStyle.SELECTED,
-									 DwtCssStyle.ACTIONED,
-									 DwtCssStyle.FOCUSED,
-									 DwtCssStyle.DISABLED,
-									 DwtCssStyle.DRAG_PROXY].join("|") +
-					  "))+\\b", "g");
+	return new RegExp("\\b(" + [this._disabledSelectedClass,
+								this._selectedClass,
+								this._kbFocusClass,
+								this._dndClass,
+								this._rightClickClass
+							   ].join("|") +
+					  ")\\b", "g");
 };
 
 DwtListView.prototype._addRow =
@@ -1360,7 +1348,7 @@ function(base, item, params) {
  */
 DwtListView.prototype._getTable =
 function(htmlArr, idx, params) {
-	htmlArr[idx++] = "<table width=";
+	htmlArr[idx++] = "<table cellpadding=0 cellspacing=0 border=0 width=";
 	htmlArr[idx++] = !params.isDragProxy ? "100%>" : (this.getSize().x + ">");
 	return idx;
 };
@@ -1459,11 +1447,9 @@ function(colIdx, params) {
 	var headerList = params.headerList || this._headerList;
 	var width = headerList[colIdx]._width;
 	if (width) {
-		if (width != "auto" && width > 0) {
-			if (AjxEnv.isIE)		return (width + 2);
-			if (AjxEnv.isSafari && !AjxEnv.isChrome19up) {
-				return (width + 5);
-			}
+		if (AjxEnv.isIE)		return (width + 2);
+		if (AjxEnv.isSafari && !AjxEnv.isChrome19up) {
+			return (width + 5);
 		}
 		return width;
 	}
@@ -1928,7 +1914,7 @@ function(element, next) {
  */
 DwtListView.prototype._scrollList =
 function(itemDiv) {
-	Dwt.scrollIntoView(itemDiv, itemDiv.parentNode);
+	DwtControl._scrollIntoView(itemDiv, itemDiv.parentNode);
 };
 
 DwtListView.prototype._setRowHeight =
@@ -1982,7 +1968,7 @@ function(next) {
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 	}
 
-	if (this._kbAnchor && !this._duringFocusByMouseDown) {
+	if (this._kbAnchor) {
 		this._scrollList(this._kbAnchor);
 	}
 };
@@ -2045,8 +2031,7 @@ function(clickedEl, ev) {
 				Dwt.addClass(clickedEl, this._kbFocusClass);
 			}
 		}
-	}
-	else if (ev.button == DwtMouseEvent.LEFT) {
+	} else {
 		if (ev.ctrlKey) {
 			this.setMultiSelection(clickedEl, bContained, ev);
 		} else { // SHIFT KEY
@@ -2111,7 +2096,7 @@ function(clickedEl, ev) {
 		if (this._setListEvent(ev, this._selEv, clickedEl)) {
 			this._evtMgr.notifyListeners(DwtEvent.SELECTION, this._selEv);
 		}
-	} else if (ev.button == DwtMouseEvent.RIGHT && !ev.shiftKey && !ev.ctrlKey && this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
+	} else if (ev.button == DwtMouseEvent.RIGHT && this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
 		if (this._setListEvent(ev, this._actionEv, clickedEl)) {
 			this._evtMgr.notifyListeners(DwtEvent.ACTION, this._actionEv);
 		}
@@ -2465,7 +2450,7 @@ function(ev) {
 		delta = Math.max(DwtListView.MIN_COLUMN_WIDTH - fcol._width, delta);
 		fcol._width = Math.max(fcol._width + delta, DwtListView.MIN_COLUMN_WIDTH);
 		col2._width = Math.max(this._calcRelativeWidth(col2._index) - delta, DwtListView.MIN_COLUMN_WIDTH);
-		resized.push(fcol._index, col2._index);
+		resized.push(fcol, col2);
 		
 	} else if (delta > 0) {
 
@@ -2490,16 +2475,16 @@ function(ev) {
 				remain = 0;
 			}
 			col2._width = col2width;
-			resized.push(col2._index);
+			resized.push(col2);
 			col1 = col2;
 		}
 	
 		fcol._width = Math.max(fcol._width + delta, DwtListView.MIN_COLUMN_WIDTH);
-		resized.push(fcol._index);
+		resized.push(fcol);
 
 	}
 
-	var col = this._getNextResizeableColumnHeader(fcol, resized, true);
+	var col = this._getNextResizeableColumnHeader(-1, resized, true);
 	if (col) {
 		col._width = "auto";
 	}
@@ -2719,7 +2704,6 @@ function() {
  *        noRemove		[boolean]*	flag indicating whether this column can be removed (overrides visible flag)
  *        view			[constant]	ID of owning view
  *        noSortArrow	[boolean]*	if true, do not show up/down sort arrow in column
- *        tooltip		[string]*	tooltip
  *        
  * @private
  */
@@ -2738,8 +2722,6 @@ DwtListHeaderItem = function(params) {
 	this._name = params.name || params.text;
 	this._align = params.align;
 	this._noRemove = params.noRemove;
-	this._tooltip = params.tooltip;
-	
 	// width:
 	var w = parseInt(params.width);
 	if (isNaN(w) || !w) {
@@ -2754,12 +2736,14 @@ DwtListHeaderItem = function(params) {
 	}
 };
 
-DwtListHeaderItem.prototype.isDwtListHeaderItem = true;
-DwtListHeaderItem.prototype.toString = function() { return "DwtListHeaderItem"; };
-
 DwtListHeaderItem.PARAMS = ["id", "text", "icon", "width", "sortable", "resizeable", "visible", "name", "align", "noRemove", "view"];
 
 DwtListHeaderItem.sortCompare =
 function(a, b) {
 	return a._index < b._index ? -1 : (a._index > b._index ? 1 : 0);
+};
+
+DwtListHeaderItem.prototype.toString =
+function() {
+	return "DwtListHeaderItem";
 };

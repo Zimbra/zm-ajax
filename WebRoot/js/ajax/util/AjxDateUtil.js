@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,15 +26,10 @@ AjxDateUtil.WEEK		= 3;
 AjxDateUtil.DAY			= 4;
 AjxDateUtil.TWO_WEEKS	= 5;
 
-AjxDateUtil.MSEC_PER_MINUTE = 60000;
 AjxDateUtil.MSEC_PER_FIFTEEN_MINUTES = 900000;
 AjxDateUtil.MSEC_PER_HALF_HOUR = 1800000;
 AjxDateUtil.MSEC_PER_HOUR = 3600000;
 AjxDateUtil.MSEC_PER_DAY = 24 * AjxDateUtil.MSEC_PER_HOUR;
-
-AjxDateUtil.MINUTES_PER_DAY = 60 * 24;
-AjxDateUtil.SECONDS_PER_DAY = 60 * 60 * 24;
-
 
 AjxDateUtil.WEEKDAY_SHORT = AjxDateFormat.WeekdaySegment.WEEKDAYS[AjxDateFormat.SHORT];
 AjxDateUtil.WEEKDAY_MEDIUM = AjxDateFormat.WeekdaySegment.WEEKDAYS[AjxDateFormat.MEDIUM];
@@ -187,20 +182,9 @@ function(dateMSec) {
 	return durationStr ? (durationStr + " " + AjxMsg.ago) : null;
 };
 
-// Computes the difference between now and <dateMSec>. Returns a simplified string describing
-// the difference
-AjxDateUtil.agoTime =
-function(dateMSec) {
-	var deltaMSec = (new Date()).getTime() - dateMSec;
-	var durationStr = AjxDateUtil.computeDuration(deltaMSec, false, true);
-	return durationStr ? (durationStr + " " + AjxMsg.ago) : null;
-};
-
-
-
 // Returns a string describing the duration, which is in milliseconds.
 AjxDateUtil.computeDuration =
-function(duration, brief, simplified) {
+function(duration, brief) {
 	// bug fix #2203 - if delta is less than zero, dont bother computing
 	if (duration < 0) return null;
 
@@ -223,25 +207,15 @@ function(duration, brief, simplified) {
 
 	var formatter = brief ? AjxDurationFormatConcise : AjxDurationFormatVerbose;
 	if (years > 0) {
-		return simplified
-            ? formatter.formatYears(years)
-            : formatter.formatYears(years, months);
+		return formatter.formatYears(years, months);
 	} else if (months > 0) {
-		return simplified
-            ? formatter.formatMonths(months)
-            : formatter.formatMonths(months, days);
+		return formatter.formatMonths(months, days);
 	} else if (days > 0) {
-		return simplified
-            ? formatter.formatDays(days)
-            : formatter.formatDays(days, hours);
+		return formatter.formatDays(days, hours);
 	} else if (hours > 0) {
-		return simplified
-            ? formatter.formatHours(hours)
-            : formatter.formatHours(hours, mins);
+		return formatter.formatHours(hours, mins);
 	} else if (mins > 0) {
-		return simplified
-            ? formatter.formatMinutes(mins)
-            : formatter.formatMinutes(mins, secs);
+		return formatter.formatMinutes(mins, secs);
 	} else {
 		return formatter.formatSeconds(secs);
 	}
@@ -321,19 +295,6 @@ function(now, dateMSec) {
 		return AjxDateUtil._wordyDate.format(date);
 	}
 };
-
-/* returns true if dateString is a valid and understandable date string
- * in compliance with the locale of the user ie. dd/mm/yy or mm/dd/yy etc.
- * Also for date strings like 1/32/2000 (that roll over to 2/1/2000), false is returned.
- */
-AjxDateUtil.isValidSimpleDateStr =
-function(str){
-        if(!str) {return false};
-        var dateValue = AjxDateUtil.getSimpleDateFormat().parse(str);
-        if (!dateValue) {return false};
-        var dateValueStr = AjxDateUtil.simpleComputeDateStr(dateValue);
-        return (str == dateValueStr);
-}
 
 AjxDateUtil.computeTimeString =
 function(date) {
@@ -420,16 +381,6 @@ function (dt, startOfWeek) {
     var dayOfWeekIndex = dt.getDay();
     var dayOfWeek = (dayOfWeekIndex - startOfWeek + 7) % 7;
     dt.setDate(dt.getDate() - dayOfWeek);
-    return dt;
-};
-
-AjxDateUtil.getLastDayOfWeek =
-function (dt, startOfWeek) {
-    startOfWeek = startOfWeek || 0;
-    var dayOfWeekIndex = dt.getDay();
-    var dayOfWeek = (dayOfWeekIndex - startOfWeek + 7) % 7;
-    dt.setDate(dt.getDate() - dayOfWeek + 6);
-    dt.setHours(23, 59, 59, 999);
     return dt;
 };
 
