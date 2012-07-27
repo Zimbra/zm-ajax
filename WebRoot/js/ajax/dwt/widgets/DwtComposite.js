@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -53,17 +53,16 @@ DwtComposite.PARAMS = DwtControl.PARAMS.concat();
 DwtComposite.prototype = new DwtControl;
 DwtComposite.prototype.constructor = DwtComposite;
 
-DwtComposite.prototype.isDwtComposite = true;
-DwtComposite.prototype.toString = function() { return "DwtComposite"; }
-
-
-
 /**
  * Pending elements hash (i.e. elements that have not yet been realized).
  * @private
  */
 DwtComposite._pendingElements = new Object();
 
+DwtComposite.prototype.toString = 
+function() {
+	return "DwtComposite";
+}
 
 /**
  * Disposes of the control. This method will remove the control from under the
@@ -102,50 +101,6 @@ DwtComposite.prototype.getChildren =
 function() {
 	return this._children.getArray().slice(0);
 }
-
-/**
- * collapses consecutive separators into one. Gets rid of head or tail separators as well .
- * Note that is does not remove the separators, just hides them so they can re-displayed as needed, next time this is called and other elements
- * become visible
- *
- * this would be used on such subclasses as DwtMenu and DwtToolbar .
- * However, currently it does not work with the toolbars, since separators there are not added as children to the toolbar composite.
- * I tried to make it consistent with the DwtMenu approach, but it seemed a bit complicated right now.
- * so for now I try to make it so no complete groups (items between separators) are hidden at one time. It might also be possible
- * to do it for the toolbar using the _items HTML elements array, but probably less elegant than this approach.
- */
-DwtComposite.prototype.cleanupSeparators =
-function() {
-	var items = this.getChildren();
-	var previousVisibleIsSeparator = true; // I lie so that upfront separator would be cleaned up
-	var lastSeparator;
-	for (var i = 0; i < items.length; i++) {
-		var item = items[i];
-		var isSeparator = item.isStyle && item.isStyle(DwtMenuItem.SEPARATOR_STYLE);
-
-		if (isSeparator) {
-			item.setVisible(!previousVisibleIsSeparator);
-			if (!previousVisibleIsSeparator || !lastSeparator) { //the !lastSeparator is the edge case of first item is separator. (see comment about lie above)
-				//keep track of last visible separator (if it's also last item visible overall)
-				previousVisibleIsSeparator = true;
-				lastSeparator = item;
-			}
-			continue;
-		}
-
-		//not a separator
-		if (item.getVisible()) {
-			previousVisibleIsSeparator = false;
-		}
-	}
-	//cleanup tail separator
-	if (previousVisibleIsSeparator) {
-		lastSeparator.setVisible(false);
-	}
-};
-
-
-
 
 /**
  * Gets the number of children of this composite.

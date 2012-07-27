@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -76,7 +76,7 @@ DwtControl = function(params) {
 	 * @private
 	 */
 	var parent = this.parent = params.parent;
-	if (parent && !(parent.isDwtComposite)) {
+	if (parent && !(parent instanceof DwtComposite)) {
 		throw new DwtException("Parent must be a subclass of Composite", DwtException.INVALIDPARENT, "DwtControl");
 	}
 
@@ -210,14 +210,19 @@ DwtControl = function(params) {
 	this.TEMPLATE = params.template || this.TEMPLATE;
 };
 
-DwtControl.prototype.isDwtControl = true;
-DwtControl.prototype.toString = function() { return "DwtControl"; };
-
-
 DwtControl.PARAMS = ["parent", "className", "posStyle", "deferred", "id", "index", "template"];
 
 DwtControl.ALL_BY_ID = {};
 
+/**
+ * Returns a string representation of the class.
+ * 
+ * @return {string}		a string representation of the class
+ */
+DwtControl.prototype.toString =
+function() {
+	return "DwtControl";
+};
 
 //
 // Constants
@@ -265,10 +270,6 @@ DwtControl._RE_STATES = new RegExp(
     ].join("|") +
     ")\\b", "g"
 );
-
-// Try to use browser tooltips (setting 'title' attribute) if possible
-DwtControl.useBrowserTooltips = false;
-
 
 /*
  * Position styles
@@ -353,21 +354,21 @@ DwtControl.DEFAULT = Dwt.DEFAULT;
  * 
  * @private
  */
-DwtControl._NO_DRAG = "NO_DRAG";
+DwtControl._NO_DRAG = 1;
 
 /**
  * Defines "drag" in progress.
  *
  * @private
  */
-DwtControl._DRAGGING = "DRAGGING";
+DwtControl._DRAGGING = 2;
 
 /**
  * Defines "drag rejected".
  * 
  * @private
  */
-DwtControl._DRAG_REJECTED = "DRAG_REJECTED";
+DwtControl._DRAG_REJECTED = 3;
 
 /**
  * Defines "drag threshold".
@@ -568,7 +569,7 @@ DwtControl.prototype.dispose =
 function() {
 	if (this._disposed) { return; }
 
-	if (this.parent && this.parent.isDwtComposite) {
+	if (this.parent != null && this.parent instanceof DwtComposite) {
 		this.parent.removeChild(this);
 	}
 	this._elRef = null;
@@ -582,7 +583,6 @@ function() {
 	var ev = new DwtDisposeEvent();
 	ev.dwtObj = this;
 	this.notifyListeners(DwtEvent.DISPOSE, ev);
-    this._eventMgr.clearAllEvents();
 };
 
 /**
@@ -643,7 +643,7 @@ function(key, value) {
  */
 DwtControl.prototype.isDisposed =
 function() {
-	return this._disposed;
+	return this._isDisposed;
 };
 
 /**
@@ -858,8 +858,8 @@ function(x, y, width, height) {
 		bds = Dwt.getBounds(htmlElement);
 		this.__controlEvent.newX = bds.x;
 		this.__controlEvent.newY = bds.y;
-		this.__controlEvent.newWidth = (AjxUtil.isNumber(width)) ? width : bds.width; //if it's exact number, no need to use the bounds, especially since they are not accurate, wrong in about 2 pixels at least in the case I'm testing.
-		this.__controlEvent.newHeight = (AjxUtil.isNumber(height)) ? height : bds.height;
+		this.__controlEvent.newWidth = bds.width;
+		this.__controlEvent.newHeight = bds.height;
 		this.__controlEvent.requestedWidth = width;
 		this.__controlEvent.requestedHeight = height;
 		this.notifyListeners(DwtEvent.CONTROL, this.__controlEvent);
@@ -1382,28 +1382,6 @@ function() {
 };
 
 /**
- * Returns the positioning style
- */
-DwtControl.prototype.getPosition =
-function() {
-	if (!this._checkState()) { return; }
-
-	return Dwt.getPosition(this.getHtmlElement());
-};
-
-/**
- * Sets the positioning style
- * 
- * @param 	{constant}	posStyle	positioning style (Dwt.*_STYLE)
- */
-DwtControl.prototype.setPosition =
-function(posStyle) {
-	if (!this._checkState()) { return; }
-
-	return Dwt.setPosition(this.getHtmlElement(), posStyle);
-};
-
-/**
  * Gets the location of the control.
  *
  * @return {DwtPoint}		the location of the control
@@ -1601,10 +1579,10 @@ function() {
  * @see #setLocation
  */
 DwtControl.prototype.getSize =
-function(getFromStyle) {
+function() {
 	if (!this._checkState()) { return; }
 
-	return Dwt.getSize(this.getHtmlElement(), null, getFromStyle);
+	return Dwt.getSize(this.getHtmlElement());
 };
 
 /**
@@ -1656,37 +1634,21 @@ function(width, height) {
  */
 DwtControl.prototype.getToolTipContent =
 function(ev) {
-	if (this._disposed) { return null; }
+	if (this._disposed) { return; }
 
 	return this.__toolTipContent;
 };
 
 /**
- * Sets tooltip content for the control. The toolTip passed in may be plain text,
- * HTML or an object containing a callback function.
- * If DwtControl.useBrowserTooltips is set to true, and the tooltip does not have
- * HTML, returns, or tabs, use a browser tooltip by setting the 'title' attribute
- * on the element.
+ * Sets tooltip content for the control. The content may be plain text or HTML.
  *
- * @param {string/object} 	toolTip		the tooltip content
+ * @param {string} text		the tooltip content
  */
 DwtControl.prototype.setToolTipContent =
-function(toolTip, useBrowser) {
+function(text) {
 	if (this._disposed) { return; }
-	if (toolTip && (typeof(toolTip) == "string")  && DwtControl.useBrowserTooltips) {
-		// browser tooltip can't have return, tab, or HTML
-		if (!toolTip || (!toolTip.match(/[\n\r\t]/) && !toolTip.match(/<[a-zA-Z]+/))) {
-			var el = this.getHtmlElement();
-			if (el) {
-				el.title = toolTip;
-				this._browserToolTip = true;
-				return;
-			}
-		}
-	}
 
-	this._browserToolTip = false;
-	this.__toolTipContent = toolTip;
+	this.__toolTipContent = text;
 };
 
 /**
@@ -1963,9 +1925,7 @@ function(ev)  {
  */
 DwtControl.prototype._focusByMouseDownEvent =
 function(ev) {
-	this._duringFocusByMouseDown = true;
 	this._focusByMouseUpEvent(ev);
-	this._duringFocusByMouseDown = false;
 };
 
 /**
@@ -2428,6 +2388,34 @@ function(loc) {
 };
 
 /**
+ * Resets the scrollTop of container (if necessary) to ensure that element is visible.
+ * 
+ * @param {Element}		element		the element to be made visible
+ * @param {Element}		container	the containing element to possibly scroll
+ * @private
+ */
+DwtControl._scrollIntoView =
+function(element, container) {
+	
+	if (!element || !container) { return; }
+	
+	var elementTop = Dwt.toWindow(element, 0, 0, null, null, DwtPoint.tmp).y;
+	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y + container.scrollTop;
+
+	var diff = elementTop - containerTop;
+	if (diff < 0) {
+		container.scrollTop += diff;
+	} else {
+		var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
+		var elementH = Dwt.getSize(element, DwtPoint.tmp).y;
+		diff = (elementTop + elementH) - (containerTop + containerH);
+		if (diff > 0) {
+			container.scrollTop += diff;
+		}
+	}
+};
+
+/**
  * Handles scrolling of a drop area for an object being dragged. The scrolling is based on proximity to
  * the top or bottom edge of the area (only vertical scrolling is done). The scrolling is done via a
  * looping timer, so that the scrolling is smooth and does not depend on additional mouse movement.
@@ -2540,7 +2528,7 @@ function(ev) {
 DwtControl.prototype.__hasToolTipContent =
 function() {
 	if (this._disposed) { return false; }
-	return Boolean(!this._browserToolTip && (this.__toolTipContent || (this.getToolTipContent != DwtControl.prototype.getToolTipContent)));
+	return Boolean(this.__toolTipContent || (this.getToolTipContent != DwtControl.prototype.getToolTipContent));
 };
 
 /**
@@ -2971,10 +2959,6 @@ function(ev) {
 DwtControl.__badDrop =
 function(obj, mouseEv) {
 	obj._dragSource._cancelDrag();
-    var targetObj = mouseEv.dwtObj;
-    if (targetObj) {
-       targetObj._drop(mouseEv);
-    }
 	// The following code sets up the drop effect for when an
 	// item is dropped onto an invalid target. Basically the
 	// drag icon will spring back to its starting location.
@@ -3194,7 +3178,7 @@ function() {
 	if (DwtControl.ALL_BY_ID) {
 		if (DwtControl.ALL_BY_ID[this._htmlElId]) {
 			DBG.println(AjxDebug.DBG1, "Duplicate ID for " + this.toString() + ": " + this._htmlElId);
-			this._htmlElId = htmlElement.id = this.__internalId = DwtId.makeId(this._htmlElId, Dwt.getNextId());
+			this._htmlElId = htmlElement.id = this.__internalId = DwtId._makeId(this._htmlElId, Dwt.getNextId());
 		}
 		DwtControl.ALL_BY_ID[this._htmlElId] = this;
 	}
@@ -3284,7 +3268,7 @@ function(event) {
 		content = "";
 	} else if (typeof(tooltip) == "string") {
 		content = tooltip;
-	} else if (tooltip.isAjxCallback) {
+	} else if (tooltip instanceof AjxCallback) {
 		callback = tooltip;
 	} else if (typeof(tooltip) == "object") {
 		content = tooltip.content;
@@ -3312,7 +3296,7 @@ DwtControl.prototype.__showToolTip =
 function(event, content) {
 
 	if (!content) { return; }
-    DwtControl.showToolTip(content, event.x, event.y, this, event);
+    DwtControl.showToolTip(content, event.x, event.y);
 	this.__lastTooltipX = event.x;
 	this.__lastTooltipY = event.y;
 	this.__tooltipClosed = false;
@@ -3377,28 +3361,20 @@ if (AjxEnv.isIE) {
  * @param y [Number] The y coordinate of the toolTip.
  */
 DwtControl.showToolTip =
-function(content, x, y, obj, hoverEv) {
+function(content, x, y) {
 	if (!content) { return; }
-	var tooltip = DwtShell.getShell(window).getToolTip();
+	var shell = DwtShell.getShell(window);
+	var tooltip = shell.getToolTip();
 	tooltip.setContent(content);
-	tooltip.popup(x, y, false, false, obj, hoverEv);
-};
+	tooltip.popup(x, y);
+}
 
 /**
  * A helper method to hide the toolTip.
  */
 DwtControl.hideToolTip =
 function() {
-	DwtShell.getShell(window).getToolTip().popdown();
-};
-
-/**
- * Returns the element that should be used as a base for positioning the tooltip.
- * If overridden to return null, the cursor position will be used as the base.
- * 
- * @param {DwtHoverEvent}	hoverEv		hover event (from hover mgr)
- */
-DwtControl.prototype.getTooltipBase =
-function(hoverEv) {
-	return this.getHtmlElement();
-};
+	var shell = DwtShell.getShell(window);
+	var tooltip = shell.getToolTip();
+	tooltip.popdown();
+}

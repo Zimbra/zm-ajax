@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -45,10 +45,7 @@ DwtIframe = function(params) {
 	this._onLoadHandler = params.onload;	
 	this._processHtmlCallback = params.processHtmlCallback;
 	this._hidden = params.hidden;
-	if (!this._createFrame(params.html)) {
-		this.initFailed = true;
-		return;	// this object is still returned
-	}
+	this._createFrame(params.html);
 	
 	if (params.useKbMgmt) {
 		var iframe = this.getIframe();
@@ -63,8 +60,10 @@ DwtIframe = function(params) {
 DwtIframe.prototype = new DwtControl;
 DwtIframe.prototype.constructor = DwtIframe;
 
-DwtIframe.prototype.isDwtIframe = true;
-DwtIframe.prototype.toString = function() { return "DwtIframe"; };
+DwtIframe.prototype.toString =
+function() {
+	return "DwtIframe";
+};
 
 /**
  * Gets the iframe.
@@ -140,7 +139,7 @@ DwtIframe.prototype._rawEventHandler = function(ev) {
 
 	var capture = DwtMouseEventCapture.getCaptureObj();
 	capture = capture && dw.button != DwtMouseEvent.RIGHT; // ignore capture if it's right-click
-	if (AjxEnv.isIE || !capture) {
+	if (AjxEnv.isIE || (AjxEnv.isSafari && !AjxEnv.isChrome) || !capture) {
 		// go for Dwt events
 		DwtEventManager.notifyListeners(type, dw);
 		this.parent.notifyListeners(type, dw);
@@ -209,22 +208,16 @@ DwtIframe.prototype._createFrame = function(html) {
 	};
 
 	// closure: protect the reference to the iframe node here.
-	return (function() {
+	(function() {
 		var iframe, tmp = [], i = 0, idoc;
 		var myElement = document.getElementById(myId);
 		var self = DwtControl.findControl(myElement);
 
-		if (!self) {
-			return false;
-		}
-		
 		tmp[i++] = "<iframe";
-		if (self._noscroll) {
+		if (self._noscroll)
 			tmp[i++] = " scrolling='no'";
-		}
-		if (self._hidden) {
+		if (self._hidden)
 			tmp[i++] = " style='visibility:hidden'";
-		}
 		tmp[i++] = " frameborder='0' width='100%' id='";
 		tmp[i++] = self._iframeID;
 		tmp[i++] = "' name='"+ self._iframeID + "'";
@@ -253,9 +246,8 @@ DwtIframe.prototype._createFrame = function(html) {
 		// if we're not giving a break, we can safely do any postprocessing
 		// here.  I.e. if we want to drop backgroundImage-s, it's safe to do it
 		// here because the browser won't have a chance to load them.
-		if (self._processHtmlCallback) {
+		if (self._processHtmlCallback)
 			self._processHtmlCallback.run(idoc);
-		}
 
 		// if we have margins, the translated coordinates won't be OK.
 		// it's best to remove them.  THE way to have some spacing is
@@ -268,17 +260,13 @@ DwtIframe.prototype._createFrame = function(html) {
 
 		// assign event handlers
 		tmp = DwtIframe._forwardEvents;
-		if (!AjxEnv.isIE) {
+		if (!AjxEnv.isIE)
 			idoc = iframe.contentWindow;
-		}
-		for (i = tmp.length; --i >= 0;) {
+		for (i = tmp.length; --i >= 0;)
 			idoc[tmp[i]] = rawHandlerProxy;
-		}
 
 		// catch browser context menus
 		// idoc[DwtEvent.ONCONTEXTMENU] = DwtShell._preventDefaultPrt;
-		
-		return true;
 	})();
 };
 
