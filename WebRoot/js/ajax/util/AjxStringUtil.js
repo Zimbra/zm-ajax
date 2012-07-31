@@ -851,7 +851,7 @@ AjxStringUtil.HTML_BR_RE = /<br\s*\/?>/gi;
 AjxStringUtil.HTML_BODY_RE = /<body(\s|>)/i;
 AjxStringUtil.HTML_QUOTE_PRE_RE = /^\s*<blockquote/i;
 AjxStringUtil.HTML_QUOTE_POST_RE = /^\s*<\/blockquote>/i;
-AjxStringUtil.HTML_QUOTE_COLOR = "rgb(16, 16, 255)";
+AjxStringUtil.HTML_QUOTE_COLOR = "#1010FF";
 AjxStringUtil.HTML_QUOTE_STYLE = "color:#000;font-weight:normal;font-style:normal;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:12pt;";
 
 /**
