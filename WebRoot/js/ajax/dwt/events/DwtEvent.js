@@ -207,6 +207,13 @@ DwtEvent.POPUP = "POPUP";
 DwtEvent.SELECTION = "SELECTION";		// left-click
 
 /**
+ * The pre-selection event is fired when controls are selected. (though so far this is only implemented in DwtTree.prototype._itemClicked for one particular case).
+ * It is supposed to allow blocking click on certain item. Again, so far used only to block Filters in certain multi account cases, and present a message explaining it. 
+ */
+DwtEvent.PRE_SELECTION = "PRE_SELECTION";
+
+
+/**
  * A tree event is fired when a {@link DwtTree} node is expanded or collapsed.
  */
 DwtEvent.TREE = "TREE";

@@ -112,6 +112,17 @@ function(listener) {
 };
 
 /**
+ * Adds a pre-selection listener, that can return false if selection is not allowed (also responsible for presenting any error message)
+ *
+ * @param	{AjxListener}	listener	the listener
+ */
+DwtTree.prototype.addPreSelectionListener =
+function(listener) {
+	this.addListener(DwtEvent.PRE_SELECTION, listener);
+};
+
+
+/**
  * Removes a selection listener.
  * 
  * @param	{AjxListener}	listener	the listener
@@ -410,6 +421,12 @@ function(item, ev) {
 	var a = this._selectedItems.getArray();
 	var numSelectedItems = this._selectedItems.size();
 	if (this._style & DwtTree.SINGLE_STYLE || (!ev.shiftKey && !ev.ctrlKey)) {
+
+		var allowedSelection = this._notifyListeners(DwtEvent.PRE_SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
+		if (allowedSelection === false) {
+			return;
+		}
+
 		if (numSelectedItems > 0) {
 			for (i = 0; i < numSelectedItems; i++) {
 				a[i]._setSelected(false);
@@ -499,9 +516,10 @@ function(listener, items, detail, srcEv, destEv, kbNavEvent) {
 		}
 		destEv.detail = detail;
 		destEv.kbNavEvent = kbNavEvent;
-		this.notifyListeners(listener, destEv);
+		var retVal = this.notifyListeners(listener, destEv);
 		if (listener == DwtEvent.SELECTION) {
 			this.shell.notifyGlobalSelection(destEv);
 		}
+		return retVal;
 	}
 };
