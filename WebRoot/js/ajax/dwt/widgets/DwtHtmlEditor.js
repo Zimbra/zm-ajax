@@ -1330,6 +1330,19 @@ function(iFrame, iFrameDoc) {
 	for (var i = 0; i < events.length; ++i) {
 		this._registerEditorEventHandler(iFrameDoc, events[i]);
 	}
+    if (AjxEnv.isIE) {
+        var editor = this;
+        // Set's up the a range for the current ins point or selection. This is IE only because the iFrame can
+        // easily lose focus (e.g. by clicking on a button in the toolbar) and we need to be able to get back
+        // to the correct insertion point/selection.
+        iFrameDoc.attachEvent("onbeforedeactivate", function() {
+            var selection = iFrameDoc.selection;
+            if (selection) {
+                editor._currInsPt = selection.createRange();
+                DBG.println(AjxDebug.DBG1, "DwtHtmlEditor onbeforedeactivate");
+            }
+        });
+    }
 };
 
 DwtHtmlEditor.prototype._registerEditorEventHandler =
@@ -1450,17 +1463,7 @@ function(ev) {
 	}
 
 	// TODO notification for any updates etc
-	// Set's up the a range for the current ins point or selection. This is IE only because the iFrame can
-	// easily lose focus (e.g. by clicking on a button in the toolbar) and we need to be able to get back
-	// to the correct insertion point/selection.
 	if (AjxEnv.isIE) {
-		var iFrameDoc = this._getIframeDoc();
-		this._currInsPt = iFrameDoc.selection.createRange();
-		// If just at the insertion point, then collapse so that we don't get
-		// a range selection on a call to DwtHtmlEditor.focus()
-		if (iFrameDoc.selection.type == "None") {
-			this._currInsPt.collapse(false);
-		}
 		//IE Hack for Ctrl+A to create range and include all elements
 
         //bug:58569 For some I18n rightAlt key is used to print I18n characters. inn IE when right alt is pressed(rightAlt) it treats just as ctrl+A and when pressed any seq(rightAlt+a) is deleting the whole content
