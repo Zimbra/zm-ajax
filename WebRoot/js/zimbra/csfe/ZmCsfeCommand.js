@@ -617,6 +617,10 @@ function(response, params) {
 	}
 
 	params.methodNameStr = ZmCsfeCommand.getMethodName(obj.Body);
+	if (params.methodNameStr == "[unknown]") {
+		DBG.println(AjxDebug.DBG1, "methodName unknown, obj.Body=" + obj.Body  + " restResponse = " + restResponse + " params.restUri = " + params.restUri + " xmlResponse = " + xmlResponse + " response.text = " + response.text);
+		DBG.dumpObj(AjxDebug.DBG1, obj.Body, -1);
+	}
 	AjxDebug.logSoapMessage(params);
 	DBG.dumpObj(AjxDebug.DBG1, obj, -1);
 
