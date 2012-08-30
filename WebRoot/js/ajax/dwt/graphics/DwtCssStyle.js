@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -111,7 +111,7 @@ function(htmlElement, cssPropName) {
 			return cssDecl.getPropertyValue(cssPropName);
 		}
 	}
-	
+
 	// Convert CSS -> DOM name for IE etc
 	var tokens = cssPropName.split("-");
 	// Shift one word off the array and capitalize the rest
@@ -159,43 +159,5 @@ DwtCssStyle.removeProperty = function(el, prop) {
 			prop = prop.replace(/([A-Z])/g, "-$1");
 			el.style.removeProperty(prop);
 		}
-	}
-};
-
-/**
- * Adds a rule to a stylesheet.
- * 
- * @param {StyleSheet}	stylesheet		a CSS stylesheet
- * @param {string}		selector		rule selector
- * @param {string}		declaration		styles
- * @param {string}		index			insertion index (optional)
- * 
- * @return	index at which rule was inserted (for later removal)
- */
-DwtCssStyle.addRule =
-function(stylesheet, selector, declaration, index) {
-	if (stylesheet.addRule) {	// IE
-		stylesheet.addRule(selector, declaration, index);
-		return (index == null) ? (stylesheet.rules.length - 1) : index;
-	}
-	else {
-		stylesheet.insertRule(selector + "{" + declaration + "}", index);
-		return (index == null) ? (stylesheet.cssRules.length - 1) : index;
-	}
-};
-
-/**
- * Removes the rule at the given index.
- * 
- * @param {StyleSheet}	stylesheet		a CSS stylesheet
- * @param {string}		index			insertion index (optional)
- */
-DwtCssStyle.removeRule =
-function(stylesheet, index) {
-	if (stylesheet.removeRule) {	// IE
-		stylesheet.removeRule(index);
-	}
-	else {
-		stylesheet.deleteRule(index);
 	}
 };
