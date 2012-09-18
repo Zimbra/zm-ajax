@@ -150,7 +150,7 @@ function(imageName, styleStr, attrStr, wrapInTable, _disabled) {
                     ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
 
             var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
-            if (AjxEnv.isIE) {
+            if (AjxEnv.isIE && !AjxEnv.isIE9up) {
                 var clip = "";
                 var size = [
                     "width:",overlay.w,";",
@@ -180,7 +180,13 @@ function(imageName, styleStr, attrStr, wrapInTable, _disabled) {
                     "</div>"
                 ].join("");
             }
-
+			else if (AjxEnv.isIE9up) {
+				color = color.replace("#","");
+				var className = AjxImg.getClassForImage(imageName + "_" + color, _disabled);
+				html = [
+					"<div class='", "Img", imageName + "_" + color, "'", styleStr, attrStr, "></div>"
+				].join("");
+			}
             else {
                 if (!overlay[color]) {
                     var width = overlay.w, height = overlay.h;
