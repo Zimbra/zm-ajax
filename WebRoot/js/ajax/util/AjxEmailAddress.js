@@ -333,7 +333,11 @@ function(str) {
 					if (ch == "," || ch == " ") {
 						// comma/space allowed as non-delimeter outside quote/comment,
 						// so we make sure it follows an actual address
-						doAdd = test.match(AjxEmailAddress.boundAddrPat);
+
+						//bug 77630 - instead of this ==> test.match(AjxEmailAddress.boundAddrPat);
+						//I do the following, to be more lenient in detecting attempts for an email address, even if
+						//it's an illegal address, so it is not taken mistakingly as the name of the next entry after the comma
+						doAdd = test.indexOf('.') > -1 && test.indexOf('@') > -1;
 					}
 					if (doAdd) {
 						addrList.push(test);
