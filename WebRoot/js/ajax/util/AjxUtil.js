@@ -146,10 +146,11 @@ function(size, units, round, fractions) {
 		case AjxUtil.SIZE_KILOBYTES: { size /= 1024; break; }
 	}
 	
+	var dot = I18nMsg.numberSeparatorDecimal !='' ? I18nMsg.numberSeparatorDecimal : '.';
 	var pattern = I18nMsg.formatNumber.replace(/\..*$/, ""); // Strip off decimal, we'll be adding one anyway
 	pattern = pattern.replace(/,/, "");       // Remove the ,
 	if (!round && fractions) {
-		pattern = pattern += ".";
+		pattern = pattern += dot;
 		for (var i = 0; i < fractions; i++) {
 			pattern += "#";
 		}
