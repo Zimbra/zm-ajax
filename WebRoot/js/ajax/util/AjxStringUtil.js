@@ -236,40 +236,6 @@ function(line) {
 	return words;
 };
 
-AjxStringUtil.WRAP_LENGTH				= 72;
-// ID for a BLOCKQUOTE to mark it as ours
-AjxStringUtil.HTML_QUOTE_ID				= "zwcbq";
-AjxStringUtil.HTML_QUOTE_COLOR			= "#1010FF";
-AjxStringUtil.HTML_QUOTE_STYLE			= "color:#000;font-weight:normal;font-style:normal;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:12pt;";
-AjxStringUtil.HTML_QUOTE_PREFIX_PRE		= '<blockquote style="border-left:2px solid ' +
-									 AjxStringUtil.HTML_QUOTE_COLOR +
-									 ';margin-left:5px;padding-left:5px;'+
-									 AjxStringUtil.HTML_QUOTE_STYLE +
-									 '">';
-AjxStringUtil.HTML_QUOTE_PREFIX_PRE_ID	= AjxStringUtil.HTML_QUOTE_PREFIX_PRE.replace("<blockquote ", '<blockquote id="' + AjxStringUtil.HTML_QUOTE_ID + '" ');
-AjxStringUtil.HTML_QUOTE_PREFIX_POST	= '</blockquote>';
-AjxStringUtil.HTML_QUOTE_NONPREFIX_PRE	= '<div style="' +
-									 AjxStringUtil.HTML_QUOTE_STYLE +
-									 '">';
-AjxStringUtil.HTML_QUOTE_NONPREFIX_POST	= '</div><br/>';
-
-// returns a standard set of params for wrapping text of HTML content
-AjxStringUtil.getWrapParams =
-function(htmlMode, incOptions) {
-
-	incOptions = incOptions || {};
-	var params = {};
-
-	params.htmlMode	= htmlMode;
-	params.len		= AjxStringUtil.WRAP_LENGTH;
-	params.eol		= htmlMode ? '<br/>' : '\n';
-	params.pre		= (htmlMode || !incOptions.prefix) ? "" : appCtxt.get(ZmSetting.REPLY_PREFIX) + " ";
-	params.before	= htmlMode ? (incOptions.prefix ? AjxStringUtil.HTML_QUOTE_PREFIX_PRE : AjxStringUtil.HTML_QUOTE_NONPREFIX_PRE) : "";
-	params.after	= htmlMode ? (incOptions.prefix ? AjxStringUtil.HTML_QUOTE_PREFIX_POST : AjxStringUtil.HTML_QUOTE_NONPREFIX_POST) : "";
-
-	return params;
-};
-
 /**
  * Wraps text to the given length and optionally quotes it. The level of quoting in the
  * source text is preserved based on the prefixes. Special lines such as email headers
@@ -348,9 +314,7 @@ function(params) {
 			if (wds.length) {
 				result += addPrefix + (curP || "") + wds.join("").replace(/^ +/,"") + eol;
 			}
-			if (i < words.length - 1) {		// don't add a trailing blank line
-				result += addPrefix + p + eol;
-			}
+			result += addPrefix + p + eol;
 			wds = [];
 			curLen = 0;
 			curP = null;
@@ -667,51 +631,59 @@ function(str, removeContent) {
  * @return	{string}	the resulting string
  */
 AjxStringUtil.convertToHtml =
-function(str, quotePrefix, openTag) {
-
-	openTag = openTag || "<blockquote>";
-	var closeTag = "</blockquote>";
-	
+function(str, quotePrefix) {
 	if (!str) {return "";}
 
-	str = AjxStringUtil.htmlEncode(str);
 	if (quotePrefix) {
 		// Convert a section of lines prefixed with > or |
 		// to a section encapsuled in <blockquote> tags
-		var prefix_re = /^(>|&gt;|\|\s+)/;
+		var prefix_re = /^(>|\|\s+)/;
 		var lines = str.split(/\r?\n/);
 		var level = 0;
-		for (var i = 0; i < lines.length; i++) {
+		for (var i=0; i<lines.length; i++) {
 			var line = lines[i];
 			if (line.length > 0) {
 				var lineLevel = 0;
-				// Remove prefixes while counting how many there are on the line
-				while (line.match(prefix_re)) {
-					line = line.replace(prefix_re, "");
+				while (line.match(prefix_re)) { // Remove prefixes while counting how many there are on the line
+					line = line.replace(prefix_re,"");
 					lineLevel++;
 				}
-				// If the lineLevel has changed since the last line, add blockquote start or end tags, and adjust level accordingly
-				while (lineLevel > level) {
-					line = openTag + line;
+				while (lineLevel > level) { // If the lineLevel has changed since the last line, add blockquote start or end tags, and adjust level accordingly
+					line = "<blockquote>" + line;
 					level++;
 				}
 				while (lineLevel < level) {
-					lines[i - 1] = lines[i - 1] + closeTag;
+					line = line + "</blockquote>";
 					level--;
 				}
 			}
 			lines[i] = line;
 		}
 		while (level > 0) {
-			lines.push(closeTag);
+			lines.push("</blockquote>");
 			level--;
 		}
 
 		str = lines.join("\n");
+		str = str.replace(/&/mg, "&amp;");
+		
+		str = str.replace(/<(?!\/?blockquote)/mg, "&lt;"); // Replace "<" only if it is not followed by "blockquote"
+
+		str = str.replace(/(\/?blockquote)?>/mg, function($0, $1) { // Replace ">" only if it is not preceded by "blockquote"
+			return $1 ? $0 : '&gt;';
+		});
+
+	} else {
+		str = str
+			.replace(/&/mg, "&amp;")
+			.replace(/</mg, "&lt;")
+			.replace(/>/mg, "&gt;")
 	}
 		
 
 	str = str
+		.replace(/  /mg, " &nbsp;")
+		.replace(/^ /mg, "&nbsp;")
 		.replace(/\t/mg, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
 		.replace(/\r?\n/mg, "<br>");
 	return str;
@@ -920,6 +892,9 @@ AjxStringUtil.SIG_RE = /^(- ?-+)|(__+)\r?$/;
 AjxStringUtil.SPLIT_RE = /\r\n|\r|\n/;
 AjxStringUtil.HDR_RE = /^\s*\w+:/;
 AjxStringUtil.COLON_RE = /\S+:$/;
+AjxStringUtil.HTML_QUOTE_COLOR = "#1010FF";
+AjxStringUtil.HTML_QUOTE_STYLE = "color:#000;font-weight:normal;font-style:normal;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:12pt;";
+
 
 // Converts a HTML document represented by a DOM tree to text
 // XXX: There has got to be a better way of doing this!
@@ -1438,8 +1413,8 @@ function(str){
 };
 
 // hidden SPANs for measuring regular and bold strings
-AjxStringUtil._testSpan = null;
-AjxStringUtil._testSpanBold = null;
+AjxStringUtil._testSpan;
+AjxStringUtil._testSpanBold;
 
 // cached string measurements
 AjxStringUtil.WIDTH			= {};		// regular strings
@@ -2226,59 +2201,53 @@ function(count, results, isHtml, ctxt) {
 	}
 };
 
-/**
- * Removes non-content HTML from the beginning and end. Would typically be used on content from an editor
- * 
- * @param {string}	str		some HTML
- */
-AjxStringUtil.trimHtml =
+// Strips trailing <BR> from HTML text that appears before closing tags.
+AjxStringUtil.removeTrailingBR =
 function(str) {
-
-	str = str.replace(/\n/g, "");								// remove line returns
-	// Remove unneeded HTML
-	str = str.replace(/<\/?html>|<\/?head>|<\/?body>/gi, "");	// strip empty document-level tags
-	str = str.replace(/<div>$/i, "");							// remove trailing <div>
-	str = str.replace(/<div><br ?\/?><\/div>/gi, "<br>");		// TinyMCE loves <div> containers
-	while (/^<div>.*<\/div>$/i.test(str)) {						// remove empty container <div> tags
-		str = str.replace(/^<div>/, "");
-		str = str.replace(/<\/div>$/, "");
+	if (!str) {
+		return "";
 	}
-	str = str.replace(/(<br ?\/?>)+$/g, "");					// remove HTML-style trailing line returns
-	str = AjxStringUtil.trim(str);
-	
+	var m = str && str.match(/((<br>)+)((<\/\w+>)+)$/i);
+	if (m && m.length) {
+		var regex = new RegExp(m[1] + m[3] + "$", "i");
+		str = str.replace(regex, m[3]);
+	}
 	return str;
 };
 
 // Replaces img src to cid for inline or dfsrc if external image and remove dfsrc before sending for a given htmlContent
 AjxStringUtil.defangHtmlContent =
 function(htmlContent) {
+    var content = htmlContent;
 
-	var content = htmlContent;
-	var imgContent = content && content.match(/<img/i) && content.split(/<img/i);
-	if (imgContent && imgContent.length) {
-		for (var i = 0; i < imgContent.length; i++) {
-			var externalImage = false;
-			var dfsrc = imgContent[i].match(/dfsrc=[\"|\'](cid:[^\"\']+)/); //look for CID assignment in image
-			if (dfsrc && dfsrc.length > 1) {
-				dfsrc = [dfsrc[1]]; //the cid is the 2nd element, but next lines expect it as first
-			}
-			if (!dfsrc) {
-				dfsrc = imgContent[i].match(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/); //look for dfsrc="" in image
-				externalImage = dfsrc ? true : false;
-			}
-			if (dfsrc && dfsrc.length > 0 && !externalImage) {
-				var tempStr = imgContent[i].replace(/\s+src=[\"\'][^\"\']+[\"\']/," src=\""+dfsrc[0]+"\""); //set src to cid
-				tempStr = tempStr.replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/,"");
-				content = content.replace(imgContent[i], tempStr);
-			}
-			else if (dfsrc && dfsrc.length > 0 && externalImage) {
-				var tempArr = imgContent[i].match(/\s+dfsrc=[\"\']([^\"\']+)[\"\']/); //match dfsrc
-				if (tempArr && tempArr.length > 1) {
-				   var tempStr = imgContent[i].replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']/," src=\""+tempArr[1]+"\"");
-				   content = content.replace(imgContent[i], tempStr);
+        var content = htmlContent;
+        var imgContent = content && content.match(/<img/i) && content.split(/<img/i);
+		if (imgContent && imgContent.length) {
+			for (var i = 0; i < imgContent.length; i++) {
+				var externalImage = false;
+				var dfsrc = imgContent[i].match(/dfsrc=[\"|\'](cid:[^\"\']+)/); //look for CID assignment in image
+				if (dfsrc && dfsrc.length > 1) {
+					dfsrc = [dfsrc[1]]; //the cid is the 2nd element, but next lines expect it as first
+				}
+				if (!dfsrc) {
+					dfsrc = imgContent[i].match(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/); //look for dfsrc="" in image
+					externalImage = dfsrc ? true : false;
+				}
+				if (dfsrc && dfsrc.length > 0 && !externalImage) {
+					var tempStr = imgContent[i].replace(/\s+src=[\"\'][^\"\']+[\"\']/," src=\""+dfsrc[0]+"\""); //set src to cid
+					tempStr = tempStr.replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/,"");
+					content = content.replace(imgContent[i], tempStr);
+				}
+				else if (dfsrc && dfsrc.length > 0 && externalImage) {
+					var tempArr = imgContent[i].match(/\s+dfsrc=[\"\']([^\"\']+)[\"\']/); //match dfsrc
+					if (tempArr && tempArr.length > 1) {
+					   var tempStr = imgContent[i].replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']/," src=\""+tempArr[1]+"\"");
+					   content = content.replace(imgContent[i], tempStr);
+					}
 				}
 			}
-		}
-	}
-	return content;
+        }
+        return content;
+
 };
+
