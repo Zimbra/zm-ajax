@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -42,7 +42,7 @@ DwtPasswordField = function(params) {
 	if (arguments.length == 0) return;
 
 	params = params || { parent: DwtShell.getShell(window) };
-	params.type = DwtInputField.PASSWORD;
+	params.type = DwtInputField.PASSWORD; 
 	DwtInputField.call(this, params);
 
 	this._tabGroup = new DwtTabGroup(this._htmlElId);
@@ -118,14 +118,3 @@ function(templateId, data) {
 DwtPasswordField.prototype._handleShowCheckbox = function(event) {
 	this.setShowPassword(event.detail);
 };
-
-/**
-* Overrides DwtInputField getValue to not do the leading/trailing spaces trimming.
-*
-* @return {string} the value
-*/
-DwtPasswordField.prototype.getValue =
-function() {
-	return this._inputField.value;
-};
-

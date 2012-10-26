@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -45,8 +45,6 @@ AjxEnv.webKitVersion;
 AjxEnv.isMac;
 /** Windows. */
 AjxEnv.isWindows;
-/** Windows 64-bit. */
-AjxEnv.isWindows64;
 /** Linux. */
 AjxEnv.isLinux;
 /** Netscape Navigator compatible. */
@@ -108,8 +106,6 @@ AjxEnv.isFirefox1_5up;
 AjxEnv.isFirefox3up;
 /** Mozilla Firefox version 3.6 (or higher). */
 AjxEnv.isFirefox3_6up;
-/** Mozilla Firefox version 4 (or higher). */
-AjxEnv.isFirefox4up;
 /** Mozilla. */
 AjxEnv.isMozilla;
 /** Mozilla version 1.4 (or higher). */
@@ -128,15 +124,12 @@ AjxEnv.isSafari4;
 AjxEnv.isSafari4up;
 /** Safari version 5 (or higher). */
 AjxEnv.isSafari5up;
-/** Safari version 5.1 (or higher). */
-AjxEnv.isSafari5_1up;
 /** Camino. */
 AjxEnv.isCamino;
 /** Chrome. */
 AjxEnv.isChrome;
-AjxEnv.isChrome2up;
-AjxEnv.isChrome7;
-AjxEnv.isChrome10up;
+/** Chrome version 19 and up. */
+AjxEnv.isChrome19up;
 /** Gecko-based. */
 AjxEnv.isGeckoBased;
 /** WebKit-based. */
@@ -162,22 +155,6 @@ AjxEnv.is1024x768orLower;
 AjxEnv.supportsHTML5File;
 
 
-/** Supports indirect global eval() **/
-AjxEnv.indirectEvalIsGlobal;
-(function(){
-	// Feature detection to see if eval referenced by alias runs in global scope
-	// See davidflanagan.com/2010/12/global-eval-in.html 
-	AjxEnv.indirectEvalIsGlobal=false;
-	var evl=window.eval;
-	try{
-		evl('__indirectEval=true');
-		if('__indirectEval' in window){
-			AjxEnv.indirectEvalIsGlobal=true;
-			delete window.__indirectEval;
-		}
-	}catch(e){}
-})();
-
 //
 // Public functions
 //
@@ -189,7 +166,6 @@ function() {
 	AjxEnv.webKitVersion = -1;
 	AjxEnv.isMac = false;
 	AjxEnv.isWindows = false;
-	AjxEnv.isWindows64 = false;
 	AjxEnv.isLinux = false;
 	AjxEnv.isNav  = false;
 	AjxEnv.isIE = false;
@@ -221,7 +197,6 @@ function() {
 	AjxEnv.isFirefox1_5up = false;
 	AjxEnv.isFirefox3up = false;
 	AjxEnv.isFirefox3_6up = false;
-	AjxEnv.isFirefox4up = false;
 	AjxEnv.isMozilla = false;
 	AjxEnv.isMozilla1_4up = false;
 	AjxEnv.isSafari = false;
@@ -230,14 +205,9 @@ function() {
     AjxEnv.isSafari4 = false;
 	AjxEnv.isSafari3up = false;
 	AjxEnv.isSafari4up = false;
-    AjxEnv.isSafari5up = false;
-    AjxEnv.isSafari5_1up = false;
-	AjxEnv.isSafari6up = false;
+	AjxEnv.isSafari5up = false;
 	AjxEnv.isCamino = false;
 	AjxEnv.isChrome = false;
-    AjxEnv.isChrome2up = false;
-    AjxEnv.isChrome7 = false;
-    AjxEnv.isChrome10up = false;
 	AjxEnv.isChrome19up = false;
 	AjxEnv.isGeckoBased = false;
 	AjxEnv.isWebKitBased = false;
@@ -248,7 +218,6 @@ function() {
 
     //HTML5
     AjxEnv.supportsHTML5File = false;
-	AjxEnv.supportsPlaceholder = false;
 
 	// screen resolution - ADD MORE RESOLUTION CHECKS AS NEEDED HERE:
 	AjxEnv.is800x600orLower = screen && (screen.width <= 800 && screen.height <= 600);
@@ -332,8 +301,6 @@ function() {
 				browserVersion = parseFloat(token.substr(index + 7));
 			} else if (token.indexOf('windows') != -1) {
 				AjxEnv.isWindows = true;
-			} else if (token.indexOf('win64') != -1) {
-				AjxEnv.isWindows64 = true;
 			} else if ((token.indexOf('macintosh') != -1) ||
 					   (token.indexOf('mac_') != -1)) {
 				AjxEnv.isMac = true;
@@ -378,35 +345,40 @@ function() {
 		AjxEnv.isFirefox3up		= (AjxEnv.isFirefox && browserVersion >= 3.0);
 		AjxEnv.isFirefox3_5up	= (AjxEnv.isFirefox && browserVersion >= 3.5);
 		AjxEnv.isFirefox3_6up	= (AjxEnv.isFirefox && browserVersion >= 3.6);
-		AjxEnv.isFirefox4up		= (AjxEnv.isFirefox && browserVersion >= 4.0);
 		AjxEnv.isSafari2		= (AjxEnv.isSafari && browserVersion >= 2.0 && browserVersion < 3.0);
 		AjxEnv.isSafari3		= (AjxEnv.isSafari && browserVersion >= 3.0 && browserVersion < 4.0) || AjxEnv.isChrome;
         AjxEnv.isSafari4        = (AjxEnv.isSafari && browserVersion >= 4.0);
 		AjxEnv.isSafari3up		= (AjxEnv.isSafari && browserVersion >= 3.0) || AjxEnv.isChrome;
 		AjxEnv.isSafari4up		= (AjxEnv.isSafari && browserVersion >= 4.0) || AjxEnv.isChrome;
-        AjxEnv.isSafari5up	    = (AjxEnv.isSafari && browserVersion >= 5.0) || AjxEnv.isChrome;
-        AjxEnv.isSafari5_1up	= (AjxEnv.isSafari && browserVersion >= 5.1) || AjxEnv.isChrome;
-		AjxEnv.isSafari6up      = AjxEnv.isSafari && browserVersion >= 6.0;
+		AjxEnv.isSafari5up		= (AjxEnv.isSafari && browserVersion >= 5.0) || AjxEnv.isChrome;
 		AjxEnv.isDesktop2up		= (AjxEnv.isDesktop && browserVersion >= 2.0);
-        AjxEnv.isChrome2up		= (AjxEnv.isChrome && browserVersion >= 2.0);
-        AjxEnv.isChrome7		= (AjxEnv.isChrome && browserVersion >= 7.0);
-        AjxEnv.isChrome10up		= (AjxEnv.isChrome && browserVersion >= 10.0);
-		AjxEnv.isChrome19up		= (AjxEnv.isChrome && browserVersion >= 19.0);
+		AjxEnv.isChrome7		= (AjxEnv.isChrome && browserVersion >= 7.0);
+		AjxEnv.isChrome19up		= (AjxEnv.isChrome && browserVersion >= 19.0);		
 
 		AjxEnv.browser = "[unknown]";
 		if (AjxEnv.isOpera) 				{	AjxEnv.browser = "OPERA";	}
 		else if (AjxEnv.isChrome)			{	AjxEnv.browser = "GC" + browserVersion;	}
-		else if (AjxEnv.isSafari)			{	AjxEnv.browser = "SAF" + browserVersion; }
+		else if (AjxEnv.isSafari3up)		{	AjxEnv.browser = "SAF3";	}
+		else if (AjxEnv.isSafari)			{	AjxEnv.browser = "SAF";		}
 		else if (AjxEnv.isCamino)			{	AjxEnv.browser = "CAM";		}
 		else if (isWebTv)					{	AjxEnv.browser = "WEBTV";	}
 		else if (isHotJava)					{	AjxEnv.browser = "HOTJAVA";	}
-		else if (AjxEnv.isFirefox)			{	AjxEnv.browser = "FF" + browserVersion; }
+		else if (AjxEnv.isFirefox3up)		{	AjxEnv.browser = "FF3.0";	}
+		else if (AjxEnv.isFirefox2_0up)		{	AjxEnv.browser = "FF2.0";	}
+		else if (AjxEnv.isFirefox1_5up)		{	AjxEnv.browser = "FF1.5";	}
+		else if (AjxEnv.isFirefox1up)		{	AjxEnv.browser = "FF1.0";	}
+		else if (AjxEnv.isFirefox)			{	AjxEnv.browser = "FF";		}
 		else if (AjxEnv.isPrism)			{	AjxEnv.browser = "PRISM";	}
 		else if (AjxEnv.isNav7)				{	AjxEnv.browser = "NAV7";	}
 		else if (AjxEnv.isNav6)				{	AjxEnv.browser = "NAV6";	}
 		else if (AjxEnv.isNav4)				{	AjxEnv.browser = "NAV4";	}
-		else if (AjxEnv.isIE)				{	AjxEnv.browser = "IE" + browserVersion; }
-		else if (AjxEnv.isDesktop)			{	AjxEnv.browser = "ZD" + browserVersion; }
+		else if (AjxEnv.isIE8)				{	AjxEnv.browser = "IE8";		}
+		else if (AjxEnv.isIE7)				{	AjxEnv.browser = "IE7";		}
+		else if (AjxEnv.isIE6)				{	AjxEnv.browser = "IE6";		}
+		else if (AjxEnv.isIE5)				{	AjxEnv.browser = "IE5";		}
+		else if (AjxEnv.isIE4)				{	AjxEnv.browser = "IE4";		}
+		else if (AjxEnv.isIE3)				{	AjxEnv.browser = "IE";		}
+		else if (AjxEnv.isDesktop)			{	AjxEnv.browser = "ZDESKTOP";}
 
 		AjxEnv.platform = "[unknown]";
 		if (AjxEnv.isWindows)				{	AjxEnv.platform = "Win";	}
@@ -437,8 +409,7 @@ function() {
 	}
 
     //HTML5
-    AjxEnv.supportsHTML5File = !!( window.FileReader/*Firefox*/ || AjxEnv.isChrome || AjxEnv.isSafari4up );
-	AjxEnv.supportsPlaceholder 	= !(AjxEnv.isIE || (AjxEnv.isFirefox && !AjxEnv.isFirefox4up));
+    AjxEnv.supportsHTML5File = ( window.FileReader/*Firefox*/ || AjxEnv.isChrome || AjxEnv.isSafari4up );
 };
 
 // code provided by webkit authors to determine if nightly browser
@@ -474,7 +445,7 @@ if ( !Function.prototype.bind ) {
         nop = function () {},
         bound = function () {
           return self.apply( this instanceof nop ? this : ( obj || {} ),
-                              args.concat( slice.call(arguments) ) );   
+                              args.concat( slice.call(arguments) ) );
         };
     nop.prototype = self.prototype;
     bound.prototype = new nop();
@@ -489,12 +460,12 @@ if (!Function.prototype.bind) {
 	Function.prototype.bind = function(thisObj) {
 		var that = this;
 		var args;
-                
+
 		if (arguments.length > 1) {
-			// optimization: create the extra array object only if needed. 
+			// optimization: create the extra array object only if needed.
 			args = Array.prototype.slice.call(arguments, 1);
 		}
-                
+
 		return function () {
 			var allArgs = args;
 
@@ -508,13 +479,3 @@ if (!Function.prototype.bind) {
 		};
 	};
 }
-
-/**
- * This should be a temporary hack as we transition from AjxCallback to bind(). Rather
- * than change hundreds of call sites with 'callback.run()' to see if the callback is
- * an AjxCallback or a closure, add a run() method to Function which just invokes the
- * closure.
- */
-Function.prototype.run = function() {
-	return this.apply(this, arguments);
-};

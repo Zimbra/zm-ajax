@@ -1,7 +1,7 @@
     /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -57,10 +57,6 @@ DwtTree = function(params) {
 
 	this._selectedItems = new AjxVector();
 	this._selEv = new DwtSelectionEvent(true);
-	this._selByClickEv = new DwtSelectionEvent(true);
-	this._selByClickEv.clicked = true;
-	this._selByEnterEv = new DwtSelectionEvent(true);
-	this._selByEnterEv.enter = true;
 };
 
 DwtTree.PARAMS = ["parent", "style", "className", "posStyle"];
@@ -114,6 +110,17 @@ DwtTree.prototype.addSelectionListener =
 function(listener) {
 	this.addListener(DwtEvent.SELECTION, listener);
 };
+
+/**
+ * Adds a pre-selection listener, that can return false if selection is not allowed (also responsible for presenting any error message)
+ *
+ * @param	{AjxListener}	listener	the listener
+ */
+DwtTree.prototype.addPreSelectionListener =
+function(listener) {
+	this.addListener(DwtEvent.PRE_SELECTION, listener);
+};
+
 
 /**
  * Removes a selection listener.
@@ -203,15 +210,6 @@ DwtTree.prototype.getSelection =
 function() {
 	return this._selectedItems.getArray();
 };
-
-DwtTree.prototype.setEnterSelection =
-function(treeItem, kbNavEvent) {
-	if (!treeItem) {
-		return;
-	}
-	this._notifyListeners(DwtEvent.SELECTION, [treeItem], DwtTree.ITEM_SELECTED, null, this._selByEnterEv, kbNavEvent);
-};
-
 
 DwtTree.prototype.setSelection =
 function(treeItem, skipNotify, kbNavEvent, noFocus) {
@@ -423,28 +421,34 @@ function(item, ev) {
 	var a = this._selectedItems.getArray();
 	var numSelectedItems = this._selectedItems.size();
 	if (this._style & DwtTree.SINGLE_STYLE || (!ev.shiftKey && !ev.ctrlKey)) {
+
+		var allowedSelection = this._notifyListeners(DwtEvent.PRE_SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
+		if (allowedSelection === false) {
+			return;
+		}
+
 		if (numSelectedItems > 0) {
 			for (i = 0; i < numSelectedItems; i++) {
 				a[i]._setSelected(false);
 			}
 			// Notify listeners of deselection
-			this._notifyListeners(DwtEvent.SELECTION, this._selectedItems.getArray(), DwtTree.ITEM_DESELECTED, ev, this._selByClickEv);
+			this._notifyListeners(DwtEvent.SELECTION, this._selectedItems.getArray(), DwtTree.ITEM_DESELECTED, ev, this._selEv);
 			this._selectedItems.removeAll();
 		}
 		this._selectedItems.add(item);
 		if (item._setSelected(true)) {
-			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selByClickEv);
+			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
 		}
 	} else {
 		if (ev.ctrlKey) {
 			if (this._selectedItems.contains(item)) {
 				this._selectedItems.remove(item);
 				item._setSelected(false);
-				this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_DESELECTED, ev, this._selByClickEv);
+				this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_DESELECTED, ev, this._selEv);
 			} else {
 				this._selectedItems.add(item);
 				if (item._setSelected(true)) {
-					this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selByClickEv);
+					this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
 				}
 			}
 		} else {
@@ -512,9 +516,10 @@ function(listener, items, detail, srcEv, destEv, kbNavEvent) {
 		}
 		destEv.detail = detail;
 		destEv.kbNavEvent = kbNavEvent;
-		this.notifyListeners(listener, destEv);
+		var retVal = this.notifyListeners(listener, destEv);
 		if (listener == DwtEvent.SELECTION) {
 			this.shell.notifyGlobalSelection(destEv);
 		}
+		return retVal;
 	}
 };
