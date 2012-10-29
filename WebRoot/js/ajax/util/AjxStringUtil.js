@@ -300,7 +300,7 @@ function(params) {
 
 	// Take the array of words and put them back together. We break for a new line
 	// when we hit the max line length, change prefixes, or hit a special word.
-	var max = params.len || 72;
+	var max = params.len || 80;
 	var addPrefix = params.pre || "";
 	var apl = addPrefix.length;
 	var result = "", curLen = 0, wds = [], curP = null;
