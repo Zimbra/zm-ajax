@@ -20,6 +20,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.localconfig.LC;
 
 import java.io.*;
 import java.lang.reflect.Method;
@@ -89,23 +90,39 @@ public class AdminServlet extends ZimbraServlet {
             resp.sendError(resp.SC_NOT_FOUND) ;
         }
     }
-    
-    
+
+
+    private static String getCSRFileName(String adminHomeDir) {
+
+        File csrFile = new File(adminHomeDir + "/tmp/current.csr");
+        if (csrFile.exists()) {
+            return adminHomeDir + "/tmp/current.csr";
+        }
+        else {
+            File serverCsrFile = new File(LC.zimbra_home.value() + "/ssl/zimbra/commercial/commercial.csr");
+            if (serverCsrFile.exists()) {
+                return LC.zimbra_home.value() + "/ssl/zimbra/commercial/commercial.csr";
+            }
+        }
+        return adminHomeDir + "/tmp/current.csr";
+    }
+
     private static void getCSRFile(String adminHomeDir, OutputStream out)
-        throws FileNotFoundException, IOException {
-        String csrFileName =  adminHomeDir + "/tmp/current.csr" ;
+            throws FileNotFoundException, IOException {
+        String csrFileName =  getCSRFileName(adminHomeDir);
+
         //System.out.println("csr file = " + csrFileName) ;
         InputStream in = null;
         try {
-          in = new BufferedInputStream(new FileInputStream(csrFileName));
-          byte[  ] buf = new byte[1024];  // 1K buffer
-          int bytesRead;
-          while ((bytesRead = in.read(buf)) != -1) {
-            out.write(buf, 0, bytesRead);
-          }
+            in = new BufferedInputStream(new FileInputStream(csrFileName));
+            byte[  ] buf = new byte[1024];  // 1K buffer
+            int bytesRead;
+            while ((bytesRead = in.read(buf)) != -1) {
+                out.write(buf, 0, bytesRead);
+            }
         }
         finally {
-          if (in != null) in.close(  );
+            if (in != null) in.close(  );
         }
     }
 
