@@ -20,7 +20,6 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.localconfig.LC;
 
 import java.io.*;
 import java.lang.reflect.Method;
@@ -39,13 +38,13 @@ public class AdminServlet extends ZimbraServlet {
     private static final String ACTION_GETCSR = "getCSR" ;
 //    private static final String ACTION_GETBP = "getBP" ;
 
-    
+
     public AdminServlet() {
         super ();
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-       doPost(req, resp);
+        doPost(req, resp);
     }
 
     /**
@@ -58,30 +57,30 @@ public class AdminServlet extends ZimbraServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         String action = req.getParameter("action") ;
-        
+
         //check the auth token
         AuthToken authToken = getAdminAuthTokenFromCookie(req, resp);
         if (authToken == null)
-           return;
+            return;
 
         try {
             if (action != null && action.equals(ACTION_GETCSR)) {
-               String filename = req.getParameter("fname") ;
-               if (filename == null || filename.length() <= 0) {
-                   filename = "current" ;
-               }
+                String filename = req.getParameter("fname") ;
+                if (filename == null || filename.length() <= 0) {
+                    filename = "current" ;
+                }
 
                 //      Set the headers.
                 //set the Content-Type header to a nonstandard value to avoid the browser to do something automatically
-               resp.setHeader("Expires", "Tue, 24 Jan 2000 20:46:50 GMT");
+                resp.setHeader("Expires", "Tue, 24 Jan 2000 20:46:50 GMT");
 //               resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-               resp.setContentType("application/x-download");
-               resp.setHeader("Content-Disposition", "attachment; filename=" + filename + ".csr");
+                resp.setContentType("application/x-download");
+                resp.setHeader("Content-Disposition", "attachment; filename=" + filename + ".csr");
 
                 String adminHomeDir = getServletContext().getRealPath("/");
 
                 getCSRFile(adminHomeDir, resp.getOutputStream()) ;
-                
+
                 return ;
 
             }
@@ -92,25 +91,9 @@ public class AdminServlet extends ZimbraServlet {
     }
 
 
-    private static String getCSRFileName(String adminHomeDir) {
-
-        File csrFile = new File(adminHomeDir + "/tmp/current.csr");
-        if (csrFile.exists()) {
-            return adminHomeDir + "/tmp/current.csr";
-        }
-        else {
-            File serverCsrFile = new File(LC.zimbra_home.value() + "/ssl/zimbra/commercial/commercial.csr");
-            if (serverCsrFile.exists()) {
-                return LC.zimbra_home.value() + "/ssl/zimbra/commercial/commercial.csr";
-            }
-        }
-        return adminHomeDir + "/tmp/current.csr";
-    }
-
     private static void getCSRFile(String adminHomeDir, OutputStream out)
             throws FileNotFoundException, IOException {
-        String csrFileName =  getCSRFileName(adminHomeDir);
-
+        String csrFileName =  adminHomeDir + "/tmp/current.csr" ;
         //System.out.println("csr file = " + csrFileName) ;
         InputStream in = null;
         try {
