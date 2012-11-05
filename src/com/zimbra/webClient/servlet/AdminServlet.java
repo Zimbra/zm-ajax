@@ -91,7 +91,6 @@ public class AdminServlet extends ZimbraServlet {
         }
     }
 
-
     private static String getCSRFileName(String adminHomeDir) {
 
         File csrFile = new File(adminHomeDir + "/tmp/current.csr");
@@ -106,23 +105,23 @@ public class AdminServlet extends ZimbraServlet {
         }
         return adminHomeDir + "/tmp/current.csr";
     }
-
+    
     private static void getCSRFile(String adminHomeDir, OutputStream out)
-            throws FileNotFoundException, IOException {
+        throws FileNotFoundException, IOException {
         String csrFileName =  getCSRFileName(adminHomeDir);
 
         //System.out.println("csr file = " + csrFileName) ;
         InputStream in = null;
         try {
-            in = new BufferedInputStream(new FileInputStream(csrFileName));
-            byte[  ] buf = new byte[1024];  // 1K buffer
-            int bytesRead;
-            while ((bytesRead = in.read(buf)) != -1) {
-                out.write(buf, 0, bytesRead);
-            }
+          in = new BufferedInputStream(new FileInputStream(csrFileName));
+          byte[  ] buf = new byte[1024];  // 1K buffer
+          int bytesRead;
+          while ((bytesRead = in.read(buf)) != -1) {
+            out.write(buf, 0, bytesRead);
+          }
         }
         finally {
-            if (in != null) in.close(  );
+          if (in != null) in.close(  );
         }
     }
 
