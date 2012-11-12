@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -78,7 +78,6 @@ function() {
 //
 
 ZmBatchCommand.prototype._sensitive = false;
-ZmBatchCommand.prototype._noAuthToken = false;
 
 //
 // Constants
@@ -99,15 +98,6 @@ ZmBatchCommand.CONTINUE = "continue";
  */
 ZmBatchCommand.prototype.setSensitive = function(sensitive) {
 	this._sensitive = this._sensitive || sensitive;
-};
-
-/**
- * Sets the noAuthToken flag.
- *
- * @param	{Boolean}	noAuthToken		<code>true</code> to send command with noAuthToken
- */
-ZmBatchCommand.prototype.setNoAuthToken = function(noAuthToken) {
-	this._noAuthToken = noAuthToken;
 };
 
 /**
@@ -164,7 +154,6 @@ function(callback, errorCallback) {
 
 	var params = {
 		sensitive:		this._sensitive,
-        noAuthToken:	this._noAuthToken,
 		asyncMode:		true,
 		callback:		new AjxCallback(this, this._handleResponseRun, [callback, errorCallback]),
 		errorCallback:	errorCallback,

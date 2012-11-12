@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -903,16 +903,17 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 		var changehandler = DwtForm.__makeFunc(itemDef.onchange);
 		var onkeyup = AjxCallback.simpleClosure(this._input2model2handler, this, id, changehandler);
 		control.setHandler(DwtEvent.ONKEYUP, onkeyup);
-        if (AjxEnv.isFirefox){
-            var onkeydown = this._onkeydownhandler.bind(this, id, changehandler);
-            control.setHandler(DwtEvent.ONKEYDOWN, onkeydown);
-        }
+
+		if (AjxEnv.isFirefox){
+		    var onkeydown = this._onkeydownhandler.bind(this, id, changehandler);
+		    control.setHandler(DwtEvent.ONKEYDOWN, onkeydown);
+		} 
 		var blurhandler = DwtForm.__makeFunc(itemDef.onblur);
         if (blurhandler) {
 		    var onblur = AjxCallback.simpleClosure(this._input2model2handler, this, id, blurhandler);
 		    control.setHandler(DwtEvent.ONBLUR, onblur);
         }
-
+		
 		control.setHint(itemDef.hint);
 	}
 
@@ -1138,7 +1139,7 @@ DwtForm.__makeGetter = function(item) {
 
 	var parts = ref.split(".");
 	var body = [
-		"var context = this.model;"
+		"var context = this.model;",
 	];
 	for (var i = 0; i < parts.length; i++) {
 		var name = parts[i];
@@ -1164,7 +1165,7 @@ DwtForm.__makeSetter = function(item) {
 
 	var parts = ref.split(".");
 	var body = [
-		"var context = this.model;"
+		"var context = this.model;",
 	];
 	for (var i = 0; i < parts.length; i++) {
 		var isLast = i == parts.length - 1;
