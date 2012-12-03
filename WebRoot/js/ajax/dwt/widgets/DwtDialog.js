@@ -332,7 +332,7 @@ function(buttonId) {
 
 /**
  * Registers a callback for a given button. Can be passed an AjxCallback,
- * the params needed to create one, or as a bound function.
+ * or the params needed to create one.
  *
  * @param {constant}		buttonId	one of the standard dialog buttons
  * @param {AjxCallback}	func		the callback method
@@ -341,7 +341,7 @@ function(buttonId) {
  */
 DwtDialog.prototype.registerCallback =
 function(buttonId, func, obj, args) {
-	this._buttonDesc[buttonId].callback = (func && (func.isAjxCallback || (!obj && !args)))
+	this._buttonDesc[buttonId].callback = (func instanceof AjxCallback)
 		? func : (new AjxCallback(obj, func, args));
 };
 
@@ -586,9 +586,7 @@ DwtDialog.prototype._runCallbackForButtonId =
 function(id, args) {
 	var buttonDesc = this._buttonDesc[id];
 	var callback = buttonDesc && buttonDesc.callback;
-	if (!callback) {
-		return false;
-	}
+	if (!callback) return false;
 	args = (args instanceof Array) ? args : [args];
 	callback.run.apply(callback, args);
 	return true;
