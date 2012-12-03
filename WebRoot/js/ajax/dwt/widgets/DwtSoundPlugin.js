@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -108,28 +108,9 @@ function() {
 DwtSoundPlugin._getPluginClass =
 function() {
 	if (!DwtSoundPlugin._pluginClass) {
-		if (AjxEnv.isIE) {
-            var version;
-            try {
-                version = AjxPluginDetector.getQuickTimeVersion();
-            } catch (e) {
-            }
-
-            //Use Quicktime for IE 8, as IE8 windows media player does not work with httpOnly cookie attribute
-            //TODO: Currently if Quick time is not installed, users will not get any prompt to install it.
-            if (AjxEnv.isIE8 && version) {
-                DwtSoundPlugin._pluginClass = DwtQTSoundPlugin;
-            } else if (AjxPluginDetector.detectWindowsMedia()) {
-                //IE8 windows media player does not work with httpOnly cookie attribute
-                DwtSoundPlugin._pluginClass = DwtWMSoundPlugin;
-            }
-
-		} 
-		else if (AjxEnv.isSafari5up && !AjxEnv.isChrome && !AjxEnv.isWindows) {
-			//safari quicktime does not work with httpOnly cookie attribute
-			DwtSoundPlugin._pluginClass = DwtHtml5SoundPlugin;
-		}
-		else {
+		if (AjxEnv.isIE && AjxPluginDetector.detectWindowsMedia()) {
+			DwtSoundPlugin._pluginClass = DwtWMSoundPlugin;
+		} else {
 			var version = AjxPluginDetector.getQuickTimeVersion();
 			if (version) {
 				DBG.println("DwtSoundPlugin: QuickTime version=" + version);
@@ -330,14 +311,18 @@ function(version) {
 		// the checkScripting() routine below. I'm going to disable all QT versions that
 		// are greater than 7.1.6. We should change this check when QT is fixed. More info:
 		// http://lists.apple.com/archives/quicktime-users/2007/May/msg00016.html
-		var badVersion = "716";
-		var currentVersion = "";
-		for(var i = 0; i < version.length; i++) {
-			currentVersion += version[i];
+		var badVersion = [7, 1, 6];
+		for(var i = 0, count = version.length; i < count; i++) {
+			if (version[i] < badVersion[i]) {
+				return true;
+			} else if (version[i] > badVersion[i]) {
+				return false;
+			}
 		}
-		return currentVersion != badVersion;
-	} 
-	return true;
+		return false;
+	} else {
+		return true;
+	}
 };
 
 /**
@@ -355,7 +340,7 @@ function() {
 		height: 16,
 		offscreen: true,
 		posStyle: DwtControl.RELATIVE_STYLE,
-		url: "/public/sounds/im/alert.wav", // Not a valid url.
+		url: "/QuickTimeScriptTest.wav", // Not a valid url.
 		volume: 0
 	};
 	var test = new DwtQTSoundPlugin(args);
@@ -376,10 +361,7 @@ function() {
 DwtQTSoundPlugin.prototype.play =
 function() {
 	var player = this._getPlayer();
-    try {
-	    player.Play();
-    }catch(e) {
-    }
+	player.Play();
 	this._monitorStatus();
 };
 
@@ -439,6 +421,7 @@ function(event) {
 				event.status = DwtSoundPlugin.LOADING;
 				break;
 			case "Loading":
+				valid = true;
 				event.status = DwtSoundPlugin.LOADING;
 				break;
 			case "Playable":
@@ -520,197 +503,6 @@ function(params) {
 	this._createQTHtml(params);
 };
 
-/**
- * Sound player that goes through the HTML5 audio tag
- * @class
- * This class provides and HTML5 audio widget
- *
- * @param	{hash}	params		a hash of parameters
- *
- * @extends		DwtSoundPlugin
- *
- * @private
- */
-DwtHtml5SoundPlugin = function(params) {
-	if (arguments.length == 0) return;
-	params.className = params.className || "DwtSoundPlugin";
-	DwtSoundPlugin.call(this, params);
-
-	this._playerId = Dwt.getNextId();
-    this._retryLoadAudio = 0;
-	this._createHtml(params);	
-};
-
-DwtHtml5SoundPlugin.prototype = new DwtSoundPlugin;
-DwtHtml5SoundPlugin.prototype.constructor = DwtHtml5SoundPlugin;
-
-DwtHtml5SoundPlugin.prototype.toString = 
-function() {
-	return "DwtHtml5SoundPlugin";
-};
-
-DwtHtml5SoundPlugin.prototype._createHtml = 
-function(params) {
-    if (AjxEnv.isSafari) {
-        AjxRpc.invoke(null, params.url, { 'X-Zimbra-Encoding': 'x-base64' },
-            this._setSource.bind(this), AjxRpcRequest.HTTP_GET);
-    } else {
-        this.getHtmlElement().innerHTML = this._getAudioHtml(params.url);
-    }
-};
-
-DwtHtml5SoundPlugin.prototype._getAudioHtml =
-function(source) {
-    var html = [
-     "<audio autoplay='yes' ",
-     "id='", this._playerId,
-     "' preload ",
-     "><source src='", source,
-     "' type='", ZmVoiceApp.audioType, "' />",
-     "</audio>"
-     ];
-    return html.join("");
-};
-
-DwtHtml5SoundPlugin.prototype._setSource =
-function(response) {
-    if(response.success){
-        this.getHtmlElement().innerHTML = this._getAudioHtml('data:' + ZmVoiceApp.audioType +';base64,' + response.text);
-    }
-};
-
-DwtHtml5SoundPlugin.prototype.play =
-function() {
-	var player = this._getPlayer();
-    if (player && player.readyState){
-        try {
-	        this._monitorStatus();
-            player.play();
-        } catch (ex){
-            DBG.println("Exception in DwtHtml5SoundPlugin.prototype.play: "+ ex);
-        }
-    }
-};
-
-DwtHtml5SoundPlugin.prototype.pause =
-function() {
-	var player = this._getPlayer();
-    if (player && player.readyState){
-        try {
-            player.pause();
-        } catch (ex){
-            DBG.println("Exception in DwtHtml5SoundPlugin.prototype.pause: "+ ex);
-        }
-    }
-};
-
-DwtHtml5SoundPlugin.prototype._getPlayer =
-function() {
-	return document.getElementById(this._playerId);
-};
-
-
-DwtHtml5SoundPlugin.prototype.rewind =
-function() {
-	this.setTime(0);
-};
-
-DwtHtml5SoundPlugin.prototype.setTime =
-function(time) {
-    if (isNaN(time)){
-        time = 0;
-    }
-    time = (time > 0) ?  (time / 1000) : 0;
-	var player = this._getPlayer();
-    try {
-        if (player && player.readyState && player.currentTime != time ){
-            player.currentTime = time;
-            if (player.controls){
-                player.controls.currentPosition =  time;
-            }
-        }
-    } catch(ex){
-        DBG.println("Exception in DwtHtml5SoundPlugin.prototype.setTime: "+ ex);
-    }
-};
-
-DwtHtml5SoundPlugin.prototype._resetEvent =
-function(event) {
-	var keepChecking = true;
-	var player = this._getPlayer();
-	event.finished = false;
-	/*
-	use HTML5 canPlay event instead
-	var valid = false;
-	if (player) {
-		var status = player.duration;
-		switch (status) {
-			case "NaN":
-				event.status = DwtSoundPlugin.LOADING;
-				break;
-			default :
-				event.status = DwtSoundPlugin.PLAYABLE;
-				valid = true;
-				keepChecking = false;
-				break;
-		}
-	} */
-	/*if (valid) {
-		var scale = 1000; // Converts to milliseconds.
-		event.time = player.currentTime * scale;
-		event.duration = player.duration * scale;
-	} */
-	if(!valid) {
-		event.status = DwtSoundPlugin.WAITING;
-		event.time = 0;
-		event.duration = 100;
-	}
-	if (event.status == DwtSoundPlugin.PLAYABLE && event.time == event.duration) {
-		event.time = 0;
-		event.finished = true;
-		keepChecking = false;
-	}
-	return keepChecking;
-};
-
-/**
- * Adds a change listener to monitor the status of the sound being played.
- * Handles the HTML5 event timeupdate 
- * The listener will be passed an event object with the following fields:
- * <ul>
- * <li>status, a constant representing the loaded state of the sound</li>
- * <li>duration, the length of the sound</li>
- * <li>time, the current time of the sound</li>
- * </ul>
- *
- * @param {AjxListener}	listener	the listener
- */
-DwtHtml5SoundPlugin.prototype.addChangeListener =
-function(listener) {
-	var player = this._getPlayer();
-    if (!player){
-        if (this._retryLoadAudio < 10){
-            setTimeout(this.addChangeListener.bind(this,listener), 1000);
-        }
-        this._retryLoadAudio++;
-        return;
-    }
-	var obj = this;
-	player.addEventListener("timeupdate", function(e) { 
-			listener.handleEvent({time: player.currentTime * 1000, duration: player.duration * 1000, status: DwtSoundPlugin.PLAYABLE});}, false);
-	player.addEventListener("ended", function(e) {
-			player.pause(); 
-			obj.setTime(0);
-			listener.obj.setFinished();
-	});
-	player.addEventListener("canplay", function(event) {
-		var scale = 1000; // Converts to milliseconds.
-		event.time = player.currentTime * scale;
-		event.duration = player.duration * scale;
-		player.play();
-	});
-	this._monitorStatus();
-};
 //////////////////////////////////////////////////////////////////////////////
 // Sound player that goes through the Windows Media (WM) plugin.
 //

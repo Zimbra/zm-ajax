@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,8 +25,15 @@ AjxXmlDoc = function() {
 		AjxXmlDoc._init();
 }
 
-AjxXmlDoc.prototype.isAjxXmlDoc = true;
-AjxXmlDoc.prototype.toString = function() {	return "AjxXmlDoc"; }
+/**
+ * Returns a string representation of the object.
+ * 
+ * @return	{string}	a string representation of the object
+ */
+AjxXmlDoc.prototype.toString =
+function() {
+	return "AjxXmlDoc";
+}
 
 //
 // Constants
@@ -296,10 +303,21 @@ function() {
 				this.removeChild(this.lastChild);
 			}
 			var len = domObj.childNodes.length;
-            for (var i = 0; i < len; i++) {
-                var importedNode = this.importNode(domObj.childNodes[i], true);
-                this.appendChild(importedNode);
-            }
+			if (AjxEnv.isChrome7) {
+				// workaround for http://code.google.com/p/chromium/issues/detail?id=54969
+				var frag = this.createDocumentFragment();
+				for (var i = 0; i < len; i++) {
+					var importedNode = this.importNode(domObj.childNodes[i], true);
+					frag.appendChild(importedNode);
+				}
+				this.appendChild(frag);
+			}
+			else {
+				for (var i = 0; i < len; i++) {
+					var importedNode = this.importNode(domObj.childNodes[i], true);
+					this.appendChild(importedNode);
+				}
+			}
 		}
 		
 		if (AjxEnv.isNav) {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -93,6 +93,8 @@ AjxHistoryMgr.BLANK_FILE = "blankHistory.html";
 // ID for the iframe
 AjxHistoryMgr.IFRAME_ID = "DhtmlHistoryFrame";
 
+// Number of ms between checks of the Location bar for changes
+AjxHistoryMgr.LOCATION_CHECK_INTERVAL = 100;
 
 /**
  * Adds a history change listener.
@@ -221,7 +223,7 @@ function() {
 	var locationHandler = function() {
 		self._checkLocation();
 	};
-	window.onhashchange = locationHandler;
+	setInterval(locationHandler, AjxHistoryMgr.LOCATION_CHECK_INTERVAL);
 };
 
 /**
