@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -107,7 +107,8 @@ DwtDialog = function(params) {
 	this._buttonElementId = {};
 	for (var i = 0; i < this._buttonList.length; i++) {
 		var buttonId = this._buttonList[i];
-		this._buttonElementId[this._buttonList[i]] = params.id + "_button" + buttonId + "_cell";
+		this._buttonElementId[buttonId] = this._buttonDesc[buttonId].label? this._buttonDesc[buttonId].label + "_" + Dwt.getNextId():Dwt.getNextId();
+		//this._buttonElementId[this._buttonList[i]] = Dwt.getNextId(); 
 	}
 
 	DwtBaseDialog.call(this, params);
@@ -138,8 +139,9 @@ DwtDialog.PARAMS = ["parent", "className", "title", "standardButtons", "extraBut
 DwtDialog.prototype = new DwtBaseDialog;
 DwtDialog.prototype.constructor = DwtDialog;
 
-DwtDialog.prototype.isDwtDialog = true;
-DwtDialog.prototype.toString = function() { return "DwtDialog"; };
+DwtDialog.prototype.toString = function() {
+	return "DwtDialog";
+};
 
 //
 // Constants
@@ -331,7 +333,7 @@ function(buttonId) {
 
 /**
  * Registers a callback for a given button. Can be passed an AjxCallback,
- * the params needed to create one, or as a bound function.
+ * or the params needed to create one.
  *
  * @param {constant}		buttonId	one of the standard dialog buttons
  * @param {AjxCallback}	func		the callback method
@@ -340,7 +342,7 @@ function(buttonId) {
  */
 DwtDialog.prototype.registerCallback =
 function(buttonId, func, obj, args) {
-	this._buttonDesc[buttonId].callback = (func && (func.isAjxCallback || (!obj && !args)))
+	this._buttonDesc[buttonId].callback = (func instanceof AjxCallback)
 		? func : (new AjxCallback(obj, func, args));
 };
 
@@ -389,7 +391,7 @@ function(id) {
 
 DwtDialog.prototype.getKeyMapName = 
 function() {
-	return DwtKeyMap.MAP_DIALOG;
+	return "DwtDialog";
 };
 
 DwtDialog.prototype.handleKeyAction =
@@ -463,7 +465,7 @@ function(templateId, data) {
  */
 DwtDialog.prototype._getButtonsContainerStartTemplate =
 function () {
-	return "<table width='100%'><tr>";
+	return "<table cellspacing='0' cellpadding='0' border='0' width='100%'><tr>";
 };
 
 /**
@@ -471,7 +473,7 @@ function () {
  */
 DwtDialog.prototype._getButtonsAlignStartTemplate =
 function () {
-	return "<td align=\"{0}\"><table><tr>";
+	return "<td align=\"{0}\"><table cellspacing='5' cellpadding='0' border='0'><tr>";
 };
 
 /**
@@ -585,9 +587,7 @@ DwtDialog.prototype._runCallbackForButtonId =
 function(id, args) {
 	var buttonDesc = this._buttonDesc[id];
 	var callback = buttonDesc && buttonDesc.callback;
-	if (!callback) {
-		return false;
-	}
+	if (!callback) return false;
 	args = (args instanceof Array) ? args : [args];
 	callback.run.apply(callback, args);
 	return true;
