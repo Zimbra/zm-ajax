@@ -57,6 +57,7 @@ DwtListView = function(params) {
         var headHtml = document.getElementById(headId);
         this._listColDiv = document.createElement("div");
         this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
+        this._listColDiv.className = "DwtListView-ColHeader";
         headHtml.appendChild(this._listColDiv);
 
         var colHtml = document.getElementById(colId);
@@ -203,7 +204,7 @@ function(enabled) {
 };
 
 DwtListView.prototype.createHeaderHtml =
-function(defaultColumnSort, isColumnHeaderTableFixed) {
+function(defaultColumnSort) {
 	// does this list view have headers or have they already been created?
 	if (!this._headerList || this.headerColCreated) { return; }
 
@@ -240,7 +241,6 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 	htmlArr[idx++] = "</tr></table>";
 
 	this._listColDiv.innerHTML = htmlArr.join("");
-	this._listColDiv.className = "DwtListView-ColHeader" + (isColumnHeaderTableFixed ? " FixedColumnHeaderTables" : "");
 
 	// for each sortable column, sets its identifier
 	var numResizeable = 0, resizeableCol;
@@ -338,7 +338,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._sortable && !headerCol._noSortArrow) {
 		var arrowIcon = this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow";
 
-		htmlArr[idx++] = "<td align=right style='padding-right:2px' width='8px' id='";
+		htmlArr[idx++] = "<td align=right style='padding-right:2px' width=100% id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
 		htmlArr[idx++] = "'>";
 		var isDefault = (field == defaultColumnSort);
