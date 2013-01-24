@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -70,7 +70,6 @@ public class Props2Js {
             
             printEntry(out, matcher, key, bundle.getString(key));
         }
-		printTail(out);
     }
 
     public static void convert(OutputStream ostream, Properties props,
@@ -84,7 +83,6 @@ public class Props2Js {
             
             printEntry(out, matcher, key, props.getProperty(key));
         }
-		printTail(out);
     }
 
     public static void convert(OutputStream ostream, File file,
@@ -112,7 +110,6 @@ public class Props2Js {
         printHead(out, classname);
         pp.load(in);
         in.close();
-		printTail(out);
     }
 
     private static void printHead(DataOutputStream out, String classname) throws
@@ -123,11 +120,6 @@ public class Props2Js {
         out.writeBytes("a="+classname+";\n");
     }
     
-	private static void printTail(DataOutputStream out) throws
-		IOException {
-		out.writeBytes("delete a;");
-	}
-	
     private static void printEntry(DataOutputStream out, Matcher matcher,
         String key, String val) throws IOException {
         matcher.reset(key);
