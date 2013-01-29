@@ -583,9 +583,7 @@ function() {
 		html[i++] = "_clear'>Clear</button></td><td><button id='";
 		html[i++] = AjxDebug._BOTTOM_FRAME_ID;
 		html[i++] = "_pause'>Pause</button></td></tr></table>";
-		if (doc.body) {
-			doc.body.innerHTML = html.join("");
-		}
+		doc.body.innerHTML = html.join("");
 	}
 	catch (ex) {
 		// IE chokes on the popup window on cold start-up (when IE is started
