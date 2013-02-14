@@ -845,6 +845,9 @@ public class SkinResources
             cookie = getCookie(req, defaultCookiePara);
             skin = cookie != null ? cookie.getValue() : getServletContext().getInitParameter(defaultSkinPara);
         }
+        if (skin != null) {
+            skin = skin.replaceAll("[^A-Za-z0-9]", "");
+        }
         File manifest = new File(getServletContext().getRealPath("/skins/"+skin+"/"+SKIN_MANIFEST));
         if (!manifest.exists()) {
             skin = getServletContext().getInitParameter(defaultSkinPara);
