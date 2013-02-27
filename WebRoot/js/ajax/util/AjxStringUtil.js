@@ -30,6 +30,9 @@ AjxStringUtil.COMPRESS_RE = /\s+/g;
 AjxStringUtil.ELLIPSIS = " ... ";
 AjxStringUtil.LIST_SEP = ", ";
 
+//Regex for image tag having src starting with cid:
+AjxStringUtil.IMG_SRC_CID_REGEX = /<img([^>]*)\ssrc=["']cid:/gi;
+
 AjxStringUtil.makeString =
 function(val) {
 	return val ? String(val) : "";
@@ -1594,6 +1597,7 @@ function(html) {
 		idoc = AjxStringUtil._htmlContentIframeDoc = Dwt.getIframeDoc(iframe);
 		AjxStringUtil.__curIframeId = AjxEnv.isFirefox ? iframe.id : null;
 	}
+    html = html && html.replace(AjxStringUtil.IMG_SRC_CID_REGEX, '<img pnsrc="cid:');
 	idoc.open();
 	idoc.write(html);
 	idoc.close();
