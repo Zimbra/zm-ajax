@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -497,7 +497,7 @@ public final class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter
         if (expiresValue > 0 && req.getMethod().equals("GET")) {
             TimeZone gmt = TimeZone.getTimeZone(GMT);
             long now = System.currentTimeMillis();
-            Date expiresDate = new Date(now + (expiresValue * (long)1000));
+            Date expiresDate = new Date(now + (expiresValue * 1000));
             DateFormat df = new SimpleDateFormat(TIME_FORMAT);
             df.setTimeZone(gmt);
             resp.setHeader(HEADER_EXPIRES, df.format(expiresDate) + " " + GMT);
