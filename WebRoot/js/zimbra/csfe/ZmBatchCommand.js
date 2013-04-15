@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -179,13 +179,16 @@ function(callback, errorCallback) {
 		if (size && this._requests.length) {
 			for (var i = 0; i < size; i++) {
 				var request = this._requests[i];
-				request.requestId = i;
-				var methodName = ZmCsfeCommand.getMethodName(request);
-				if (!batchRequest[methodName]) {
-					batchRequest[methodName] = [];
-				}
-				request[methodName].requestId = i;
-				batchRequest[methodName].push(request[methodName]);
+                //Bug fix # 67110 the request object is sometimes undefined
+                if(request) {
+                    request.requestId = i;
+                    var methodName = ZmCsfeCommand.getMethodName(request);
+                    if (!batchRequest[methodName]) {
+                        batchRequest[methodName] = [];
+                    }
+				    request[methodName].requestId = i;
+				    batchRequest[methodName].push(request[methodName]);
+                }
 			}
 			params.jsonObj = jsonObj;
 		}

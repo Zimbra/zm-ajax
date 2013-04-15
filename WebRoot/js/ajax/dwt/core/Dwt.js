@@ -1556,6 +1556,9 @@ function(id, date) {
 		document.body.appendChild(div);
 	}
 	div.innerHTML = date.getTime();
+	if (window.appDevMode) {
+		console.profile(id);
+	}
 };
 
 /**
@@ -1576,8 +1579,33 @@ function(id, date) {
 		document.body.appendChild(div);
 	}
 	div.innerHTML = date.getTime();
+	if (window.appDevMode) {
+		console.profileEnd();
+	}
 };
 
+/**
+ * Prints the computed time from performance metrics data
+ */
+Dwt.printPerfMetric =
+function() {
+	//code to print all loading stats
+	$.each($('div[id*="_loaded"]'), function(index, elem) {
+		var end_id = $(elem).attr("id");
+		var start_id_prefix = end_id.substring(0,end_id.indexOf("_"));
+		var end_elem = $("#" + start_id_prefix+"_launched");
+		if (end_elem && end_elem.length > 0) {
+			var end_time = $("#" + start_id_prefix+"_launched").html();
+		} else {
+			end_time = $("#" + start_id_prefix+"_loading").html();
+		}
+		var log = "Load time for " + start_id_prefix + " is " + ($(elem).html()-end_time);
+		DBG.println(AjxDebug.DBG1,log);
+		if (console) {
+			console.log(log);
+		}
+	});
+}
 
 // Css for Templates
 Dwt.createLinearGradientCss =

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -46,7 +46,7 @@ DwtSelect = function(params) {
 	this._hasSetMouseEvents = true;
 
     // initialize some variables
-    this._currentSelectionId = -1;
+    this._currentSelectedOption = null;
     this._options = new AjxVector();
     this._optionValuesToIndices = {};
     this._selectedValue = this._selectedOption = null;
@@ -181,6 +181,8 @@ function(option, selected, value, image) {
         "</div>"
     ].join("");
 
+	this.fixedButtonWidth(); //good to call always to prevent future bugs due to the vertical space.
+
 	// Register listener to create new menu.
 	this.setMenu(this._menuCallback, true);
 
@@ -222,6 +224,7 @@ function(option) {
 			var newSelIndex = (index >= size) ? size - 1 : index;
 			this._setSelectedOption(this._options.get(newSelIndex));
 		}
+		this.fixedButtonWidth(); //good to call always to prevent future bugs due to the vertical space.
 	}
 
 	delete this._optionValuesToIndices[value];
@@ -251,6 +254,9 @@ DwtSelect.prototype.popup =
 function() {
 	var menu = this.getMenu();
 	if (!menu) { return; }
+	if (this._currentSelectedOption) {
+		menu.setSelectedItem(this._currentSelectedOption.getItem());
+	}
 
 	var selectElement = this._selectEl;
 	var selectBounds = Dwt.getBounds(selectElement);
@@ -321,7 +327,10 @@ function() {
 	this._optionValuesToIndices = [];
 	this._selectedValue = null;
 	this._selectedOption = null;
-	this._currentSelectionId = -1;
+	this._currentSelectedOption = null;
+	if (this._pseudoItemsEl) {
+		this._pseudoItemsEl.innerHTML = "";
+	}
 };
 
 /**
@@ -524,7 +533,10 @@ function(text) {
 DwtSelect.prototype.dispose =
 function() {
 	this._selectEl = null;
-	this._pseudoItemsEl = null;
+	if (this._pseudoItemsEl) {
+		this._pseudoItemsEl.innerHTML = "";
+		this._pseudoItemsEl = null;
+	}
 	this._containerEl = null;
 
 	DwtButton.prototype.dispose.call(this);
@@ -564,8 +576,10 @@ function(anId) {
  */
 DwtSelect.prototype.dynamicButtonWidth = 
 function() {
+	this._isDynamicButtonWidth = true; //if this is set, set this so fixedButtonWidth doesn't change this.
+	this._selectEl.style.width = "auto"; //set to default in case fixedButtonWidth was called before setting it explicitely.
 	this._pseudoItemsEl.style.display =  "none";
-}
+};
 
 /*
  * Use this in case you want the select to be as wide as the widest option and
@@ -573,6 +587,10 @@ function() {
  */
 DwtSelect.prototype.fixedButtonWidth =
 function(){
+	if (this._isDynamicButtonWidth) {
+		return;
+	}
+	this._pseudoItemsEl.style.display = "block"; //in case this function was called before. This will fix the width of the _selectEl to match the options.
     var elm = this._selectEl;
     var width = elm.offsetWidth;
     elm.style.width = width + "px";
@@ -657,15 +675,7 @@ function(ev) {
     this.notifyListeners(DwtEvent.ONCHANGE, event);
 };
 
-DwtSelect.prototype._clearOptionSelection = 
-function() {
-    if (this._currentSelectionId != -1) {
-        var currOption = DwtSelect._getObjectWithId(this._currentSelectionId);
-        currOption.deSelect();
-    }
-};
-
-DwtSelect.prototype._setSelectedOption = 
+DwtSelect.prototype._setSelectedOption =
 function(option) {
 	var displayValue = option.getSelectedValue() || option.getDisplayValue();
 	var image = option.getImage();
@@ -697,19 +707,21 @@ function() {
 
 DwtSelect.prototype._updateSelection = 
 function(newOption) {
-    var currOption = (this._currentSelectionId != -1)
-		? DwtSelect._getObjectWithId(this._currentSelectionId) : null;
+	var currOption = this._currentSelectedOption;
 
-    if (currOption) {
-        currOption.deSelect();
+	if (currOption) {
+		currOption.deSelect();
 	}
-    if (newOption) {
-		newOption.select();
-		this._currentSelectionId = newOption.getIdentifier();
-		var menu = this.getMenu();
-		if (menu)
-			menu.setSelectedItem(newOption.getItem());
-    }
+	this._currentSelectedOption = newOption;
+	if (!newOption) {
+		return;
+	}
+	newOption.select();
+	var menu = this.getMenu(true);
+	if (!menu) {
+		return;
+	}
+	menu.setSelectedItem(newOption.getItem());
 };
 
 // Call this function to update the rendering of the element
