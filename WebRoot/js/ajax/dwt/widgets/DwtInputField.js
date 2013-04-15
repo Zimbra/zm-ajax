@@ -46,7 +46,7 @@
  * @param {string}      params.hint				a hint to display in the input field when the value is empty.
  * @param {string}      params.id				an explicit ID to use for the control's DIV element
  * @param {string}      params.inputId			an explicit ID to use for the control's INPUT element
- *
+ * 
  * @extends		DwtComposite
  * 
  * TODO: Use HTML5 feature of placeholder text for inputs (not supported by IE):
@@ -55,8 +55,7 @@
 DwtInputField = function(params) {
 
 	if (arguments.length == 0) return;
-	params.className = params.className  || "DwtInputField";
-	this._origClassName = params.className;
+	this._origClassName = params.className ? params.className : "DwtInputField";
 	this._errorClassName = this._origClassName + "-Error";
 	this._hintClassName = this._origClassName + "-hint";
 	this._disabledClassName = this._origClassName + "-disabled";
@@ -334,7 +333,7 @@ function() {
 */
 DwtInputField.prototype.getValue =
 function() {
-	return this._hintIsVisible ? '' : AjxStringUtil.trim(this._inputField.value);
+	return this._hintIsVisible ? '' : this._inputField.value;
 };
 
 /**
