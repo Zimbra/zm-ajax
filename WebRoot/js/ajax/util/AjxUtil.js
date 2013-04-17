@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -874,14 +874,15 @@ AjxUtil.get = function(object /* , propName1, ... */) {
  * 
 */
 AjxUtil.convertToEntities = function (source){
-	var result = '', temp, length = 0, i = 0;
+	var result = '';
+	var length = 0;
     
     if (!source || !(length = source.length)) return source;
     
-	for(i; i < length; ++i){
-		if(source.charCodeAt(i) > 127){
-			temp = source.charCodeAt(i).toString(10);
-			while(temp.length < 4){
+	for (var i = 0; i < length; i++) {
+		if (source.charCodeAt(i) > 127) {
+			var temp = source.charCodeAt(i).toString(10);
+			while (temp.length < 4) {
 				temp = '0' + temp;
 			}
 			result += '&#' + temp + ';';
@@ -891,3 +892,19 @@ AjxUtil.convertToEntities = function (source){
 	}
 	return result;
 };
+
+/**
+ *  Get the class attribute string from the given class.
+ * @param {array} - An array of class names to be converted to a class attribute.
+ * returns the attribute string with the class names or empty string if no class is passed.
+	*
+ */
+AjxUtil.getClassAttr = function (classes){
+	var attr = [];
+	if (classes && classes.length > 0) {
+		//remove duplicate css classes
+		classes = AjxUtil.uniq(classes);
+		return ["class='" , classes.join(" "), "'"].join("");
+	}
+	return "";
+}

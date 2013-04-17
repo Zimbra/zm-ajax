@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -99,7 +99,7 @@ function(htmlElement, cssPropName) {
 	var result;
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not support ownerDocument
-		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
+		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -128,7 +128,7 @@ DwtCssStyle.getComputedStyleObject =
 function(htmlElement) {
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not suppoert ownerDocument
-		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
+		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -175,13 +175,16 @@ DwtCssStyle.removeProperty = function(el, prop) {
 DwtCssStyle.addRule =
 function(stylesheet, selector, declaration, index) {
 	if (stylesheet.addRule) {	// IE
+		//if index is not specified insert at the end so that new rule takes precedence
+		index = index || (stylesheet.rules.length);
 		stylesheet.addRule(selector, declaration, index);
-		return (index == null) ? (stylesheet.rules.length - 1) : index;
 	}
 	else {
-		stylesheet.insertRule(selector + "{" + declaration + "}", index || 0);
-		return (index == null) ? (stylesheet.cssRules.length - 1) : index;
+		//if index is not specified insert at the end so that new rule takes precedence
+		index = index || (stylesheet.cssRules.length);
+		stylesheet.insertRule(selector + "{" + declaration + "}", index);
 	}
+	return index;
 };
 
 /**
