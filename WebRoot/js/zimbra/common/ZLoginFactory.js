@@ -97,7 +97,7 @@ function(msgs) {
 		showButton : false,
 		buttonName : msgs["login"] || "",
 		
-		copyrightText : msgs["splashScreenCopyright"] || ""
+		copyrightText : ZaItem.getSplashScreenCopyright() || ""
 	};
 };
 
