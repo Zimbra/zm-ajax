@@ -338,7 +338,7 @@ public class SkinResources
 			// Cache It!
 			String maxAge = (String)req.getAttribute("init.Expires");
 			if (maxAge == null) {
-				maxAge = "2595600";
+				maxAge = "604800";
 			}
 			resp.setHeader("Cache-control", "public, max-age="+maxAge);
 			resp.setContentType(contentType);
