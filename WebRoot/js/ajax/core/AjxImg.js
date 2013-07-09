@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -42,16 +42,14 @@ AjxImg.RE_COLOR = /^(.*?),color=(.*)$/;
  * @param parentEl 		the parent element for the image
  * @param imageName 		the name of the image.  The CSS class for the image will be "Img&lt;imageName&gt;".
  * @param useParenEl 	if <code>true</code> will use the parent element as the root for the image and will not create an intermediate DIV
- * @param _disabled		if <code>true</code>, will append " ZDisabledImage" to the CSS class for the image,
- * @param {array}       classes             array of class names to be applied to this image
+ * @param _disabled		if <code>true</code>, will append " ZDisabledImage" to the CSS class for the image, 
  *							which will make the image partly transparent
  */
 AjxImg.setImage =
-function(parentEl, imageName, useParentEl, _disabled, classes) {
+function(parentEl, imageName, useParentEl, _disabled) {
 	
 	if (!parentEl) { return; }
 	
-	classes = classes || [];
 	var origImageName = imageName;
     var color, m = imageName && imageName.match(AjxImg.RE_COLOR);
 	if (m) {
@@ -61,8 +59,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes) {
 
 	var className = AjxImg.getClassForImage(imageName, _disabled);
 	if (useParentEl) {
-		classes.push(className);
-		parentEl.className = classes.join(" ");
+		parentEl.className = className;
 		return;
 	}
 	var id = parentEl.firstChild && parentEl.firstChild.id;
@@ -78,30 +75,29 @@ function(parentEl, imageName, useParentEl, _disabled, classes) {
 
 	if (parentEl.firstChild == null || parentEl.firstChild.nodeName.toLowerCase() != "div") {
 		var html = [], i = 0;
-		html[i++] = "<div ";
+		html[i++] = "<div";
 		if (id) {
 			html[i++] = " id='";
 			html[i++] = id;
-			html[i++] = "' ";
+			html[i++] = "'";
 		}
 		if (className) {
-			classes.push(className);
+			html[i++] = " class='";
+			html[i++] = className;
+			html[i++] = "'";
 		}
-		html[i++] = AjxUtil.getClassAttr(classes);
 		html[i++] = "></div>";
 		parentEl.innerHTML = html.join("");
 		return;
 	} else if (AjxEnv.isIE) {
 		parentEl.firstChild.innerHTML = "";
 	}
-	if (className) {
-		classes.push(className);
-	}
-	parentEl.firstChild.className = classes.join(" ");
+
+	parentEl.firstChild.className = className;
 };
 
-AjxImg.setDisabledImage = function(parentEl, imageName, useParentEl, classes) {
-	return AjxImg.setImage(parentEl, imageName, useParentEl, true, classes);
+AjxImg.setDisabledImage = function(parentEl, imageName, useParentEl) {
+	return AjxImg.setImage(parentEl, imageName, useParentEl, true);
 };
 
 AjxImg.getClassForImage =
@@ -134,17 +130,15 @@ function(imageEl) {
  * @param {string}		attrStr			optional attributes (for example, "id=X748")
  * @param {boolean}		wrapInTable		if true, wrap the HTML in a TABLE
  * @param {boolean}		disabled		if true, show image as disabled
- * @param {array}       classes     array of class names to be applied to this image
  * 
  * @return	{string}	the image string
  */
 AjxImg.getImageHtml = 
-function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
+function(imageName, styles, attrStr, wrapInTable, disabled) {
 
 	styles = styles || "";
 	var styleStr = styles ? " style='" + styles + "'" : "";
 	attrStr = attrStr ? " " + attrStr : "";
-	classes = classes || [];
 
 	var pre = wrapInTable ? "<table style='display:inline' cellpadding=0 cellspacing=0 border=0><tr><td align=center valign=bottom>" : "";
     var html = "";
@@ -198,9 +192,8 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
 			else if (AjxEnv.isIE9up) {
 					color = color.replace("#","");
 					var className = AjxImg.getClassForImage(imageName + "_" + color, disabled);
-	                classes.push("Img" + imageName + "_" + color);
 					html = [
-						"<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, "></div>"
+						"<div class='", "Img", imageName + "_" + color, "'", styleStr, attrStr, "></div>"
 					].join("");
 			}
             else {
@@ -263,14 +256,13 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
                 }
 
                 html = [
-                    "<img src='", overlay[color], "'"," border=0 ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
+                    "<img src='", overlay[color], "'"," border=0 ", styleStr, attrStr, ">"
                 ].join("");
             }
         }
         else {
-	        classes.push("Img" + imageName);
             html = [
-                "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, "></div>"
+                "<div class='", "Img", imageName, "'", styleStr, attrStr, "></div>"
             ].join("");
         }
 	}

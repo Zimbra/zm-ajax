@@ -133,26 +133,9 @@ function() {
 	this._imageCell = null;
 	this._textCell = null;
 	this._childDiv = null;
-	this._initialized = false;
 	DwtComposite.prototype.dispose.call(this);
 };
 
-/**
- * override DwtControl.prototype.getData to take care of special case of KEY_OBJECT of type ZmOrganizer. See bug 82027
- * @param key
- * @return {*}
- */
-DwtTreeItem.prototype.getData =
-function(key) {
-	var obj = this._data[key];
-	if (key !== Dwt.KEY_OBJECT || !obj || !obj.isZmOrganizer) {
-		return obj;
-	}
-	//special case for ZmOrganizer instance of the Dwt.KEY_OBJECT attribute.
-	//bug 82027 - the folder attributes such as name could be wrong after refresh block+ rename when new instance was created but not set to the item Dwt.KEY_OBJECT attribute.
-	var cachedOrganizer = obj && appCtxt.cacheGet(obj.id);
-	return cachedOrganizer || obj; //just in case somehow it's no longer cached. No idea if could happen.
-};
 
 /**
  * Checks if the item is checked.
@@ -318,7 +301,7 @@ function() {
  */
 DwtTreeItem.prototype.setText =
 function(text) {
-	if (this._initialized && this._textCell) {
+	if (this._initialized) {
 		if (!text) text = "";
 		this._text = this._textCell.innerHTML = text;
 	} else {
@@ -873,7 +856,7 @@ function(img, focused) {
 
 DwtTreeItem.prototype._setSelected =
 function(selected, noFocus) {
-	if (this._selected != selected && !this._disposed) {
+	if (this._selected != selected) {
 		this._selected = selected;
 		if (!this._initialized) {
 			this._initialize();

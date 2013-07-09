@@ -9,7 +9,6 @@
  */
 DwtLinkButton = function(params) {
 	params.className = params.className || "ZButtonLink";
-	this._noDropDown = params.noDropDown;
 	DwtButton.call(this, params);
 };
 
@@ -27,15 +26,4 @@ DwtLinkButton.prototype._dropDownHovImg = null; //same as above
 DwtLinkButton.prototype.toString =
 function() {
 	return "DwtLinkButton";
-};
-
-DwtLinkButton.prototype._createHtmlFromTemplate = function(templateId, data) {
-	data = data || {};
-	data.noDropDown = this._noDropDown;
-	DwtButton.prototype._createHtmlFromTemplate.call(this, templateId, data);
-};
-
-DwtLinkButton.prototype._createElement =
-function() {
-	return document.createElement("SPAN")
 };
