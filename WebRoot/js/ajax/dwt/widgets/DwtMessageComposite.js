@@ -102,6 +102,11 @@ function() {
 	return "DwtMessageComposite";
 }
 
+// Data
+
+DwtMessageComposite.prototype._formatter;
+DwtMessageComposite.prototype._controls;
+
 // Public methods
 
 /**

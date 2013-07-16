@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -528,7 +528,7 @@ XForm.prototype.outputForm = function () {
 	var items = this.getItems();
 
 	
-	html.append('<div id="', this.__id, '"', 'style="height: 100%;"',
+	html.append('<div id="', this.__id,'"',
 				(this.cssClass != null && this.cssClass != '' ? ' class="' + this.cssClass + '"' : ""),
 				(this.cssStyle != null && this.cssStyle != '' ? ' style="' + this.cssStyle + ';"' : ""),
 				'>'
