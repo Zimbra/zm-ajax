@@ -97,10 +97,9 @@ AjxEmailAddress.toSoapType[AjxEmailAddress.READ_RECEIPT]= "n";
 AjxEmailAddress.SEPARATOR = "; ";				// used to join addresses
 AjxEmailAddress.DELIMS = [';', ',', '\n', ' '];	// recognized as address delimiters
 AjxEmailAddress.IS_DELIM = {};
-for (i = 0; i < AjxEmailAddress.DELIMS.length; i++) {
+for (var i = 0; i < AjxEmailAddress.DELIMS.length; i++) {
 	AjxEmailAddress.IS_DELIM[AjxEmailAddress.DELIMS[i]] = true;
 }
-delete i;
 
 // validation patterns
 
@@ -114,7 +113,7 @@ AjxEmailAddress.addrPat = /(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x
 // (RFC822 wants the address part to be in <> if preceded by name part)
 AjxEmailAddress.addrPat1 = /(^|"|\s)(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*)))/;
 // pattern below is for account part of address (before @)
-AjxEmailAddress.accountPat = /^([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)$/;
+AjxEmailAddress.accountPat = /((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))/;
 // Pattern below hangs on an unclosed comment, so use simpler one if parsing for comments
 //AjxEmailAddress.commentPat = /(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|)+)*\s*\)\s*))+)*\s*\)\s*))+)*\s*\)\s*))+)*\s*\)\s*))+)*\s*\)\s*)/;
 AjxEmailAddress.commentPat = /\((.*)\)/g;
