@@ -157,10 +157,9 @@ AjxEnv.is800x600orLower;
 /** Screen size is less then 1024x768. */
 AjxEnv.is1024x768orLower;
 
+
 /** HTML5 Support **/
 AjxEnv.supportsHTML5File;
-
-AjxEnv.supported = Modernizr;
 
 
 /** Supports indirect global eval() **/
@@ -174,7 +173,7 @@ AjxEnv.indirectEvalIsGlobal;
 		evl('__indirectEval=true');
 		if('__indirectEval' in window){
 			AjxEnv.indirectEvalIsGlobal=true;
-			delete __indirectEval;
+			delete window.__indirectEval;
 		}
 	}catch(e){}
 })();
@@ -424,6 +423,9 @@ function() {
 		}
 	}
 
+	// show transparent PNGs on platforms that support them well (eg: all but IE and Linux)
+	// MOW: having trouble getting safari to render transparency for shadows, skipping there, too
+	AjxEnv.useTransparentPNGs = !AjxEnv.isIE && !AjxEnv.isLinux && !AjxEnv.isSafari;
 	AjxEnv._inited = !AjxEnv.isIE;
 
 	// test for safari nightly
@@ -435,8 +437,8 @@ function() {
 	}
 
     //HTML5
-    AjxEnv.supportsHTML5File = !!( window.FileReader/*Firefox*/ || AjxEnv.isChrome || AjxEnv.isSafari4up || AjxEnv.isIE10up );
-    AjxEnv.supportsPlaceholder 	= !(AjxEnv.isFirefox && !AjxEnv.isFirefox4up) || !(AjxEnv.isIE && !AjxEnv.isIE10up);
+    AjxEnv.supportsHTML5File = ( window.FileReader/*Firefox*/ || AjxEnv.isChrome || AjxEnv.isSafari4up );
+	AjxEnv.supportsPlaceholder 	= !(AjxEnv.isIE || (AjxEnv.isFirefox && !AjxEnv.isFirefox4up));
 };
 
 // code provided by webkit authors to determine if nightly browser
