@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -441,7 +441,7 @@ function() {
 	
 	if (this._layoutStyle == DwtChooser.HORIZ_STYLE) {
 		// start new table for list views
-		html[idx++] = "<table>";
+		html[idx++] = "<table cellspacing=0 cellpadding=0 border=0>";
 		html[idx++] = "<tr>";
 
 		// source list
@@ -484,7 +484,7 @@ function() {
 		
 		if (this._hasTextField) {
 			html[idx++] = "<tr><td>";
-			html[idx++] = "<table width=100%><tr><td style='white-space:nowrap; width:1%'>";
+			html[idx++] = "<table border=0 width=100%><tr><td style='white-space:nowrap; width:1%'>";
 			html[idx++] = AjxMsg.add;
 			html[idx++] = ":</td><td id='";
 			html[idx++] = this._textFieldTdId;
@@ -503,7 +503,7 @@ function() {
 		html[idx++] = "<div align='center' id='";
 		html[idx++] = this._buttonsDivId;
 		html[idx++] = "'>";
-		html[idx++] = "<table class='ZPropertySheet' cellspacing='6'><tr>";
+		html[idx++] = "<table><tr>";
 		if (this._allButtons) {
 			html[idx++] = "<td id='";
 			html[idx++] = this._addAllButtonDivId;

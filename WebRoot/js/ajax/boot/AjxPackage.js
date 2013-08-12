@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -269,13 +269,11 @@ AjxPackage.eval = function(text) {
         // NOTE: for IE
         window.execScript(text);
     }
-    // eval in global scope (FF, Opera, WebKit)
-    else if (AjxEnv.indirectEvalIsGlobal) {
-        var evl=window.eval;
-        evl(text);
+    // eval in global scope (FF)
+    else if (AjxEnv.isGeckoBased) {
+        window.eval(text);
     }
     // insert script tag into head
-    // Note: if any scripts are still loading, this will not run immediately!
     else {
         var e = document.createElement("SCRIPT");
         var t = document.createTextNode(text);

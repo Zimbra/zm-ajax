@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Web Client
+ * Copyright (C) 2011, 2013 Zimbra Software, LLC.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.4 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 /**
  * @overview
  * A link that is a button. Currently used only for the "help" link/button
@@ -9,7 +23,6 @@
  */
 DwtLinkButton = function(params) {
 	params.className = params.className || "ZButtonLink";
-	this._noDropDown = params.noDropDown;
 	DwtButton.call(this, params);
 };
 
@@ -27,15 +40,4 @@ DwtLinkButton.prototype._dropDownHovImg = null; //same as above
 DwtLinkButton.prototype.toString =
 function() {
 	return "DwtLinkButton";
-};
-
-DwtLinkButton.prototype._createHtmlFromTemplate = function(templateId, data) {
-	data = data || {};
-	data.noDropDown = this._noDropDown;
-	DwtButton.prototype._createHtmlFromTemplate.call(this, templateId, data);
-};
-
-DwtLinkButton.prototype._createElement =
-function() {
-	return document.createElement("SPAN")
 };

@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -20,15 +20,15 @@
  * @class
  * This class represents a tabbed view. {@link DwtTabView} manages the z-index of the contained tabs. 
  * 
- * @param {hash}			params			a hash of parameters
- * @param {DwtComposite}	parent			the parent widget
- * @param {string}			className		the CSS class
- * @param {constant}		posStyle		the positioning style (see {@link DwtControl})
- * @param {string}			id				an explicit ID to use for the control's HTML element
+ * @param {hash}	params		a hash of parameters
+ * @param {DwtComposite}      parent	the parent widget
+ * @param {string}      className		the CSS class
+ * @param {constant}      posStyle	the positioning style (see {@link DwtControl})
+ * @param {string}      id			an explicit ID to use for the control's HTML element
  * 
  * @author Greg Solovyev
  * 
- * @extends DwtComposite
+ * @extends		DwtComposite
  */
 DwtTabView = function(params) {
 	if (arguments.length == 0) return;
@@ -42,7 +42,7 @@ DwtTabView = function(params) {
 
 	this._tabs = [];
 	this._tabIx = 1;
-	this._createHtml();
+    this._createHtml();
 
 	var tabGroupId = [this.toString(), this._htmlElId].join("-");
 	this._tabGroup = new DwtTabGroup(tabGroupId);
@@ -54,27 +54,29 @@ DwtTabView.PARAMS = ["parent", "className", "posStyle"];
 DwtTabView.prototype = new DwtComposite;
 DwtTabView.prototype.constructor = DwtTabView;
 
-DwtTabView.prototype.isDwtTabView = true;
-DwtTabView.prototype.toString = function() { return "DwtTabView"; };
 
 // Constants
 
 // Z-index consts for tabbed view contents are based on Dwt z-index consts
-DwtTabView.Z_ACTIVE_TAB	= Dwt.Z_VIEW+10;
-DwtTabView.Z_HIDDEN_TAB	= Dwt.Z_HIDDEN;
-DwtTabView.Z_TAB_PANEL	= Dwt.Z_VIEW+20;
-DwtTabView.Z_CURTAIN	= Dwt.Z_CURTAIN;
+DwtTabView.Z_ACTIVE_TAB = Dwt.Z_VIEW+10;
+DwtTabView.Z_HIDDEN_TAB = Dwt.Z_HIDDEN;
+DwtTabView.Z_TAB_PANEL 	= Dwt.Z_VIEW+20;
+DwtTabView.Z_CURTAIN 	= Dwt.Z_CURTAIN;
 
 DwtTabView.prototype.TEMPLATE = "dwt.Widgets#ZTabView";
 
 
 // Public methods
 
+DwtTabView.prototype.toString =
+function() {
+	return "DwtTabView";
+};
 
 /**
  * Adds a state change listener.
  * 
- * @param {AjxListener}		listener		the listener
+ * @param	{AjxListener}	listener		the listener
  */
 DwtTabView.prototype.addStateChangeListener =
 function(listener) {
@@ -84,7 +86,7 @@ function(listener) {
 /**
  * Removes a state change listener.
  * 
- * @param {AjxListener}		listener		the listener
+ * @param	{AjxListener}	listener		the listener
  */
 DwtTabView.prototype.removeStateChangeListener =
 function(listener) {
@@ -98,10 +100,10 @@ DwtTabView.prototype.getTabGroupMember = function() {
 /**
  * Adds a tab.
  * 
- * @param {string}						title					the text for the tab button
+ * @param {string}	title  the text for the tab button
  * @param {DwtTabViewPage|AjxCallback}	tabViewOrCallback		an instance of the tab view page or callback that returns an instance of {@link DwtTabViewPage}
- *
- * @return {string}		key for the added tab	This key can be used to retrieve the tab using {@link #getTab}
+ * @return {string}		the key for the added tab. This key can be used to retrieve the tab using {@link #getTab}
+ * 
  * 
  * @see		#getTab
  */
@@ -153,7 +155,7 @@ function(enable) {
 /**
  * Gets the current tab.
  * 
- * @return {string}		the tab key
+ * @return	{string}	the tab key
  */
 DwtTabView.prototype.getCurrentTab =
 function() {
@@ -163,7 +165,7 @@ function() {
 /**
  * Gets the tab count.
  * 
- * @return {number}		the number of tabs
+ * @return	{number}	the number of tabs
  */
 DwtTabView.prototype.getNumTabs =
 function() {
@@ -173,8 +175,7 @@ function() {
 /**
  * Gets the tab.
  * 
- * @param {string}		tabKey		the key for the tab
- *
+ * @param {string}	tabKey  the key for the tab
  * @return {DwtTabViewPage}	the view tab
  * 
  * @see		#addTab
@@ -189,7 +190,7 @@ function (tabKey) {
 /**
  * Gets the tab bar.
  * 
- * @return {DwtTabBar}		the tab bar
+ * @return	{DwtTabBar}		the tab bar
  */
 DwtTabView.prototype.getTabBar = function() {
 	return this._tabBar;
@@ -198,9 +199,8 @@ DwtTabView.prototype.getTabBar = function() {
 /**
  * Gets the tab title.
  * 
- * @param {string}		tabKey		the tab key
- *
- * @return {string}		the title
+ * @param	{string}	tabKey		the tab key
+ * @return	{string}	the title
  */
 DwtTabView.prototype.getTabTitle =
 function(tabKey) {
@@ -212,9 +212,8 @@ function(tabKey) {
 /**
  * Gets the tab button.
  * 
- * @param {string}		tabKey		the tab key
- *
- * @return {DwtTabButton}		the tab button
+ * @param	{string}	tabKey		the tab key
+ * @return	{DwtTabButton}	the tab button
  */
 DwtTabView.prototype.getTabButton =
 function(tabKey) {
@@ -226,7 +225,7 @@ function(tabKey) {
 /**
  * Sets the tab view.
  * 
- * @param {string}						tabKey		the tab key
+ * @param	{string}	tabKey		the tab key
  * @param {DwtTabViewPage|AjxCallback}	tabView		 an instance of the tab view page or callback that returns an instance of {@link DwtTabViewPage}
  */
 DwtTabView.prototype.setTabView =
@@ -247,9 +246,8 @@ function(tabKey, tabView) {
 /**
  * Gets the tab view.
  * 
- * @param {string}		tabKey		the tab key
- *
- * @return {DwtTabViewPage}		the tab view page
+ * @param	{string}	tabKey		the tab key
+ * @return {DwtTabViewPage}	the tab view page
  */
 DwtTabView.prototype.getTabView =
 function(tabKey) {
@@ -268,7 +266,7 @@ function(tabKey) {
 /**
  * Switches to the tab view.
  * 
- * @param {string}		tabKey		the tab key
+ * @param	{string}	tabKey		the tab key
  */
 DwtTabView.prototype.switchToTab = 
 function(tabKey) {
@@ -307,7 +305,7 @@ function() {
 
 DwtTabView.prototype.getKeyMapName =
 function() {
-	return DwtKeyMap.MAP_TAB_VIEW;
+	return "DwtTabView";
 };
 
 DwtTabView.prototype.resetKeyBindings =
@@ -317,16 +315,16 @@ function() {
 		var kmm = kbm.__keyMapMgr;
 		if (!kmm) { return; }
 		var num = this.getNumTabs();
-		var seqs = kmm.getKeySequences(DwtKeyMap.MAP_TAB_VIEW, "GoToTab");
+		var seqs = kmm.getKeySequences("DwtTabView", "GoToTab");
 		for (var k = 0; k < seqs.length; k++) {
 			var ks = seqs[k];
 			for (var i = 1; i <= num; i++) {
-				var keycode = 48 + i;
+                var keycode = 48 + i;
 				var newKs = ks.replace(/NNN/, keycode);
-				kmm.setMapping(DwtKeyMap.MAP_TAB_VIEW, newKs, "GoToTab" + i);
+				kmm.setMapping("DwtTabView", newKs, "GoToTab" + i);
 			}
 		}
-		kmm.reloadMap(DwtKeyMap.MAP_TAB_VIEW);
+		kmm.reloadMap("DwtTabView");
 	}
 };
 
@@ -395,17 +393,17 @@ function() {
 
 DwtTabView.prototype._createHtml =
 function(templateId) {
-	this._createHtmlFromTemplate(templateId || this.TEMPLATE, {id:this._htmlElId});
+    this._createHtmlFromTemplate(templateId || this.TEMPLATE, {id:this._htmlElId});
 };
 
 DwtTabView.prototype._createHtmlFromTemplate =
 function(templateId, data) {
-	DwtComposite.prototype._createHtmlFromTemplate.call(this, templateId, data);
+    DwtComposite.prototype._createHtmlFromTemplate.call(this, templateId, data);
 
-	this._tabBarEl = document.getElementById(data.id+"_tabbar");
-	this._tabBar = new DwtTabBar(this);
-	this._tabBar.reparentHtmlElement(this._tabBarEl);
-	this._pageEl = document.getElementById(data.id+"_page");
+    this._tabBarEl = document.getElementById(data.id+"_tabbar");
+    this._tabBar = new DwtTabBar(this);
+    this._tabBar.reparentHtmlElement(this._tabBarEl);
+    this._pageEl = document.getElementById(data.id+"_page");
 };
 
 DwtTabView.prototype._showTab = 
@@ -414,11 +412,11 @@ function(tabKey) {
 		this._currentTabKey = tabKey;
 		this._hideAllTabs();						// hide all the tabs
 		var tabView = this.getTabView(tabKey);		// make this tab visible
-		if (tabView) {
+        if (tabView) {
 			tabView.setVisible(true);
-			tabView.showMe();
-		}
-	}
+            tabView.showMe();
+        }
+    }
 };
 
 DwtTabView.prototype._hideAllTabs = 
@@ -437,7 +435,7 @@ function() {
 
 DwtTabView.prototype._tabButtonListener = 
 function (ev) {
-	this.switchToTab(ev.item.getData("tabKey"));
+    this.switchToTab(ev.item.getData("tabKey"));
 };
 
 
@@ -450,26 +448,25 @@ function (ev) {
  * @constructor
  * @class
  * DwtTabViewPage abstract class for a page in a tabbed view.
- * Tab pages are responsible for creating their own HTML and populating/collecting
+ * Tab pages are responsible for creating there own HTML and populating/collecting 
  * data to/from any form fields that they display.
  * 
- * @param {DwtComposite}	parent			the parent widget
- * @param {string}			className		the CSS class
- * @param {constant}		posStyle		the positioning style (see {@link DwtControl})
+ * @param {DwtComposite}      parent	the parent widget
+ * @param {string}      className		the CSS class
+ * @param {constant}      posStyle	the positioning style (see {@link DwtControl})
  * 
- * @extends DwtPropertyPage
+ * @extends		DwtPropertyPage
  */
-DwtTabViewPage = function(parent, className, posStyle, id) {
+DwtTabViewPage = function(parent, className, posStyle) {
 	if (arguments.length == 0) return;
-	var params = Dwt.getParams(arguments, DwtTabViewPage.PARAMS);
+	params = Dwt.getParams(arguments, DwtTabViewPage.PARAMS);
 	params.className = params.className || "ZTabPage";
 	params.posStyle = params.posStyle || DwtControl.ABSOLUTE_STYLE;
-	params.id = id || null;
 	this._rendered = true; // by default UI creation is not lazy
 
 	DwtPropertyPage.call(this, params);
 
-	this._createHtml();
+    this._createHtml();
 	this.getHtmlElement().style.overflowY = "auto";
 	this.getHtmlElement().style.overflowX = "visible";
 	if (params.contentTemplate) {
@@ -493,11 +490,11 @@ DwtTabViewPage.PARAMS = DwtPropertyPage.PARAMS.concat("contentTemplate");
 /**
  * Gets the content HTML element.
  * 
- * @return {Element}	the element
+ * @return	{Element}	the element
  */
 DwtTabViewPage.prototype.getContentHtmlElement =
 function() {
-	return this._contentEl || this.getHtmlElement();
+    return this._contentEl || this.getHtmlElement();
 };
 
 /**
@@ -531,8 +528,8 @@ function() {
 /**
  * Resets the size.
  * 
- * @param {number|string}		newWidth		the width of the control (for example: 100, "100px", "75%", {@link Dwt.DEFAULT})
- * @param {number|string}		newHeight		the height of the control (for example: 100, "100px", "75%", {@link Dwt.DEFAULT})
+ * @param	{number|string} newWidth	the width of the control (for example: 100, "100px", "75%", {@link Dwt.DEFAULT})
+ * @param	{number|string} newHeight	the height of the control (for example: 100, "100px", "75%", {@link Dwt.DEFAULT})
  */
 DwtTabViewPage.prototype.resetSize =
 function(newWidth, newHeight) {
@@ -544,13 +541,13 @@ function(newWidth, newHeight) {
 
 DwtTabViewPage.prototype._createHtml =
 function(templateId) {
-	this._createHtmlFromTemplate(templateId || this.TEMPLATE, {id:this._htmlElId});
+    this._createHtmlFromTemplate(templateId || this.TEMPLATE, {id:this._htmlElId});
 };
 
 DwtTabViewPage.prototype._createHtmlFromTemplate =
 function(templateId, data) {
-	DwtPropertyPage.prototype._createHtmlFromTemplate.call(this, templateId, data);
-	this._contentEl = document.getElementById(data.id+"_content") || this.getHtmlElement();
+    DwtPropertyPage.prototype._createHtmlFromTemplate.call(this, templateId, data);
+    this._contentEl = document.getElementById(data.id+"_content") || this.getHtmlElement();
 };
 
 
@@ -564,11 +561,11 @@ function(templateId, data) {
  * @class
  * This class represents the tab bar, which is effectively a tool bar.
  * 
- * @param {DwtComposite}		parent			the parent widget
- * @param {string}				tabCssClass		the tab CSS class
- * @param {string}				btnCssClass		the button CSS class
+ * @param {DwtComposite}      parent	the parent widget
+ * @param {string}      tabCssClass		the tab CSS class
+ * @param {string}      btnCssClass		the button CSS class
  * 
- * @extends DwtToolBar
+ * @extends		DwtToolBar 
  */
 DwtTabBar = function(parent, tabCssClass, btnCssClass) {
 	if (arguments.length == 0) return;
@@ -611,7 +608,7 @@ function() {
 /**
  * Gets the current tab.
  * 
- * @return {string}		the tab key
+ * @return	{string}	the tab key
  */
 DwtTabBar.prototype.getCurrentTab =
 function() {
@@ -621,7 +618,7 @@ function() {
 /**
  * Adds a state change listener.
  * 
- * @param {AjxListener}		listener		the listener
+ * @param	{AjxListener}	listener	the listener
  */
 DwtTabBar.prototype.addStateChangeListener =
 function(listener) {
@@ -631,7 +628,7 @@ function(listener) {
 /**
  * Removes a state change listener.
  * 
- * @param {AjxListener}		listener		the listener
+ * @param	{AjxListener}	listener	the listener
  */
 DwtTabBar.prototype.removeStateChangeListener = 
 function(listener) {
@@ -641,8 +638,8 @@ function(listener) {
 /**
  * Adds a selection listener.
  * 
- * @param {string}			tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
- * @param {AjxListener}		listener	the listener
+ * @param {string}	tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
+ * @param {AjxListener}	listener	the listener
  */
 DwtTabBar.prototype.addSelectionListener =
 function(tabKey, listener) {
@@ -652,8 +649,8 @@ function(tabKey, listener) {
 /**
  * Removes a selection listener.
  * 
- * @param {string}			tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
- * @param {AjxListener}		listener	the listener
+ * @param {string}	tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
+ * @param {AjxListener}	listener	the listener
  */
 DwtTabBar.prototype.removeSelectionListener =
 function(tabKey, listener) {
@@ -663,12 +660,11 @@ function(tabKey, listener) {
 /**
  * Adds a button.
  * 
- * @param {string}		tabKey		the the tab key
- * @param {string}		tabTitle	the tab title
- * @param {string}		id			the id
- * @param {number}		index		the index
- *
- * @return {DwtTabButton}		the newly added button
+ * @param {string}	tabKey		the the tab key
+ * @param {string}	tabTitle	the tab title
+ * @param	{string}	id		the id
+ * @param	{number}	index		the index
+ * @return	{DwtTabButton}	the newly added button	
  */
 DwtTabBar.prototype.addButton =
 function(tabKey, tabTitle, id, index) {
@@ -692,23 +688,22 @@ function(tabKey, tabTitle, id, index) {
 	}
 
 	// make sure that new button is selected properly
-	var sindex = this.__getButtonIndex(this._currentTabKey);
-	if (sindex != -1) {
-		var nindex = this.__getButtonIndex(tabKey);
-		if (nindex == sindex + 1) {
-			Dwt.addClass(b.getHtmlElement(), DwtTabBar.SELECTED_NEXT);
-		}
-	}
+    var sindex = this.__getButtonIndex(this._currentTabKey);
+    if (sindex != -1) {
+        var nindex = this.__getButtonIndex(tabKey);
+        if (nindex == sindex + 1) {
+            Dwt.addClass(b.getHtmlElement(), DwtTabBar.SELECTED_NEXT);
+        }
+    }
 
-	return b;
+    return b;
 };
 
 /**
  * Gets the button.
  * 
- * @param {string}		tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
- *
- * @return {DwtTabButton}		the button
+ * @param {string}	tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
+ * @return	{DwtTabButton}		the button
  */
 DwtTabBar.prototype.getButton = 
 function (tabKey) {
@@ -719,30 +714,30 @@ function (tabKey) {
 
 /**
  * Opens the tab.
- *
- * @param {string}		tabKey			the id used to create tab button in {@link DwtTabBar.addButton}
- * @param {boolean}		skipNotify		if <code>true</code>, do not notify listeners
+ *  
+ * @param {string}	tabKey		the id used to create tab button in {@link DwtTabBar.addButton}
+ * @param	{boolean}	skipNotify	if <code>true</code>, do not notify listeners
  */
 DwtTabBar.prototype.openTab = 
 function(tabK, skipNotify) {
 	this._currentTabKey = tabK;
-	var cnt = this._buttons.length;
+    var cnt = this._buttons.length;
 
-	for (var ix = 0; ix < cnt; ix ++) {
+    for (var ix = 0; ix < cnt; ix ++) {
 		if (ix==tabK) { continue; }
 
-		var button = this._buttons[ix];
-		if (button) {
-			this.__markPrevNext(ix, false);
-			button.setClosed();
-		}
-	}
+        var button = this._buttons[ix];
+        if (button) {
+            this.__markPrevNext(ix, false);
+            button.setClosed();
+        }
+    }
 
-	var button = this._buttons[tabK];
-	if (button) {
+    var button = this._buttons[tabK];
+    if (button) {
 		button.setOpen();
-		this.__markPrevNext(tabK, true);
-	}
+        this.__markPrevNext(tabK, true);
+    }
 
 	if (!skipNotify && this._eventMgr.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
 		this._eventMgr.notifyListeners(DwtEvent.STATE_CHANGE, this._stateChangeEv);
@@ -759,21 +754,21 @@ function(tabK, skipNotify) {
  */
 DwtTabBar._setActiveTab =
 function(ev) {
-	var tabK;
-	if (ev && ev.item) {
+    var tabK;
+    if (ev && ev.item) {
 		tabK=ev.item.getData("tabKey");
-	} else if (ev && ev.target) {
+    } else if (ev && ev.target) {
 		var elem = ev.target;
-		while (elem.tagName != "TABLE" && elem.offsetParent )
-			elem = elem.offsetParent;
+	    while (elem.tagName != "TABLE" && elem.offsetParent )
+	    	elem = elem.offsetParent;
 
 		tabK = elem.getAttribute("tabKey");
 		if (tabK == null)
 			return false;
-	} else {
+    } else {
 		return false;
-	}
-	this.openTab(tabK);
+    }
+    this.openTab(tabK);
 };
 
 
@@ -787,17 +782,16 @@ function(ev) {
  * @class
  * This class represents the tab in a tab view.
  * 
- * @param {DwtComposite}		parent			the parent widget
- * @param {string}				id				the id
- * @param {number}				index			the index
- * @param {string}				className		the style class name
+ * @param {DwtComposite}      parent	the parent widget
+ * @param {string}      id		the id 
+ * @param {number}      index		the index
+ * @param {string}      className       the style class name
  * 
- * @extends DwtButton
+ * @extends		DwtButton
  */
 DwtTabButton = function(parent, id, index, className) {
 	if (arguments.length == 0) return;
-	var tabStyle = className || "ZTab";
-	DwtButton.call(this, {parent:parent, className:tabStyle, id:id, index:index});
+	DwtButton.call(this, {parent:parent, className:className, id:id, index:index});
 };
 
 DwtTabButton.prototype = new DwtButton;
@@ -818,24 +812,24 @@ function() {
  */
 DwtTabButton.prototype.setOpen = 
 function() {
-	this._isSelected = true;
-	this.setDisplayState(DwtControl.SELECTED);
+    this._isSelected = true;
+    this.setDisplayState(DwtControl.SELECTED);
 };
 
 /**
  * Changes the visual appearance to inactive tab.
  */
-DwtTabButton.prototype.setClosed =
+DwtTabButton.prototype.setClosed = 
 function() {
-	this._isSelected = false;
-	this.setDisplayState(DwtControl.NORMAL);
+    this._isSelected = false;
+    this.setDisplayState(DwtControl.NORMAL);
 };
 
 DwtTabButton.prototype.setDisplayState = function(state) {
-	if (this._isSelected && state != DwtControl.SELECTED) {
-		state = [ DwtControl.SELECTED, state ].join(" ");
-	}
-	DwtButton.prototype.setDisplayState.call(this, state);
+    if (this._isSelected && state != DwtControl.SELECTED) {
+        state = [ DwtControl.SELECTED, state ].join(" ");
+    }
+    DwtButton.prototype.setDisplayState.call(this, state);
 };
 
 
@@ -843,11 +837,11 @@ DwtTabButton.prototype.setDisplayState = function(state) {
  * @class
  * @constructor
  * 
- * @param {DwtComposite}		parent			the parent widget
- * @param {string}				tabCssClass		the tab CSS class
- * @param {string}				btnCssClass		the button CSS class
- *
- * @extends DwtTabButton
+ * @param {DwtComposite}      parent	the parent widget
+ * @param {string}      tabCssClass		the tab CSS class
+ * @param {string}      btnCssClass		the button CSS class
+ *  
+ * @extends		DwtTabButton
  * 
  * @private
  */
@@ -864,11 +858,11 @@ DwtTabBarFloat.prototype.TEMPLATE = "dwt.Widgets#ZTabBarFloat";
 /**
  * Adds a button.
  * 
- * @param {string}		tabKey			the the tab key
- * @param {string}		tabTitle		the tab title
- * @param {string}		id				the id
+ * @param {string}	tabKey		the the tab key
+ * @param {string}	tabTitle	the tab title
+ * @param	{string}	id		the id
  * 
- * @return {DwtTabButton}		the newly added button
+ * @return	{DwtTabButton}	the newly added button	
  */
 DwtTabBarFloat.prototype.addButton =
 function(tabKey, tabTitle, id) {
@@ -892,38 +886,38 @@ function(tabKey, tabTitle, id) {
 	}
 
 	// make sure that new button is selected properly
-	var sindex = this.__getButtonIndex(this._currentTabKey);
-	if (sindex != -1) {
-		var nindex = this.__getButtonIndex(tabKey);
-		if (nindex == sindex + 1) {
-			Dwt.addClass(b.getHtmlElement(), DwtTabBar.SELECTED_NEXT);
-		}
-	}
+    var sindex = this.__getButtonIndex(this._currentTabKey);
+    if (sindex != -1) {
+        var nindex = this.__getButtonIndex(tabKey);
+        if (nindex == sindex + 1) {
+            Dwt.addClass(b.getHtmlElement(), DwtTabBar.SELECTED_NEXT);
+        }
+    }
 
-	return b;
+    return b;
 };
 
 DwtTabBarFloat.prototype.addChild =
 function(child, index) {
-	DwtComposite.prototype.addChild.apply(this, arguments);
+    DwtComposite.prototype.addChild.apply(this, arguments);
 
-	this._addItem(DwtToolBar.ELEMENT, child, index);
+    this._addItem(DwtToolBar.ELEMENT, child, index);
 };
 
 DwtTabBarFloat.prototype._addItem =
 function(type, element, index) {
 
-	// get the reference element for insertion
-	var placeEl = this._items[index] || this._suffixEl;
+    // get the reference element for insertion
+    var placeEl = this._items[index] || this._suffixEl;
 
-	// insert item
+    // insert item
 	var spliceIndex = index || (typeof index == "number") ? index : this._items.length;
 	this._items.splice(spliceIndex, 0, element);
+    
+    this._itemsEl.insertBefore(element.getHtmlElement(), placeEl);
 
-	this._itemsEl.insertBefore(element.getHtmlElement(), placeEl);
-
-	// append spacer
-	// TODO!
+    // append spacer
+    // TODO!
 };
 
 DwtTabButtonFloat = function(parent, id) {

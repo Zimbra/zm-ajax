@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -33,16 +33,12 @@ DynSelect_XFormItem.prototype.dataFetcherObject = null;
 DynSelect_XFormItem.prototype.dataFetcherTypes = null;
 DynSelect_XFormItem.prototype.dataFetcherAttrs = null;
 DynSelect_XFormItem.prototype.dataFetcherDomain = null;
-DynSelect_XFormItem.prototype.entryKeyMethod = null;
 DynSelect_XFormItem.prototype.bmolsnr = true;
 DynSelect_XFormItem.prototype.emptyText = "";
 DynSelect_XFormItem.prototype.cssClass = "dynselect";
 DynSelect_XFormItem.prototype.edited = false;
 DynSelect_XFormItem.prototype.focusable = true;
-// Make sure there's enough delay between keystroke pauses
-// TODO This is just a simple fix for now. A more complete and comprehensive fix is needed
-// OLD --- DynSelect_XFormItem.LOAD_PAUSE = AjxEnv.isIE ? 500 : 250;	// delay between chunks
-DynSelect_XFormItem.LOAD_PAUSE = 750; // delay between chunks
+DynSelect_XFormItem.LOAD_PAUSE = AjxEnv.isIE ? 500 : 250;	// delay between chunks
 DynSelect_XFormItem.prototype.initFormItem = function () {
 	// if we're dealing with an XFormChoices object...
 	var choices  = this.getChoices();
@@ -132,12 +128,10 @@ DynSelect_XFormItem.prototype.onKeyUp = function(value, event) {
 		if(value != null && value != undefined) {
 			this.setValue(value, true, event);
 			this.hideMenu();
-            this.processEntryKey();
 			return;
 		}
 	} else if (this.menuUp && event.keyCode==DwtKeyEvent.KEY_ENTER) {
 		this.hideMenu();
-        this.processEntryKey();
 		return;
 	}
 	this.isSelecting = false;	
@@ -214,13 +208,7 @@ DynSelect_XFormItem.prototype.handleKeyPressDelay = function (event,value,lastTy
 	} else {
 		if (window.console && window.console.log) window.console.log("typing faster than retreiving data");
 		return;
-	}
-
-    if (event.keyCode == DwtKeyEvent.KEY_ENTER) {
-        this.processEntryKey();
-        return;
-    }
-
+	}		
 	if(!this.dataFetcherObject && this.dataFetcherClass !=null && this.dataFetcherMethod !=null) {
 		this.dataFetcherObject = new this.dataFetcherClass(this.getForm().getController());
 	} else if(this.getInheritedProperty("dataFetcherInstance")) {
@@ -267,7 +255,7 @@ DynSelect_XFormItem.prototype.outputHTML = function (HTMLoutput) {
 			" onclick=\"", this.getFormGlobalRef(), ".getItemById('",this.getId(),"').onClick(event)\"",
 			" onselectstart=\"return false\"",
 			">",
-			"<table ", this.getTableCssString(), " cellspacing='0'>", 
+			"<table ", this.getTableCssString(), ">", 
 				"<tr><td width=100%>",inputHtml,"</td>",
 				"</tr>", 
 			"</table>", 
@@ -295,7 +283,7 @@ DynSelect_XFormItem.prototype.onClick = function(event) {
 	if(!this.edited && this.getInheritedProperty("editable")) {
 		this.showInputTooltip(event);
 	} else {
-		if(choices && choices.values && choices.values.length && !(choices.values[0] instanceof XFormChoices)) {
+		if(choices && choices.values && choices.values.length) {
 			this.showMenu();
 		}
 	}
@@ -387,12 +375,4 @@ DynSelect_XFormItem.prototype.setElementEnabled = function(enabled) {
 		table.className = this.getTableCssClass()+"_disabled";
 		this.getDisplayElement().disabled=true;
 	}
-}
-
-DynSelect_XFormItem.prototype.processEntryKey = function () {
-    var value = this.getInstanceValue();
-	var processEntryKey = this.getInheritedProperty("entryKeyMethod");
-	if (processEntryKey instanceof AjxCallback) {
-        processEntryKey.run(this, value);
-    }
 }

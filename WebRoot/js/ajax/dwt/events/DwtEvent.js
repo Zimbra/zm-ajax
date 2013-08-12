@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -205,6 +205,13 @@ DwtEvent.POPUP = "POPUP";
  * list item, or tree node).
  */
 DwtEvent.SELECTION = "SELECTION";		// left-click
+
+/**
+ * The pre-selection event is fired when controls are selected. (though so far this is only implemented in DwtTree.prototype._itemClicked for one particular case).
+ * It is supposed to allow blocking click on certain item. Again, so far used only to block Filters in certain multi account cases, and present a message explaining it. 
+ */
+DwtEvent.PRE_SELECTION = "PRE_SELECTION";
+
 
 /**
  * A tree event is fired when a {@link DwtTree} node is expanded or collapsed.

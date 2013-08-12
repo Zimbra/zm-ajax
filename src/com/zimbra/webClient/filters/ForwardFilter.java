@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2011 VMware, Inc.
+ * Copyright (C) 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -25,42 +25,17 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.WebSplitUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.taglib.memcached.MemcachedConnector;
-import com.zimbra.cs.taglib.ngxlookup.NginxRouteLookUpConnector;
-import com.zimbra.cs.util.Zimbra;
-
 import java.io.IOException;
 
 public class ForwardFilter implements Filter {
 
     private ServletContext ctxt;
-
+    
     @Override public void init(FilterConfig filterConfig) throws ServletException {
         ctxt = filterConfig.getServletContext().getContext("/service");
-        if (WebSplitUtil.isZimbraWebClientSplitEnabled()) {
-            try {
-                MemcachedConnector.startup();
-                NginxRouteLookUpConnector.startup();
-            } catch (ServiceException e) {
-                Zimbra.halt("Exception during MemCached Connector/NginxRouteLookUpConnecter startup, aborting WebClient server, " +
-                        "please check your config", e);
-            }
-        }
     }
 
-    @Override public void destroy() {
-        if (WebSplitUtil.isZimbraWebClientSplitEnabled()) {
-            try {
-                MemcachedConnector.shutdown();
-                NginxRouteLookUpConnector.shutdown();
-            } catch (ServiceException e) {
-                ZimbraLog.soap.error("ServiceException in MemcachedConnector/NginxRouteLookUpConnector while disconnecting", e);
-            }
-        }
-      }
+    @Override public void destroy() { }
 
     @Override public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (ctxt == null ||

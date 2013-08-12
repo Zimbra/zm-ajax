@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -53,6 +53,11 @@ AjxFormat.prototype.toString = function() {
 	}
 	return s.join("");
 };
+
+// Data
+
+AjxFormat.prototype._pattern;
+AjxFormat.prototype._segments;
 
 // Static functions
 
@@ -161,6 +166,10 @@ AjxFormat.FormatException.prototype.toString = function() {
 	return this._message; 
 };
 
+// Data
+
+AjxFormat.FormatException.prototype._format;
+AjxFormat.FormatException.prototype._message;
 
 //
 // Formatting exception class
@@ -173,6 +182,9 @@ AjxFormat.FormattingException = function(format, segment, message) {
 AjxFormat.FormattingException.prototype = new AjxFormat.FormatException;
 AjxFormat.FormattingException.prototype.constructor = AjxFormat.FormattingException;
 
+// Data
+
+AjxFormat.FormattingException.prototype._segment;
 
 //
 // Parsing exception class
@@ -184,6 +196,10 @@ AjxFormat.ParsingException = function(format, segment, message) {
 };
 AjxFormat.ParsingException.prototype = new AjxFormat.FormatException;
 AjxFormat.ParsingException.prototype.constructor = AjxFormat.ParsingException;
+
+// Data
+
+AjxFormat.ParsingException.prototype._segment;
 
 //
 // Segment class
@@ -198,6 +214,11 @@ AjxFormat.Segment = function(format, s) {
 AjxFormat.Segment.prototype.toString = function() { 
 	return "segment: \""+this._s+'"'; 
 };
+
+// Data
+
+AjxFormat.Segment.prototype._parent;
+AjxFormat.Segment.prototype._s;
 
 // Public methods
 
@@ -359,7 +380,6 @@ AjxDateFormat = function(pattern) {
 			case AjxDateFormat.MEDIUM: pattern = I18nMsg.formatDateMedium; break;
 			case AjxDateFormat.LONG: pattern = I18nMsg.formatDateLong; break;
 			case AjxDateFormat.FULL: pattern = I18nMsg.formatDateFull; break;
-            case AjxDateFormat.NUMBER: pattern = I18nMsg.formatDateNumber; break;
 		}
 	}	
 	for (var i = 0; i < pattern.length; i++) {
@@ -378,10 +398,10 @@ AjxDateFormat = function(pattern) {
 					}
 				}
 			}
-//			if (i == pattern.length) {
+			if (i == pattern.length) {
 				// NOTE: try to avoid silent errors
 //				throw new FormatException(this, "unterminated string literal"); // I18n
-//			}
+			}
 			var tail = i;
 			var segment = new AjxFormat.TextSegment(this, pattern.substring(head, tail));
 			this._segments.push(segment);
@@ -465,8 +485,6 @@ AjxDateFormat.DEFAULT = AjxDateFormat.MEDIUM;
 
 AjxDateFormat._META_CHARS = "GyMwWDdFEaHkKhmsSzZ";
 
-/** Number date . */
-AjxDateFormat.NUMBER = 4;
 // Static methods
 
 /**
@@ -562,7 +580,7 @@ AjxDateFormat.initialize = function() {
 	// format
 	AjxDateFormat._dateFormats = [
 		I18nMsg.formatDateShort, I18nMsg.formatDateMedium,
-		I18nMsg.formatDateLong, I18nMsg.formatDateFull,I18nMsg.formatDateNumber
+		I18nMsg.formatDateLong, I18nMsg.formatDateFull
 	];
 	AjxDateFormat._timeFormats = [
 		I18nMsg.formatTimeShort, I18nMsg.formatTimeMedium,
@@ -1224,10 +1242,10 @@ AjxMessageFormat = function(pattern) {
 					}
 				}
 			}
-//			if (i == pattern.length) {
+			if (i == pattern.length) {
 				// NOTE: try to avoid silent errors
 //				throw new AjxFormat.FormatException(this, "unterminated string literal"); // I18n
-//)			}
+			}
 			var tail = i;
 			var segment = new AjxFormat.TextSegment(this, pattern.substring(head, tail));
 			this._segments.push(segment);
@@ -1392,7 +1410,12 @@ AjxMessageFormat.MessageSegment.prototype.toString = function() {
 
 // Data
 
+AjxMessageFormat.MessageSegment.prototype._index;
+AjxMessageFormat.MessageSegment.prototype._type;
+AjxMessageFormat.MessageSegment.prototype._style;
+
 AjxMessageFormat.MessageSegment.prototype._isList = false;
+AjxMessageFormat.MessageSegment.prototype._formatter;
 
 // Public methods
 
@@ -1574,11 +1597,16 @@ AjxNumberFormat._META_CHARS = "0#.,E";
 // Data
 
 AjxNumberFormat.prototype._groupingOffset = Number.MAX_VALUE;
+AjxNumberFormat.prototype._maxIntDigits;
 AjxNumberFormat.prototype._minIntDigits = 1;
+AjxNumberFormat.prototype._maxFracDigits;
+AjxNumberFormat.prototype._minFracDigits;
 AjxNumberFormat.prototype._isCurrency = false;
 AjxNumberFormat.prototype._isPercent = false;
 AjxNumberFormat.prototype._isPerMille = false;
 AjxNumberFormat.prototype._showExponent = false;
+
+AjxNumberFormat.prototype._negativeFormatter;
 
 // Static functions
 
@@ -1881,6 +1909,12 @@ AjxChoiceFormat.prototype.toString = function() {
 	].join("");
 };
 
+// Data
+
+AjxChoiceFormat.prototype._limits;
+AjxChoiceFormat.prototype._lessThan;
+AjxChoiceFormat.prototype._formats;
+
 // Public methods
 
 AjxChoiceFormat.prototype.getLimits = function() {
@@ -1948,19 +1982,22 @@ AjxChoiceFormat.prototype.format = function(number, index) {
  *                                  the last item in the list (e.g. " and ").
  *                                  If not specified, <code>AjxMsg.separatorListLast</code>
  *                                  is used.
- * @param {string}    twoSeparator	Optional. Separator used if the list consists of 
- * 									exactly two items. If not specified, <code>AjxMsg.listSeparatorTwo</code>
- * 									is used.	
  */
-AjxListFormat = function(formatter, separator, lastSeparator, twoSeparator) {
+AjxListFormat = function(formatter, separator, lastSeparator) {
+    if (arguments.length == 0) { return; }
 	AjxFormat.call(this, formatter ? formatter.toPattern() : "");
 	this._formatter = formatter;
 	this._separator = separator || AjxMsg.listSeparator;
 	this._lastSeparator = lastSeparator || AjxMsg.listSeparatorLast;
-	this._twoSeparator = twoSeparator || AjxMsg.listSeparatorTwo;
 }
 AjxListFormat.prototype = new AjxFormat;
 AjxListFormat.prototype.constructor = AjxListFormat;
+
+// Data
+
+AjxListFormat.prototype._formatter;
+AjxListFormat.prototype._separator;
+AjxListFormat.prototype._lastSeparator;
 
 // Public methods
 
@@ -1973,11 +2010,9 @@ AjxListFormat.prototype.constructor = AjxListFormat;
 AjxListFormat.prototype.format = function(array) {
 	array = array instanceof Array ? array : [ array ];
 	var list = [];
-	var num = array.length;
-	for (var i = 0; i < num; i++) {
+	for (var i = 0; i < array.length; i++) {
 		if (i > 0) {
-			list.push((i < num - 1) ? this._separator : (num == 2) ?
-					this._twoSeparator : this._lastSeparator);
+			list.push(i < array.length - 1 ? this._separator : this._lastSeparator);
 		}
 		var item = array[i];
 		list.push(this._formatter ? this._formatter.format(item) : String(item));

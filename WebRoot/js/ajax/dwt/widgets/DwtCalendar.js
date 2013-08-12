@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -441,8 +441,7 @@ function(workingDaysArray) {
 /**
  * Enables/disables the highlight (i.e. "bolding") on the dates in <code>&lt;dates&gt;</code>.
  *
- * @param {object} dates associative array of {@link Date} objects for
- * which to enable/disable highlighting
+ * @param {array}	dates	an array of {@link Date} objects for which to enable/disable highlighting
  * @param {boolean}	enable 	if <code>true</code>, enable highlighting
  * @param {boolean}	clear 	if <code>true</code>, clear current highlighting
  */
@@ -464,19 +463,16 @@ function(dates, enable, clear) {
 
 	var cellId;
 	for (var i in dates) {
-        // NOTE: Protect from prototype extensions.
-        if (dates.hasOwnProperty(i)) {
-            aDate = dates[i];
-            cellId = this._date2CellId[aDate.getFullYear() * 10000 + aDate.getMonth() * 100 + aDate.getDate()];
+		aDate = dates[i];
+		cellId = this._date2CellId[aDate.getFullYear() * 10000 + aDate.getMonth() * 100 + aDate.getDate()];
 
-            if (cellId) {
-                cell = document.getElementById(cellId);
-                if (cell._isHilited != enable) {
-                    cell._isHilited = enable;
-                    this._setClassName(cell, DwtCalendar._NORMAL);
-                }
-            }
-        }
+		if (cellId) {
+			cell = document.getElementById(cellId);
+			if (cell._isHilited != enable) {
+				cell._isHilited = enable;
+				this._setClassName(cell, DwtCalendar._NORMAL);
+			}
+		}
 	}
 };
 
@@ -855,27 +851,25 @@ function() {
 
 	// Construct the header row with the prev/next year and prev/next month
 	// icons as well as the month/year title cell
-	html[idx++] =	"<table width=100%>";
-	html[idx++] =		"<tr><td class='DwtCalendarTitlebar'>";
-	html[idx++] =			"<table width='100%'>";
+	html[idx++] =	"<table width=100% cellspacing='0' cellpadding='0' style='border-collapse:collapse;'>";
+	html[idx++] =		"<tr><td class=DwtCalendarTitlebar>";
+	html[idx++] =			"<table width='100%' cellspacing='0' cellpadding='0'>";
 	html[idx++] =				"<tr>";
 	html[idx++] =					"<td class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:py:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FastRevArrowSmall", null, ["id='b:py:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
 	html[idx++] =					"<td class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:pm:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("RevArrowSmall", null, ["id='b:pm:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td align='center' class='DwtCalendarTitleCell' 'nowrap' style='width: 60%'><span class='";
+	html[idx++] =					"<td align='center' class='DwtCalendarTitleCell' nowrap'><span class='";
 	html[idx++] =						DwtCalendar._TITLE_CLASS;
 	html[idx++] = 						"' id='";
 	html[idx++] =						this._monthCell;
@@ -884,24 +878,22 @@ function() {
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:nm:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FwdArrowSmall", null, ["id='b:nm:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
 	html[idx++] =					"<td class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:ny:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FastFwdArrowSmall", null, ["id='b:ny:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
 	html[idx++] =				"</tr>";
 	html[idx++] =			"</table>";
 	html[idx++] =		"</td></tr>";
-	html[idx++] =	"<tr><td class='DwtCalendarBody'>";
-	html[idx++] =		"<table width='100%' style='border-collapse:separate;' cellspacing='0'>";
-	html[idx++] =			"<tr>";
+	html[idx++] =	"<tr><td>";
+	html[idx++] = "<table cellspacing='0' cellpadding='1' width='100%'>";
+	html[idx++] = "<tr>";
 
 	if (this._showWeekNumber) {
 		html[idx++] = "<td class='DwtCalendarWeekNoTitle' width='14%' id='";

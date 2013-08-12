@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -151,15 +151,35 @@ DwtMenu.PARAMS = ["parent", "style", "className", "posStyle", "cascade", "id"];
 DwtMenu.prototype = new DwtComposite;
 DwtMenu.prototype.constructor = DwtMenu;
 
-DwtMenu.prototype.isDwtMenu = true;
-DwtMenu.prototype.toString = function() { return "DwtMenu"; };
+DwtMenu.prototype.toString = 
+function() {
+	return "DwtMenu";
+};
 
-DwtMenu.BAR_STYLE				= "BAR";
-DwtMenu.POPUP_STYLE				= "POPUP";
-DwtMenu.DROPDOWN_STYLE			= "DROPDOWN";
-DwtMenu.COLOR_PICKER_STYLE		= "COLOR";
-DwtMenu.CALENDAR_PICKER_STYLE	= "CALENDAR";
-DwtMenu.GENERIC_WIDGET_STYLE	= "GENERIC";
+/**
+ * Defines the "bar" style menu.
+ */
+DwtMenu.BAR_STYLE = 1;
+/**
+ * Defines the "popup" style menu.
+ */
+DwtMenu.POPUP_STYLE = 2;
+/**
+ * Defines the "dropdown" style menu.
+ */
+DwtMenu.DROPDOWN_STYLE = 3;
+/**
+ * Defines the "color" style menu.
+ */
+DwtMenu.COLOR_PICKER_STYLE =  4;
+/**
+ * Defines the "calendar" style menu.
+ */
+DwtMenu.CALENDAR_PICKER_STYLE = 5;
+/**
+ * Defines the "generic widget" style menu.
+ */
+DwtMenu.GENERIC_WIDGET_STYLE = 6;
 
 DwtMenu.HAS_ICON = "ZHasIcon";
 DwtMenu.HAS_CHECK = "ZHasCheck";
@@ -273,10 +293,8 @@ function(key, id) {
 	var items = this.getItems();
 	for (var i = 0; i < items.length; i++) {
 		var itemId = items[i].getData(key);
-		if (itemId == id) {
-			items[i].index = i; //needed in some caller
+		if (itemId == id)
 			return items[i];
-		}
 	}
 	return null;
 };
@@ -347,7 +365,7 @@ function(msec, x, y, kbGenerated) {
 };
 
 DwtMenu.prototype.popdown =
-function(msec, ev) {
+function(msec) {
 	if (this._style == DwtMenu.BAR_STYLE) return;
 
 	if (this._popupActionId != -1) {
@@ -357,7 +375,7 @@ function(msec, ev) {
 		if (!this._isPoppedUp || this._popdownActionId != -1)
 			return;
 		if (msec == null || msec == 0)
-			this._doPopdown(ev);
+			this._doPopdown();
 		else
 			this._popdownActionId = AjxTimedAction.scheduleAction(this._popdownAction, msec);
 	}
@@ -580,7 +598,7 @@ function(x, y) {
 
 DwtMenu.prototype.getKeyMapName = 
 function() {
-	return DwtKeyMap.MAP_MENU;
+	return "DwtMenu";
 };
 
 DwtMenu.prototype._handleScroll =
@@ -876,14 +894,7 @@ function(which) {
 		currItem = this._children.get(which);
 	}
 	// While the current item is not enabled or is a separator, try another
-	while (currItem) {
-		if (!currItem.isStyle) { // this is not a DwtMenuItem
-			currItem.focus();
-			break;
-		}
-		else if (!currItem.isStyle(DwtMenuItem.SEPARATOR_STYLE) && currItem.getEnabled() && currItem.getVisible()) {
-			break;
-		}
+	while (currItem && (currItem.isStyle(DwtMenuItem.SEPARATOR_STYLE) || !currItem.getEnabled() || !currItem.getVisible())) {
 		currItem = (which === false) ? this._children.getPrev(currItem) : this._children.getNext(currItem);
 	}
 	if (!currItem) { return; }
@@ -893,10 +904,10 @@ function(which) {
 	var mev = new DwtMouseEvent();
 	if (this.__currentItem) {
 		this._setMouseEvent(mev, {dwtObj:this.__currentItem});
-		this.__currentItem.notifyListeners(AjxEnv.isIE ? DwtEvent.ONMOUSELEAVE : DwtEvent.ONMOUSEOUT, mev);
+		this.__currentItem.notifyListeners(DwtEvent.ONMOUSEOUT, mev);
 	}
 	this._setMouseEvent(mev, {dwtObj:currItem});
-	currItem.notifyListeners(AjxEnv.isIE ? DwtEvent.ONMOUSEENTER : DwtEvent.ONMOUSEOVER, mev);	// mouseover selects a menu item
+	currItem.notifyListeners(DwtEvent.ONMOUSEOVER, mev);	// mouseover selects a menu item
 	this.__currentItem = currItem;
 	this.scrollToItem(currItem, true);
 };
@@ -917,7 +928,7 @@ function(child) {
 			this._table.rows[0].deleteCell(Dwt.getCellIndex(cell));
 		} else {
 			var el = child.getHtmlElement();
-			if (el && el.parentNode.parentNode.rowIndex > -1)// Make sure that the element exists in the table
+			if (el)
 				this._table.deleteRow(el.parentNode.parentNode.rowIndex);
 		}
 	}
@@ -934,10 +945,8 @@ function(child) {
     // Color pickers and calendars are not menu aware so we have to deal with
 	// them acordingly
 	if (Dwt.instanceOf(child, "DwtColorPicker") || Dwt.instanceOf(child, "DwtCalendar") ||
-	    (this._style == DwtMenu.GENERIC_WIDGET_STYLE)) {
-		
+	    (this._style == DwtMenu.GENERIC_WIDGET_STYLE))
 		this._addItem(child);
-	}
 
     if (child.addSelectionListener) {
         child.addSelectionListener(this._itemSelectionListener);
@@ -1145,7 +1154,7 @@ function(incScroll) {
 };
 
 DwtMenu.prototype._doPopdown =
-function(ev) {
+function() {
 	// Notify all sub menus to pop themselves down
 	var a = this._children.getArray();
 	var s = this._children.size();
@@ -1156,8 +1165,7 @@ function(ev) {
 	}
 	this.setZIndex(Dwt.Z_HIDDEN);
 	this.setLocation(Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-	this._ev = ev;
-
+	
 	this.notifyListeners(DwtEvent.POPDOWN, this);
 
 	var omem = DwtOutsideMouseEventMgr.INSTANCE;
@@ -1173,7 +1181,7 @@ function(ev) {
 	this._isPoppedUp = false;
 
 	if ((this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE) &&
-		this._table && this._table.rows && this._table.rows.length && this._table.rows[0].cells.length)
+		this._table.rows.length && this._table.rows[0].cells.length)
 	{
 		var numColumns = this._table.rows[0].cells.length;
 		var numRows = this._table.rows.length;
@@ -1251,7 +1259,7 @@ function(ev) {
 
 		// If we've gotten here, the mousedown happened outside the active
 		// menu, so we hide it.
-		menu.popdown(0, ev);
+		menu.popdown();
 		
 		//it should remove all the active menus 
 		var cMenu = null ;
@@ -1279,8 +1287,8 @@ function() {
 };
 
 DwtMenu.closeActiveMenu =
-function(ev) {
+function() {
 	if (DwtMenu._activeMenuUp) {
-		DwtMenu._activeMenu.popdown(0, ev);
+		DwtMenu._activeMenu.popdown();
 	}
 };

@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -51,10 +51,6 @@ DwtHtmlEditor.PARAMS = ["parent", "className", "posStyle", "content", "mode", "b
 
 DwtHtmlEditor.prototype = new DwtComposite();
 DwtHtmlEditor.prototype.constructor = DwtHtmlEditor;
-
-DwtHtmlEditor.prototype.isDwtHtmlEditor = true;
-DwtHtmlEditor.prototype.isInputControl = true;
-DwtHtmlEditor.prototype.toString = function() { return "DwtHtmlEditor"; };
 
 // Modes
 /**
@@ -183,14 +179,11 @@ function(tryCount) {
 			}
 			// Hack to fix IE focusing bug
 			if (AjxEnv.isIE) {
-				if (this._currInsPtBm) {
-					var range = this._getIframeDoc().selection.createRange();
-					range.moveToBookmark(this._currInsPtBm);
-					if (range.text.length <= 1) {
-						range.collapse(false);
+				if (this._currInsPt) {
+					if (this._currInsPt.text.length <= 1) {
+						this._currInsPt.collapse(false);
 					}
-					range.select();
-					this._currInsPtBm = range.getBookmark();
+					this._currInsPt.select();
 				}
 			}
 		} catch (ex) {
@@ -269,6 +262,7 @@ function(listener) {
  */
 DwtHtmlEditor.prototype.clear =
 function() {
+	AjxDebug.println(AjxDebug.REPLY, "DwtHtmlEditor::clear");
 	this.setContent("");
 }
 
@@ -316,18 +310,21 @@ function(html) {
 DwtHtmlEditor.prototype.setContent =
 function(content) {
 	if (AjxEnv.isIE) {
-		this._currInsPtBm = null; // reset insertion pointer, bug 11623
+		this._currInsPt = null; // reset insertion pointer, bug 11623
 	}
 
 	content = content || "";
+	AjxDebug.println(AjxDebug.REPLY, "DwtHtmlEditor::setContent - Content length: " + content.length);
 	if (this._mode == DwtHtmlEditor.HTML) {
 		// If the html editor is initialized then go ahead and set the content, else let
 		// _finishHtmlModeInit run before we try setting the content
 		this._pendingContent = content;
+		AjxDebug.println(AjxDebug.REPLY, "HTML mode, initialized: " + this._htmlModeInited);
 		if (this._htmlModeInited) {
 			this._setContentOnTimer();
 		} // ELSE: _finishHtmlModeInit is about to run and it'll use _pendingContent
 	} else {
+		AjxDebug.println(AjxDebug.REPLY, "Text mode, set textarea value");
 		document.getElementById(this._textAreaId).value = content;
 	}
 }
@@ -762,6 +759,8 @@ function(mode, convert, convertor) {
 		var iFrame;
 		var content = convert ? AjxStringUtil.convertToHtml(textArea.value, true) : textArea.value;
 		if (this._iFrameId) {
+			AjxDebug.println(AjxDebug.REPLY, "DwtHtmlEditor::setMode - content length = " + content.length);
+			AjxDebug.println(AjxDebug.REPLY, "Set innerHTML of iframe body");
 			idoc.body.innerHTML = content;
 			iFrame = document.getElementById(this._iFrameId);
 		} else {
@@ -895,10 +894,23 @@ function(content) {
 	// The onload event was originally used to continue init, but we went to setTimeout for bug 10619. That bug doesn't
 	// occur if we go back to using onload, so maybe something got fixed in FF.
 	// iFrame.onload = cont;
+
+    if( this._isPasteEnabled ){
+        var pastecont = AjxCallback.simpleClosure(this._registerPasteEvent, this);
+        iFrame.onload = pastecont;
+    }
     iFrame.src = 'javascript:(function(d){d.open();d.write("<html><body></body></html>");d.close();})(document)';
 	htmlEl.appendChild(iFrame);
 
 	return iFrame;
+};
+
+DwtHtmlEditor.prototype._registerPasteEvent = function(){
+    var editor = this,
+        doc = editor._getIframeDoc();
+    //Always unregister event handler as safari and chrome fires multiple times if registered multiple
+    editor._unregisterEditorEventHandler(doc,"paste");
+    editor._registerEditorEventHandler(doc,"paste");
 };
 
 DwtHtmlEditor.prototype._finishHtmlModeInit =
@@ -1318,6 +1330,19 @@ function(iFrame, iFrameDoc) {
 	for (var i = 0; i < events.length; ++i) {
 		this._registerEditorEventHandler(iFrameDoc, events[i]);
 	}
+    if (AjxEnv.isIE) {
+        var editor = this;
+        // Set's up the a range for the current ins point or selection. This is IE only because the iFrame can
+        // easily lose focus (e.g. by clicking on a button in the toolbar) and we need to be able to get back
+        // to the correct insertion point/selection.
+        iFrameDoc.attachEvent("onbeforedeactivate", function() {
+            var selection = iFrameDoc.selection;
+            if (selection) {
+                editor._currInsPt = selection.createRange();
+                DBG.println(AjxDebug.DBG1, "DwtHtmlEditor onbeforedeactivate");
+            }
+        });
+    }
 };
 
 DwtHtmlEditor.prototype._registerEditorEventHandler =
@@ -1438,31 +1463,22 @@ function(ev) {
 	}
 
 	// TODO notification for any updates etc
-	// Set's up the a range for the current ins point or selection. This is IE only because the iFrame can
-	// easily lose focus (e.g. by clicking on a button in the toolbar) and we need to be able to get back
-	// to the correct insertion point/selection.
 	if (AjxEnv.isIE) {
-		var iFrameDoc = this._getIframeDoc();
-		var range = iFrameDoc.selection.createRange();
-		// If just at the insertion point, then collapse so that we don't get
-		// a range selection on a call to DwtHtmlEditor.focus()
-		if (iFrameDoc.selection.type == "None") {
-			range.collapse(false);
-		}
 		//IE Hack for Ctrl+A to create range and include all elements
 
-		//bug:58569 For some I18n rightAlt key is used to print I18n characters. inn IE when right alt is pressed(rightAlt) it treats just as ctrl+A and when pressed any seq(rightAlt+a) is deleting the whole content
-		//avoided alt key when Ctrl+A seq formed (after the fix when leftCtrl+A and leftAlt+A pressed the whole text is selected and when pressed rightAlt+A (ą) is printed
+        //bug:58569 For some I18n rightAlt key is used to print I18n characters. inn IE when right alt is pressed(rightAlt) it treats just as ctrl+A and when pressed any seq(rightAlt+a) is deleting the whole content
+        //avoided alt key when Ctrl+A seq formed (after the fix when leftCtrl+A and leftAlt+A pressed the whole text is selected and when pressed rightAlt+A (ą) is printed
 
-		if (ctrlA && ev.keyCode == 65 && ev.ctrlKey && !ev.altKey) {
-			var p = this._getParentElement();
-			while (p && (p.nodeType == 1) && (p.tagName.toLowerCase() != 'body')) {
-				p = p.parentNode;
-			}
-			range.moveToElementText(p);
-			range.select();
-		}
-		this._currInsPtBm = range.getBookmark();
+        if(ctrlA && ev.keyCode == 65 && ev.ctrlKey && !ev.altKey) {
+        	var p = this._getParentElement();
+        	while (p && (p.nodeType == 1) && (p.tagName.toLowerCase() != 'body')) {
+            	p = p.parentNode;
+	    	}
+        	var idoc = this._getIframeDoc();
+        	this._currInsPt = idoc.selection.createRange();
+        	this._currInsPt.moveToElementText(p);
+        	this._currInsPt.select();
+    	}
 	}
 
 	if (this._stateUpdateActionId != null) {
@@ -1480,7 +1496,7 @@ function(ev) {
 
 DwtHtmlEditor.prototype.getKeyMapName =
 function() {
-	return DwtKeyMap.MAP_EDITOR;
+	return "DwtHtmlEditor";
 };
 
 DwtHtmlEditor.prototype.handleKeyAction =
@@ -1716,6 +1732,7 @@ function(iFrameDoc) {
 
 DwtHtmlEditor.prototype._onContentInitialized =
 function() {
+	AjxDebug.println(AjxDebug.REPLY, "DwtHtmlEditor::_onContentInitialized - clear pending content, length = " + this._pendingContent.length);
 	this._pendingContent = null;
 };
 
@@ -1723,15 +1740,20 @@ DwtHtmlEditor.prototype._setContentOnTimer =
 function() {
 	var iframeDoc = this._getIframeDoc();
 	try {
+		AjxDebug.println(AjxDebug.REPLY, "DwtHtmlEditor::_setContentOnTimer");
 		if (this._pendingContent != null) {
+			AjxDebug.println(AjxDebug.REPLY, "Pending content length: " + this._pendingContent.length);
+			AjxDebug.println(AjxDebug.REPLY, "Set innerHTML of iframe body");
 			iframeDoc.body.innerHTML = this._pendingContent;
 		}
 		// XXX: mozilla hack
 		if (AjxEnv.isGeckoBased || AjxEnv.isSafari) {
+			AjxDebug.println(AjxDebug.REPLY, "Turn on design mode");
 			this._enableDesignMode(iframeDoc);
 		}
 		this._onContentInitialized();
 	} catch (ex) {
+		AjxDebug.println(AjxDebug.REPLY, "_setContentOnTimer got exception, trying again - [" + ex + "]");
 		var ta = new AjxTimedAction(this, this._setContentOnTimer);
 		AjxTimedAction.scheduleAction(ta, 10);
 		return true;
@@ -2170,7 +2192,7 @@ function(params) {
 		}
 
 		if (!win.find(params.searchstring, params.casesensitive, params.backwards, params.wrap, params.wholeword, false, false)) {
-			while (win.find(params.searchstring, params.casesensitive, true, params.wrap, params.wholeword, false, false)) {}
+			while (win.find(params.searchstring, params.casesensitive, true, params.wrap, params.wholeword, false, false));
 		}
 	}
 };

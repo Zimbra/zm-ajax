@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -99,7 +99,7 @@ function(htmlElement, cssPropName) {
 	var result;
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not support ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
+		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -111,7 +111,7 @@ function(htmlElement, cssPropName) {
 			return cssDecl.getPropertyValue(cssPropName);
 		}
 	}
-	
+
 	// Convert CSS -> DOM name for IE etc
 	var tokens = cssPropName.split("-");
 	// Shift one word off the array and capitalize the rest
@@ -128,7 +128,7 @@ DwtCssStyle.getComputedStyleObject =
 function(htmlElement) {
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not suppoert ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
+		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -159,46 +159,5 @@ DwtCssStyle.removeProperty = function(el, prop) {
 			prop = prop.replace(/([A-Z])/g, "-$1");
 			el.style.removeProperty(prop);
 		}
-	}
-};
-
-/**
- * Adds a rule to a stylesheet.
- * 
- * @param {StyleSheet}	stylesheet		a CSS stylesheet
- * @param {string}		selector		rule selector
- * @param {string}		declaration		styles
- * @param {string}		index			insertion index (optional)
- * 
- * @return	index at which rule was inserted (for later removal)
- */
-DwtCssStyle.addRule =
-function(stylesheet, selector, declaration, index) {
-	if (stylesheet.addRule) {	// IE
-		//if index is not specified insert at the end so that new rule takes precedence
-		index = index || (stylesheet.rules.length);
-		stylesheet.addRule(selector, declaration, index);
-	}
-	else {
-		//if index is not specified insert at the end so that new rule takes precedence
-		index = index || (stylesheet.cssRules.length);
-		stylesheet.insertRule(selector + "{" + declaration + "}", index);
-	}
-	return index;
-};
-
-/**
- * Removes the rule at the given index.
- * 
- * @param {StyleSheet}	stylesheet		a CSS stylesheet
- * @param {string}		index			insertion index (optional)
- */
-DwtCssStyle.removeRule =
-function(stylesheet, index) {
-	if (stylesheet.removeRule) {	// IE
-		stylesheet.removeRule(index);
-	}
-	else {
-		stylesheet.deleteRule(index);
 	}
 };

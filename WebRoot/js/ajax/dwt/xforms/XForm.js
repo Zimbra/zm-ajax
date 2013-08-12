@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -528,7 +528,7 @@ XForm.prototype.outputForm = function () {
 	var items = this.getItems();
 
 	
-	html.append('<div id="', this.__id, '"', 'style="height: 100%;"',
+	html.append('<div id="', this.__id,'"',
 				(this.cssClass != null && this.cssClass != '' ? ' class="' + this.cssClass + '"' : ""),
 				(this.cssStyle != null && this.cssStyle != '' ? ' style="' + this.cssStyle + ';"' : ""),
 				'>'
@@ -620,16 +620,11 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 
 	if (drawTable) {
 		var colSizes = parentItem.getColSizes();
-
 		//XXX MOW: appending an elementDiv around the container if we need to style it
 		var cellspacing = parentItem.getInheritedProperty("cellspacing");
-		var cellpadding = parentItem.getInheritedProperty("cellpadding");
-        var border = parentItem.getInheritedProperty("border");
-        if (border == 0 && XForm._showBorder) {
-            border = 1;
-        }
-		html.append("<table cellspacing=",cellspacing," cellpadding=",cellpadding,
-				 "  border=" , border,
+		var cellpadding = parentItem.getInheritedProperty("cellpadding");		
+		html.append("<table cellspacing=",cellspacing," cellpadding=",cellpadding," ", 
+				(XForm._showBorder ? "border=1" : "border=0"),
 				" id=\"", parentItem.getId(),"_table\" ", parentItem.getTableCssString(),">");
 		if (colSizes != null) {
 			html.append( " <colgroup>");
@@ -740,15 +735,13 @@ XForm.prototype.outputItemList = function (items, parentItem, html,  numCols, cu
 		if(parentItem)
 			parentItem.registerActiveChild(item);
 			
-		item.signUpForEvents();
-
+		item.signUpForEvents();	
 	}
 	
 	
 	if (drawTable) {
 		html.append("</tbody></table>");
 	}
-
 	if (outerStyle != null && outerStyle != "") {
 		parentItem.outputElementDivEnd(html);
 	}

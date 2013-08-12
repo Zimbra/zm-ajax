@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -110,42 +110,6 @@ function() {
 			return null;
 		}
 	}
-};
-
-/**
- * This code is part of JQuery's Flash plugin.
- * http://jquery.lukelutman.com/plugins/flash/
- *
- * @return Flash plugin version
- */
-AjxPluginDetector.getFlashVersion =
-function() {
-    var flashVersion = "0,0,0";
-    // ie
-    try {
-        try {
-            // avoid fp6 minor version lookup issues
-            // see: http://blog.deconcept.com/2006/01/11/getvariable-setvariable-crash-internet-explorer-flash-6/
-            var axo = new ActiveXObject('ShockwaveFlash.ShockwaveFlash.6');
-            try {
-                axo.AllowScriptAccess = 'always';
-            }
-            catch(e) {
-                return '6,0,0';
-            }
-        } catch(e) {
-            }
-        flashVersion = new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version').replace(/\D+/g, ',').match(/^,?(.+),?$/)[1];
-        // other browsers
-    } catch(e) {
-        try {
-            if (navigator.mimeTypes["application/x-shockwave-flash"].enabledPlugin) {
-                flashVersion = (navigator.plugins["Shockwave Flash 2.0"] || navigator.plugins["Shockwave Flash"]).description.replace(/\D+/g, ",").match(/^,?(.+),?$/)[1];
-            }
-        } catch(e) {
-        }
-    }
-	return flashVersion;
 };
 
 AjxPluginDetector.detectReal =

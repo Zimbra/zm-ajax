@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2012 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -79,7 +79,7 @@ function(dragEl, rootEl, minX, maxX, minY, maxY, dragStartCB, dragCB, dragEndCB,
 	dragEl.__root.onDragStart = dragStartCB
 	dragEl.__root.onDragEnd = dragEndCB
 	dragEl.__root.onDrag = dragCB;
-};
+}
 
 /**
  * Sets the minimum and maximum drag boundries
@@ -142,7 +142,7 @@ function(e)	{
 	document.onmouseup = DwtDraggable.__end;
 
 	return false;
-};
+}
 
 /** @private */
 DwtDraggable.__drag =
@@ -185,7 +185,7 @@ function(e)	{
 		DwtDraggable.dragEl.__root.onDrag.run([nx, ny]);
 		
 	return false;
-};
+}
 
 /** @private */
 DwtDraggable.__end =
@@ -196,18 +196,16 @@ function() {
 		DwtDraggable.dragEl.__root.onDragEnd.run([parseInt(DwtDraggable.dragEl.__root.style[DwtDraggable.dragEl.__hMode ? "left" : "right"]), 
 											 	  parseInt(DwtDraggable.dragEl.__root.style[DwtDraggable.dragEl.__vMode ? "top" : "bottom"])]);
 	DwtDraggable.dragEl = null;
-};
+}
 
 /** @private */
 DwtDraggable.__fixE =
 function(e) {
 	if (typeof e == 'undefined')
 		e = window.event;
-	if (!AjxEnv.isWebKitBased) {
-		if (typeof e.layerX == 'undefined')
-			e.layerX = e.offsetX;
-		if (typeof e.layerY == 'undefined')
-			e.layerY = e.offsetY;
-	}
+	if (typeof e.layerX == 'undefined')
+		e.layerX = e.offsetX;
+	if (typeof e.layerY == 'undefined')
+		e.layerY = e.offsetY;
 	return e;
-};
+}

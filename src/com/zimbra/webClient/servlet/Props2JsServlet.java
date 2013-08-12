@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2007, 2009, 2010, 2013 VMware, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -35,16 +35,16 @@ public class Props2JsServlet extends com.zimbra.kabuki.servlets.Props2JsServlet 
 	// Protected methods
 	//
 
-	protected String getSkin(HttpServletRequest req) {
-		String skin = (String)req.getAttribute(A_SKIN);
-		if (skin == null) {
-			skin = req.getParameter(P_SKIN);
-		}
+    protected String getSkin(HttpServletRequest req) {
+        String skin = (String)req.getAttribute(A_SKIN);
+        if (skin == null) {
+            skin = req.getParameter(P_SKIN);
+        }
         if (skin != null) {
             skin = skin.replaceAll("[^A-Za-z0-9]", "");
         }
-		return skin;
-	}
+        return skin;
+    }
 
 	//
 	// com.zimbra.kabuki.servlets.Props2JsServlet methods

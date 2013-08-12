@@ -1,10 +1,10 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
+ * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
  * 
@@ -99,7 +99,7 @@ DwtId.DND_PLUS_ID		= "z__roundPlus";
  * 
  * @private
  */
-DwtId.makeId =
+DwtId._makeId =
 function() {
 	var list = [];
 	for (var i = 0; i < arguments.length; i++) {
@@ -110,7 +110,6 @@ function() {
 	}
 	return list.join(DwtId.SEP);
 };
-DwtId._makeId = DwtId.makeId;	// back-compatibility
 
 /**
  * Gets an ID for a list view.
@@ -121,7 +120,7 @@ DwtId._makeId = DwtId.makeId;	// back-compatibility
  */
 DwtId.getListViewId =
 function(context, modifier) {
-	return DwtId.makeId(DwtId.WIDGET_LIST_VIEW, context, modifier);
+	return DwtId._makeId(DwtId.WIDGET_LIST_VIEW, context, modifier);
 };
 
 /**
@@ -134,7 +133,7 @@ function(context, modifier) {
  */
 DwtId.getListViewHdrId =
 function(type, context, hdr) {
-	return DwtId.makeId(type, context, hdr);
+	return DwtId._makeId(type, context, hdr);
 };
 
 /**
@@ -148,7 +147,7 @@ function(type, context, hdr) {
  */
 DwtId.getListViewItemId =
 function(type, context, itemId, field) {
-	return DwtId.makeId(type, context, itemId, field);
+	return DwtId._makeId(type, context, itemId, field);
 };
 
 /**
@@ -159,5 +158,5 @@ function(type, context, itemId, field) {
  */
 DwtId.getIframeId =
 function(context) {
-	return DwtId.makeId(context, DwtId.IFRAME);
+	return DwtId._makeId(context, DwtId.IFRAME);
 };
