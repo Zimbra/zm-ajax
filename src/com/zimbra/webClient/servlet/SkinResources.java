@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,43 +15,67 @@
 
 package com.zimbra.webClient.servlet;
 
-import com.yahoo.platform.yui.compressor.CssCompressor;
-import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.servlet.DiskCacheServlet;
+import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.CharArrayWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.net.URLEncoder;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Stack;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.swing.ImageIcon;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.swing.ImageIcon;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.yahoo.platform.yui.compressor.CssCompressor;
+import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.servlet.DiskCacheServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.kabuki.util.Colors;
-
-import java.awt.Color;
-
-import java.net.URLEncoder;
 
 /**
  * TODO: Clean up this code!
@@ -80,7 +104,7 @@ public class SkinResources
 	private static final String P_TEMPLATES = "templates";
 	private static final String P_COMPRESS = "compress";
 	private static final String P_CUSTOMER_DOMAIN = "customerDomain";
-	
+
 	private static final String V_TRUE = "true";
 	private static final String V_FALSE = "false";
 	private static final String V_SPLIT = "split";
@@ -139,6 +163,8 @@ public class SkinResources
 
 	private static final Map<String, String> TYPES = new HashMap<String, String>();
 
+    private boolean supportsGzip = true;
+
 	static {
 		TYPES.put("css", "text/css");
 		TYPES.put("html", "text/html");
@@ -160,7 +186,7 @@ public class SkinResources
 	 * Not knowing on subsequent requests whether templates were
 	 * included caused bug 26563 and a 0-byte skin.js file to be
 	 * requested even though everything had been inlined into
-	 * launchZCS.jsp. 
+	 * launchZCS.jsp.
 	 */
 	private Map<String,Boolean> included = new HashMap<String,Boolean>();
 
@@ -176,7 +202,19 @@ public class SkinResources
 	// DiskCacheServlet methods
 	//
 
-	protected boolean flushCache(ServletRequest req) {
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        String val = getServletConfig().getInitParameter("shouldSupportGzip");
+        if (val != null) {
+            this.supportsGzip = Boolean.valueOf(val);
+        } else {
+            this.supportsGzip = true;
+        }
+    }
+
+	@Override
+    protected boolean flushCache(ServletRequest req) {
 		boolean flushed = super.flushCache(req);
 		if (flushed) {
 			// NOTE: The app:imginfo tag for the standard client stores its
@@ -200,18 +238,20 @@ public class SkinResources
 	// HttpServlet methods
 	//
 
-	public void doPost(HttpServletRequest req, HttpServletResponse resp)
+	@Override
+    public void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException, ServletException {
 		doGet(req, resp);
 	}
 
-	public void doGet(HttpServletRequest req, HttpServletResponse resp)
+	@Override
+    public void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException, ServletException {
 		String uri = getRequestURI(req);
 		String contentType = getContentType(uri);
 		String type = contentType.replaceAll("^.*/", "");
 		String debugStr = req.getParameter(P_DEBUG);
-		boolean debug =  debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1")); 
+		boolean debug =  debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"));
 		String client = req.getParameter(P_CLIENT);
 		if (client == null) {
 			client = CLIENT_ADVANCED;
@@ -236,7 +276,7 @@ public class SkinResources
 
 		String compressStr = req.getParameter(P_COMPRESS);
 		boolean compress =
-			LC.zimbra_web_generate_gzip.booleanValue() &&
+			supportsGzip &&
 			(compressStr != null && (compressStr.equals("true") || compressStr.equals("1")))
 		;
 		compress = compress && macros.get("MSIE_6") == null;
@@ -275,7 +315,8 @@ public class SkinResources
 				if (type.equals(T_JAVASCRIPT)) {
 					JavaScriptCompressor compressor = new JavaScriptCompressor(new StringReader(buffer), new ErrorReporter() {
 
-						public void warning(String message, String sourceName,
+						@Override
+                        public void warning(String message, String sourceName,
 											int line, String lineSource, int lineOffset) {
 							if (line < 0) {
 								ZimbraLog.webclient.warn("\n" + message);
@@ -284,7 +325,8 @@ public class SkinResources
 							}
 						}
 
-						public void error(String message, String sourceName,
+						@Override
+                        public void error(String message, String sourceName,
 										  int line, String lineSource, int lineOffset) {
 							if (line < 0) {
 								ZimbraLog.webclient.error("\n" + message);
@@ -293,7 +335,8 @@ public class SkinResources
 							}
 						}
 
-						public EvaluatorException runtimeError(String message, String sourceName, int line, String lineSource, int lineOffset) {
+						@Override
+                        public EvaluatorException runtimeError(String message, String sourceName, int line, String lineSource, int lineOffset) {
 							error(message, sourceName, line, lineSource, lineOffset);
 							return new EvaluatorException(message);
 						}
@@ -366,7 +409,7 @@ public class SkinResources
 		if (file != null) {
 			// NOTE: If we saved the buffer to a file and compression is
 			// NOTE: enabled then the file has *already* been compressed
-			// NOTE: and the Content-Encoding header has been added. 
+			// NOTE: and the Content-Encoding header has been added.
 			copy(file, resp, false);
 		}
 		else {
@@ -419,7 +462,7 @@ public class SkinResources
 		String commentStart = "/* ";
 		String commentContinue = " * ";
 		String commentEnd = " */";
-		if (type.equals(T_HTML)) {                 
+		if (type.equals(T_HTML)) {
 			commentStart = "<!-- ";
 			commentContinue = " - ";
 			commentEnd = " -->";
@@ -470,14 +513,14 @@ public class SkinResources
 			appContextPath = "/zimbra";
 		}
 		// domain overrides
-		
+
 		if (cacheBusterVersion == null) {
 			cacheBusterVersion = "";
 		}
 		Map<String,String> substOverrides = new HashMap<String,String>();
 		substOverrides.put(Manifest.S_APP_CONTEXT_PATH, appContextPath);
 		substOverrides.put(Manifest.S_JS_VERSION, cacheBusterVersion);
-		
+
 		try {
 			SoapProvisioning provisioning = new SoapProvisioning();
 			String soapUri =
@@ -778,10 +821,10 @@ public class SkinResources
 
 	private String getServerName(HttpServletRequest req) {
 		String serverName = req.getParameter(P_CUSTOMER_DOMAIN);
-		
+
 		if(serverName==null || serverName.trim().length() == 0)
 			serverName = getServletConfig().getInitParameter(P_SERVER_NAME);
-		
+
 		return serverName != null ? serverName.trim() : HttpUtil.getVirtualHost(req);
 	}
 
@@ -827,7 +870,7 @@ public class SkinResources
 
 	private String getSkin(HttpServletRequest req) {
 		String zimbraAdminURL = null;
-		
+
 		try {
 			Context initCtx = new InitialContext();
 			Context envCtx = (Context) initCtx.lookup("java:comp/env");
@@ -837,7 +880,7 @@ public class SkinResources
 		if (zimbraAdminURL == null) {
 			zimbraAdminURL = "/zimbraAdmin";
 		}
-		
+
 		String defaultSkinPara = null;
 		String defaultCookiePara = null;
 		String contentPath = req.getContextPath();
@@ -865,12 +908,12 @@ public class SkinResources
             }
         }
         catch(NullPointerException e) {
-            if (ZimbraLog.webclient.isDebugEnabled()) { 
+            if (ZimbraLog.webclient.isDebugEnabled()) {
                 ZimbraLog.webclient.debug("DEBUG: cannot get skin file " + skin);
             }
             skin = getServletContext().getInitParameter(defaultSkinPara);
         }
-		
+
 		return StringUtil.escapeHtml(skin);
 	}
 
@@ -1064,14 +1107,14 @@ public class SkinResources
 			isFirefox4up = (isFirefox && browserVersion >= 4);
 			isGecko1_8up = (isGeckoBased && browserVersion >= 1.8);
 			isGecko2up = (isGeckoBased && browserVersion >= 2);
-			
+
 			isSafari2 = (isSafari && browserVersion == 2.0);
 			isSafari2up = (isSafari && browserVersion >= 2);
 			isSafari3 = (isSafari && browserVersion == 3.0);
 			isSafari5up = (isSafari && browserVersion >= 5);
-			
+
 			isChrome4up = (isChrome && browserVersion >= 4);
-			
+
 			// operating systems
 			define(macros, "LINUX", isLinux);
 			define(macros, "MACINTOSH", isMac);
@@ -1183,8 +1226,8 @@ public class SkinResources
 		private static final String S_HELP_DELEGATED_URL = "HelpDelegatedURL";
 		private static final String S_HELP_STANDARD_URL = "HelpStandardURL";
 
-		private static final String S_APP_CONTEXT_PATH = "AppContextPath"; 
-		private static final String S_JS_VERSION = "jsVersion"; 
+		private static final String S_APP_CONTEXT_PATH = "AppContextPath";
+		private static final String S_JS_VERSION = "jsVersion";
 
 		private static final String E_SKIN = "skin";
 		private static final String E_SUBSTITUTIONS = "substitutions";
@@ -1227,7 +1270,7 @@ public class SkinResources
 			this.client = client;
 			// rememeber the macros passed in (for skin substitution functions)
 			this.macros = macros;
-			
+
 			// load document
 			Document document;
 			try {
@@ -1371,9 +1414,9 @@ public class SkinResources
 
 		private boolean isBrowser(String name) {
 			String booleanStr = macros.get(name);
-			return (booleanStr != null && booleanStr.equalsIgnoreCase("true"));		
+			return (booleanStr != null && booleanStr.equalsIgnoreCase("true"));
 		}
-	
+
 		public String getProperty(Stack<String> stack, String pname) {
 			// check for cycles
 			if (stack != null) {
@@ -1401,7 +1444,7 @@ public class SkinResources
 			}
 
 			s = this.handleMethodCalls(stack, s);
-			
+
 			Matcher matcher = RE_TOKEN.matcher(s);
 			if (!matcher.find()) {
 				return s;
@@ -1430,8 +1473,8 @@ public class SkinResources
 
 			return str.toString();
 		}
-		
-				
+
+
 		// handle a method call in a skin replacemented file
 		//	syntax:	@methodName(param,param,param)@
 		private String handleMethodCalls(Stack<String> stack, String s) {
@@ -1446,41 +1489,41 @@ public class SkinResources
 
 				String operation = matcher.group(1).toLowerCase();
 				String[] params = matcher.group(2).split(" *, *");
-				
+
 				try {
 					String result;
 					// "darken" or "-"
 					if (operation.equals("darken") || operation.equals("+")) {
 						result = outputDarkerColor(stack, params);
-						
+
 					// "lighten" or "-"
 					} else if (operation.equals("lighten") || operation.equals("-")) {
 						result = outputLighterColor(stack, params);
-					
+
 					// "invert"
 					} else if (operation.equals("invert")) {
 						result = outputInvertColor(stack, params);
-					
+
 					// "border"
 					} else if (operation.equals("border")) {
 						result = outputBorder(stack, params);
-					
+
 					// "grad"
 					} else if (operation.equals("grad")){
 						result = outputGrad(stack, params);
-					
+
 					// "image" or "img"
 					} else if (operation.equals("image") || operation.equals("img")) {
 						result = outputImage(stack, params);
-					
+
 					// "cssShadow"
 					} else if (operation.equals("cssshadow")) {
 						result = outputCssShadow(stack, params);
-					
+
 					// "cssText" or "cssTextProp[ertie]s"
 					} else if (operation.indexOf("csstext") == 0) {
 						result = outputCssTextProperties(stack, params);
-					
+
 					// "cssValue"
 					} else if (operation.indexOf("cssvalue") == 0) {
 						result = outputCssValue(stack, params);
@@ -1488,22 +1531,22 @@ public class SkinResources
 					// "css" or "cssProp[ertie]s"
 					} else if (operation.indexOf("css") == 0) {
 						result = outputCssProperties(stack, params);
-					
+
 					// "round" or "roundCorners"
 					} else if (operation.indexOf("round") == 0) {
 						result = outputRoundCorners(stack, params);
-					
+
 					// "opacity"
 					} else if (operation.equals("opacity")) {
 						result = outputOpacity(stack, params);
-					
+
 					} else {
 						throw new IOException("Couldn't understand operation "+matcher.group(1)+".");
 					}
 
 					// and output the results in place
 					str.append(result);
-					
+
 				} catch (IOException e) {
 					str.append("/***"+e.getMessage()+"***/");
 				}
@@ -1514,13 +1557,13 @@ public class SkinResources
 			return str.toString();
 		}
 
-		
+
 		//
 		//
 		//	Color routines
 		//
 		//
-		
+
 		//
 		// replace occurances of @Darken(color,percent)@ with the adjusted color
 		//
@@ -1547,7 +1590,7 @@ public class SkinResources
 									darken(color.getGreen(), delta),
 									darken(color.getBlue(), delta)
 						)
-					);		
+					);
 		}
 
 		// lighten a color object by given fraction, returns a hex color string
@@ -1557,7 +1600,7 @@ public class SkinResources
 									lighten(color.getGreen(), delta),
 									lighten(color.getBlue(), delta)
 						)
-					);		
+					);
 		}
 
 
@@ -1580,12 +1623,12 @@ public class SkinResources
 		// invert color object
 		private String invertColor(Color color) {
 			return colorToColorString( new Color( Math.abs(color.getRed() - 255),
-                        				Math.abs(color.getGreen() - 255), 
+                        				Math.abs(color.getGreen() - 255),
 							Math.abs(color.getBlue() - 255))
-	 					);		
+	 					);
 		}
 
-		// given a color (either '#fffff' or 'ffffff' or a substitution), 
+		// given a color (either '#fffff' or 'ffffff' or a substitution),
 		//	return a Color object that corresponds to that color.
 		//
 		// TODO: make this handle rgb(#,#,#) and 'ccc' or '#ccc'
@@ -1617,7 +1660,7 @@ public class SkinResources
 		}
 
 
-		
+
 		//
 		//
 		//	CSS manipulation routines
@@ -1636,7 +1679,7 @@ public class SkinResources
 			float delta = (float) (params.length > 3 ? (Float.parseFloat(params[3]) / 100) : .25);
 
 			String sizeStr = (size.indexOf(" ") == -1 ? " " + size + ";" : "; border-width:" + size + ";");
-			
+
 			if (type.equals("transparent")) {
 				if (isBrowser("MSIE_LOWER_THAN_7")) {
 					return "margin:" + size +";border:0px;";
@@ -1645,7 +1688,7 @@ public class SkinResources
 				}
 			} else if (type.equals("solid")) {
 				return "border:solid " + colorToColorString(color) + sizeStr;
-				
+
 			} else if (type.equals("inset") || type.equals("outset")) {
 				String tlColor = (type.equals("inset") ? darkenColor(color, delta) : lightenColor(color, delta));
 				String brColor = (type.equals("inset") ? lightenColor(color, delta) : darkenColor(color, delta));
@@ -1654,9 +1697,9 @@ public class SkinResources
 			}
 			throw new IOException("border("+type+"): type not understood: use 'transparent', 'solid', 'inset' or 'outset'");
 		}
-					
+
 		//
-		// replace occurances of @grad(to, from, type)@, @grad(to, from) with the CSS for the cross-browser linear gradient 
+		// replace occurances of @grad(to, from, type)@, @grad(to, from) with the CSS for the cross-browser linear gradient
 		// default type is linear-vertical
 		//
 		private String outputGrad(Stack<String> stack, String[] params) throws IOException {
@@ -1668,7 +1711,7 @@ public class SkinResources
 			String result = "background-color:" + from;   // Default
 			int gradType = 0;
 
-			if (from == null || to == null) 
+			if (from == null || to == null)
 				throw new IOException("grad(): specify from, to");
 
 			if (type.equals("linear-horizontal")){
@@ -1697,9 +1740,9 @@ public class SkinResources
 
 			return result;
 		}
-		
+
 		//
-		// replace occurances of @image(dir, filename.extension, width, height, repeat)@ with the CSS for the image 
+		// replace occurances of @image(dir, filename.extension, width, height, repeat)@ with the CSS for the image
 		//		as a background-image (or filter for PNG's in IE)
 		//
 		private String outputImage(Stack<String> stack, String[] params) throws IOException {
@@ -1710,15 +1753,15 @@ public class SkinResources
 			String repeat = (params.length > 4 ? params[4] : null);
 
 			if (name == null) throw new IOException("image(): specify directory, name, width, height");
-			
+
 			// if there is no extension in the name, assume it's a sub
 			if (name.indexOf(".") == -1) {
 				name = getProperty(stack, name);
 			}
 			if (name == null) throw new IOException("image(): specify directory, name, width, height");
-			
+
 			boolean isPNG = (name.toLowerCase().indexOf(".png") > -1);
-			
+
 			dir = (dir == null || dir.equals("") ? "" : getProperty(stack, dir));
 			// make sure there's a slash between the directory and the image name
 			if (!dir.equals("") && (dir.lastIndexOf("/") != dir.length()-1 || name.indexOf("/") != 0)) {
@@ -1726,7 +1769,7 @@ public class SkinResources
 			}
 
 			String url = dir + name;
-			
+
 			if (isPNG && isBrowser("MSIE_LOWER_THAN_7")) {
 				return "background-image:none;filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"+url+"',sizingMethod='image');"
 							+ (width != null ? "width:"+width+";" : "")
@@ -1738,7 +1781,7 @@ public class SkinResources
 							+ (height != null ? "height:"+height+";" : "");
 			}
 		}
-		
+
 		//
 		// replace occurances of @cssValue(token, property)@ with the css value of that replacement token
 		//
@@ -1771,7 +1814,7 @@ public class SkinResources
 			}
 			return output.toString();
 		}
-					
+
 		//
 		// replace occurances of @cssTextProperties(token)@ with the CSS-text properties of that replacement token
 		//
@@ -1786,7 +1829,7 @@ public class SkinResources
 											};
 			return outputCssProperties(stack, newParams);
 		}
-					
+
 		//
 		// replace occurances of @cssShadow(size, color)@ with CSS to show a shadow, specific to the platform
 		//
@@ -1798,7 +1841,7 @@ public class SkinResources
 			}
 			return "";
 		}
-		
+
 		//
 		// replace occurances of @roundCorners(size[ size[ size[ size]]])@ with CSS to round corners, specific to the platform
 		//
@@ -1810,15 +1853,15 @@ public class SkinResources
 			boolean isChrome4up = isBrowser("CHROME_4_OR_HIGHER");
 			//removing IE9+ until rendering in standards mode is supported
 			//boolean isIE9up = isBrowser("MSIE_9_OR_HIGHER"); 
-			
+
 			// Pick out browsers that support rounding in some fashion
 			if (isFirefox1_5up || isWebKitBased) {
 				String propName;
-				
+
 				if (isFirefox4up || isSafari5up || isChrome4up) { 
 					// browsers that support the w3c syntax should use it
 					propName = "border-radius:";
-				} else { 
+				} else {
 					// otherwise use the browser-proprietary syntax where available
 					if (isWebKitBased) {
 						propName = "-webkit-border-radius:";
@@ -1840,7 +1883,7 @@ public class SkinResources
 			}
 			return "";
 		}
-		
+
 		//
 		// replace occurances of @opacity(percentage)@ with CSS opacity value (correct for each platform)
 		//
@@ -1849,7 +1892,7 @@ public class SkinResources
 		private String outputOpacity(Stack<String> stack, String[] params) throws IOException {
 			float opacity;
 			try {
-				opacity = (float) (Float.parseFloat(params[0]) / 100);
+				opacity = Float.parseFloat(params[0]) / 100;
 			} catch (Exception e) {
 				throw new IOException("opacity(): pass opacity as integer percentage");
 			}
@@ -1866,7 +1909,7 @@ public class SkinResources
 		//
 		private Map<String, String> parseCSSProperties(String cssString) {
 			Map<String, String> map = new HashMap<String, String>();
-			
+
 			String[] props = cssString.trim().split("\\s*;\\s*");
 			for (int i = 0; i < props.length; i++) {
 				String[] prop = props[i].split("\\s*:\\s*");
@@ -1956,7 +1999,7 @@ public class SkinResources
 	 * that looks like "N cannot be cast to N".
 	 */
 	public static class ImageInfo {
-		
+
 		// Constants
 		public static final int DEFAULT_WIDTH = 16; // TODO: settable?
 		public static final int DEFAULT_HEIGHT = 16; // TODO: settable?
