@@ -46,6 +46,7 @@ AjxPackage.require("ajax.util.AjxEmailAddress");
 AjxPackage.require("ajax.util.AjxHistoryMgr");
 
 // DWT files
+
 AjxPackage.require("ajax.dwt.core.Dwt");
 AjxPackage.require("ajax.dwt.core.DwtId");
 AjxPackage.require("ajax.dwt.core.DwtException");
@@ -130,6 +131,3 @@ AjxPackage.require("ajax.dwt.widgets.DwtMessageComposite");
 AjxPackage.require("ajax.dwt.widgets.DwtRadioButtonGroup");
 AjxPackage.require("ajax.dwt.widgets.DwtForm");
 AjxPackage.require("ajax.dwt.widgets.DwtComboBox");
-
-AjxPackage.require("ajax.3rdparty.jquery.jquery");
-

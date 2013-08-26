@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -39,14 +39,11 @@
  * @param {boolean}      params.singleClickAction		if <code>true</code>, an action is performed in single click
  * @param {AjxCallback}      params.dndScrollCallback	the callback triggered when scrolling of a drop area for an object being dragged
  * @param {string}      params.dndScrollId			the id
- * @param {boolean}    params.arrowDisabled
  *        
  * @extends		DwtComposite		
  */
 DwtTreeItem = function(params) {
-
     if (arguments.length == 0) { return; }    
-
     params = Dwt.getParams(arguments, DwtTreeItem.PARAMS);
 	var parent = params.parent;
 	if (parent instanceof DwtTree) {
@@ -63,8 +60,6 @@ DwtTreeItem = function(params) {
 	this._selectedFocusedClassName = [this._origClassName, DwtCssStyle.SELECTED, DwtCssStyle.FOCUSED].join("-");
 	this._actionedClassName = [this._origClassName, DwtCssStyle.ACTIONED].join("-");
 	this._dragOverClassName = [this._origClassName, DwtCssStyle.DRAG_OVER].join("-");
-    this._treeItemTextClass = "DwtTreeItem-Text";
-    this._treeItemExtraImgClass = "DwtTreeItem-ExtraImg";
 
 	params.deferred = (params.deferred !== false);
 	params.className = null;
@@ -84,8 +79,12 @@ DwtTreeItem = function(params) {
 	this._forceNotifyAction = Boolean(params.forceNotifyAction);
 	this._dndScrollCallback = params.dndScrollCallback;
 	this._dndScrollId = params.dndScrollId;
-	this._arrowDisabled = params.arrowDisabled;
 
+	// disable selection if checkbox style
+	if (this._tree.isCheckedStyle) {
+		this.enableSelection(false);
+		this._selectedClassName = this._origClassName;
+	}
 	if (params.singleClickAction) {
 		this._singleClickAction = true;
 		this._selectedFocusedClassName = this._selectedClassName = this._textClassName;
@@ -110,9 +109,6 @@ DwtTreeItem.PARAMS = ["parent", "index", "text", "imageInfo", "deferred", "class
 DwtTreeItem.prototype = new DwtComposite;
 DwtTreeItem.prototype.constructor = DwtTreeItem;
 
-DwtTreeItem.prototype.isDwtTreeItem = true;
-DwtTreeItem.prototype.toString = function() { return "DwtTreeItem"; };
-
 DwtTreeItem.prototype.TEMPLATE = "dwt.Widgets#ZTreeItem";
 
 DwtTreeItem.prototype._checkBoxVisible = true; // Assume it's shown, if check style
@@ -126,7 +122,6 @@ DwtTreeItem._processedMouseDown = false;
 
 DwtTreeItem.prototype.dispose =
 function() {
-    DwtComposite.prototype.dispose.call(this);
 	this._itemDiv = null;
 	this._nodeCell = null;
 	this._checkBoxCell = null;
@@ -135,24 +130,12 @@ function() {
 	this._imageCell = null;
 	this._textCell = null;
 	this._childDiv = null;
-	this._initialized = false;
+	DwtComposite.prototype.dispose.call(this);
 };
 
-/**
- * override DwtControl.prototype.getData to take care of special case of KEY_OBJECT of type ZmOrganizer. See bug 82027
- * @param key
- * @return {*}
- */
-DwtTreeItem.prototype.getData =
-function(key) {
-	var obj = this._data[key];
-	if (key !== Dwt.KEY_OBJECT || !obj || !obj.isZmOrganizer) {
-		return obj;
-	}
-	//special case for ZmOrganizer instance of the Dwt.KEY_OBJECT attribute.
-	//bug 82027 - the folder attributes such as name could be wrong after refresh block+ rename when new instance was created but not set to the item Dwt.KEY_OBJECT attribute.
-	var cachedOrganizer = obj && appCtxt.cacheGet(obj.id);
-	return cachedOrganizer || obj; //just in case somehow it's no longer cached. No idea if could happen.
+DwtTreeItem.prototype.toString =
+function() {
+	return "DwtTreeItem";
 };
 
 /**
@@ -319,7 +302,7 @@ function() {
  */
 DwtTreeItem.prototype.setText =
 function(text) {
-	if (this._initialized && this._textCell) {
+	if (this._initialized) {
 		if (!text) text = "";
 		this._text = this._textCell.innerHTML = text;
 	} else {
@@ -373,14 +356,7 @@ function(enable) {
 	this._selectedClassName = enable
 		? this._origClassName + "-" + DwtCssStyle.SELECTED
 		: this._origClassName;
-
 };
-
-DwtTreeItem.prototype.isSelectionEnabled =
-function() {
-	return this._selectionEnabled;
-};
-
 
 DwtTreeItem.prototype.enableAction =
 function(enable) {
@@ -445,18 +421,13 @@ function(child) {
 
 DwtTreeItem.prototype.getKeyMapName =
 function() {
-	return DwtKeyMap.MAP_TREE;
+	return "DwtTreeItem";
 };
 
 DwtTreeItem.prototype.handleKeyAction =
 function(actionCode, ev) {
 
 	switch (actionCode) {
-		
-		case DwtKeyMap.ENTER:
-			this._tree.setEnterSelection(this, true);
-			break;
-
 
 		case DwtKeyMap.NEXT: {
 			var ti = this._tree._getNextTreeItem(true);
@@ -548,10 +519,6 @@ function(index, realizeDeferred, forceNode) {
 	this._textCell = document.getElementById(data.id + "_textCell");
 	this._extraCell = document.getElementById(data.id + "_extraCell");
 
-    if (this._arrowDisabled){
-        var tableNode = document.getElementById(data.id + "_table");
-        tableNode.style.tableLayout = "auto";
-    }
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
 		this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
@@ -563,7 +530,6 @@ function(index, realizeDeferred, forceNode) {
 
 	if (this._extraCell) {
 		AjxImg.setImage(this._extraCell, (this._extraInfo ||  "Blank_16"));
-		this._extraCell.className = this._treeItemExtraImgClass;
 	}
 
 	// initialize checkbox
@@ -737,7 +703,6 @@ DwtTreeItem.prototype._dragEnter =
 function() {
 	this._preDragClassName = this._textCell.className;
 	this._textCell.className = this._dragOverClassName;
-	this._draghovering = true;
 };
 
 DwtTreeItem.prototype._dragHover =
@@ -752,7 +717,6 @@ function(ev) {
 	if (this._preDragClassName) {
 		this._textCell.className = this._preDragClassName;
 	}
-	this._draghovering = false;
 };
 
 DwtTreeItem.prototype._drop =
@@ -760,22 +724,7 @@ function() {
 	if (this._preDragClassName) {
 		this._textCell.className = this._preDragClassName;
 	}
-	this._draghovering = false;
 };
-
-/**
- *   This is for bug 45129.
- *   In the DwControl's focusByMouseDownEvent, it focuses the TreeItem 
- *   And change TreeItem's color. But sometimes when mousedown and mouseup
- *   haven't been matched on the one element. It will cause multiple selection. 
- *   For in the mouseup handle function, we has done focus if we find both mouse 
- *   down and up happened on the same element. So when the mouse is down, we just
- *   do nothing.
- */
-DwtTreeItem.prototype._focusByMouseDownEvent =
-function(ev) {
-	
-}
 
 DwtTreeItem._nodeIconMouseDownHdlr =
 function(ev) {
@@ -863,23 +812,9 @@ function(item) {
 	return false;
 };
 
-DwtTreeItem.prototype._setTreeElementStyles =
-function(img, focused) {
-   if (this._arrowDisabled || this._draghovering) {
-        return;
-   }
-   var selected = focused ? "-focused" : "";
-   if (this._extraCell) {
-        AjxImg.setImage(this._extraCell, img);
-        this._extraCell.className = this._treeItemExtraImgClass + selected;
-   }
-   if (this._textCell)
-        this._textCell.className = this._treeItemTextClass + selected;
-}
-
 DwtTreeItem.prototype._setSelected =
 function(selected, noFocus) {
-	if (this._selected != selected && !this._disposed) {
+	if (this._selected != selected) {
 		this._selected = selected;
 		if (!this._initialized) {
 			this._initialize();
@@ -887,15 +822,12 @@ function(selected, noFocus) {
 		if (!this._itemDiv) { return; }
 		if (selected && (this._selectionEnabled || this._forceNotifySelection) /*&& this._origClassName == "DwtTreeItem"*/) {
 			this._itemDiv.className = this._selectedClassName;
-			this._setTreeElementStyles("DownArrowSmall", true);
-            if (!noFocus) {
+			if (!noFocus) {
 				this.focus();
 			}
 			return true;
 		} else {
-			this.blur();
-			this._setTreeElementStyles("Blank_16", false);
-			this._itemDiv.className = this._origClassName;;
+			this._itemDiv.className = this._origClassName;
 			return false;
 		}
 	}
@@ -929,8 +861,9 @@ DwtTreeItem.prototype._focus =
 function() {
 	if (!this._itemDiv) { return; }
 	// focused tree item should always be selected as well
-	this._itemDiv.className = this._selectedFocusedClassName;
-	this._setTreeElementStyles("DownArrowSmall", true);
+	if (this._selectionEnabled) {
+		this._itemDiv.className = this._selectedFocusedClassName;
+	}
 };
 
 DwtTreeItem.prototype._blur =
@@ -938,7 +871,6 @@ function() {
 	if (!this._itemDiv) { return; }
 	this._itemDiv.className = this._selected
 		? this._selectedClassName : this._origClassName;
-	this._setTreeElementStyles(this._selected ? "DownArrowSmall" : "Blank_16", this._selected);
 };
 
 DwtTreeItem._mouseDownListener =
@@ -952,7 +884,6 @@ function(ev) {
 	} else if (ev.button == DwtMouseEvent.RIGHT && (treeItem._actionEnabled || treeItem._forceNotifyAction)) {
 		treeItem._gotMouseDownRight = true;
 	}
-
 };
 
 DwtTreeItem._mouseOutListener = 
@@ -966,10 +897,6 @@ function(ev) {
 	if (treeItem._singleClickAction && treeItem._textCell) {
 		treeItem._textCell.className = treeItem._textClassName;
 	}
-    if(!treeItem._selected){
-       treeItem._setTreeElementStyles("Blank_16", false);
-    }
-
 };
 
 DwtTreeItem._mouseOverListener =
@@ -981,9 +908,6 @@ function(ev) {
 	if (treeItem._singleClickAction && treeItem._textCell) {
 		treeItem._textCell.className = treeItem._hoverClassName;
 	}
-    if(!treeItem._selected){
-       treeItem._setTreeElementStyles("ColumnDownArrow", true);
-    }
 };
 
 DwtTreeItem._mouseUpListener =
@@ -1038,11 +962,6 @@ function(params) {
 	this._setMouseEvent(mev, params);
 	mev.kbNavEvent = params.kbNavEvent;
 	this.notifyListeners(DwtEvent.ONMOUSEUP, mev);
-};
-
-DwtTreeItem.prototype.getTooltipBase =
-function(hoverEv) {
-	return this._itemDiv;
 };
 
 DwtTreeItem._listeners = {};

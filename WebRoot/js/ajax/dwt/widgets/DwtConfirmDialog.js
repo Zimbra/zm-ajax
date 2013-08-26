@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -23,13 +23,11 @@
  * 
  * @extends		DwtDialog
  */
-DwtConfirmDialog = function(parent, className, id, buttons, extraButtons) {
+DwtConfirmDialog = function(parent, className) {
 	if (arguments.length == 0) return;
-
-    if(!buttons){
-	buttons = [ DwtDialog.YES_BUTTON, DwtDialog.NO_BUTTON, DwtDialog.CANCEL_BUTTON ];
-    }
-	DwtDialog.call(this, {parent:parent, className:className || "DwtConfirmDialog", title:AjxMsg.confirmTitle, standardButtons:buttons, id:id, extraButtons:extraButtons});
+	
+	var buttons = [ DwtDialog.YES_BUTTON, DwtDialog.NO_BUTTON, DwtDialog.CANCEL_BUTTON ];
+	DwtDialog.call(this, {parent:parent, className:className || "DwtConfirmDialog", title:AjxMsg.confirmTitle, standardButtons:buttons});
 	
 	this._questionDiv = document.createElement("DIV");
 	this._questionDiv.className = "DwtConfirmDialogQuestion";

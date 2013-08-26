@@ -60,7 +60,6 @@ ZmCsfeException.PARAMS = ["msg", "code", "method", "detail", "data", "trace"];
 
 ZmCsfeException.prototype = new AjxException;
 ZmCsfeException.prototype.constructor = ZmCsfeException;
-ZmCsfeException.prototype.isZmCsfeException = true;
 
 /**
  * Returns a string representation of the object.
@@ -181,7 +180,6 @@ ZmCsfeException.MAINTENANCE_MODE					= "account.MAINTENANCE_MODE";
 ZmCsfeException.TOO_MANY_IDENTITIES					= "account.TOO_MANY_IDENTITIES";
 ZmCsfeException.TOO_MANY_SEARCH_RESULTS				= "account.TOO_MANY_SEARCH_RESULTS";
 ZmCsfeException.NO_SUCH_COS 						= "account.NO_SUCH_COS";
-ZmCsfeException.SIGNATURE_EXISTS                    = "account.SIGNATURE_EXISTS";
 
 ZmCsfeException.CANNOT_CHANGE_VOLUME = "volume.CANNOT_CHANGE_TYPE_OF_CURRVOL";
 ZmCsfeException.CANNOT_DELETE_VOLUME_IN_USE = "volume.CANNOT_DELETE_VOLUME_IN_USE";
@@ -217,8 +215,6 @@ ZmCsfeException.CANNOT_RENAME                       = "mail.CANNOT_RENAME";
 ZmCsfeException.CANNOT_UNLOCK                       = "mail.CANNOT_UNLOCK";
 ZmCsfeException.CANNOT_LOCK                         = "mail.CANNOT_LOCK";
 ZmCsfeException.LOCKED                              = "mail.LOCKED";
-
-ZmCsfeException.MUST_BE_ORGANIZER					= "mail.MUST_BE_ORGANIZER";
 
 
 ZmCsfeException.OFFLINE_ONLINE_ONLY_OP				= "offline.ONLINE_ONLY_OP";

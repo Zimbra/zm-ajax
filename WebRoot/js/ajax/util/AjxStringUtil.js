@@ -23,15 +23,13 @@
  * @author Roland Schemers
  * @author Conrad Damon
  */
-AjxStringUtil = function() {};
+AjxStringUtil = function() {
+}
 
 AjxStringUtil.TRIM_RE = /^\s+|\s+$/g;
 AjxStringUtil.COMPRESS_RE = /\s+/g;
 AjxStringUtil.ELLIPSIS = " ... ";
 AjxStringUtil.LIST_SEP = ", ";
-
-//Regex for image tag having src starting with cid:
-AjxStringUtil.IMG_SRC_CID_REGEX = /<img([^>]*)\ssrc=["']cid:/gi;
 
 AjxStringUtil.makeString =
 function(val) {
@@ -49,24 +47,13 @@ AjxStringUtil.capitalize = function(str) {
 };
 
 /**
- * Capitalizes the specified string by upper-casing the first character.
- * Unlike AjxStringUtil.capitalize - don't change the rest of the letters.
- *
- * @param {string} str  The string to capitalize.
- */
-AjxStringUtil.capitalizeFirstLetter = function(str) {
-	return str.length > 0 ? str.charAt(0).toUpperCase() + str.substr(1) : "";
-};
-
-
-/**
  * Capitalizes all the words in the specified string by upper-casing the first
- * character of each word (does not change following characters, so something like MTV stays MTV
+ * character of each word and lower-casing the rest of the word.
  *
  * @param {string} str  The string to capitalize.
  */
 AjxStringUtil.capitalizeWords = function(str) {
-    return AjxUtil.map(str.split(/\s+/g), AjxStringUtil.capitalizeFirstLetter).join(" ");
+    return AjxUtil.map(str.split(/\s+/g), AjxStringUtil.capitalize).join(" ");
 };
 
 /**
@@ -229,40 +216,26 @@ function(str, dels) {
 	return chunks;
 };
 
-AjxStringUtil.SPACE_WORD_RE = new RegExp("\\s*\\S+", "g");
 /**
- * Splits the line into words, keeping leading whitespace with each word.
  *
- * @param {string}	line	the text to split
+ * splits the line into words, keeping leading whitespace with each word
+ *
+ * @param line the text to split
  *
  * @return {array} the array of words
  */
 AjxStringUtil.splitKeepLeadingWhitespace =
 function(line) {
-	var words = [], result;
-	while (result = AjxStringUtil.SPACE_WORD_RE.exec(line)) {
-		words.push(result[0]);
+
+	var wordWithLeadingSpaces = /\s*\S+/g;
+	var words = [];
+	var result;
+	while (result = wordWithLeadingSpaces.exec(line)) {
+		var word = result[0];
+		words.push(word);
 	}
 	return words;
 };
-
-AjxStringUtil.WRAP_LENGTH				= 80;
-AjxStringUtil.HDR_WRAP_LENGTH			= 120;
-AjxStringUtil.MAX_HTMLNODE_COUNT		= 250;
-
-// ID for a BLOCKQUOTE to mark it as ours
-AjxStringUtil.HTML_QUOTE_COLOR			= "#1010FF";
-AjxStringUtil.HTML_QUOTE_STYLE			= "color:#000;font-weight:normal;font-style:normal;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:12pt;";
-AjxStringUtil.HTML_QUOTE_PREFIX_PRE		= '<blockquote style="border-left:2px solid ' +
-									 AjxStringUtil.HTML_QUOTE_COLOR +
-									 ';margin-left:5px;padding-left:5px;'+
-									 AjxStringUtil.HTML_QUOTE_STYLE +
-									 '">';
-AjxStringUtil.HTML_QUOTE_PREFIX_POST	= '</blockquote>';
-AjxStringUtil.HTML_QUOTE_NONPREFIX_PRE	= '<div style="' +
-									 AjxStringUtil.HTML_QUOTE_STYLE +
-									 '">';
-AjxStringUtil.HTML_QUOTE_NONPREFIX_POST	= '</div><br/>';
 
 /**
  * Wraps text to the given length and optionally quotes it. The level of quoting in the
@@ -270,14 +243,12 @@ AjxStringUtil.HTML_QUOTE_NONPREFIX_POST	= '</div><br/>';
  * always start a new line.
  *
  * @param {hash}	params	a hash of parameters
- * @param {string}      text 				the text to be wrapped
- * @param {number}      len					the desired line length of the wrapped text, defaults to 80
- * @param {string}      prefix				an optional string to prepend to each line (useful for quoting)
- * @param {string}      before				text to prepend to final result
- * @param {string}      after				text to append to final result
- * @param {boolean}		preserveReturns		if true, don't combine small lines
- * @param {boolean}		isHeaders			if true, we are wrapping a block of email headers
- * @param {boolean}		isFlowed			format text for display as flowed (RFC 3676)
+ * @param {string}      params.text 				the text to be wrapped
+ * @param {number}      [params.len=80]				the desired line length of the wrapped text, defaults to 80
+ * @param {string}      [params.pre]				an optional string to prepend to each line (useful for quoting)
+ * @param {string}      [params.before]				text to prepend to final result
+ * @param {string}      [params.after]				text to append to final result
+ * @param {boolean}		[params.preserveReturns]	if true, don't combine small lines
  *
  * @return	{string}	the wrapped/quoted text
  */
@@ -287,28 +258,26 @@ function(params) {
 	if (!(params && params.text)) { return ""; }
 
 	var text = params.text;
-	var before = params.before || "";
-	var after = params.after || "";
-	var isFlowed = params.isFlowed;
+	var before = params.before || "", after = params.after || "";
 
 	// For HTML, just surround the content with the before and after, which is
 	// typically a block-level element that puts a border on the left
 	if (params.htmlMode) {
-		before = params.before || (params.prefix ? AjxStringUtil.HTML_QUOTE_PREFIX_PRE : AjxStringUtil.HTML_QUOTE_NONPREFIX_PRE);
-		after = params.after || (params.prefix ? AjxStringUtil.HTML_QUOTE_PREFIX_POST : AjxStringUtil.HTML_QUOTE_NONPREFIX_POST);
 		return [before, text, after].join("");
 	}
 
-	var max = params.len || (params.isHeaders ? AjxStringUtil.HDR_WRAP_LENGTH : AjxStringUtil.WRAP_LENGTH);
-	var prefixChar = params.prefix || "";
+	var len = params.len || 80;
+	var pre = params.pre || "";
 	var eol = "\n";
 
-	var lines = text.split(AjxStringUtil.SPLIT_RE);
+	text = AjxStringUtil.trim(text, false, "[\t ]");
+	text = text.replace(/\r\n/g, eol);
+	var lines = text.split(eol);
 	var words = [];
 
 	// Divides lines into words. Each word is part of a hash that also has
-	// the word's prefix, whether it's a paragraph break, and whether it
-	// needs to be preserved at the start or end of a line.
+	// the word's prefix, whether it's a paragraph break, and whether it's
+	// special (cannot be wrapped into a previous line)
 	for (var l = 0, llen = lines.length; l < llen; l++) {
 		var line = lines[l];
 		// get this line's prefix
@@ -317,91 +286,64 @@ function(params) {
 		if (prefix) {
 			line = line.substr(prefix.length);
 		}
-		if (AjxStringUtil._NON_WHITESPACE.test(line)) {
-			var wds = AjxStringUtil.splitKeepLeadingWhitespace(line);
-			if (wds && wds[0] && wds[0].length) {
-				var mustStart = AjxStringUtil.MSG_SEP_RE.test(line) || AjxStringUtil.COLON_RE.test(line) ||
-								AjxStringUtil.HDR_RE.test(line) || params.isHeaders || AjxStringUtil.SIG_RE.test(line);
-				var mustEnd = params.preserveReturns;
-				if (isFlowed) {
-					var m = line.match(/( +)$/);
-					if (m) {
-						wds[wds.length - 1] += m[1];	// preserve trailing space at end of line
-						mustEnd = false;
-					}
-					else {
-						mustEnd = true;
-					}
-				}
-				for (var w = 0, wlen = wds.length; w < wlen; w++) {
-					words.push({
-						w:			wds[w],
-						prefix:		prefix,
-						mustStart:	(w === 0) && mustStart,
-						mustEnd:	(w === wlen - 1) && mustEnd
-					});
-				}
+		var wds = AjxStringUtil.splitKeepLeadingWhitespace(line);
+		if (wds && wds[0] && wds[0].length) {
+			var isSpecial = AjxStringUtil.MSG_SEP_RE.test(line) || AjxStringUtil.COLON_RE.test(line) ||
+							AjxStringUtil.HDR_RE.test(line) || AjxStringUtil.SIG_RE.test(line);
+			for (var w = 0, wlen = wds.length; w < wlen; w++) {
+				var lastWord = params.preserveReturns && (w == wlen - 1);
+				words.push({w:wds[w], p:prefix, special:(isSpecial && w == 0), lastWord:lastWord});
 			}
 		} else {
-			// paragraph marker
-			words.push({
-				para:	true,
-				prefix:	prefix
-			});
+			words.push({para:true, p:prefix});	// paragraph marker
 		}
 	}
 
 	// Take the array of words and put them back together. We break for a new line
-	// when we hit the max line length, change prefixes, or hit a word that must start a new line.
-	var result = "", curLen = 0, wds = [], curPrefix = null;
+	// when we hit the max line length, change prefixes, or hit a special word.
+	var max = params.len || 72;
+	var addPrefix = params.pre || "";
+	var apl = addPrefix.length;
+	var result = "", curLen = 0, wds = [], curP = null;
 	for (var i = 0, len = words.length; i < len; i++) {
 		var word = words[i];
-		var w = word.w, prefix = word.prefix;
-		var addPrefix = !prefixChar ? "" : curPrefix ? prefixChar : prefixChar + " ";
-		var pl = (curPrefix === null) ? 0 : curPrefix.length;
-		pl = 0;
-		var newPrefix = addPrefix + (curPrefix || "");
+		var w = word.w, p = word.p;
+		var sp = wds.length ? 1 : 0;
+		var pl = (curP === null) ? 0 : curP.length;
 		if (word.para) {
-			// paragraph break - output what we have, then add a blank line
+			// paragraph break - output what we have, add a blank line
 			if (wds.length) {
-				result += newPrefix + wds.join("").replace(/^ +/, "") + eol;
+				result += addPrefix + (curP || "") + wds.join("").replace(/^ /,"") + eol;
 			}
-			if (i < words.length - 1) {
-				curPrefix = prefix;
-				addPrefix = !prefixChar ? "" : curPrefix ? prefixChar : prefixChar + " ";
-				newPrefix = addPrefix + (curPrefix || "");
-				result += newPrefix + eol;
-			}
+			result += addPrefix + p + eol;
 			wds = [];
 			curLen = 0;
-			curPrefix = null;
-		} else if ((pl + curLen + w.length <= max) && (prefix === curPrefix || curPrefix === null) && !word.mustStart) {
+			curP = null;
+		} else if ((apl + pl + curLen + sp + w.length <= max) && (p == curP || curP === null) && !word.special) {
 			// still room left on the current line, add the word
 			wds.push(w);
 			curLen += w.length;
-			curPrefix = prefix;
-			if (word.mustEnd && words[i + 1]) {
-				words[i + 1].mustStart = true;
+			curP = p;
+			if (word.lastWord && words[i + 1]) {
+				words[i + 1].special = true;
 			}
 		} else {
-			// no more room - output what we have and start a new line
+			// output what we have and start a new line
 			if (wds.length) {
-				result += newPrefix + wds.join("").replace(/^ +/, "") + eol;
+				result += addPrefix + (curP || "") + wds.join("").replace(/^ /,"") + eol;
 			}
 			wds = [w];
 			curLen = w.length;
-			curPrefix = prefix;
-			if (word.mustEnd && words[i + 1]) {
-				words[i + 1].mustStart = true;
+			curP = p;
+			if (word.lastWord && words[i + 1]) {
+				words[i + 1].special = true;
 			}
 		}
 	}
 
 	// handle last line
 	if (wds.length) {
-		var addPrefix = !prefixChar ? "" : wds[0].prefix ? prefixChar : prefixChar + " ";
-		var newPrefix = addPrefix + (curPrefix || "");
-		result += newPrefix + wds.join("").replace(/^ /, "") + eol;
+		result += addPrefix + curP + wds.join("").replace(/^ /,"") + eol;
 	}
 
 	return [before, result, after].join("");
@@ -548,12 +490,7 @@ AjxStringUtil.urlDecode =
 function(str) {
 	if (!str) return "";
 	var func = window.decodeURL || window.decodeURI;
-	try {
-		return func(str);
-	}
-	catch(e) {
-		return "";
-	}
+	return func(str);
 };
 
 /**
@@ -588,11 +525,7 @@ AjxStringUtil.ENCODE_MAP = { '>' : '&gt;', '<' : '&lt;', '&' : '&amp;' };
  */
 AjxStringUtil.htmlEncode =
 function(str, includeSpaces) {
-
 	if (!str) {return "";}
-	if (typeof(str) != "string") {
-		str = str.toString ? str.toString() : "";
-	}
 
 	if (!AjxEnv.isSafari || AjxEnv.isSafariNightly) {
 		if (includeSpaces) {
@@ -610,16 +543,6 @@ function(str, includeSpaces) {
 };
 
 /**
- * encode quotes for using in inline JS code, so the text does not end a quoted param prematurely.
- * @param str
- */
-AjxStringUtil.encodeQuotes =
-function(str) {
-	return str.replace(/"/g, '&quot;').replace(/'/g, "&#39;");
-};
-
-
-/**
  * Decodes the string.
  * 
  * @param	{string}	str		the string to decode
@@ -633,38 +556,6 @@ function(str, decodeSpaces) {
 	 	str = str.replace(/&nbsp;/g," ");
 	 	
      return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-};
-
-AjxStringUtil.__jsEscapeChar = function(c) {
-	var codestr = c.charCodeAt(0).toString(16);
-
-	if (codestr.length == 1)
-		return '\\u000' + codestr;
-	else if (codestr.length == 2)
-		return '\\u00' + codestr;
-	else if (codestr.length == 3)
-		return '\\u0' + codestr;
-	else if (codestr.length == 4)
-		return '\\u' + codestr;
-
-	// shouldn't happen -- ECMAscript proscribes that strings are
-	// UTF-16 internally
-	DBG.println(AjxDebug.NONE, "unexpected condition in " +
-	            "AjxStringUtil.__jsEscapeChar -- code point 0x" +
-	            codestr + " doesn't fit in 16 bits");
-};
-
-/**
- * Encodes non-ASCII and non-printable characters as \uXXXX, suitable
- * for JSON.
- *
- * @param	{string}	str		the string
- * @return	{string}	the encoded string
- */
-AjxStringUtil.jsEncode =
-function(str) {
-	return str.replace(/[^\u0020-\u007e]/g,
-	                   AjxStringUtil.__jsEscapeChar);
 };
 
 /**
@@ -690,52 +581,59 @@ function(str, removeContent) {
  * @return	{string}	the resulting string
  */
 AjxStringUtil.convertToHtml =
-function(str, quotePrefix, openTag, closeTag) {
-
-	openTag = openTag || "<blockquote>";
-	closeTag = closeTag || "</blockquote>";
-	
+function(str, quotePrefix) {
 	if (!str) {return "";}
 
-	str = AjxStringUtil.htmlEncode(str);
 	if (quotePrefix) {
 		// Convert a section of lines prefixed with > or |
 		// to a section encapsuled in <blockquote> tags
-		var prefix_re = /^(>|&gt;|\|\s+)/;
+		var prefix_re = /^(>|\|\s+)/;
 		var lines = str.split(/\r?\n/);
 		var level = 0;
-		for (var i = 0; i < lines.length; i++) {
+		for (var i=0; i<lines.length; i++) {
 			var line = lines[i];
 			if (line.length > 0) {
 				var lineLevel = 0;
-				// Remove prefixes while counting how many there are on the line
-				while (line.match(prefix_re)) {
-					line = line.replace(prefix_re, "");
+				while (line.match(prefix_re)) { // Remove prefixes while counting how many there are on the line
+					line = line.replace(prefix_re,"");
 					lineLevel++;
 				}
-				// If the lineLevel has changed since the last line, add blockquote start or end tags, and adjust level accordingly
-				while (lineLevel > level) {
-					line = openTag + line;
+				while (lineLevel > level) { // If the lineLevel has changed since the last line, add blockquote start or end tags, and adjust level accordingly
+					line = "<blockquote>" + line;
 					level++;
 				}
 				while (lineLevel < level) {
-					lines[i - 1] = lines[i - 1] + closeTag;
+					line = line + "</blockquote>";
 					level--;
 				}
 			}
 			lines[i] = line;
 		}
 		while (level > 0) {
-			lines.push(closeTag);
+			lines.push("</blockquote>");
 			level--;
 		}
 
 		str = lines.join("\n");
+		str = str.replace(/&/mg, "&amp;");
+		
+		str = str.replace(/<(?!\/?blockquote)/mg, "&lt;"); // Replace "<" only if it is not followed by "blockquote"
+
+		str = str.replace(/(\/?blockquote)?>/mg, function($0, $1) { // Replace ">" only if it is not preceded by "blockquote"
+			return $1 ? $0 : '&gt;';
+		});
+
+	} else {
+		str = str
+			.replace(/&/mg, "&amp;")
+			.replace(/</mg, "&lt;")
+			.replace(/>/mg, "&gt;")
 	}
+		
 
 	str = str
-		.replace(/  /mg, ' &nbsp;')
-		.replace(/^ /mg, '&nbsp;')
+		.replace(/  /mg, " &nbsp;")
+		.replace(/^ /mg, "&nbsp;")
 		.replace(/\t/mg, "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
 		.replace(/\r?\n/mg, "<br>");
 	return str;
@@ -938,12 +836,209 @@ function(origString, pixelWidth, className) {
 	return newString;
 };
 
-// Regexes for finding stuff in msg content
+// Regexes for finding non-quoted content
 AjxStringUtil.MSG_SEP_RE = new RegExp("^\\s*--+\\s*(" + AjxMsg.origMsg + "|" + AjxMsg.forwardedMessage + ")\\s*--+", "i");
 AjxStringUtil.SIG_RE = /^(- ?-+)|(__+)\r?$/;
+AjxStringUtil.COLON_RE = /\S+:$/;
+AjxStringUtil.PREFIX_RE = /^\s*(&gt;|>|\|)/;
+AjxStringUtil.BRACKET_RE = /^\s*\[.+\]\s*$/;
+AjxStringUtil.LINE_RE = /^\s*_{30,}\s*$/;
+AjxStringUtil.BLANK_RE = /^\s*$/;
 AjxStringUtil.SPLIT_RE = /\r\n|\r|\n/;
 AjxStringUtil.HDR_RE = /^\s*\w+:/;
-AjxStringUtil.COLON_RE = /\S+:$/;
+AjxStringUtil.HTML_BLANK_RE = /^\s*(<br\s*\/?>)*\s*$/i;
+AjxStringUtil.HTML_BR_RE = /<br\s*\/?>/gi;
+AjxStringUtil.HTML_BODY_RE = /<body(\s|>)/i;
+AjxStringUtil.HTML_QUOTE_PRE_RE = /^\s*<blockquote/i;
+AjxStringUtil.HTML_QUOTE_POST_RE = /^\s*<\/blockquote>/i;
+AjxStringUtil.HTML_QUOTE_COLOR = "#1010FF";
+AjxStringUtil.HTML_QUOTE_STYLE = "color:#000;font-weight:normal;font-style:normal;text-decoration:none;font-family:Helvetica,Arial,sans-serif;font-size:12pt;";
+
+/**
+ * Returns a list of chunks of top-level content in a message body. Top-level
+ * content is what was actually typed by the sender. We attempt to exclude quoted
+ * content and signatures.
+ *
+ * The following lines/blocks (and variants) and any text after them are ignored:
+ *
+ * 		----- Original Message -----
+ *
+ * 		----- Forwarded Message -----
+ *
+ *		--
+ *		some signature text
+ *
+ *		______________________________		|
+ *											| Outlook 2003 does this
+ *		From:								|
+ *
+ * Lines that begin with a prefix character ("&gt;" or "|") are ignored. The
+ * following lines/blocks are ignored if they precede a line that begins with a
+ * prefix character:
+ *
+ * 		Fred Flintstone <fred@bedrock.org> wrote:
+ *
+ * 		Fred Flintstone <fred@bedrock.org> wrote:
+ * 		[snipped]
+ *
+ * Since quoted text may be interleaved with original text, we may return several
+ * chunks of original text. That is so they may be separated when they are quoted.
+ *
+ * @param {string}	text		a message body
+ * 
+ * @private
+ */
+AjxStringUtil.getTopLevel =
+function(text, eol, htmlMode) {
+
+	if (!text) { return [""]; }
+	var isHtml = /<br|<div/i.test(text);
+	var split = isHtml ? AjxStringUtil.HTML_BR_RE : AjxStringUtil.SPLIT_RE;
+	var eol = isHtml ? '<br>' : '\n';
+	text = AjxStringUtil._trimBlankLines(text, split, eol, isHtml);
+	var lines = text.split(split);
+	var len = lines.length;
+	var i = 0, start = 0;
+	var chunks = [];
+	var skipping = false;
+
+	while (i < len) {
+		var wasSkipping = skipping;
+		var skip = AjxStringUtil._linesToSkip(lines, i, htmlMode);
+		skipping = (skip > 0);
+		if (wasSkipping && !skipping) {
+			start = i;
+		} else if (!wasSkipping && skipping && i > start) {
+			var chunk = AjxStringUtil._trimBlankLines(lines.slice(start, i).join(eol), split, eol, htmlMode);
+			if (chunk && chunk.length) {
+				chunks.push(chunk);
+			}
+		}
+		i += skipping ? skip : 1;
+	}
+
+	if (!skipping && i > start) {
+		var chunk = AjxStringUtil._trimBlankLines(lines.slice(start, i).join(eol), split, eol, htmlMode);
+		if (chunk && chunk.length) {
+			chunks.push(chunk);
+		}
+	}
+
+	return chunks;
+};
+
+/**
+ * Starting at a given line, returns the number of lines that should be skipped because
+ * they are quoted (or signature) content.
+ * 
+ * @param {array}	lines		lines of text
+ * @param {number}	i			index of current line
+ * @param {boolean}	htmlMode	if <code>true</code>, text is HTML
+ * 
+ * @private
+ */
+AjxStringUtil._linesToSkip =
+function(lines, i, htmlMode) {
+	var len = lines.length;
+	var skip = 0;
+	var start = i;
+	var line = htmlMode ? AjxStringUtil.stripTags(lines[i]) : lines[i];
+	
+	if (AjxStringUtil.MSG_SEP_RE.test(line)) {
+		skip = len - i;
+	} else if (AjxStringUtil.PREFIX_RE.test(line)) {
+		while (i < lines.length && (AjxStringUtil.PREFIX_RE.test(line) || AjxStringUtil.BLANK_RE.test(line))) {
+			i++;
+			line = htmlMode ? AjxStringUtil.stripTags(lines[i]) : lines[i];
+		}
+		skip = i - start;
+	} else if (AjxStringUtil.HTML_QUOTE_PRE_RE.test(line) && line.indexOf(AjxStringUtil.HTML_QUOTE_COLOR) != -1) {
+		while (i < lines.length && (!AjxStringUtil.HTML_QUOTE_POST_RE.test(line))) {
+			i++;
+			line = lines[i];
+		}
+		if (i < lines.length) {
+			lines[i] = lines[i].replace(AjxStringUtil.HTML_QUOTE_POST_RE, "");
+		}
+		skip = i - start;
+	} else if (AjxStringUtil.COLON_RE.test(line)) {
+		var idx = AjxStringUtil._nextNonBlankLineIndex(lines, i + 1, htmlMode);
+		var line1 = (idx == -1) ? null : htmlMode ? AjxStringUtil.stripTags(lines[idx]) : lines[idx];
+		if (line1 && AjxStringUtil.PREFIX_RE.test(line1)) {
+			skip = idx - i;
+		} else {
+			if (idx != -1) {
+				idx = AjxStringUtil._nextNonBlankLineIndex(lines, idx + 1, htmlMode);
+			}
+			var line2 = (idx == -1) ? null : htmlMode ? AjxStringUtil.stripTags(lines[idx]) : lines[idx];
+			if (line2 && AjxStringUtil.BRACKET_RE.test(line1) && AjxStringUtil.PREFIX_RE.test(line2)) {
+				skip = idx - i;
+			}
+		}
+	} else if (AjxStringUtil.LINE_RE.test(line)) {
+		var idx = AjxStringUtil._nextNonBlankLineIndex(lines, i + 1, htmlMode);
+		var line1 = (idx == -1) ? null : htmlMode ? AjxStringUtil.stripTags(lines[idx]) : lines[idx];
+		if (line1 && AjxStringUtil.HDR_RE.test(line1)) {
+			skip = len - i;
+		}
+	} else if (AjxStringUtil.SIG_RE.test(line)) {
+		skip = len - i;
+	}
+	return skip;
+};
+
+/**
+ * Returns the index of the next non-blank line
+ * 
+ * @param {array}	lines		lines of text
+ * @param {number}	i			index of current line
+ * @param {boolean}	htmlMode	if <code>true</code>, text is HTML
+ * 
+ * @private
+ */
+AjxStringUtil._nextNonBlankLineIndex =
+function(lines, i, htmlMode) {
+	while (i < lines.length && AjxStringUtil.BLANK_RE.test(htmlMode ? AjxStringUtil.stripTags(lines[i]) : lines[i])) {
+		i++;
+	}
+	return ((i < lines.length) ? i : -1);
+};
+
+/**
+ * Removes blank lines from the beginning and end of text
+ * 
+ * @param {string}	text		a message body
+ * @param {string|RegExp}	split		used to divide text into lines
+ * @param {string}	eol		the eol sequence
+ * @param {boolean}	htmlMode	if <code>true</code>, text is HTML
+ * 
+ * @private
+ */
+AjxStringUtil._trimBlankLines =
+function(text, split, eol, htmlMode) {
+	var lines = text.split(split);
+	var len = lines.length;
+	var regEx = htmlMode ? AjxStringUtil.HTML_BLANK_RE : AjxStringUtil.BLANK_RE;
+	var i = 0;
+	while (i < len && regEx.test(lines[i])) {
+		i++;
+	}
+	var j = len;
+	while (j > 0 && regEx.test(lines[j - 1])) {
+		j--;
+	}
+	if (i != 0 || j != len) {
+		text = lines.slice(i, j).join(eol) + eol;
+	}
+	
+	// if the HTML text has a <body> tag, remove leading/trailing returns
+	if (htmlMode && AjxStringUtil.HTML_BODY_RE.test(text)) {
+		text = text.replace(/<body\s*[^>]*>(<br\s*\/?>)+/i, "<body>");
+		text = text.replace(/(<br\s*\/?>)+<\/body>/i, "</body>");
+	}
+
+	return text;
+};
 
 // Converts a HTML document represented by a DOM tree to text
 // XXX: There has got to be a better way of doing this!
@@ -957,7 +1052,7 @@ AjxStringUtil._LF = /\n/;
 AjxStringUtil.convertHtml2Text =
 function(domRoot, convertor, onlyOneNewLinePerP) {
 
-	if (!domRoot) { return ""; }
+	if (!domRoot) { return null; }
 
 	if (convertor && AjxUtil.isFunction(convertor._before)) {
 		domRoot = convertor._before(domRoot);
@@ -971,7 +1066,7 @@ function(domRoot, convertor, onlyOneNewLinePerP) {
 	var text = [];
 	var idx = 0;
 	var ctxt = {};
-	AjxStringUtil._traverse(domRoot, text, idx, AjxStringUtil._NO_LIST, 0, 0, ctxt, convertor, onlyOneNewLinePerP);
+	this._traverse(domRoot, text, idx, AjxStringUtil._NO_LIST, 0, 0, ctxt, convertor, onlyOneNewLinePerP);
 
 	var result = text.join("");
 
@@ -989,7 +1084,7 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOne
 
 	var result = null;
 	if (convertor && convertor[nodeName]) {
-		result = convertor[nodeName](el, ctxt);
+		result = convertor[nodeName](el,ctxt);
 	}
 
 	if (result != null) {
@@ -1024,22 +1119,21 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOne
 		if (listType == AjxStringUtil._ORDERED_LIST) {
 			text[idx++] = bulletNum + ". ";
 		} else {
-			text[idx++] = "\u002A "; // TODO AjxMsg.bullet
+			text[idx++] = "\u002A "; // TODO ZmMsg.bullet
+		}
+	} else if (nodeName == "img") {
+		if (el.alt && el.alt != "") {
+			text[idx++] = el.alt;
 		}
 	} else if (nodeName == "tr" && el.parentNode.firstChild != el) {
 		text[idx++] = "\n";
 	} else if (nodeName == "td" && el.parentNode.firstChild != el) {
 		text[idx++] = "\t";
-	} else if (nodeName == "div" || nodeName == "address") {
-        if (idx && text[idx - 1] !== "\n") {
-            text[idx++] = "\n";
-        }
+	} else if (nodeName == "div") {
+		text[idx++] = "\n";
 	} else if (nodeName == "blockquote") {
 		text[idx++] = "\n\n";
 	} else if (nodeName == "pre") {
-        if (idx && text[idx - 1] !== "\n") {
-            text[idx++] = "\n";
-        }
 		ctxt.isPreformatted = true;
 	} else if (nodeName == "#comment" ||
 			   nodeName == "script" ||
@@ -1055,7 +1149,7 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOne
 		if (tmp.nodeType == 1 && tmp.tagName.toLowerCase() == "li") {
 			bulletNum++;
 		}
-		idx = AjxStringUtil._traverse(tmp, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOneNewLinePerP);
+		idx = this._traverse(tmp, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOneNewLinePerP);
 	}
 
 	if (convertor && convertor["/"+nodeName]) {
@@ -1063,15 +1157,10 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOne
 	}
 
 	if (nodeName == "h1" || nodeName == "h2" || nodeName == "h3" || nodeName == "h4"
-		|| nodeName == "h5" || nodeName == "h6" || nodeName == "div" || nodeName == "address") {
-        if (idx && text[idx - 1] !== "\n") {
-            text[idx++] = "\n";
-        }
+		|| nodeName == "h5" || nodeName == "h6") {
+			text[idx++] = "\n";
 			ctxt.list = false;
 	} else if (nodeName == "pre") {
-        if (idx && text[idx - 1] !== "\n") {
-            text[idx++] = "\n";
-        }
 		ctxt.isPreformatted = false;
 	} else if (nodeName == "li") {
 		if (!ctxt.list) {
@@ -1316,18 +1405,126 @@ function(sourceUri) {
 	return params;
 };
 
+AjxStringUtil._SPECIAL_CHARS = /["\\\x00-\x1f]/g;
+AjxStringUtil._CHARS = {
+	'\b': '\\b',
+	'\t': '\\t',
+	'\n': '\\n',
+	'\f': '\\f',
+	'\r': '\\r',
+	'"' : '\\"',
+	'\\': '\\\\'
+};
+
 /**
- * Pretty-prints a JS object. Preferred over JSON.stringify for the debug-related dumping
- * of an object for several reasons:
- * 		- doesn't have an enclosing object, which shifts everything over one level
- * 		- doesn't put quotes around keys
- * 		- shows indexes for arrays (downside is that prevents output from being eval-able)
+ * Converts a JS object to a string representation. Adapted from YAHOO.lang.JSON.stringify() in YUI 2.5.0, with the
+ * following differences:
+ * 		- does not support whitelist or depth limit
+ * 		- no special conversion for Date objects
  * 
- * @param obj
- * @param recurse
- * @param showFuncs
- * @param omit
+ * @param o		[object]	object to convert to string
+ * 
+ * @private
  */
+AjxStringUtil.objToString =
+function(o) {
+	var t = typeof o,
+	i,len,j, // array iteration
+	k,v,     // object iteration
+	vt,      // typeof v during iteration
+	a,       // composition array for performance over string concat
+	pstack = []; // Processing stack used for cyclical ref detection
+
+	// escape encode special characters
+	var _char = function (c) {
+		if (!AjxStringUtil._CHARS[c]) {
+			var a = c.charCodeAt();
+			AjxStringUtil._CHARS[c] = '\\u00' + Math.floor(a / 16).toString(16) + (a % 16).toString(16);
+		}
+		return AjxStringUtil._CHARS[c];
+	};
+
+	var _string = function (s) {
+		return '"' + s.replace(AjxStringUtil._SPECIAL_CHARS, _char) + '"';
+	}
+
+	if (o === null) {
+		return 'null';
+	}
+	
+	// String
+	if (t === 'string') {
+		return _string(o);
+	}
+
+	// native boolean and Boolean instance
+	if (t === 'boolean' || o instanceof Boolean) {
+		return String(o);
+	}
+
+	// native number and Number instance
+	if (t === 'number' || o instanceof Number) {
+		return isFinite(o) ? String(o) : 'null';
+	}
+
+	// Array
+	//Special check ( t==='object' && o.length && typeof o.push === "function") becoz when objects are passed from child window to parent window they loose their types.
+	//Parent window considers every object/custome object/array as 'object' type.
+    if (AjxUtil.isArray(o) || (t === 'object' &&  o.length) ) {
+		// Check for cyclical references
+		for (i = pstack.length - 1; i >= 0; --i) {
+			if (pstack[i] === o) {
+				return 'null';
+			}
+		}
+	
+		// Add the array to the processing stack
+		pstack[pstack.length] = o;
+	
+		a = [];
+		for (i = o.length - 1; i >= 0; --i) {
+			a[i] = AjxStringUtil.objToString(o[i]);
+		}
+	
+		// remove the array from the stack
+		pstack.pop();
+	
+		return '[' + a.join(',') + ']';
+	}
+
+	// Object
+	if (t === 'object' && o) {
+		// Check for cyclical references
+		for (i = pstack.length - 1; i >= 0; --i) {
+			if (pstack[i] === o) {
+				return 'null';
+			}
+		}
+
+		// Add the object to the  processing stack
+		pstack[pstack.length] = o;
+
+		a = [];
+		j = 0;
+		for (k in o) {
+			if (typeof k === 'string' && o.hasOwnProperty(k)) {
+				v = o[k];
+				vt = typeof v;
+				if (vt !== 'undefined' && vt !== 'function') {
+					a[j++] = _string(k) + ':' + AjxStringUtil.objToString(v);
+				}
+			}
+		}
+
+		// Remove the object from processing stack
+		pstack.pop();
+
+		return '{' + a.join(',') + '}';
+	}
+
+	return 'null';
+};
+
 AjxStringUtil.prettyPrint =
 function(obj, recurse, showFuncs, omit) {
 
@@ -1378,16 +1575,14 @@ function(obj, recurse, showFuncs, omit) {
 	} else if (AjxUtil.isNumber(obj)) {
 		text += obj;
 	} else if (AjxUtil.isObject(obj)) {
-		var isArray = AjxUtil.isArray(obj) || AjxUtil.isArray1(obj);
+		var isArray = AjxUtil.isArray(obj);
 		if (stopRecursion) {
 			text += isArray ? "[Array]" : obj.toString();
 		} else {
 			stopRecursion = !recurse;
 			var keys = new Array();
 			for (var i in obj) {
-                if (obj.hasOwnProperty(i)) {
-                    keys.push(i);
-                }
+				keys.push(i);
 			}
 
 			if (isArray) {
@@ -1421,18 +1616,12 @@ function(obj, recurse, showFuncs, omit) {
 					text += ",";
 				}
 				text += "\n" + indent;
-                var keyString;
-                if (isArray) {
-                    keyString = "// [" + key + "]:\n" + indent;
-                } else {
-                    keyString = key + ": ";
-                }
 				if (omit && omit[key]) {
-					text += keyString + "[" + key + "]";
+					text += key + ": [" + key + "]";
 				} else if (value != null) {
-					text += keyString + value;
+					text += key + ": " + value;
 				} else {
-					text += keyString + AjxStringUtil._prettyPrint(nextObj, recurse, showFuncs, omit, indentLevel + 2, true, stopRecursion);
+					text += key + ": " + this._prettyPrint(nextObj, recurse, showFuncs, omit, indentLevel + 2, true, stopRecursion);
 				}
 			}
 			if (i > 0) {
@@ -1462,8 +1651,8 @@ function(str){
 };
 
 // hidden SPANs for measuring regular and bold strings
-AjxStringUtil._testSpan = null;
-AjxStringUtil._testSpanBold = null;
+AjxStringUtil._testSpan;
+AjxStringUtil._testSpanBold;
 
 // cached string measurements
 AjxStringUtil.WIDTH			= {};		// regular strings
@@ -1476,10 +1665,9 @@ AjxStringUtil._cacheSize	= 0;		// current number of cached strings
  *
  * @param {string}	str		string to measure
  * @param {boolean}	bold	if true, string should be measured in bold font
- * @param {string|number}   font size to measure string in. If unset, use default font size
  */
 AjxStringUtil.getWidth =
-function(str, bold, fontSize) {
+function(str, bold) {
 
 	if (!AjxStringUtil._testSpan) {
 		var span1 = AjxStringUtil._testSpan = document.createElement("SPAN");
@@ -1493,14 +1681,9 @@ function(str, bold, fontSize) {
 		span2.style.fontWeight = "bold";
 	}
 
-	if (AjxUtil.isString(fontSize)) {
-		fontSize = fontSize.replace(/px$/,"");
-	}
-	var sz = "" + (fontSize || 0); // 0 means "default";
-	
 	var cache = bold ? AjxStringUtil.WIDTH_BOLD : AjxStringUtil.WIDTH;
-	if (cache[str] && cache[str][sz]) {
-		return cache[str][sz];
+	if (cache[str]) {
+		return cache[str];
 	}
 
 	if (AjxStringUtil._cacheSize >= AjxStringUtil.MAX_CACHE) {
@@ -1511,13 +1694,7 @@ function(str, bold, fontSize) {
 
 	var span = bold ? AjxStringUtil._testSpanBold : AjxStringUtil._testSpan;
 	span.innerHTML = str;
-	span.style.fontSize = fontSize ? (fontSize+"px") : null;
-
-	if (!cache[str]) {
-		cache[str] = {};
-	}
-
-	var w = cache[str][sz] = Dwt.getSize(span).x;
+	var w = cache[str] = Dwt.getSize(span).x;
 	AjxStringUtil._cacheSize++;
 
 	return w;
@@ -1529,21 +1706,16 @@ function(str, bold, fontSize) {
  *
  */
 AjxStringUtil.fixCrossDomainReference =
-function(url, restUrlAuthority, convertToRelativeURL) {
+function(url, restUrlAuthority) {
 	var urlParts = AjxStringUtil.parseURL(url);
 	if (urlParts.authority == window.location.host) {
 		return url;
 	}
 
 	if ((restUrlAuthority && url.indexOf(restUrlAuthority) >=0) || !restUrlAuthority) {
-        if (convertToRelativeURL) {
-            url = urlParts.path;
-        }
-        else {
-            var oldRef = urlParts.protocol + "://" + urlParts.authority;
-            var newRef = window.location.protocol + "//" + window.location.host;
-            url = url.replace(oldRef, newRef);
-        }
+		var oldRef = urlParts.protocol + "://" + urlParts.authority;
+		var newRef = window.location.protocol + "//" + window.location.host;
+		url = url.replace(oldRef, newRef);
 	}
 	return url;
 };
@@ -1573,816 +1745,44 @@ function(html1, html2) {
 	return AjxStringUtil.htmlPlatformIndependent(html1) == AjxStringUtil.htmlPlatformIndependent(html2);
 };
 
-// Stuff for parsing messages to find original (as opposed to quoted) content
-
-// types of content related to finding original content; not all are used
-AjxStringUtil.ORIG_UNKNOWN		= "UNKNOWN";
-AjxStringUtil.ORIG_QUOTED		= "QUOTED";
-AjxStringUtil.ORIG_SEP_STRONG	= "SEP_STRONG";
-AjxStringUtil.ORIG_SEP_WEAK		= "SEP_WEAK";
-AjxStringUtil.ORIG_WROTE_STRONG	= "WROTE_STRONG";
-AjxStringUtil.ORIG_WROTE_WEAK	= "WROTE_WEAK";
-AjxStringUtil.ORIG_HEADER		= "HEADER";
-AjxStringUtil.ORIG_LINE			= "LINE";
-AjxStringUtil.ORIG_SIG_SEP		= "SIG_SEP";
-
-// regexes for parsing msg body content so we can figure out what was quoted and what's new
-// TODO: should these be moved to AjxMsg to be fully localizable?
-AjxStringUtil.MSG_REGEXES = [
-	{
-		// the two most popular quote characters, > and |
-		type:	AjxStringUtil.ORIG_QUOTED,
-		regex:	/^\s*(>|\|)/
-	},
-	{
-		// marker for Original or Forwarded message, used by ZCS and others
-		type:	AjxStringUtil.ORIG_SEP_STRONG,
-		regex:	new RegExp("^\\s*--+\\s*(" + AjxMsg.origMsg + "|" + AjxMsg.forwardedMessage + "|" + AjxMsg.origAppt + ")\\s*--+\\s*$", "i")
-	},
-	{
-		// marker for Original or Forwarded message, used by ZCS and others
-		type:	AjxStringUtil.ORIG_SEP_STRONG,
-		regex:	new RegExp("^" + AjxMsg.forwardedMessage1 + "$", "i")
-	},
-	{
-		// one of the commonly quoted email headers
-		type:	AjxStringUtil.ORIG_HEADER,
-		regex:	new RegExp("^\\s*(" + [AjxMsg.from, AjxMsg.to, AjxMsg.subject, AjxMsg.date, AjxMsg.sent, AjxMsg.cc].join("|") + ")")
-	},
-	{
-		// some clients use a series of underscores as a text-mode separator (text version of <hr>)
-		type:	AjxStringUtil.ORIG_LINE,
-		regex:	/^\s*_{5,}\s*$/
-	}/*,
-	{
-		// in case a client doesn't use the exact words above
-		type:	AjxStringUtil.ORIG_SEP_WEAK,
-		regex:	/^\s*--+\s*[\w\s]+\s*--+$/
-	},
-	{
-		// internet style signature separator
-		type:	AjxStringUtil.ORIG_SIG_SEP,
-		regex:	/^- ?-\s*$/
-	}*/
-];
-
-// ID for an HR to mark it as ours
-AjxStringUtil.HTML_SEP_ID = "zwchr";
-
-// regexes for finding a delimiter such as "On DATE, NAME (EMAIL) wrote:"
-AjxStringUtil.ORIG_EMAIL_RE = /[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+/;	// see AjxUtil.EMAIL_FULL_RE
-AjxStringUtil.ORIG_DATE_RE = /, 20\d\d/;
-AjxStringUtil.ORIG_INTRO_RE = new RegExp("^(-{2,}|" + AjxMsg.on + ")", "i")
-
-
-// Lazily creates a test hidden IFRAME and writes the given html to it, then returns the HTML element.
-AjxStringUtil._writeToTestIframeDoc =
-function(html) {
-
-	var idoc = AjxStringUtil._htmlContentIframeDoc;
-	// Firefox has weird issue where iframe gets stuck with first content written to it; subsequent opens do not truncate
-	// IE sometimes throws "Permission denied" error
-	if (!idoc || AjxEnv.isFirefox || AjxEnv.isIE) {
-		var iframe = document.createElement("IFRAME");
-		iframe.id = Dwt.getNextId();	// without an ID, IE will throw "Permission denied" errors ?!
-		
-		// position offscreen rather than set display:none so we can get metrics if needed; no perf difference seen
-		Dwt.setPosition(iframe, Dwt.ABSOLUTE_STYLE);
-		Dwt.setLocation(iframe, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-		document.body.appendChild(iframe);
-		idoc = AjxStringUtil._htmlContentIframeDoc = Dwt.getIframeDoc(iframe);
-		AjxStringUtil.__curIframeId = AjxEnv.isFirefox ? iframe.id : null;
-	}
-    html = html && html.replace(AjxStringUtil.IMG_SRC_CID_REGEX, '<img $1 pnsrc="cid:');
-	idoc.open();
-	idoc.write(html);
-	idoc.close();
-
-	return idoc.childNodes[0];
-};
-
-// Firefox only - clean up test iframe since we can't reuse it
-AjxStringUtil._removeTestIframeDoc =
-function() {
-	if (AjxStringUtil.__curIframeId) {
-		var iframe = document.getElementById(AjxStringUtil.__curIframeId);
-		if (iframe) {
-			iframe.parentNode.removeChild(iframe);
-		}
-		AjxStringUtil.__curIframeId = null;
-	}
-};
+/**
+ * A helper method that wraps the string in quotes.
+ * @param str [String] The string value that needs to be wrapped in quotes.
+ * @param useDoubleQuotes [String] A flag indicating whether to use double quotes. Default is single quote.
+ * @return Returns the string value wrapped in quotes. If the string value is undefined/null, the function treats it as empty string and returns '' or "".
+ */
+AjxStringUtil.quoteString =
+function(str, useDoubleQuotes) {
+    str = str || "";
+    var quote = useDoubleQuotes ? '"' : "'";
+    return quote + str + quote;
+}
 
 /**
- * Analyze the text and return what appears to be original (as opposed to quoted) content. We
- * look for separators commonly used by mail clients, as well as prefixes that indicate that
- * a line is being quoted.
- * 
- * @param {string}	text		message body content
- * 
- * @return	{string}	original content if quoted content was found, otherwise NULL
+ * A helper method that builds an attribute e.g. someAttrName='someValue'.
+ * @param name [String] The name of the attribute. In the above e.g., name would be someAttrName.
+ * @param value [String] The value of the attribute. In the above e.g., value would be someValue.
+ * @param prependSpace [boolean] A flag indicating whether the return value should be prefixed with a space. Default is true.
+ * @param useDoubleQuotes [String] A flag indicating whether to use double quotes. Default is single quote.
+ * @param jsEscape [boolean] A flag indicating whether the value should be javascript escaped. Default is false;
+ * @param htmlEscape [boolean] A flag indicating whether the value should be html escaped. Default is false. Note: You cannot apply both js and html escape. If both are true, js escape will be applied.
  */
-AjxStringUtil.getOriginalContent =
-function(text, isHtml) {
-	
-	if (!text) { return ""; }
-	
-	if (isHtml) {
-		return AjxStringUtil._getOriginalHtmlContent(text);
-	}
+AjxStringUtil.buildAttribute =
+function(name, value, prependSpace, useDoubleQuotes, jsEscape, htmlEscape) {
+    if (!name) {return ""};
 
-	var results = [];
-	var lines = text.split(AjxStringUtil.SPLIT_RE);
-	
-	var curType, curBlock = [], count = {}, isMerged, unknownBlock;
-	for (var i = 0; i < lines.length; i++) {
-		var line = lines[i];
-		var testLine = AjxStringUtil.trim(line);
+    var retVal = (prependSpace === false) ? "" : " ";
+    retVal += (name + "=");
 
-		// blank lines are just added to the current block
-		if (!AjxStringUtil._NON_WHITESPACE.test(testLine)) {
-			curBlock.push(line);
-			continue;
-		}
-		
-		// Bugzilla is very good at fooling us, and does not have quoted content, so bail
-		if ((testLine.indexOf("| DO NOT REPLY") === 0) && (lines[i + 2].indexOf("bugzilla") !== -1)) {
-			return text;
-		}
-
-		var type = AjxStringUtil._getLineType(testLine);
-
-		// WROTE can stretch over two lines; if so, join them into one line
-		var nextLine = lines[i + 1];
-		var isMerged = false;
-		if (nextLine && (type === AjxStringUtil.ORIG_UNKNOWN) && AjxStringUtil.ORIG_INTRO_RE.test(testLine) && nextLine.match(/\w+:$/)) {
-			testLine = [testLine, nextLine].join(" ");
-			type = AjxStringUtil._getLineType(testLine);
-			isMerged = true;
-		}
-		
-		// LINE sometimes used as delimiter; if HEADER follows, lump it in with them
-		if (type === AjxStringUtil.ORIG_LINE) {
-			var j = i + 1;
-			nextLine = lines[j];
-			while (!AjxStringUtil._NON_WHITESPACE.test(nextLine) && j < lines.length) {
-				nextLine = lines[++j];
-			}
-			var nextType = nextLine && AjxStringUtil._getLineType(nextLine);
-			if (nextType === AjxStringUtil.ORIG_HEADER) {
-				type = AjxStringUtil.ORIG_HEADER;
-			}
-			else {
-				type = AjxStringUtil.ORIG_UNKNOWN;
-			}
-		}
-				
-		// see if we're switching to a new type; if so, package up what we have so far
-		if (curType) {
-			if (curType !== type) {
-				results.push({type:curType, block:curBlock});
-				unknownBlock = (curType === AjxStringUtil.ORIG_UNKNOWN) ? curBlock : unknownBlock;
-				count[curType] = count[curType] ? count[curType] + 1 : 1;
-				curBlock = [];
-				curType = type;
-			}
-		}
-		else {
-			curType = type;
-		}
-		
-		if (isMerged && (type === AjxStringUtil.ORIG_WROTE_WEAK || type === AjxStringUtil.ORIG_WROTE_STRONG)) {
-			curBlock.push(line);
-			curBlock.push(nextLine);
-			i++;
-			isMerged = false;
-		}
-		else {
-			curBlock.push(line);
-		}
-	}
-
-	// Handle remaining content
-	if (curBlock.length) {
-		results.push({type:curType, block:curBlock});
-		unknownBlock = (curType === AjxStringUtil.ORIG_UNKNOWN) ? curBlock : unknownBlock;
-		count[curType] = count[curType] ? count[curType] + 1 : 1;
-	}
-	
-	// Now it's time to analyze all these blocks that we've classified
-
-	// Check for UNKNOWN followed by HEADER
-	var first = results[0], second = results[1];
-	if (first && first.type === AjxStringUtil.ORIG_UNKNOWN && second && second.type === AjxStringUtil.ORIG_HEADER) {
-		var originalText = AjxStringUtil._getTextFromBlock(first.block);
-		if (originalText) {
-			return originalText;
-		}
-	}
-
-	// check for special case of WROTE preceded by UNKNOWN, followed by mix of UNKNOWN and QUOTED (inline reply)
-	var originalText = AjxStringUtil._checkInlineWrote(count, results, false);
-	if (originalText) {
-		return originalText;
-	}
-
-	// If we found quoted content and there's exactly one UNKNOWN block, return it.
-	if (count[AjxStringUtil.ORIG_UNKNOWN] === 1 && count[AjxStringUtil.ORIG_QUOTED] > 0) {
-		var originalText = AjxStringUtil._getTextFromBlock(unknownBlock);
-		if (originalText) {
-			return originalText;
-		}
-	}
-
-	// If we have a STRONG separator (eg "--- Original Message ---"), consider it authoritative and return the text that precedes it
-	if (count[AjxStringUtil.ORIG_SEP_STRONG] > 0) {
-		var block = [];
-		for (var i = 0; i < results.length; i++) {
-			var result = results[i];
-			if (result.type === AjxStringUtil.ORIG_SEP_STRONG) {
-				break;
-			}
-			block = block.concat(result.block);
-		}
-		var originalText = AjxStringUtil._getTextFromBlock(block);
-		if (originalText) {
-			return originalText;
-		}
-	}
-
-	return text;
-};
-
-// Matches a line of text against some regexes to see if has structural meaning within a mail msg.
-AjxStringUtil._getLineType =
-function(testLine) {
-
-	var type = AjxStringUtil.ORIG_UNKNOWN;
-	
-	// see if the line matches any known delimiters or quote patterns
-	for (var j = 0; j < AjxStringUtil.MSG_REGEXES.length; j++) {
-		var msgTest = AjxStringUtil.MSG_REGEXES[j];
-		var regex = msgTest.regex;
-		if (regex.test(testLine.toLowerCase())) {
-			// line that starts and ends with | is considered ASCII art (eg a table) rather than quoted
-			if (msgTest.type == AjxStringUtil.ORIG_QUOTED && /^\s*\|.*\|\s*$/.test(testLine)) {
-				continue;
-			}
-			type = msgTest.type;
-			break;	// first match wins
-		}
-	}
-	
-	if (type === AjxStringUtil.ORIG_UNKNOWN) {
-		// "so-and-so wrote:" takes a lot of different forms; look for various common parts and
-		// assign points to determine confidence
-		var m = testLine.match(/(\w+):$/);
-		var verb = m && m[1] && m[1].toLowerCase();
-		if (verb) {
-			var points = 0;
-			// look for "wrote:" (and discount "changed:", which is used by Bugzilla)
-			points = points + (verb === AjxMsg.wrote) ? 5 : (verb === AjxMsg.changed) ? 0 : 3;
-			if (AjxStringUtil.ORIG_EMAIL_RE.test(testLine)) {
-				points += 4;
-			}
-			if (AjxStringUtil.ORIG_DATE_RE.test(testLine)) {
-				points += 3;
-			}
-			var regEx = new RegExp("^(--|" + AjxMsg.on + ")", "i");
-			if (AjxStringUtil.ORIG_INTRO_RE.test(testLine)) {
-				points += 1;
-			}
-			if (points >= 7) {
-				type = AjxStringUtil.ORIG_WROTE_STRONG;
-			}
-			else if (points >= 5) {
-				type = AjxStringUtil.ORIG_WROTE_WEAK;
-			}
-		}
-	}
-	
-	return type;
-};
-
-AjxStringUtil._getTextFromBlock =
-function(block) {
-	if (!(block && block.length)) { return null; }
-	var originalText = block.join("\n") + "\n";
-	originalText = originalText.replace(/\s+$/, "\n");
-	return (AjxStringUtil._NON_WHITESPACE.test(originalText)) ? originalText : null;
-};
-
-AjxStringUtil.SCRIPT_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-
-/**
- * For HTML, we strip off the html, head, and body tags and stick the rest in a temporary DOM node so that
- * we can walk the tree. Instead of going line by line, we go element by element. The easiest way is to figure
- * out which nodes we can remove if the message appears to have quoted and original content.
- * 
- * @param {string}	text		message body content
- * 
- * @return	{string}	original content if quoted content was found, otherwise NULL
- * @private
- *
- * TODO: Would this all be easier if we flattened the HTML tree to make it serial?
- */
-AjxStringUtil._getOriginalHtmlContent =
-function(text) {
-	
-	// strip <script> tags (which should not be there)
-	while (AjxStringUtil.SCRIPT_REGEX.test(text)) {
-		text = text.replace(AjxStringUtil.SCRIPT_REGEX, "");
-	}
-	
-	var htmlNode = AjxStringUtil._writeToTestIframeDoc(text);
-	var ctxt = {
-		curType:	null,
-		count:		{},
-		level:		0,
-		toRemove:	[],
-		done:		false,
-		hasQuoted:	false,
-		sepNode:	null,
-		results:	[],
-		ignore:		false,
-		nodeCount:	0
-	};
-	AjxStringUtil._traverseOriginalHtmlContent(htmlNode, ctxt);
-
-	// check for special case of WROTE preceded by UNKNOWN, followed by mix of UNKNOWN and QUOTED (inline reply)
-	AjxStringUtil._checkInlineWrote(ctxt.count, ctxt.results, true, ctxt);
-	
-	// if there's one UNKNOWN section and some QUOTED, preserve the UNKNOWN
-	if (!ctxt.done) {
-		if (ctxt.count[AjxStringUtil.ORIG_UNKNOWN] === 1 && ctxt.hasQuoted) {
-			for (var i = 0; i < ctxt.toRemove.length; i++) {
-				var el = ctxt.toRemove[i];
-				if (el && el.parentNode) {
-					el.parentNode.removeChild(el);
-				}
-			}
-			ctxt.done = true;
-		}
-	}
-
-	// convert back to text, restoring html, head, and body nodes
-	var result = ctxt.done ? "<html>" + htmlNode.innerHTML + "</html>" : text;
-
-	AjxStringUtil._removeTestIframeDoc();
-	return result;	
-};
-
-// nodes to ignore; they won't have anything we're interested in
-AjxStringUtil.IGNORE_NODE_LIST = ["#comment", "script", "select", "style"];
-AjxStringUtil.IGNORE_NODE = AjxUtil.arrayAsHash(AjxStringUtil.IGNORE_NODE_LIST);
-
-// Walk the tree, looking for a definitive delimiter and determining content types for nodes. If we find a node
-// that's a delimiter, we clip it and all subsequent nodes at its level, and we're done.
-AjxStringUtil._traverseOriginalHtmlContent =
-function(el, ctxt) {
-
-	if (ctxt.done || !el || ctxt.ignore) { return; }
-
-	ctxt.nodeCount++; //keep a count of processed nodes.
-	
-	var nodeName = el.nodeName.toLowerCase();
-	DBG.println("html", AjxStringUtil.repeat("&nbsp;&nbsp;&nbsp;&nbsp;", ctxt.level) + nodeName + ((nodeName === "#text" && /\S+/.test(el.nodeValue) ? " - " + el.nodeValue.substr(0, 20) : "")));
-	var type;
-	var processChildren = true;
-	
-	// Text node: test against our regexes
-	if (nodeName === "#text") {
-		if (!AjxStringUtil._NON_WHITESPACE.test(el.nodeValue)) {
-			return;
-		}
-		var testLine = AjxStringUtil.trim(el.nodeValue);
-		type = AjxStringUtil._getLineType(testLine);
-		if (type === AjxStringUtil.ORIG_SEP_STRONG || type === AjxStringUtil.ORIG_WROTE_STRONG) {
-			ctxt.sepNode = el;	// mark for removal
-		}
-		else if (type !== AjxStringUtil.ORIG_WROTE_STRONG) {
-			// Check for colon in case we have a "wrote:" line or a header
-			if (testLine.indexOf(":") !== -1 && el.parentNode) {
-				// what appears as a single "... wrote:" line may have multiple elements, so gather it all
-				// together into one line and test that
-				testLine = AjxStringUtil.trim(AjxStringUtil.htmlDecode(AjxStringUtil.stripTags(el.parentNode.innerHTML)));
-				type = AjxStringUtil._getLineType(testLine);
-				if (type === AjxStringUtil.ORIG_WROTE_STRONG) {
-					// check for a multinode WROTE; if we find one, gather it into a SPAN so that we
-					// have a single node to deal with later
-					var pn = el.parentNode, nodes = pn.childNodes, startNodeIndex, stopNodeIndex;
-					for (var i = pn.childNodes.length - 1; i >= 0; i--) {
-						var childNode = pn.childNodes[i];
-						var text = childNode.nodeValue;
-						if (!text) { continue; }
-						if (text.match(/(\w+):$/)) {
-							stopNodeIndex = i;
-						}
-						else if ((stopNodeIndex !== null) && text.match(AjxStringUtil.ORIG_INTRO_RE)) {
-							startNodeIndex = i;
-							break;
-						}
-					}
-					if (startNodeIndex !== null && stopNodeIndex !== null) {
-						var span = document.createElement("span");
-						for (var i = 0; i < (stopNodeIndex - startNodeIndex) + 1; i++) {
-							span.appendChild(nodes[startNodeIndex]);
-						}
-						pn.insertBefore(span, nodes[startNodeIndex]);
-						ctxt.sepNode = span;
-					}
-				}
-				else if (type === AjxStringUtil.ORIG_HEADER) {
-					if (ctxt.results.length && ctxt.results[ctxt.results.length - 1].type === AjxStringUtil.ORIG_LINE && ctxt.lineNode) {
-						ctxt.sepNode = ctxt.lineNode;
-						ctxt.done = true;
-					}
-				}
-			}
-		}
-		
-	// HR: look for a couple different forms that are used to delimit quoted content
-	} else if (nodeName === "hr") {
-		// see if the HR is ours, or one commonly used by other mail clients such as Outlook
-		if (el.id === AjxStringUtil.HTML_SEP_ID || (el.size === "2" && el.width === "100%" && el.align === "center")) {
-			type = AjxStringUtil.ORIG_SEP_STRONG;
-			ctxt.sepNode = el;	// mark for removal
-		}
-		
-	// PRE: treat as one big line of text (should maybe go line by line)
-	} else if (nodeName === "pre") {
-		var text = AjxStringUtil.htmlDecode(AjxStringUtil.stripTags(el.innerHTML));
-		type = AjxStringUtil._getLineType(text);
-
-	// BR: ignore
-	} else if (nodeName === "br") {
-		return;
-
-	// DIV: check for Outlook class used as delimiter
-	} else if (nodeName === "div") {
-		if (el.className === "OutlookMessageHeader" || el.className === "gmail_quote") {
-			type = AjxStringUtil.ORIG_SEP_STRONG;
-			ctxt.sepNode = el;	// mark for removal
-		}
-		else if (el.style.borderTop) {
-			var styleObj = DwtCssStyle.getComputedStyleObject(el);
-			if (styleObj && styleObj.borderTopWidth && parseInt(styleObj.borderTopWidth) === 1 && styleObj.borderTopColor) {
-				type = AjxStringUtil.ORIG_SEP_STRONG;
-				ctxt.sepNode = el;	// mark for removal
-			}
-		}
-
-	// SPAN: check for Outlook ID used as delimiter
-	} else if (nodeName === "span") {
-		if (el.id === "OLK_SRC_BODY_SECTION") {
-			type = AjxStringUtil.ORIG_SEP_STRONG;
-			ctxt.sepNode = el;	// mark for removal
-		}
-
-	// IMG: treat as original content
-	} else if (nodeName === "img") {
-		type = AjxStringUtil.ORIG_UNKNOWN;
-
-	// BLOCKQUOTE: treat as quoted section
-	} else if (nodeName === "blockquote") {
-		type = AjxStringUtil.ORIG_QUOTED;
-		ctxt.toRemove.push(el);
-		ctxt.hasQuoted = true;
-		processChildren = false;
-
-	} else if (nodeName === "script") {
-		throw new Error("SCRIPT tag found in AjxStringUtil._traverseOriginalHtmlContent");
-	
-	// node types to ignore
-	} else if (AjxStringUtil.IGNORE_NODE[nodeName]) {
-		return;
-	}
-
-	// see if we've found a new type
-	if (type) {
-		if (ctxt.curType) {
-			if (ctxt.curType !== type) {
-				ctxt.count[ctxt.curType] = ctxt.count[ctxt.curType] ? ctxt.count[ctxt.curType] + 1 : 1;
-				ctxt.results.push({type:ctxt.curType});
-				ctxt.curType = type;
-				ctxt.curBlock = [];
-			}
-		}
-		else {
-			ctxt.curType = type;
-		}
-	}
-
-	if (ctxt.hasQuoted && type === AjxStringUtil.ORIG_UNKNOWN && ctxt.count[AjxStringUtil.ORIG_WROTE_STRONG] === 1) {
-		//if we find a UNKNOWN block in the quoted content then it means there are possibly inline comments so do not do
-		//further processing
-		ctxt.ignore = true;
-		ctxt.sepNode = null;
-		return;
-	}
-	// if we found a recognized delimiter, set flag to clip it and subsequent nodes at its level
-	if (type === AjxStringUtil.ORIG_SEP_STRONG) {
-		ctxt.done = true;
-	}
-	
-	if (!processChildren) {
-		return;	// don't visit node's children
-	}
-	
-	ctxt.level++;
-
-	// any element that gets here will get recursed into
-	for (var i = 0, len = el.childNodes.length; i < len; i++) {
-		var childNode = el.childNodes[i];
-		if (ctxt.nodeCount > AjxStringUtil.MAX_HTMLNODE_COUNT) {
-			ctxt.sepNode = null;
-			return;
-		}
-		AjxStringUtil._traverseOriginalHtmlContent(childNode, ctxt);
-		// see if we ran into a delimiter
-		if (ctxt.done) {
-			// clip all subsequent nodes
-			while (el && el.lastChild && el.lastChild !== childNode) {
-				el.removeChild(el.lastChild);
-			}
-			// clip the delimiter node
-			if (el && el.lastChild === ctxt.sepNode) {
-				el.removeChild(el.lastChild);
-			}
-			break;
-		}
-	}
-
-	ctxt.level--;
-};
-
-/**
- * Checks the given HTML to see if it is "safe", and cleans it up if it is. It must have only
- * the tags in the given list, otherwise false is returned. Attributes in the given list will
- * be removed. It is not necessary to include "#text", "html", "head", and "body" in the list
- * of allowed tags.
- * 
- * @param {string}	html			HTML text
- * @param {array}	okTags			whitelist of allowed tags
- * @param {array}	attrsToRemove	list of attributes to remove from each element
- */
-AjxStringUtil.checkForCleanHtml =
-function(html, okTags, attrsToRemove) {
-
-	var htmlNode = AjxStringUtil._writeToTestIframeDoc(html);
-	var ctxt = {
-		tags:	AjxUtil.arrayAsHash(okTags),
-		attrs:	attrsToRemove || []
-	}
-	AjxStringUtil._traverseCleanHtml(htmlNode, ctxt);
-
-	var result = "<html>" + htmlNode.innerHTML + "</html>";
-
-	var width = Math.max(htmlNode.scrollWidth, htmlNode.lastChild.scrollWidth);
-
-	AjxStringUtil._removeTestIframeDoc();
-	return {html:result, width:width, useIframe:ctxt.fail};
-};
-
-AjxStringUtil._traverseCleanHtml =
-function(el, ctxt) {
-
-    var isCleanHtml = true;
-
-	var nodeName = el.nodeName.toLowerCase();
-	
-	// useless <style> that we used to add, remove it
-	if (nodeName === "style" && el.innerHTML === "p { margin: 0; }") {
-		el.doDelete = true;
-	}
-	
-	// IE likes to insert an empty <title> in the <head>, let it go
-	else if (nodeName === "title" && !el.innerHTML) {
-	}
-	
-	// see if tag is allowed
-	else if (ctxt.tags[nodeName]) {
-
-        //checks for invalid styles and removes them.  Bug: 78875 - bad styles from user = email displays incorrectly
-        if (el.style) {
-            var style = el.style && el.style.cssText;
-            style = style.toLowerCase();
-            if (!AjxStringUtil._checkStyle(style)){
-                isCleanHtml = false;
-            }
-            el.style.cssText = AjxStringUtil._fixStyle(style);
+    if (jsEscape) {
+        value = escape(value);
+    } else {
+        if (htmlEscape) {
+            value = AjxStringUtil.htmlEncode(value);
         }
-
-		if (el.removeAttribute && el.attributes && el.attributes.length) {
-			// check for blacklisted attrs
-			for (var i = 0; i < ctxt.attrs.length; i++) {
-				el.removeAttribute(ctxt.attrs[i]);
-			}
-			
-			// Note that DOM-based handling of attributes is horribly broken in IE, in all sorts of ways.
-			// In IE it is impossible to find a reliable way to get an attribute's value. The attributes
-			// collection is supposed to be attributes that were specified in the HTML, but IE fills it with every
-			// possible attribute.
-			for (var i = 0, attrs = el.attributes, l = attrs.length; i < l; i++) {
-				var attr = attrs.item(i);
-				var attrName = attr.nodeName && attr.nodeName.toLowerCase();
-				// on* handlers (should have been removed by server, check again to be safe)
-				if (attrName && attrName.indexOf("on") === 0) {
-					el.removeAttribute(attrName);
-					continue;
-				}
-				// this might not work in IE
-				var attrValue = attr.nodeValue && String(attr.nodeValue);
-				if (attrValue) {
-					attrValue = attrValue.toLowerCase();
-					// we have global CSS rules for TD that trump table properties, so bail
-					if (nodeName === "table" && (attrName === "cellpadding" || attrName === "cellspacing" ||
-							attrName === "border") && attrValue !== "0") {
-						isCleanHtml = false;
-					}
-				}
-			}
-		}
-	}
-	
-	// disallowed tag - bail
-	else {
-        isCleanHtml = false;
-	}
-	
-	// process child nodes
-	for (var i = 0, len = el.childNodes.length; i < len; i++) {
-		var childNode = el.childNodes[i];
-		AjxStringUtil._traverseCleanHtml(childNode, ctxt);
-	}
-	
-	// remove nodes marked for deletion
-	for (var i = el.childNodes.length - 1; i >= 0; i--) {
-		var childNode = el.childNodes[i];
-		if (childNode.doDelete) {
-			el.removeChild(childNode);
-		}
-	}
-
-    if (!isCleanHtml){
-        ctxt.fail = true;
     }
-};
 
+    retVal += AjxStringUtil.quoteString(value, useDoubleQuotes);
 
-AjxStringUtil._checkStyle =
-    function(style) {
-
-        //check for absolute positioning
-        if (style.match(/\bposition\s*:\s*absolute[^;]*;?/)){
-            return false;
-        }
-
-        //check for font-<anything>
-        if (style.match(/\bfont-[^;]*;?/)){
-            return false;
-        }
-
-        return true;
-};
-
-AjxStringUtil._fixStyle =
-function(style) {
-
-    //check for negative margins
-    style = style.replace(/\bmargin-?(top|left|right|bottom)?\s*:[^;]*-\d+[^;]*;?/gi, "");
-
-    //check for negative padding
-    style = style.replace(/\bpadding-?(top|left|right|bottom)?\s*:[^;]*-\d+[^;]*;?/gi, "");
-
-    return style;
-};
-
-/**
- * A "... wrote:" separator is not quite as authoritative, since the user might be replying inline. If we have
- * a single UNKNOWN block before the WROTE separator, return it unless there is a mix of QUOTED and UNKNOWN
- * following the separator, except if there's only a single unknown block after the separator and it comes last.
- * 
- * @private
- */
-AjxStringUtil._checkInlineWrote =
-function(count, results, isHtml, ctxt) {
-
-	if (count[AjxStringUtil.ORIG_WROTE_STRONG] > 0) {
-		var unknownBlock, foundSep = false, afterSep = {};
-		for (var i = 0; i < results.length; i++) {
-			var result = results[i], type = result.type;
-			if (type === AjxStringUtil.ORIG_WROTE_STRONG) {
-				foundSep = true;
-			}
-			else if (type === AjxStringUtil.ORIG_UNKNOWN && !foundSep) {
-				if (unknownBlock) {
-					return null;
-				}
-				else {
-					unknownBlock = isHtml ? true : result.block;
-				}
-			}
-			else if (foundSep) {
-				afterSep[type] = true;
-			}
-		}
-
-		var mixed = (afterSep[AjxStringUtil.ORIG_UNKNOWN] && afterSep[AjxStringUtil.ORIG_QUOTED]);
-		var endsWithUnknown = (count[AjxStringUtil.ORIG_UNKNOWN] === 2 && results[results.length - 1].type === AjxStringUtil.ORIG_UNKNOWN);
-		if (unknownBlock && (!isHtml || ctxt.sepNode) && (!mixed || endsWithUnknown)) {
-			if (isHtml) {
-				// In HTML mode we do DOM surgery rather than returning the original content
-				var el = ctxt.sepNode.parentNode;
-				// clip all subsequent nodes
-				while (el && el.lastChild && el.lastChild != ctxt.sepNode) {
-					el.removeChild(el.lastChild);
-				}
-				// clip the delimiter node
-				if (el && el.lastChild == ctxt.sepNode) {
-					el.removeChild(el.lastChild);
-				}
-			}
-			else {
-				var originalText = AjxStringUtil._getTextFromBlock(unknownBlock);
-				if (originalText) {
-					return originalText;
-				}
-			}
-		}
-	}
-};
-
-/**
- * Removes non-content HTML from the beginning and end. Would typically be used on raw content from an editor.
- * There's almost certainly a better way to do this.
- * 
- * @param {string}	str		some HTML
- */
-AjxStringUtil.trimHtml =
-function(str) {
-
-	if (!str) {
-		return "";
-	}
-	
-	str = str.replace(/<\/?html>|<\/?head>|<\/?body>/gi, "");	// strip empty document-level tags
-	str = str.replace(/<div><br ?\/?><\/div>/gi, "<br>");		// TinyMCE loves <div> containers
-
-	// remove empty surrounding <div> containers, and leading/trailing <br>
-	var len = 0;
-	while ((str.length !== len) &&
-		   ((/^<?div>/i.test(str) && /<\/div>$/i.test(str)) ||
-			 /^<br ?\/?>/i.test(str) || /<br ?\/?>$/i.test(str))) {
-
-		len = str.length;	// loop prevention
-		str = str.replace(/^<div>/i, "").replace(/<\/div>$/i, "");
-		str = str.replace(/^<br ?\/?>/i, "").replace(/<br ?\/?>$/i, "");
-	}
-	
-	// remove trailing <br> trapped in front of closing tags
-	var m = str && str.match(/((<br ?\/?>)+)((<\/\w+>)+)$/i);
-	if (m && m.length) {
-		var regex = new RegExp(m[1] + m[3] + "$", "i");
-		str = str.replace(regex, m[3]);
-	}
-	
-	// remove empty internal <div> containers
-	str = str.replace(/(<div><\/div>)+/gi, "");
-	
-	return AjxStringUtil.trim(str);
-};
-
-// Replaces img src to cid for inline or dfsrc if external image and remove dfsrc before sending for a given htmlContent
-AjxStringUtil.defangHtmlContent =
-function(htmlContent) {
-
-	var content = htmlContent;
-	var imgContent = content && content.match(/<img/i) && content.split(/<img/i);
-	if (imgContent && imgContent.length) {
-		for (var i = 0; i < imgContent.length; i++) {
-			var externalImage = false;
-			var dfsrc = imgContent[i].match(/dfsrc=[\"|\'](cid:[^\"\']+)/); //look for CID assignment in image
-			if (dfsrc && dfsrc.length > 1) {
-				dfsrc = [dfsrc[1]]; //the cid is the 2nd element, but next lines expect it as first
-			}
-			if (!dfsrc) {
-				dfsrc = imgContent[i].match(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/); //look for dfsrc="" in image
-				externalImage = dfsrc ? true : false;
-			}
-			if (dfsrc && dfsrc.length > 0 && !externalImage) {
-				var tempStr = imgContent[i].replace(/\s+src=[\"\'][^\"\']+[\"\']/," src=\""+dfsrc[0]+"\""); //set src to cid
-				tempStr = tempStr.replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/,"");
-				content = content.replace(imgContent[i], tempStr);
-			}
-			else if (dfsrc && dfsrc.length > 0 && externalImage) {
-				var tempArr = imgContent[i].match(/\s+dfsrc=[\"\']([^\"\']+)[\"\']/); //match dfsrc
-				if (tempArr && tempArr.length > 1) {
-				   var tempStr = imgContent[i].replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']/," src=\""+tempArr[1]+"\"");
-				   content = content.replace(imgContent[i], tempStr);
-				}
-			}
-		}
-	}
-	return content;
-};
+    return retVal;
+}

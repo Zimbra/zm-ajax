@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -46,14 +46,12 @@ DwtSelect = function(params) {
 	this._hasSetMouseEvents = true;
 
     // initialize some variables
-    this._currentSelectedOption = null;
+    this._currentSelectionId = -1;
     this._options = new AjxVector();
     this._optionValuesToIndices = {};
     this._selectedValue = this._selectedOption = null;
 	this._maxRows = params.maxRows || 0;
 	this._layout = params.layout;
-    this._congruent = params.congruent;
-    this._hrCount = 0;
 
     // add options
     var options = params.options;
@@ -181,21 +179,12 @@ function(option, selected, value, image) {
         "</div>"
     ].join("");
 
-	this.fixedButtonWidth(); //good to call always to prevent future bugs due to the vertical space.
-
 	// Register listener to create new menu.
 	this.setMenu(this._menuCallback, true);
 
     // return the index of the option.
     this._optionValuesToIndices[opt.getValue()] = this._options.size() - 1;
     return (this._options.size() - 1);
-};
-
-DwtSelect.prototype.addHR =
-function() {
-    opt = new DwtSelectOption("hr" + this._hrCount.toString(), false, "", this, null, null, null, true);
-    this._hrCount++;
-	this._options.add(opt);
 };
 
 /**
@@ -224,7 +213,6 @@ function(option) {
 			var newSelIndex = (index >= size) ? size - 1 : index;
 			this._setSelectedOption(this._options.get(newSelIndex));
 		}
-		this.fixedButtonWidth(); //good to call always to prevent future bugs due to the vertical space.
 	}
 
 	delete this._optionValuesToIndices[value];
@@ -254,9 +242,6 @@ DwtSelect.prototype.popup =
 function() {
 	var menu = this.getMenu();
 	if (!menu) { return; }
-	if (this._currentSelectedOption) {
-		menu.setSelectedItem(this._currentSelectedOption.getItem());
-	}
 
 	var selectElement = this._selectEl;
 	var selectBounds = Dwt.getBounds(selectElement);
@@ -327,15 +312,7 @@ function() {
 	this._optionValuesToIndices = [];
 	this._selectedValue = null;
 	this._selectedOption = null;
-	this._currentSelectedOption = null;
-	if (this._pseudoItemsEl) {
-		try {
-			this._pseudoItemsEl.innerHTML = ""; //bug 81504
-		}
-		catch (e) {
-			//do nothing - this happens in IE for some reason. Stupid IE. "Unknown runtime error".
-		}
-	}
+	this._currentSelectionId = -1;
 };
 
 /**
@@ -538,10 +515,7 @@ function(text) {
 DwtSelect.prototype.dispose =
 function() {
 	this._selectEl = null;
-	if (this._pseudoItemsEl) {
-		this._pseudoItemsEl.innerHTML = "";
-		this._pseudoItemsEl = null;
-	}
+	this._pseudoItemsEl = null;
 	this._containerEl = null;
 
 	DwtButton.prototype.dispose.call(this);
@@ -581,30 +555,8 @@ function(anId) {
  */
 DwtSelect.prototype.dynamicButtonWidth = 
 function() {
-	this._isDynamicButtonWidth = true; //if this is set, set this so fixedButtonWidth doesn't change this.
-	this._selectEl.style.width = "auto"; //set to default in case fixedButtonWidth was called before setting it explicitely.
 	this._pseudoItemsEl.style.display =  "none";
-};
-
-/*
- * Use this in case you want the select to be as wide as the widest option and
- * the options hidden so they don't overflow outside containers.
- */
-DwtSelect.prototype.fixedButtonWidth =
-function(){
-	if (this._isDynamicButtonWidth) {
-		return;
-	}
-	this._pseudoItemsEl.style.display = "block"; //in case this function was called before. This will fix the width of the _selectEl to match the options.
-    var elm = this._selectEl;
-	var width = elm.offsetWidth;
-	//offsetWidth is 0 if some parent (ancestor) has display:none which is the case only in Prefs pages when the select is setup.
-	//don't set width to 0px in this case as it acts inconsistent - filling the entire space. Better to keep it just dynamic.
-	if (width) {
-		elm.style.width = width + "px";
-	}
-    this._pseudoItemsEl.style.display = "none";
-};
+}
 
 DwtSelect.prototype._createHtmlFromTemplate =
 function(templateId, data) {
@@ -639,28 +591,21 @@ function(templateId, data) {
 DwtSelect.prototype._createMenu =
 function() {
     var menu = new DwtSelectMenu(this);
-    var mi;
     for (var i = 0, len = this._options.size(); i < len; ++i) {
-	    var option = this._options.get(i);
-        if (option._hr) {
-            mi = new DwtMenuItem({parent:menu, style:DwtMenuItem.SEPARATOR_STYLE});
-            mi.setEnabled(false);
-        } else {
-            var mi = new DwtSelectMenuItem(menu, Dwt.getNextId(option._value + "_"));
-            var image = option.getImage();
-            if (image) {
-                mi.setImage(image);
-            }
-            var text = option.getDisplayValue();
-            if (text) {
-                mi.setText(AjxStringUtil.htmlEncode(text));
-            }
-            mi.setEnabled(option.enabled);
-
-            mi.addSelectionListener(new AjxListener(this, this._handleOptionSelection));
-            mi._optionIndex = i;
+		var mi = new DwtSelectMenuItem(menu);
+		var option = this._options.get(i);
+        var image = option.getImage();
+        if (image) {
+            mi.setImage(image);
         }
-        mi._optionIndex = i;
+        var text = option.getDisplayValue();
+		if (text) {
+			mi.setText(AjxStringUtil.htmlEncode(text));
+		}
+		mi.setEnabled(option.enabled);
+
+		mi.addSelectionListener(new AjxListener(this, this._handleOptionSelection));
+		mi._optionIndex = i;
 		option.setItem(mi);
     }
 	return menu;
@@ -684,7 +629,15 @@ function(ev) {
     this.notifyListeners(DwtEvent.ONCHANGE, event);
 };
 
-DwtSelect.prototype._setSelectedOption =
+DwtSelect.prototype._clearOptionSelection = 
+function() {
+    if (this._currentSelectionId != -1) {
+        var currOption = DwtSelect._getObjectWithId(this._currentSelectionId);
+        currOption.deSelect();
+    }
+};
+
+DwtSelect.prototype._setSelectedOption = 
 function(option) {
 	var displayValue = option.getSelectedValue() || option.getDisplayValue();
 	var image = option.getImage();
@@ -716,21 +669,19 @@ function() {
 
 DwtSelect.prototype._updateSelection = 
 function(newOption) {
-	var currOption = this._currentSelectedOption;
+    var currOption = (this._currentSelectionId != -1)
+		? DwtSelect._getObjectWithId(this._currentSelectionId) : null;
 
-	if (currOption) {
-		currOption.deSelect();
+    if (currOption) {
+        currOption.deSelect();
 	}
-	this._currentSelectedOption = newOption;
-	if (!newOption) {
-		return;
-	}
-	newOption.select();
-	var menu = this.getMenu(true);
-	if (!menu) {
-		return;
-	}
-	menu.setSelectedItem(newOption.getItem());
+    if (newOption) {
+		newOption.select();
+		this._currentSelectionId = newOption.getIdentifier();
+		var menu = this.getMenu();
+		if (menu)
+			menu.setSelectedItem(newOption.getItem());
+    }
 };
 
 // Call this function to update the rendering of the element
@@ -788,15 +739,13 @@ DwtSelectOptionData = function(value, displayValue, isSelected, selectedValue, i
  * @param {DwtSelect}	owner 	not used
  * @param {String}	optionalDOMId		not used
  * @param {String}	[selectedValue] 	the text value to use when this value is the currently selected value
- * @param {Boolean}	hr                  True => This option will be usd to create a unselectable horizontal rule
  */
-DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, image, selectedValue, hr) {
+DwtSelectOption = function(value, selected, displayValue, owner, optionalDOMId, image, selectedValue) {
 	this._value = value;
 	this._selected = selected;
 	this._displayValue = displayValue;
 	this._image = image;
 	this._selectedValue = selectedValue;
-    this._hr = hr;
 
 	this._internalObjectId = DwtSelect._assignId(this);
 	this.enabled = true;
@@ -924,10 +873,7 @@ function() {
  * @extends		DwtMenu
  */
 DwtSelectMenu = function(parent) {
-    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout,
-        maxRows:parent._maxRows, congruent:parent._congruent,
-        id:Dwt.getNextId(parent.getHTMLElId() + "_Menu_")});
-// Dwt.getNextId should be removed once Bug 66510 is fixed
+    DwtMenu.call(this, {parent:parent, style:DwtMenu.DROPDOWN_STYLE, className:"DwtMenu", layout:parent._layout, maxRows:parent._maxRows});
 };
 DwtSelectMenu.prototype = new DwtMenu;
 DwtSelectMenu.prototype.constructor = DwtSelectMenu;
@@ -949,8 +895,8 @@ function() {
  * 
  * @extends 	DwtMenuItem
  */
-DwtSelectMenuItem = function(parent, id) {
-    DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem", id: id});
+DwtSelectMenuItem = function(parent) {
+    DwtMenuItem.call(this, {parent:parent, style:DwtMenuItem.SELECT_STYLE, className:"ZSelectMenuItem"});
 };
 DwtSelectMenuItem.prototype = new DwtMenuItem;
 DwtSelectMenuItem.prototype.constructor = DwtSelectMenuItem;

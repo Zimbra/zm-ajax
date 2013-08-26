@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -46,17 +46,13 @@
  * @param {string}      params.hint				a hint to display in the input field when the value is empty.
  * @param {string}      params.id				an explicit ID to use for the control's DIV element
  * @param {string}      params.inputId			an explicit ID to use for the control's INPUT element
- *
- * @extends		DwtComposite
  * 
- * TODO: Use HTML5 feature of placeholder text for inputs (not supported by IE):
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-input-element-attributes.html#the-placeholder-attribute
+ * @extends		DwtComposite
  */
 DwtInputField = function(params) {
 
 	if (arguments.length == 0) return;
-	params.className = params.className  || "DwtInputField";
-	this._origClassName = params.className;
+	this._origClassName = params.className ? params.className : "DwtInputField";
 	this._errorClassName = this._origClassName + "-Error";
 	this._hintClassName = this._origClassName + "-hint";
 	this._disabledClassName = this._origClassName + "-disabled";
@@ -159,9 +155,10 @@ DwtInputField = function(params) {
 DwtInputField.prototype = new DwtComposite;
 DwtInputField.prototype.constructor = DwtInputField;
 
-DwtInputField.prototype.isDwtInputField = true;
-DwtInputField.prototype.isInputControl = true;
-DwtInputField.prototype.toString = function() { return "DwtInputField"; };
+DwtInputField.prototype.toString =
+function() {
+	return "DwtInputField";
+};
 
 //
 // Constants
@@ -334,7 +331,7 @@ function() {
 */
 DwtInputField.prototype.getValue =
 function() {
-	return this._hintIsVisible ? '' : AjxStringUtil.trim(this._inputField.value);
+	return this._hintIsVisible ? '' : this._inputField.value;
 };
 
 /**
@@ -722,7 +719,6 @@ function(ev) {
 			obj._showHint();
 		}
 	}
-	obj.notifyListeners(DwtEvent.ONBLUR, ev)
 };
 
 DwtInputField._focusHdlr =
@@ -734,7 +730,6 @@ function(ev) {
 			obj._hideHint('');
 		}
 	}
-	obj.notifyListeners(DwtEvent.ONFOCUS, ev)
 };
 
 DwtInputField._keyDownHdlr =
@@ -871,7 +866,6 @@ function(oel, nel, inheritClass, inheritStyle) {
 // Private methods
 //
 
-
 DwtInputField.prototype.__createInputEl =
 function(params) {
 	// clean up old input field if present
@@ -883,10 +877,11 @@ function(params) {
 	}
 
 	// create new input field
-	var ninput;
 	var type = this._type != DwtInputField.PASSWORD ? "text" : "password";
-	ninput = document.createElement("INPUT");
-	ninput.type = type;
+	var ninput = document.createElement(AjxEnv.isIE ? ["<INPUT type='",type,"'>"].join("") : "INPUT");
+	if (!AjxEnv.isIE) {
+		ninput.type = type;
+	}
 	this._inputField = ninput;
 
 	// set common values
@@ -934,18 +929,4 @@ function() {
 DwtInputField.prototype.enableFocusHdlr =
 function(){
     this._inputField.onfocus = DwtInputField._focusHdlr;
-};
-
-/*
- * enables the onKeyDown handler
- * bug fix # 80423 - Firefox loses the handler
- */
-DwtInputField.prototype.enableKeyDownHdlr =
-function() {
-    this._inputField.onkeydown = DwtInputField._keyDownHdlr;
-};
-
-DwtInputField.prototype.moveCursorToEnd =
-function() {
-	Dwt.moveCursorToEnd(this._inputField);
 };

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -89,12 +89,26 @@ Dwt.DISPLAY_NONE = "none";
 /**
  * Table row style.
  */
-Dwt.DISPLAY_TABLE_ROW = "table-row";
+Dwt.DISPLAY_TABLE_ROW = AjxEnv.isIE ? Dwt.DISPLAY_BLOCK : "table-row";
 
 /**
  * Table cell style.
  */
-Dwt.DISPLAY_TABLE_CELL = "table-cell";
+Dwt.DISPLAY_TABLE_CELL = AjxEnv.isIE ? Dwt.DISPLAY_BLOCK : "table-cell";
+
+// constants for layout
+/*
+Dwt.LEFT = 100;
+Dwt.RIGHT = 101;
+Dwt.TOP = 102;
+Dwt.BOTTOM = 103;
+
+Dwt.ABOVE = 104;
+Dwt.BELOW = 105;
+
+Dwt.WIDTH = 106;
+Dwt.HEIGHT = 107;
+*/
 
 // Scroll constants
 /**
@@ -262,11 +276,9 @@ Dwt.__nextId = {};
  */
 Dwt.getNextId =
 function(prefix) {
-	prefix = prefix || "DWT";
-	if (!Dwt.__nextId[prefix]) {
-		Dwt.__nextId[prefix] = 1;
-	}
-	return prefix + Dwt.__nextId[prefix]++;
+	if (arguments.length == 0) prefix = "DWT";
+	if (!Dwt.__nextId[prefix]) Dwt.__nextId[prefix] = 1;
+	return prefix+Dwt.__nextId[prefix]++;
 };
 
 /**
@@ -321,18 +333,12 @@ function(domElement, attrName) {
 	return AjxCore.objectWithId(domElement[attrName||"dwtObj"]);
 };
 
-Dwt.getElement =
-function(el) {
-	return (typeof(el) == "string") ? document.getElementById(el) : el;
-};
-
 /**
- * Finds an ancestor element with a non-empty value for the given attr.
+ * Finds an ancestor element with a value for the given attr.
  * 
- * @param	{DOMElement}	domElement	the starting DOM element
- * @param	{string}		attrName	the attribute name
- * 
- * @return	{DOMElement}	the DOM element
+ * @param {DOMElement} domElement the DOM element (typically an HTML element)
+ * @param {string}	attrName	the attribute name
+ * @param {DOMElement} the DOM element
  */
 Dwt.findAncestor =
 function(domElement, attrName) {
@@ -370,7 +376,6 @@ function(el1, el2) {
 
 Dwt.setHandler =
 function(htmlElement, event, func) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	if (event == DwtEvent.ONMOUSEWHEEL && AjxEnv.isGeckoBased) {
 		Dwt.clearHandler(htmlElement, event);
 	}
@@ -382,7 +387,6 @@ function(htmlElement, event, func) {
 
 Dwt.clearHandler =
 function(htmlElement, event) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	if (event == DwtEvent.ONMOUSEWHEEL && AjxEnv.isGeckoBased) {
 		if (htmlElement[event]) {
 			var func = htmlElement[event];
@@ -394,13 +398,11 @@ function(htmlElement, event) {
 
 Dwt.getBackgroundRepeat =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	return DwtCssStyle.getProperty(htmlElement, "background-repeat");
 };
 
 Dwt.setBackgroundRepeat =
 function(htmlElement, style) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.backgroundRepeat = style;
 };
 
@@ -417,7 +419,6 @@ function(htmlElement, style) {
  */
 Dwt.getBounds =
 function(htmlElement, rect) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return null; }
 	var tmpPt = DwtPoint.tmp;
 
 	Dwt.getLocation(htmlElement, tmpPt);
@@ -453,7 +454,6 @@ function(htmlElement, rect) {
  */
 Dwt.setBounds =
 function(htmlElement, x, y, width, height) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	Dwt.setLocation(htmlElement, x, y);
 	Dwt.setSize(htmlElement, width, height);
 };
@@ -469,7 +469,6 @@ function(htmlElement, x, y, width, height) {
  */
 Dwt.getCursor =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return ""; }
 	return DwtCssStyle.getProperty(htmlElement, "cursor");
 };
 
@@ -483,7 +482,6 @@ function(htmlElement) {
  */
 Dwt.setCursor =
 function(htmlElement, cursorName) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.cursor = cursorName;
 };
 
@@ -500,7 +498,6 @@ function(htmlElement, cursorName) {
  */
 Dwt.getLocation =
 function(htmlElement, point) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return null; }
 	point = point || new DwtPoint(0, 0);
 
 	if (htmlElement.style.position == Dwt.ABSOLUTE_STYLE) {
@@ -530,8 +527,7 @@ function(htmlElement, point) {
  */
 Dwt.setLocation =
 function(htmlElement, x, y) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	var position = DwtCssStyle.getProperty(htmlElement, 'position');
+	var position = htmlElement.style.position;
 	if (position != Dwt.ABSOLUTE_STYLE && position != Dwt.RELATIVE_STYLE && position != Dwt.FIXED_STYLE) {
 		DBG.println(AjxDebug.DBG1, "Cannot position static widget " + htmlElement.className);
 		throw new DwtException("Static widgets may not be positioned", DwtException.INVALID_OP, "Dwt.setLocation");
@@ -546,13 +542,11 @@ function(htmlElement, x, y) {
 
 Dwt.getPosition =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	return htmlElement.style.position;
 };
 
 Dwt.setPosition =
 function(htmlElement, posStyle) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.position = posStyle;
 };
 
@@ -572,7 +566,6 @@ function(htmlElement, posStyle) {
  */
 Dwt.getScrollStyle =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return ""; }
 	var overflow =  DwtCssStyle.getProperty(htmlElement, "overflow");
 
 	if (overflow == "hidden")		{ return Dwt.CLIP; }
@@ -604,7 +597,6 @@ function(htmlElement) {
  */
 Dwt.setScrollStyle =
 function(htmlElement, scrollStyle) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	if (scrollStyle == Dwt.CLIP)
 		htmlElement.style.overflow = "hidden";
 	else if (scrollStyle == Dwt.SCROLL)
@@ -625,8 +617,7 @@ function(htmlElement, scrollStyle) {
 // Note: in FireFox, offsetHeight includes border and clientHeight does not;
 // may want to look at clientHeight for FF
 Dwt.getSize =
-function(htmlElement, point, getFromStyle) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
+function(htmlElement, point) {
 	var p;
 	if (!point) {
 		p = new DwtPoint(0, 0);
@@ -636,16 +627,6 @@ function(htmlElement, point, getFromStyle) {
 	}
 
 	if (!htmlElement) { return p; }
-
-	if (getFromStyle) {
-		if (htmlElement.style.width) { //assumption - the caller only cares about the dimension that is set via the style. So ok to keep 0 if it's not set. for simplicity.
-			p.x = parseInt(htmlElement.style.width);
-		}
-		if (htmlElement.style.height) {
-			p.y = parseInt(htmlElement.style.height);
-		}
-		return p;
-	}
 
 	p.x = htmlElement.offsetWidth;
 	if (p.x != null) {
@@ -662,7 +643,6 @@ function(htmlElement, point, getFromStyle) {
 
 Dwt.setSize =
 function(htmlElement, width, height) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	if (!htmlElement.style) { return; }
 
 	if (width == Dwt.CLEAR) {
@@ -731,14 +711,12 @@ function(htmlEl, attr, recursive) {
 
 Dwt.getVisible =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	var disp = DwtCssStyle.getProperty(htmlElement, "display");
 	return (disp != Dwt.DISPLAY_NONE);
 };
 
 Dwt.setVisible =
 function(htmlElement, visible) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	if (visible) {
 		if (htmlElement.nodeName.match(/tr/i)) {
 			htmlElement.style.display = Dwt.DISPLAY_TABLE_ROW;
@@ -761,14 +739,12 @@ function(htmlElement, visible) {
 
 Dwt.getVisibility =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	var vis = DwtCssStyle.getProperty(htmlElement, "visibility");
 	return (vis == "visible");
 };
 
 Dwt.setVisibility =
 function(htmlElement, visible) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.visibility = visible ? "visible" : "hidden";
 };
 
@@ -776,9 +752,8 @@ Dwt.__MSIE_OPACITY_RE = /alpha\(opacity=(\d+)\)/;
 
 Dwt.getOpacity =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-		var filter = Dwt.getIEFilter(htmlElement, "alpha");
+	if (AjxEnv.isIE) {
+		var filter = htmlElement.style.filter;
 		var m = Dwt.__MSIE_OPACITY_RE.exec(filter) || [ filter, "100" ];
 		return Number(m[1]);
 	}
@@ -787,9 +762,8 @@ function(htmlElement) {
 
 Dwt.setOpacity =
 function(htmlElement, opacity) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-        Dwt.alterIEFilter(htmlElement, "alpha", "alpha(opacity="+opacity+")");
+	if (AjxEnv.isIE) {
+		htmlElement.style.filter = "alpha(opacity="+opacity+")";
 	} else {
 		htmlElement.style.opacity = opacity/100;
 	}
@@ -797,13 +771,11 @@ function(htmlElement, opacity) {
 
 Dwt.getZIndex =
 function(htmlElement) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	return DwtCssStyle.getProperty(htmlElement, "z-index");
 };
 
 Dwt.setZIndex =
 function(htmlElement, idx) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.zIndex = idx;
 };
 
@@ -814,7 +786,6 @@ function(htmlElement) {
 
 Dwt.setDisplay =
 function(htmlElement, value) {
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.display = value;
 };
 
@@ -850,7 +821,6 @@ function(htmlElement, x, y, containerElement, dontIncScrollTop, point) {
 		p.set(x, y);
 	}
 
-	htmlElement = Dwt.getElement(htmlElement);
 	var offsetParent = htmlElement;
 	while (offsetParent && offsetParent != containerElement) {
 		p.x += offsetParent.offsetLeft - offsetParent.scrollLeft;
@@ -879,7 +849,6 @@ Dwt.getInsets = function(htmlElement) {
 	//		{ left: 3, top:0, right:3, bottom:0 }
 	// NOTE: assumes values from computedStyle are returned in pixels!!!
 
-	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	var style = DwtCssStyle.getComputedStyleObject(htmlElement);
 
 	var bl = parseInt(style.borderLeftWidth) 	|| 0;
@@ -1104,7 +1073,6 @@ Dwt.hasClass = function(el, className) {
 Dwt.setSelectionRange =
 function(input, start, end) {
 	if (AjxEnv.isGeckoBased || AjxEnv.isSafari) {
-        input.focus();
 		input.setSelectionRange(start, end);
 	} else if (AjxEnv.isIE) {
 		var range = input.createTextRange();
@@ -1227,16 +1195,15 @@ function(objOrClassName, className) {
  * hash with the given param names.
  * 
  * @param {hash}	args			a hash of arguments
- * @param {array}	paramNames		an ordered list of param names
- * @param {boolean}	force			if true, a single arg is not a params hash
+ * @param {array}	paramNames	a ordered list of param names
  */
 Dwt.getParams =
-function(args, paramNames, force) {
+function(args, paramNames) {
 	if (!(args && args.length)) { return {}; }
 	
 	// Check for arg-list style of passing params. There will almost always
 	// be more than one arg, and the first one is the parent DwtControl.
-	if (args.length > 1 || (args[0] && args[0]._eventMgr) || force) {
+	if (args.length > 1 || args[0]._eventMgr) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
 			params[paramNames[i]] = args[i];
@@ -1259,7 +1226,6 @@ function(args, paramNames, force) {
 Dwt.__checkPxVal =
 function(val, check) {
 	if (val == Dwt.DEFAULT) { return false; }
-	if (isNaN(parseInt(val))) { return false; }
 
 	if (check && val < 0 && val != Dwt.LOC_NOWHERE) {
 		DBG.println(AjxDebug.DBG1, "negative pixel value: " + val);
@@ -1303,33 +1269,6 @@ function(id, ancestor) {
 Dwt.byTag =
 function(tagName) {
 	return document.getElementsByTagName(tagName);
-};
-
-Dwt.byClassName =
-function(className, ancestor) {
-	if (!ancestor) {
-        ancestor = document;
-	}
-
-    try {
-        return ancestor.getElementsByClassName(className);
-    } catch (e) {
-        /* fall back for IE 8 and earlier */
-        var pattern = new RegExp("\\b"+className+"\\b");
-
-        function byClass(element, accumulator)
-        {
-            if (element.className && element.className.match(pattern))
-                accumulator.push(element);
-
-            for (var i = 0; i < element.childNodes.length; i++)
-                byClass(element.childNodes[i], accumulator);
-
-            return accumulator;
-	    };
-
-	    return byClass(ancestor, []);
-    }
 };
 
 Dwt.show =
@@ -1394,6 +1333,7 @@ function(htmlEl,html){
  */
 Dwt.setFavIcon =
 function(iconURL) {
+	return; // Unsupported on IE. Too CPU heavy on FF. Now seems too CPU heavy on Chrome too. Let's disable this.
 
 	// Look for an existing fav icon to modify.
 	var favIcon = null;
@@ -1417,7 +1357,6 @@ function(iconURL) {
 	// (Need to remove/add to dom in order to force a redraw.)
 	if (favIcon) {
 		favIcon.href=iconURL;
-		favIcon.type = 'image/x-icon';
 		var parent = favIcon.parentNode;
 		parent.removeChild(favIcon);
 		parent.appendChild(favIcon);
@@ -1428,7 +1367,6 @@ function(iconURL) {
 		newLink.id = Dwt._favIconId = Dwt.getNextId()
 		newLink.rel = "SHORTCUT ICON";
 		newLink.href = iconURL;
-		newLink.type = "image/x-icon";
 		docHead = docHead || document.getElementsByTagName("head")[0];
 		docHead.appendChild(newLink);
 	}
@@ -1538,42 +1476,18 @@ function(el1, el2) {
 };
 
 /**
- * Resets the scrollTop of container (if necessary) to ensure that element is visible.
- * 
- * @param {Element}		element		the element to be made visible
- * @param {Element}		container	the containing element to possibly scroll
- * @private
- */
-Dwt.scrollIntoView =
-function(element, container) {
-	
-	if (!element || !container) { return; }
-	
-	var elementTop = Dwt.toWindow(element, 0, 0, null, null, DwtPoint.tmp).y;
-	var containerTop = Dwt.toWindow(container, 0, 0, null, null, DwtPoint.tmp).y + container.scrollTop;
-
-	var diff = elementTop - containerTop;
-	if (diff < 0) {
-		container.scrollTop += diff;
-	} else {
-		var containerH = Dwt.getSize(container, DwtPoint.tmp).y;
-		var elementH = Dwt.getSize(element, DwtPoint.tmp).y;
-		diff = (elementTop + elementH) - (containerTop + containerH);
-		if (diff > 0) {
-			container.scrollTop += diff;
-		}
-	}
-};
-
-/**
  * Sets up a hidden div for performance metrics.  Use to set the start of object rendering
  * @param id {String}
  * @param date {Date}
  */
 Dwt.setLoadingTime = 
 function(id, date) {
-	if (!window.isPerfMetric) { return;	}
-	date = date || new Date();
+	if (!window.isPerfMetric) {
+		return;
+	}
+	if (!date) {
+		date = new Date();
+	}
 	id += "_loading";
 	var div = document.getElementById(id);
 	if (!div) {
@@ -1583,9 +1497,6 @@ function(id, date) {
 		document.body.appendChild(div);
 	}
 	div.innerHTML = date.getTime();
-	if (window.appDevMode) {
-		console.profile(id);
-	}
 };
 
 /**
@@ -1595,8 +1506,12 @@ function(id, date) {
  */
 Dwt.setLoadedTime = 
 function(id, date) {
-	if (!window.isPerfMetric) { return;	}
-	date = date || new Date();
+	if (!window.isPerfMetric) {
+		return;
+	}
+	if (!date) {
+		date = new Date();
+	} 
 	id += "_loaded";
 	var div = document.getElementById(id);
 	if (!div) {
@@ -1606,173 +1521,4 @@ function(id, date) {
 		document.body.appendChild(div);
 	}
 	div.innerHTML = date.getTime();
-	if (window.appDevMode) {
-		console.profileEnd();
-	}
-};
-
-/**
- * Prints the computed time from performance metrics data
- */
-Dwt.printPerfMetric =
-function() {
-	//code to print all loading stats
-	$.each($('div[id*="_loaded"]'), function(index, elem) {
-		var end_id = $(elem).attr("id");
-		var start_id_prefix = end_id.substring(0,end_id.indexOf("_"));
-		var end_elem = $("#" + start_id_prefix+"_launched");
-		if (end_elem && end_elem.length > 0) {
-			var end_time = $("#" + start_id_prefix+"_launched").html();
-		} else {
-			end_time = $("#" + start_id_prefix+"_loading").html();
-		}
-		var log = "Load time for " + start_id_prefix + " is " + ($(elem).html()-end_time);
-		DBG.println(AjxDebug.DBG1,log);
-		if (console) {
-			console.log(log);
-		}
-	});
-}
-
-// Css for Templates
-Dwt.createLinearGradientCss =
-function(startColor, endColor, direction) {
-    var gradientCss = null;
-    var gradient = this.createLinearGradientInfo(startColor, endColor, direction);
-    if (gradient.field) {
-        gradientCss = gradient.field + ":" + gradient.css + ";";
-    }
-    return gradientCss;
-}
-
-/**
- * -- FF 3.6+
- *    background: -moz-linear-gradient(black, white);
- * -- Safari 4+, Chrome 2+
- *    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #000000), color-stop(100%, #ffffff));
- * -- Safari 5.1+, Chrome 10+
- *    background: -webkit-linear-gradient(top, black, white);
- * -- Opera 11.10
- *    background: -o-linear-gradient(black, white);
- * -- IE6 & IE7
- *    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#000000', endColorstr='#ffffff');
- * -- IE8 & IE9
- *    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#000000', endColorstr='#ffffff')";
- * -- IE10
- *    background: -ms-linear-gradient(black, white);
- * -- the standard
- *    background: linear-gradient(black, white);
- */
-Dwt.createLinearGradientInfo =
-function(startColor, endColor, direction) {
-
-    var cssDirection;
-    var gradient = {};
-    if (AjxEnv.isIE10up) {
-        cssDirection = (direction == 'v') ? 'top' : 'left';
-        gradient.field = "background";
-        gradient.css   = "-ms-linear-gradient(" + cssDirection + "," + startColor + ", "  + endColor + ")";
-    } else if (AjxEnv.isIE) {
-        cssDirection = (direction == 'v') ? 0 : 1;
-        gradient.field = "filter";
-        gradient.name  = "DXImageTransform.Microsoft.Gradient";
-        gradient.css   = "progid:" + gradient.name + "(" +
-                         "GradientType=" + cssDirection + ",startColorstr=" + startColor +
-                         ",endColorstr=" + endColor + "); zoom:1;";
-    } else if (AjxEnv.isFirefox3_6up) {
-        cssDirection = (direction == 'v') ? 'top' : 'left';
-        gradient.field = "background";
-        gradient.css   = "-moz-linear-gradient(" + cssDirection + "," + startColor + ", "  + endColor + ")";
-    } else if ((AjxEnv.isSafari && AjxEnv.isSafari5_1up) || AjxEnv.isChrome10up) {
-        cssDirection = (direction == 'v') ? 'top' : 'left';
-        gradient.field = "background";
-        gradient.css   = "-webkit-linear-gradient(" + cssDirection + ","+
-                          startColor + ", " + endColor + ")";
-    } else if ((AjxEnv.isSafari && AjxEnv.isSafari4up) || AjxEnv.isChrome2up) {
-        var startPt = 'left top';
-        var endPt   = (direction == 'v') ? "left bottom" : "right top";
-        gradient.field = "background";
-        gradient.css   = "-webkit-gradient(linear, " + startPt + ", " + endPt +
-                         ", color-stop(0%, " + startColor + "), color-stop(100%, " + endColor + "))";
-    }
-    return gradient;
-}
-
-Dwt.setLinearGradient =
-function(htmlElement, startColor, endColor, direction) {
-    var gradient = Dwt.createLinearGradientInfo(startColor, endColor, direction);
-    if (AjxEnv.isIE) {
-        Dwt.alterIEFilter(htmlElement, gradient.name, gradient.css);
-    } else {
-        htmlElement.style[gradient.field] = gradient.css;
-    }
-}
-
-Dwt.alterIEFilter =
-function(htmlElement, filterName, newFilter) {
-    if (htmlElement.style.filter) {
-        var found = false;
-        var filters = htmlElement.style.filter.split(" ");
-        for (var i = 0; i < filters.length; i++) {
-            if (filters[i].indexOf(filterName) != -1) {
-                filters[i] = newFilter;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            filters[filters.length] = newFilter;
-        }
-        htmlElement.style.filter = filters.join(" ");
-    } else {
-       htmlElement.style.filter = newFilter;
-    }
-}
-
-Dwt.getIEFilter =
-function(htmlElement, filterName) {
-    var filter = "";
-    if (htmlElement.style.filter) {
-        var filters = htmlElement.style.filter.split(" ");
-        for (var i = 0; i < filters.length; i++) {
-            if (filters[i].indexOf(filterName) != -1) {
-                filter = filters[i];
-                break;
-            }
-        }
-    }
-    return filter
-}
-
-// Used for an unattached DOM subtree.
-Dwt.getDescendant =
-function(htmlElement, id) {
-    var descendant = null;
-    for (var i = 0; i < htmlElement.childNodes.length; i++) {
-        var child = htmlElement.childNodes[i];
-        if (child.id == id) {
-            descendant = child;
-        } else {
-            descendant = Dwt.getDescendant(child, id);
-        }
-        if (descendant != null) {
-            break;
-        }
-    }
-    return descendant;
-};
-
-Dwt.moveCursorToEnd =
-function(input) {
-	if (AjxEnv.isIE) {
-		var tr = input.createTextRange();
-		tr.moveStart('character', input.value.length);
-		tr.collapse();
-		tr.select();
-	 }
-	else {
-		input.focus();
-		var length = input.value.length;
-		input.setSelectionRange(length, length);
-	}
 };

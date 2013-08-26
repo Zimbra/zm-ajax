@@ -42,10 +42,17 @@ AjxCallback = function(obj, func, args) {
         this.func = func;
         this.args = args;
     }
-};
+}
 
-AjxCallback.prototype.isAjxCallback = true;
-AjxCallback.prototype.toString = function() { return "AjxCallback"; }
+/**
+ * Returns a string representation of the object.
+ * 
+ * @return		{string}		a string representation of the object
+ */
+AjxCallback.prototype.toString =
+function() {
+	return "AjxCallback";
+}
 
 AjxCallback.NOP = new AjxCallback(function(){});
 
@@ -84,7 +91,7 @@ function(/* arg1 ... argN */) {
 
 	// invoke function
 	if (this.func) {
-        return this.func.apply(this.obj || window, args);
+		return this.func.apply(this.obj || window, args);
 	}
 };
 

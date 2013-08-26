@@ -64,7 +64,7 @@ DwtLabel = function(params) {
 	params = Dwt.getParams(arguments, DwtLabel.PARAMS);
 	
 	params.className = params.className || "DwtLabel";
-	DwtComposite.call(this, params);
+	DwtControl.call(this, params);
 
 	/**
 	 * The label style. See the constructor for more info.
@@ -81,13 +81,13 @@ DwtLabel = function(params) {
 	 */
 	this._textForeground = null;
 
-    this._createHtml(params.template);
+    this._createHtml();
     //MOW:  this.setCursor("default");
 }
 
 DwtLabel.PARAMS = ["parent", "style", "className", "posStyle", "id", "index"];
 
-DwtLabel.prototype = new DwtComposite;
+DwtLabel.prototype = new DwtControl;
 DwtLabel.prototype.constructor = DwtLabel;
 
 /**
@@ -191,17 +191,6 @@ DwtLabel.prototype.setImage =
 function(imageInfo) {
 	this.__imageInfo = imageInfo;
 	this.__setImage(imageInfo);
-}
-
-/**
- *
- * Set _iconEl, used for buttons that contains only images
- *
- * @param       htmlElement/DOM node
- *
- */
-DwtLabel.prototype.setIconEl = function(iconElement) {
-        this._iconEl =  iconElement;
 }
 
 /**

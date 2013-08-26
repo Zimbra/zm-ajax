@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -25,8 +25,15 @@ AjxXmlDoc = function() {
 		AjxXmlDoc._init();
 }
 
-AjxXmlDoc.prototype.isAjxXmlDoc = true;
-AjxXmlDoc.prototype.toString = function() {	return "AjxXmlDoc"; }
+/**
+ * Returns a string representation of the object.
+ * 
+ * @return	{string}	a string representation of the object
+ */
+AjxXmlDoc.prototype.toString =
+function() {
+	return "AjxXmlDoc";
+}
 
 //
 // Constants
@@ -49,10 +56,6 @@ AjxXmlDoc.REC_AVOID_CHARS_RE = /[\u007F-\u0084\u0086-\u009F\uFDD0-\uFDDF]/g;
 
 AjxXmlDoc._inited = false;
 AjxXmlDoc._msxmlVers = null;
-AjxXmlDoc._useDOM =
-    Boolean(document.implementation && document.implementation.createDocument);
-AjxXmlDoc._useActiveX =
-    !AjxXmlDoc._useDOM && Boolean(window.ActiveXObject);
 
 /**
  * Creates an XML doc.
@@ -63,14 +66,14 @@ AjxXmlDoc.create =
 function() {
 	var xmlDoc = new AjxXmlDoc();
 	var newDoc = null;
-	if (AjxXmlDoc._useActiveX) {
+	if (AjxEnv.isIE) {
 		newDoc = new ActiveXObject(AjxXmlDoc._msxmlVers);
 		newDoc.async = true; // Force Async loading
 		if (AjxXmlDoc._msxmlVers == "MSXML2.DOMDocument.4.0") {
 			newDoc.setProperty("SelectionLanguage", "XPath");
 			newDoc.setProperty("SelectionNamespaces", "xmlns:zimbra='urn:zimbra' xmlns:mail='urn:zimbraMail' xmlns:account='urn:zimbraAccount'");
 		}
-	} else if (AjxXmlDoc._useDOM) {
+	} else if (document.implementation && document.implementation.createDocument) {
 		newDoc = document.implementation.createDocument("", "", null);
 	} else {
 		throw new AjxException("Unable to create new Doc", AjxException.INTERNAL_ERROR, "AjxXmlDoc.create");
@@ -136,7 +139,7 @@ AjxXmlDoc.prototype.loadFromString =
 function(str) {
 	var doc = this._doc;
 	doc.loadXML(str);
-	if (AjxXmlDoc._useActiveX) {
+	if (AjxEnv.isIE) {
 		if (doc.parseError.errorCode != 0)
 			throw new AjxException(doc.parseError.reason, AjxException.INVALID_PARAM, "AjxXmlDoc.loadFromString");
 	}
@@ -257,7 +260,7 @@ function(dropns, lowercase, withAttrs) {
 AjxXmlDoc.prototype.getElementsByTagNameNS = 
 function(ns, tag) {
 	var doc = this.getDoc();
-	return !doc.getElementsByTagNameNS
+	return AjxEnv.isIE
 		? doc.getElementsByTagName(ns + ":" + tag)
 		: doc.getElementsByTagNameNS(ns, tag);
 };
@@ -275,7 +278,7 @@ function(tag) {
 
 AjxXmlDoc._init =
 function() {
-	if (AjxXmlDoc._useActiveX) {
+	if (AjxEnv.isIE) {
 		var msxmlVers = ["MSXML4.DOMDocument", "MSXML3.DOMDocument", "MSXML2.DOMDocument.4.0",
 				 "MSXML2.DOMDocument.3.0", "MSXML2.DOMDocument", "MSXML.DOMDocument",
 				 "Microsoft.XmlDom"];
@@ -290,7 +293,7 @@ function() {
 		if (!AjxXmlDoc._msxmlVers) {
 			throw new AjxException("MSXML not installed", AjxException.INTERNAL_ERROR, "AjxXmlDoc._init");
 		}
-	} else if (!Document.prototype.loadXML) {
+	} else if (AjxEnv.isNav || AjxEnv.isOpera || AjxEnv.isSafari) {
 		// add loadXML to Document's API
 		Document.prototype.loadXML = function(str) {
 			var domParser = new DOMParser();
@@ -300,10 +303,21 @@ function() {
 				this.removeChild(this.lastChild);
 			}
 			var len = domObj.childNodes.length;
-            for (var i = 0; i < len; i++) {
-                var importedNode = this.importNode(domObj.childNodes[i], true);
-                this.appendChild(importedNode);
-            }
+			if (AjxEnv.isChrome7) {
+				// workaround for http://code.google.com/p/chromium/issues/detail?id=54969
+				var frag = this.createDocumentFragment();
+				for (var i = 0; i < len; i++) {
+					var importedNode = this.importNode(domObj.childNodes[i], true);
+					frag.appendChild(importedNode);
+				}
+				this.appendChild(frag);
+			}
+			else {
+				for (var i = 0; i < len; i++) {
+					var importedNode = this.importNode(domObj.childNodes[i], true);
+					this.appendChild(importedNode);
+				}
+			}
 		}
 		
 		if (AjxEnv.isNav) {
