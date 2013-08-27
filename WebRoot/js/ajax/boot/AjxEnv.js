@@ -41,6 +41,8 @@ AjxEnv.geckoDate;
 AjxEnv.mozVersion;
 /** WebKit version. */
 AjxEnv.webKitVersion;
+/** Trident version. */
+AjxEnv.tridentVersion;
 /** Macintosh. */
 AjxEnv.isMac;
 /** Windows. */
@@ -141,6 +143,8 @@ AjxEnv.isChrome10up;
 AjxEnv.isGeckoBased;
 /** WebKit-based. */
 AjxEnv.isWebKitBased;
+/** Trident, i.e. the MSIE rendering engine */
+AjxEnv.isTrident;
 /** Opera. */
 AjxEnv.isOpera;
 
@@ -241,6 +245,7 @@ function() {
 	AjxEnv.isChrome19up = false;
 	AjxEnv.isGeckoBased = false;
 	AjxEnv.isWebKitBased = false;
+	AjxEnv.isTrident = false;
 	AjxEnv.isOpera = false;
 	AjxEnv.useTransparentPNGs = false;
 	AjxEnv.isDesktop = false;
@@ -266,6 +271,7 @@ function() {
 	var isHotJava = false;
 	var beginsWithMozilla = false;
 	var isCompatible = false;
+	var isTrident = false;
 
 	if (agtArr != null) {
 		var browserVersion;
@@ -299,6 +305,9 @@ function() {
 			} else if ((index = token.indexOf('msie')) != -1) {
 				AjxEnv.isIE = true;
 				browserVersion = parseFloat(agtArr[i+1]);
+			} else if ((index = token.indexOf('trident/')) != -1) {
+				AjxEnv.isTrident = true;
+				AjxEnv.tridentVersion = parseFloat(token.substr(index + 8));
 			} else if ((index = token.indexOf('gecko/')) != -1) {
 				AjxEnv.isGeckoBased = true;
 				AjxEnv.geckoDate = parseFloat(token.substr(index + 6));

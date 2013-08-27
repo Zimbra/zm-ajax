@@ -944,6 +944,7 @@ public class SkinResources
 		double geckoDate = 0;
 		double mozVersion = -1;
 		double webKitVersion = -1;
+		double tridentVersion = -1;
 		boolean isMac = false;
 		boolean isWindows = false;
 		boolean isLinux = false;
@@ -971,6 +972,8 @@ public class SkinResources
 		boolean isIE9up = false;
 		boolean isIE10 = false;
 		boolean isIE10up = false;
+		boolean isIE11 = false;
+		boolean isIE11up = false;
 		boolean isFirefox = false;
 		boolean isFirefox1up = false;
 		boolean isFirefox1_5up = false;
@@ -984,6 +987,7 @@ public class SkinResources
 		boolean isSafari5up = false;
 		boolean isChrome = false;
 		boolean isChrome4up = false;
+		boolean isTrident = false;
 		boolean isGeckoBased = false;
 		boolean isGecko1_8up = false;
 		boolean isGecko2up = false;
@@ -1038,6 +1042,9 @@ public class SkinResources
 					if (agtArr.hasMoreTokens()) {
 						browserVersion = parseVersion(agtArr.nextToken());
 					}
+				} else if ((index = token.indexOf("trident/")) != -1) {
+					isTrident = true;
+					tridentVersion = parseFloat(token.substring(index + 8));
 				} else if ((index = token.indexOf("gecko/")) != -1) {
 					isGeckoBased = true;
 					geckoDate = parseFloat(token.substring(index + 6));
@@ -1073,6 +1080,11 @@ public class SkinResources
 				token = agtArr.hasMoreTokens() ? agtArr.nextToken() : null;
 			} while (token != null);
 
+			if (isTrident && mozVersion >= 11.0) {
+				isIE = true;
+				browserVersion = mozVersion;
+			}
+
 			isIE = (isIE && !isOpera);
 			isIE3 = (isIE && (browserVersion < 4));
 			isIE4 = (isIE && (browserVersion == 4.0));
@@ -1091,6 +1103,8 @@ public class SkinResources
 			isIE9up = (isIE && (browserVersion >= 9.0));
 			isIE10 = (isIE && (browserVersion == 10.0));
 			isIE10up = (isIE && (browserVersion >= 10.0));
+			isIE11 = (isIE && (browserVersion == 11.0));
+			isIE11up = (isIE && (browserVersion >= 11.0));
 
 			// Note: Opera and WebTV spoof Navigator. We do strict client detection.
 			isNav = (beginsWithMozilla && !isSpoofer && !isCompatible && !isOpera && !isWebTv && !isHotJava && !isSafari && !isChrome);
@@ -1154,6 +1168,8 @@ public class SkinResources
 			define(macros, "MSIE_9_OR_HIGHER", isIE9up);
 			define(macros, "MSIE_10", isIE10);
 			define(macros, "MSIE_10_OR_HIGHER", isIE10up);
+			define(macros, "MSIE_11", isIE11);
+			define(macros, "MSIE_11_OR_HIGHER", isIE11up);
 			define(macros, "NAVIGATOR", isNav);
 			define(macros, "NAVIGATOR_4", isNav4);
 			define(macros, "NAVIGATOR_6", isNav6);
@@ -1722,13 +1738,7 @@ public class SkinResources
 				throw new IOException("grad():type not understood: use 'linear-vertical', 'linear-horizontal");
 			}
 			if (isBrowser("MSIE")){
-				if (isBrowser("MSIE_10_OR_HIGHER")){
-					result = String.format("background-image: -ms-linear-gradient(top %s, %s, %s);\n", topLeft, from, to);
-				//} else if (isBrowser("MSIE_8_OR_HIGHER")){ //IE 8 and IE 9
-					//result = String.format("-ms-filter: \"progid:DXImageTransform.Microsoft.gradient(startColorstr='%s',endColorstr='%s',GradientType=%d\");",from, to, gradType);
-				} else { // IE 7 or lower
-					result = String.format("filter: progid:DXImageTransform.Microsoft.gradient(startColorStr='%s', EndColorStr='%s' , GradientType=%d);", from, to, gradType );
-				}
+				result = String.format("filter: progid:DXImageTransform.Microsoft.gradient(startColorStr='%s', EndColorStr='%s' , GradientType=%d);", from, to, gradType );
 			} else if (isBrowser("FIREFOX")) {
 				result = String.format("background-image: -moz-linear-gradient(top %s, %s, %s);",topLeft, from, to);
 			} else if (isBrowser("WEBKIT")){
