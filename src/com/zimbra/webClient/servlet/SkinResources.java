@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -891,6 +891,7 @@ public class SkinResources
         double geckoDate = 0;
         double mozVersion = -1;
         double webKitVersion = -1;
+		double tridentVersion = -1;
         boolean isMac = false;
         boolean isWindows = false;
         boolean isLinux = false;
@@ -919,6 +920,7 @@ public class SkinResources
         boolean isMozilla1_4up = false;
         boolean isSafari = false;
         boolean isChrome = false;
+		boolean isTrident = false;
         boolean isGeckoBased = false;
 		boolean isGecko1_8up = false;
         boolean isWebKitBased = false;
@@ -972,6 +974,9 @@ public class SkinResources
                     if (agtArr.hasMoreTokens()) {
                         browserVersion = parseVersion(agtArr.nextToken());
                     }
+				} else if ((index = token.indexOf("trident/")) != -1) {
+					isTrident = true;
+					tridentVersion = parseFloat(token.substring(index + 8));
                 } else if ((index = token.indexOf("gecko/")) != -1) {
                     isGeckoBased = true;
                     geckoDate = parseFloat(token.substring(index + 6));
@@ -1006,6 +1011,11 @@ public class SkinResources
 
                 token = agtArr.hasMoreTokens() ? agtArr.nextToken() : null;
             } while (token != null);
+
+			if (isTrident && mozVersion >= 11.0) {
+				isIE = true;
+				browserVersion = mozVersion;
+			}
 
             isIE = (isIE && !isOpera);
 			isIE3 = (isIE && (browserVersion < 4));
