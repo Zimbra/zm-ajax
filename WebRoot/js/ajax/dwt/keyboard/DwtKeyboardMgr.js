@@ -422,8 +422,8 @@ function() {
 	var kbff = this._kbFocusField = document.createElement("textarea");
 	kbff.id = DwtKeyboardMgr.FOCUS_FIELD_ID;
 	kbff.tabIndex = 0;
-	Dwt.setPosition(kbff, Dwt.ABSOLUTE_STYLE);
-	Dwt.setLocation(kbff, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
+	kbff.style.position = Dwt.ABSOLUTE_STYLE;
+	kbff.style.top = kbff.style.left = Dwt.LOC_NOWHERE;
 	kbff.onblur = DwtKeyboardMgr.__onBlurHdlr;
 	kbff.onfocus = DwtKeyboardMgr.__onFocusHdlr;
 	document.body.appendChild(kbff);
@@ -720,9 +720,9 @@ function(ev) {
 	// Sync up focus if needed
 	var focusInTGMember = DwtKeyboardMgr.__syncFocus(kbMgr, kev.target);
 	
-//	if (!focusInTGMember) {
+	if (!focusInTGMember) {
 //		DBG.println("kbnav", "Object is not in tab hierarchy");
-//	}
+	}
 			
 	/* The first thing we care about is the tab key since we want to manage
 	 * focus based on the tab groups. 
@@ -818,7 +818,8 @@ function(ev) {
 
 	// If the currently focused control didn't handle the event, hand it to the default key
 	// event handler
-	if (handled === DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED && kbMgr.__currDefaultHandler) {
+	if ((handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && kbMgr.__currDefaultHandler &&
+		!(kbMgr.__currTabGroup && kbMgr.__currTabGroup.isDefaultHandlingBlocked())) {
 		handled = kbMgr.__dispatchKeyEvent(kbMgr.__currDefaultHandler, kev);
 	}
 

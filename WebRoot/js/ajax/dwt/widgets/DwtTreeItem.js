@@ -39,9 +39,7 @@
  * @param {boolean}      params.singleClickAction		if <code>true</code>, an action is performed in single click
  * @param {AjxCallback}      params.dndScrollCallback	the callback triggered when scrolling of a drop area for an object being dragged
  * @param {string}      params.dndScrollId			the id
- * @param {boolean}    params.arrowDisabled
- * @param {boolean}     params.dynamicWidth		if <code>true</code>, the table should be width auto instead of the default fixed
- *
+ *        
  * @extends		DwtComposite		
  */
 DwtTreeItem = function(params) {
@@ -67,8 +65,6 @@ DwtTreeItem = function(params) {
     this._treeItemTextClass = "DwtTreeItem-Text";
     this._treeItemExtraImgClass = "DwtTreeItem-ExtraImg";
 
-	this._dynamicWidth = params.dynamicWidth;
-
 	params.deferred = (params.deferred !== false);
 	params.className = null;
 	DwtComposite.call(this, params);
@@ -87,7 +83,7 @@ DwtTreeItem = function(params) {
 	this._forceNotifyAction = Boolean(params.forceNotifyAction);
 	this._dndScrollCallback = params.dndScrollCallback;
 	this._dndScrollId = params.dndScrollId;
-	this._arrowDisabled = params.arrowDisabled;
+    this._contextEnabled = (!(!(parent._optButton)) || parent._contextEnabled) && this._selectionEnabled;
 
 	if (params.singleClickAction) {
 		this._singleClickAction = true;
@@ -129,7 +125,6 @@ DwtTreeItem._processedMouseDown = false;
 
 DwtTreeItem.prototype.dispose =
 function() {
-    DwtComposite.prototype.dispose.call(this);
 	this._itemDiv = null;
 	this._nodeCell = null;
 	this._checkBoxCell = null;
@@ -138,25 +133,9 @@ function() {
 	this._imageCell = null;
 	this._textCell = null;
 	this._childDiv = null;
-	this._initialized = false;
+	DwtComposite.prototype.dispose.call(this);
 };
 
-/**
- * override DwtControl.prototype.getData to take care of special case of KEY_OBJECT of type ZmOrganizer. See bug 82027
- * @param key
- * @return {*}
- */
-DwtTreeItem.prototype.getData =
-function(key) {
-	var obj = this._data[key];
-	if (key !== Dwt.KEY_OBJECT || !obj || !obj.isZmOrganizer) {
-		return obj;
-	}
-	//special case for ZmOrganizer instance of the Dwt.KEY_OBJECT attribute.
-	//bug 82027 - the folder attributes such as name could be wrong after refresh block+ rename when new instance was created but not set to the item Dwt.KEY_OBJECT attribute.
-	var cachedOrganizer = obj && appCtxt.cacheGet(obj.id);
-	return cachedOrganizer || obj; //just in case somehow it's no longer cached. No idea if could happen.
-};
 
 /**
  * Checks if the item is checked.
@@ -322,7 +301,7 @@ function() {
  */
 DwtTreeItem.prototype.setText =
 function(text) {
-	if (this._initialized && this._textCell) {
+	if (this._initialized) {
 		if (!text) text = "";
 		this._text = this._textCell.innerHTML = text;
 	} else {
@@ -376,14 +355,9 @@ function(enable) {
 	this._selectedClassName = enable
 		? this._origClassName + "-" + DwtCssStyle.SELECTED
 		: this._origClassName;
+    this._contextEnabled = !(!(this.parent._optButton)) && this._selectionEnabled;
 
 };
-
-DwtTreeItem.prototype.isSelectionEnabled =
-function() {
-	return this._selectionEnabled;
-};
-
 
 DwtTreeItem.prototype.enableAction =
 function(enable) {
@@ -551,12 +525,10 @@ function(index, realizeDeferred, forceNode) {
 	this._textCell = document.getElementById(data.id + "_textCell");
 	this._extraCell = document.getElementById(data.id + "_extraCell");
 
-	if (this._dynamicWidth){
-		var tableNode = document.getElementById(data.id + "_table");
-		tableNode.style.tableLayout = "auto";
-	}
-
-
+    if (!this._contextEnabled){
+        var tableNode = document.getElementById(data.id + "_table");
+        tableNode.style.tableLayout = "auto";
+    }
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
 		this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
@@ -870,7 +842,7 @@ function(item) {
 
 DwtTreeItem.prototype._setTreeElementStyles =
 function(img, focused) {
-   if (this._arrowDisabled || this._draghovering) {
+   if (!this._contextEnabled || this._draghovering) {
         return;
    }
    var selected = focused ? "-focused" : "";
@@ -884,13 +856,13 @@ function(img, focused) {
 
 DwtTreeItem.prototype._setSelected =
 function(selected, noFocus) {
-	if (this._selected != selected && !this._disposed) {
+	if (this._selected != selected) {
 		this._selected = selected;
 		if (!this._initialized) {
 			this._initialize();
 		}
 		if (!this._itemDiv) { return; }
-		if (selected && (this._selectionEnabled || this._forceNotifySelection) /*&& this._origClassName == "DwtTreeItem"*/) {
+		if (selected && (this._selectionEnabled || this._forceNotifySelection || this._checkBoxVisible) /*&& this._origClassName == "DwtTreeItem"*/) {
 			this._itemDiv.className = this._selectedClassName;
 			this._setTreeElementStyles("DownArrowSmall", true);
             if (!noFocus) {
@@ -898,7 +870,6 @@ function(selected, noFocus) {
 			}
 			return true;
 		} else {
-			this.blur();
 			this._setTreeElementStyles("Blank_16", false);
 			this._itemDiv.className = this._origClassName;;
 			return false;

@@ -28,7 +28,6 @@ AjxUtil.FLOAT_RE = /^[+\-]?((\d+(\.\d*)?)|((\d*\.)?\d+))([eE][+\-]?\d+)?$/;
 AjxUtil.NOTFLOAT_RE = /[^\d\.]/;
 AjxUtil.NOTINT_RE = /[^0-9]+/;
 AjxUtil.LIFETIME_FIELD = /^([0-9])+([dhms]|ms)?$/;
-AjxUtil.INT_RE = /^\-?(0|[1-9]\d*)$/;
 
 AjxUtil.isSpecified 		= function(aThing) { return ((aThing !== void 0) && (aThing !== null)); };
 AjxUtil.isUndefined 		= function(aThing) { return (aThing === void 0); };
@@ -42,10 +41,10 @@ AjxUtil.isFunction 			= function(aThing) { return (typeof(aThing) == 'function')
 AjxUtil.isDate 				= function(aThing) { return AjxUtil.isInstance(aThing, Date); };
 AjxUtil.isLifeTime 			= function(aThing) { return AjxUtil.LIFETIME_FIELD.test(aThing); };
 AjxUtil.isNumeric 			= function(aThing) { return (!isNaN(parseFloat(aThing)) && AjxUtil.FLOAT_RE.test(aThing) && !AjxUtil.NOTFLOAT_RE.test(aThing)); };
-AjxUtil.isInt				= function(aThing) { return AjxUtil.INT_RE.test(aThing); };
-AjxUtil.isPositiveInt		= function(aThing) { return AjxUtil.isInt(aThing) && parseInt(aThing, 10) > 0; }; //note - assume 0 is not positive
-AjxUtil.isLong = AjxUtil.isInt;
-AjxUtil.isNonNegativeLong	= function(aThing) { return AjxUtil.isLong(aThing) && parseInt(aThing, 10) >= 0; };
+AjxUtil.isLong			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
+AjxUtil.isNonNegativeLong   = function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isLong(aThing) && (parseFloat(aThing) >= 0)); };
+AjxUtil.isInt			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
+AjxUtil.isPositiveInt   	= function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isInt(aThing) && (parseInt(aThing) > 0)); };
 AjxUtil.isEmpty				= function(aThing) { return ( AjxUtil.isNull(aThing) || AjxUtil.isUndefined(aThing) || (aThing === "") || (AjxUtil.isArray(aThing) && (aThing.length==0))); };
 // REVISIT: Should do more precise checking. However, there are names in
 //			common use that do not follow the RFC patterns (e.g. domain
@@ -875,15 +874,14 @@ AjxUtil.get = function(object /* , propName1, ... */) {
  * 
 */
 AjxUtil.convertToEntities = function (source){
-	var result = '';
-	var length = 0;
+	var result = '', temp, length = 0, i = 0;
     
     if (!source || !(length = source.length)) return source;
     
-	for (var i = 0; i < length; i++) {
-		if (source.charCodeAt(i) > 127) {
-			var temp = source.charCodeAt(i).toString(10);
-			while (temp.length < 4) {
+	for(i; i < length; ++i){
+		if(source.charCodeAt(i) > 127){
+			temp = source.charCodeAt(i).toString(10);
+			while(temp.length < 4){
 				temp = '0' + temp;
 			}
 			result += '&#' + temp + ';';
@@ -892,68 +890,4 @@ AjxUtil.convertToEntities = function (source){
 		}
 	}
 	return result;
-};
-
-/**
- *  Get the class attribute string from the given class.
- * @param {array} - An array of class names to be converted to a class attribute.
- * returns the attribute string with the class names or empty string if no class is passed.
-	*
- */
-AjxUtil.getClassAttr = function (classes){
-	var attr = [];
-	if (classes && classes.length > 0) {
-		//remove duplicate css classes
-		classes = AjxUtil.uniq(classes);
-		return ["class='" , classes.join(" "), "'"].join("");
-	}
-	return "";
-};
-
-/**
- * converts datauri string to blob object used for uploading the image
- * @param {dataURI} - datauri string  data:image/png;base64,iVBORw0
- *
- */
-AjxUtil.dataURItoBlob =
-function (dataURI) {
-
-    if (!(dataURI && typeof window.atob === "function" && typeof window.Blob === "function")) {
-        return;
-    }
-
-    var dataURIArray = dataURI.split(",");
-    if (dataURIArray.length === 2) {
-        if (dataURIArray[0].indexOf('base64') === -1) {
-            return;
-        }
-        // convert base64 to raw binary data held in a string
-        // doesn't handle URLEncoded DataURIs
-        try{
-            var byteString = window.atob(dataURIArray[1]);
-        }
-        catch(e){
-            return;
-        }
-        if (!byteString) {
-            return;
-        }
-        // separate out the mime component
-        var mimeString = dataURIArray[0].split(':');
-        if (!mimeString[1]) {
-            return;
-        }
-        mimeString = mimeString[1].split(';')[0];
-        if (mimeString) {
-            // write the bytes of the string to an ArrayBuffer
-            var byteStringLength = byteString.length,
-                ab = new ArrayBuffer(byteStringLength),
-                ia = new Uint8Array(ab);
-            for (var i = 0; i < byteStringLength; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            return new Blob([ab], {"type" : mimeString});
-        }
-    }
-
 };

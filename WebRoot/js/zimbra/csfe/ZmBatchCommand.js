@@ -179,16 +179,13 @@ function(callback, errorCallback) {
 		if (size && this._requests.length) {
 			for (var i = 0; i < size; i++) {
 				var request = this._requests[i];
-                //Bug fix # 67110 the request object is sometimes undefined
-                if(request) {
-                    request.requestId = i;
-                    var methodName = ZmCsfeCommand.getMethodName(request);
-                    if (!batchRequest[methodName]) {
-                        batchRequest[methodName] = [];
-                    }
-				    request[methodName].requestId = i;
-				    batchRequest[methodName].push(request[methodName]);
-                }
+				request.requestId = i;
+				var methodName = ZmCsfeCommand.getMethodName(request);
+				if (!batchRequest[methodName]) {
+					batchRequest[methodName] = [];
+				}
+				request[methodName].requestId = i;
+				batchRequest[methodName].push(request[methodName]);
 			}
 			params.jsonObj = jsonObj;
 		}
