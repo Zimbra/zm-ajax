@@ -216,10 +216,6 @@ DwtComboBox.prototype.focus = function() {
     this.input.focus();
 };
 
-DwtComboBox.prototype.popdown = function() {
-	if (this._menu)
-		this._menu.popdown();
-};
 
 //
 // Protected methods
@@ -277,10 +273,7 @@ function(ev) {
 };
 
 DwtComboBox.prototype._handleKeyDown = function(ev) {
-	var keycode = DwtKeyEvent.getCharCode(ev);
-
 	this.__ovalue = this.getText();
-
 	return true;
 };
 
