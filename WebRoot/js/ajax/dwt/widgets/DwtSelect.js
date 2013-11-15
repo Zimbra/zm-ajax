@@ -157,7 +157,7 @@ function(option, selected, value, image) {
 			selected = opt.isSelected();
 		} else if(option instanceof DwtSelectOptionData || option.value != null) {
 			val = value != null ? value : option.value;
-			opt = new DwtSelectOption(val, option.isSelected, option.displayValue, this, null, option.image, option.selectedValue, option.extraData);
+			opt = new DwtSelectOption(val, option.isSelected, option.displayValue, this, null, option.image, option.selectedValue, false, option.extraData);
 			selected = Boolean(option.isSelected);
 		} else {
 			return -1;
