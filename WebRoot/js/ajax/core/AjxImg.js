@@ -159,7 +159,7 @@ function(imageName, styles, attrStr, wrapInTable, disabled) {
                     ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
 
             var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
-            if (AjxEnv.isIE && !AjxEnv.isIE9up) {
+            if (AjxEnv.isIE && (!AjxEnv.tridentVersion || AjxEnv.tridentVersion < 5)) {
                 var clip = "";
                 var size = [
                     "width:", overlay.w, ";",
@@ -189,7 +189,7 @@ function(imageName, styles, attrStr, wrapInTable, disabled) {
                     "</div>"
                 ].join("");
             }
-			else if (AjxEnv.isIE9up) {
+			else if (AjxEnv.isIE) {
 					color = color.replace("#","");
 					var className = AjxImg.getClassForImage(imageName + "_" + color, disabled);
 					html = [
