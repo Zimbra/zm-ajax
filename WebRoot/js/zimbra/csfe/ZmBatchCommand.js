@@ -55,7 +55,6 @@ ZmBatchCommand = function(continueOnError, accountName, useJson) {
 	this._onError = (continueOnError === false) ? ZmBatchCommand.STOP : ZmBatchCommand.CONTINUE;
 	this._accountName = accountName;
 	this._useJson = useJson;
-    this._requestBody = null;
 
 	this.curId = 0;
     this._cmds = [];
@@ -153,7 +152,7 @@ function() {
  *										stop.
  */
 ZmBatchCommand.prototype.run =
-function(callback, errorCallback, offlineCallback) {
+function(callback, errorCallback) {
 
 	// Invoke each command so that it hands us its SOAP doc, response callback,
 	// and error callback
@@ -169,7 +168,6 @@ function(callback, errorCallback, offlineCallback) {
 		asyncMode:		true,
 		callback:		new AjxCallback(this, this._handleResponseRun, [callback, errorCallback]),
 		errorCallback:	errorCallback,
-		offlineCallback: offlineCallback,
 		accountName:	this._accountName
 	};
 
@@ -181,19 +179,15 @@ function(callback, errorCallback, offlineCallback) {
 		if (size && this._requests.length) {
 			for (var i = 0; i < size; i++) {
 				var request = this._requests[i];
-                //Bug fix # 67110 the request object is sometimes undefined
-                if(request) {
-                    request.requestId = i;
-                    var methodName = ZmCsfeCommand.getMethodName(request);
-                    if (!batchRequest[methodName]) {
-                        batchRequest[methodName] = [];
-                    }
-				    request[methodName].requestId = i;
-				    batchRequest[methodName].push(request[methodName]);
-                }
+				request.requestId = i;
+				var methodName = ZmCsfeCommand.getMethodName(request);
+				if (!batchRequest[methodName]) {
+					batchRequest[methodName] = [];
+				}
+				request[methodName].requestId = i;
+				batchRequest[methodName].push(request[methodName]);
 			}
 			params.jsonObj = jsonObj;
-            this._requestBody = jsonObj;
 		}
 	}
 	else {
@@ -210,7 +204,6 @@ function(callback, errorCallback, offlineCallback) {
 				batchSoapDoc.getMethod().appendChild(node);
 			}
 			params.soapDoc = batchSoapDoc;
-            this._requestBody = batchSoapDoc;
 		}
 	}
 
@@ -222,11 +215,6 @@ function(callback, errorCallback, offlineCallback) {
 		callback.run();
 	}
 };
-
-ZmBatchCommand.prototype.getRequestBody =
-function() {
-    return this._requestBody;
-}
 
 /**
  * @private

@@ -164,25 +164,6 @@ DwtForm.prototype.setLabel = function(id, label) {
 };
 
 /**
- * Sets the image.
- *
- * @param	{string}	id 		the id
- * @param	{string}	image 	the image
- */
-DwtForm.prototype.setImage = function(id, image) {
-	var item = this._items[id];
-	if (!item) {
-		return;
-	}
-	var control = item.control;
-	if (!control) {
-		return;
-	}
-	control.setImage(image);
-};
-
-
-/**
  * Gets the label.
  * 
  * @param	{string}	id 		the id
@@ -1157,7 +1138,7 @@ DwtForm.__makeGetter = function(item) {
 
 	var parts = ref.split(".");
 	var body = [
-		"var context = this.model;"
+		"var context = this.model;",
 	];
 	for (var i = 0; i < parts.length; i++) {
 		var name = parts[i];
@@ -1183,7 +1164,7 @@ DwtForm.__makeSetter = function(item) {
 
 	var parts = ref.split(".");
 	var body = [
-		"var context = this.model;"
+		"var context = this.model;",
 	];
 	for (var i = 0; i < parts.length; i++) {
 		var isLast = i == parts.length - 1;

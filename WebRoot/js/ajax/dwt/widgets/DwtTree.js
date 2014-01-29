@@ -1,7 +1,7 @@
     /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -403,7 +403,7 @@ function(item) {
 
 DwtTree.prototype._itemActioned =
 function(item, ev) {
-	if (this._actionedItem && !this._actionedItem.isDisposed()) {
+	if (this._actionedItem) {
 		this._actionedItem._setActioned(false);
 		this._notifyListeners(DwtEvent.SELECTION, [this._actionedItem], DwtTree.ITEM_DESELECTED, ev, this._selEv);
 	}
@@ -493,8 +493,8 @@ function(item, ev, skipNotify) {
 	}
 
 	if (setSelection && !this._selectedItems.contains(item)) {
+		this._selectedItems.add(item);
 		if (item._setSelected(true)) {
-			this._selectedItems.add(item);
 			this._notifyListeners(DwtEvent.SELECTION, [item], DwtTree.ITEM_SELECTED, ev, this._selEv);
 		}
 	}

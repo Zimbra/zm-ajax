@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -68,6 +68,7 @@ AjxPackage.require("ajax.dwt.events.DwtMouseEvent");
 AjxPackage.require("ajax.dwt.events.DwtMouseEventCapture");
 AjxPackage.require("ajax.dwt.events.DwtListViewActionEvent");
 AjxPackage.require("ajax.dwt.events.DwtSelectionEvent");
+AjxPackage.require("ajax.dwt.events.DwtHtmlEditorStateEvent");
 AjxPackage.require("ajax.dwt.events.DwtTreeEvent");
 AjxPackage.require("ajax.dwt.events.DwtHoverEvent");
 AjxPackage.require("ajax.dwt.events.DwtOutsideMouseEventMgr");
@@ -100,6 +101,7 @@ AjxPackage.require("ajax.dwt.widgets.DwtBorderlessButton");
 AjxPackage.require("ajax.dwt.widgets.DwtMenuItem");
 AjxPackage.require("ajax.dwt.widgets.DwtMenu");
 AjxPackage.require("ajax.dwt.widgets.DwtMessageDialog");
+AjxPackage.require("ajax.dwt.widgets.DwtHtmlEditor");
 AjxPackage.require("ajax.dwt.widgets.DwtInputField");
 AjxPackage.require("ajax.dwt.widgets.DwtPasswordField");
 AjxPackage.require("ajax.dwt.widgets.DwtSash");
@@ -121,6 +123,7 @@ AjxPackage.require("ajax.dwt.widgets.DwtProgressBar");
 AjxPackage.require("ajax.dwt.widgets.DwtPropertyEditor");
 AjxPackage.require("ajax.dwt.widgets.DwtConfirmDialog");
 AjxPackage.require("ajax.dwt.widgets.DwtChooser");
+AjxPackage.require("ajax.dwt.widgets.DwtGridSizePicker");
 AjxPackage.require("ajax.dwt.widgets.DwtSpinner");
 AjxPackage.require("ajax.dwt.widgets.DwtButtonColorPicker");
 AjxPackage.require("ajax.dwt.widgets.DwtMessageComposite");
@@ -128,5 +131,5 @@ AjxPackage.require("ajax.dwt.widgets.DwtRadioButtonGroup");
 AjxPackage.require("ajax.dwt.widgets.DwtForm");
 AjxPackage.require("ajax.dwt.widgets.DwtComboBox");
 
-AjxPackage.require("ajax.3rdparty.jquery.jquery");
+
 
