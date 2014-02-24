@@ -379,12 +379,9 @@ function (hoverImageInfo) {
 DwtButton.prototype.setMenu =
 function(params) {
 	
-	params = Dwt.getParams(arguments, DwtButton.setMenuParams, (arguments.length == 1 && arguments[0] && !arguments[0].menu));
-
-    if (params){
-	    this._menu = params.menu;
-    }
-
+	params = Dwt.getParams(arguments, DwtButton.setMenuParams, (arguments.length == 1 && !arguments[0].menu));
+	
+	this._menu = params.menu;
 	if (this._menu) {
 		// if menu is a callback, wait until it's created to set menu-related properties
 		if (this._menu.isDwtMenu) {
@@ -619,22 +616,6 @@ function(actionCode, ev) {
 	return true;
 };
 
-/**
- * Removes options from drop down menu
- */
-DwtButton.prototype.removePullDownMenuOptions =
-function() {
-    if (this._menu) {
-        this._setDropDownCellMouseHandlers(false);
-        if (this._dropDownEl && this._dropDownImg) {
-            // removes initial down arrow
-            AjxImg.setImage(this._dropDownEl, "");
-            // removes arrow image set by mouse hover, click, etc.
-            this.setDropDownImages("", "", "", "");
-        }
-    }
-};
-
 // Private methods
 
 /**
@@ -665,7 +646,7 @@ function() {
 	var p = Dwt.toWindow(htmlEl);
 	var mev = new DwtMouseEvent();
 	this._setMouseEvent(mev, {dwtObj:this, target:htmlEl, button:DwtMouseEvent.LEFT, docX:p.x, docY:p.y});
-	DwtButton._dropDownCellMouseUpHdlr(mev);
+	DwtButton._dropDownCellMouseDownHdlr(mev);
 };
 
 /**

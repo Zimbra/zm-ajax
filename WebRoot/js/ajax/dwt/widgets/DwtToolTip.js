@@ -30,12 +30,10 @@ DwtToolTip = function(shell, className, dialog) {
 	Dwt.setZIndex(this._div, Dwt.Z_HIDDEN);
 	Dwt.setLocation(this._div, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
 
-	this._eventMgr = new AjxEventMgr();
-
     // create html
     // NOTE: This id is ok because there's only ever one instance of a tooltip
-    var templateId = "dwt.Widgets#DwtToolTip";
-    this._div.innerHTML = AjxTemplate.expand(templateId);
+    var templateId = "dwt.Widgets#" + this._borderStyle;
+    this._div.innerHTML = AjxTemplate.expand(templateId, "tooltip");
 
     var params = AjxTemplate.getParams(templateId);
     this._offsetX = (params.width != null) ? Number(params.width) : DwtToolTip.POPUP_OFFSET_X;
@@ -45,13 +43,6 @@ DwtToolTip = function(shell, className, dialog) {
     this._contentDiv = document.getElementById("tooltipContents");
 
     Dwt.setHandler(this._div, DwtEvent.ONMOUSEOVER, AjxCallback.simpleClosure(this._mouseOverListener, this));
-    Dwt.setHandler(this._div, DwtEvent.ONMOUSEOUT, AjxCallback.simpleClosure(this._mouseOutListener, this));
-
-	var events = [DwtEvent.ONCLICK,DwtEvent.ONDBLCLICK,DwtEvent.ONMOUSEDOWN,DwtEvent.ONMOUSEENTER,DwtEvent.ONMOUSELEAVE,DwtEvent.ONMOUSEMOVE,DwtEvent.ONMOUSEUP,DwtEvent.ONMOUSEWHEEL,DwtEvent.ONSCROLL];
-	for (var i=0; i<events.length; i++) {
-		var event = events[i];
-    	Dwt.setHandler(this._div, event, AjxCallback.simpleClosure(this.notifyListeners, this, [event]));
-	}
 };
 
 DwtToolTip.prototype.isDwtToolTip = true;
@@ -70,6 +61,8 @@ DwtToolTip.POPUP_OFFSET_Y = 5;	// default vertical offset from control
 //
 // Data
 //
+
+DwtToolTip.prototype._borderStyle = "DwtToolTip";
 
 //
 // Public methods
@@ -101,11 +94,9 @@ function(content, setInnerHTML) {
  * @param {boolean}			popdownOnMouseOver	if true, hide tooltip on mouseover
  * @param {DwtControl}		obj					control that tooltip is for (optional)
  * @param {DwtHoverEvent}	hoverEv				hover event (optional)
- * @param {AjxCallback}		popdownListener		callback to run when tooltip pops down
  */
 DwtToolTip.prototype.popup = 
-function(x, y, skipInnerHTML, popdownOnMouseOver, obj, hoverEv, popdownListener) {
-	this._hovered = false;
+function(x, y, skipInnerHTML, popdownOnMouseOver, obj, hoverEv) {
     if (this._popupAction) {
         AjxTimedAction.cancelAction(this._popupAction);
         this._popupAction = null;
@@ -113,8 +104,6 @@ function(x, y, skipInnerHTML, popdownOnMouseOver, obj, hoverEv, popdownListener)
 	// popdownOnMouseOver may be true to pop down the tooltip if the mouse hovers over the tooltip. Optionally,
 	// it can be an AjxCallback that will be called after popping the tooltip down.
     this._popdownOnMouseOver = popdownOnMouseOver;
-	// popdownListener is always called after popping the tooltip down, regardless of what called the popdown
-    this._popdownListener = popdownListener;
     if (this._content != null) {
 		if(!skipInnerHTML) {
             this._contentDiv.innerHTML = this._content;
@@ -144,7 +133,6 @@ function(bool) {
 DwtToolTip.prototype.popdown = 
 function() {
     this._popdownOnMouseOver = false;
-	this._hovered = false;
     if (this._popupAction) {
         AjxTimedAction.cancelAction(this._popupAction);
         this._popupAction = null;
@@ -152,10 +140,6 @@ function() {
 	if (this._content != null && this._poppedUp) {
 		Dwt.setLocation(this._div, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
 		this._poppedUp = false;
-		if (this._popdownListener instanceof AjxCallback) {
-			this._popdownListener.run();
-		}
-		this._popdownListener = null;
 	}
 };
 
@@ -205,65 +189,11 @@ function(startX, startY, obj, hoverEv) {
 
 DwtToolTip.prototype._mouseOverListener = 
 function(ev) {
-	this._hovered = true;
     if (this._popdownOnMouseOver && this._poppedUp) {
-        var callback = (this._popdownOnMouseOver.isAjxCallback || AjxUtil.isFunction(this._popdownOnMouseOver)) ? this._popdownOnMouseOver : null;
+        var callback = (this._popdownOnMouseOver.isAjxCallback) ? this._popdownOnMouseOver : null;
         this.popdown();
         if (callback) {
             callback.run();
 		}
     }
-	this.notifyListeners(DwtEvent.ONMOUSEOVER);
 };
-
-DwtToolTip.prototype._mouseOutListener = 
-function(ev) {
-	ev = DwtUiEvent.getEvent(ev, this._div)
-	var location = Dwt.toWindow(this._div);
-	var size = Dwt.getSize(this._div);
-	// We sometimes get mouseover events even though the cursor is inside the tooltip, so double-check before popping down
-	if (ev.clientX <= location.x || ev.clientX >= (location.x + size.x) || ev.clientY <= location.y || ev.clientY >= (location.y + size.y)) {
-		this.popdown();
-		this.notifyListeners(DwtEvent.ONMOUSEOUT);
-	}
-};
-
-DwtToolTip.prototype.getHovered = 
-function() {
-	return this._hovered;
-};
-
-
-// The com_zimbra_email zimlet wants to put a listener on our mouseout event, but overwriting the existing handler is a no-no
-// and we actually only want that event when the double-check above succeeds. Let API users add event listeners in a more clean way.
-DwtToolTip.prototype.addListener =
-function(eventType, listener, index) {
-	return this._eventMgr.addListener(eventType, listener, index);
-};
-
-DwtToolTip.prototype.setListener =
-function(eventType, listener, index) {
-	this.removeAllListeners(eventType);
-	return this._eventMgr.addListener(eventType, listener, index);
-};
-
-DwtToolTip.prototype.removeListener =
-function(eventType, listener) {
-	return this._eventMgr.removeListener(eventType, listener);
-};
-
-DwtToolTip.prototype.removeAllListeners =
-function(eventType) {
-	return this._eventMgr.removeAll(eventType);
-};
-
-DwtToolTip.prototype.isListenerRegistered =
-function(eventType) {
-	return this._eventMgr.isListenerRegistered(eventType);
-};
-
-DwtToolTip.prototype.notifyListeners =
-function(eventType, event) {
-	return this._eventMgr.notifyListeners(eventType, event);
-};
-
