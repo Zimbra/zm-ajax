@@ -32,17 +32,16 @@
  * @param  {constant}	params.posStyle				the positioning style
  * @param {boolean}      params.forceNotifySelection	force notify selection even if checked style
  * @param {boolean}      params.forceNotifyAction		force notify action even if checked style
- * @param {hash}		  params.optButton				a hash of data for showing a options button in the item: image, tooltip, callback
+ * @param {hash}		  params.button				a hash of data for showing a button in the item: image, tooltip, callback
  * @param {boolean}      params.selectable			if <code>true</code>, this item is selectable
  *        
  * @extend		DwtTreeItem
  */
 DwtHeaderTreeItem = function(params) {
 	this.overview = params.overview;
-	this._optButton = params.optButton;
+	this._button = params.button;
 	this._noNodeCell = params.noNodeCell;
 	DwtTreeItem.call(this, params);
-	this._arrowDisabled = true; //override what DwTreeItem constructor sets.
 };
 
 DwtHeaderTreeItem.prototype = new DwtTreeItem;
@@ -64,26 +63,25 @@ function(template, data) {
 DwtHeaderTreeItem.prototype._initialize =
 function() {
 	DwtTreeItem.prototype._initialize.apply(this, arguments);
-	if (this._optButton) {
-		this._optButtonId = this._htmlElId + "_optButton";
-		var optButtonEl = document.getElementById(this._optButtonId);
-		if (optButtonEl) {
-			this._optButtonItem = new DwtBorderlessButton({parent:this, style:DwtLabel.IMAGE_LEFT});
-			this._optButtonItem.setToolTipContent(this._optButton.tooltip);
-			this._optButtonItem.callback = this._optButton.callback;
-			this._optButtonItem.addSelectionListener(new AjxListener(this, this._onclickHandler));
-			this._optButtonItem.replaceElement(this._optButtonId);
-			this._optButtonItem.setImage("ContextMenu");
-			this._optButtonItem.setIconEl(this._optButtonItem.getHtmlElement()); // image container is button
+	if (this._button) {
+		this._headerButtonId = this._htmlElId + "_headerButton";
+		var buttonEl = document.getElementById(this._headerButtonId);
+		if (buttonEl) {
+			this._buttonItem = new DwtBorderlessButton({parent:this, style:DwtLabel.IMAGE_LEFT, className:"Img"+this._button.image});
+			//this._buttonItem.setImage(this._button.image);
+			this._buttonItem.setToolTipContent(this._button.tooltip);
+			this._buttonItem.addSelectionListener(new AjxListener(this, this._onclickHandler));
+			this._buttonItem.replaceElement(this._headerButtonId);
 		}
 	}
 };
 
 DwtHeaderTreeItem.prototype._onclickHandler =
 function(ev) {
-    this._tree._itemActioned(this, ev);
+	var mouseEv = DwtShell.mouseEvent;
+	mouseEv.setFromDhtmlEvent(ev, this);
+	this._button.callback.run(mouseEv);
 };
-
 
 DwtHeaderTreeItem.prototype._focusByMouseUpEvent =
 function(ev)  {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -72,9 +72,6 @@ DwtKeyboardMgr = function(shell) {
 	this._evtMgr = new AjxEventMgr();
 };
 
-DwtKeyboardMgr.prototype.isDwtKeyboardMgr = true;
-DwtKeyboardMgr.prototype.toString = function() { return "DwtKeyboardMgr"; };
-
 /**@private*/
 DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED	= 1;
 /**@private*/
@@ -91,6 +88,7 @@ DwtKeyboardMgr.FOCUS_FIELD_ID = "kbff";
  * <ul>
  * <li>Alt or Ctrl or Meta plus another key</li>
  * <li>Esc</li>
+ * <li>Enter within a text input (but not a textarea)</li>
  * </ul>
  * 
  * @param {DwtKeyEvent}	ev	the key event
@@ -98,9 +96,20 @@ DwtKeyboardMgr.FOCUS_FIELD_ID = "kbff";
  */
 DwtKeyboardMgr.isPossibleInputShortcut =
 function(ev) {
-	var target = DwtUiEvent.getTarget(ev);
-    return (!DwtKeyMap.IS_MODIFIER[ev.keyCode] && (ev.keyCode == 27 || DwtKeyMapMgr.hasModifier(ev)) ||
+    var target = DwtUiEvent.getTarget(ev);
+    return (!DwtKeyMap.IS_MODIFIER[ev.keyCode] &&
+			(ev.keyCode == 27 || DwtKeyMapMgr.hasModifier(ev)) ||
 			(target && target.nodeName.toUpperCase() == "INPUT" && (ev.keyCode == 13 || ev.keyCode == 3)));
+};
+
+/**
+ * Returns the string representation of this object.
+ * 
+ * @return	{string}	the string representation of this object
+ */
+DwtKeyboardMgr.prototype.toString = 
+function() {
+	return "DwtKeyboardMgr";
 };
 
 /**
@@ -202,7 +211,7 @@ function(tabGroup) {
  */
 DwtKeyboardMgr.prototype.setTabGroup =
 function(tabGroup) {
-//	if (!this.__enabled || !this.__keyboardHandlingInited) { return; }
+	if (!this.__enabled || !this.__keyboardHandlingInited) { return; }
 	
 	var otg = this.popTabGroup();
 	this.pushTabGroup(tabGroup);
@@ -249,10 +258,10 @@ function() {
  */ 
 DwtKeyboardMgr.prototype.grabFocus =
 function(focusObj) {
-//	if (!this.__enabled) { return; }
-//	if (!this.__keyboardHandlingInited) {
-//		return;
-//	}
+	if (!this.__enabled) { return; }
+	if (!this.__keyboardHandlingInited) {
+		return;
+	}
 	if (typeof focusObj == "string") {
 		focusObj = document.getElementById(focusObj);
 	}
@@ -295,10 +304,10 @@ function(focusObj) {
  */
 DwtKeyboardMgr.prototype.dwtControlHasFocus =
 function(control) {
-//	if (!this.__enabled) { return false; }
-//	if (!this.__keyboardHandlingInited) {
-//		return false;
-//	}
+	if (!this.__enabled) { return false; }
+	if (!this.__keyboardHandlingInited) {
+		return false;
+	}
 		
 	return (this.__dwtCtrlHasFocus && this.__focusObj == control);
 };
@@ -422,8 +431,8 @@ function() {
 	var kbff = this._kbFocusField = document.createElement("textarea");
 	kbff.id = DwtKeyboardMgr.FOCUS_FIELD_ID;
 	kbff.tabIndex = 0;
-	Dwt.setPosition(kbff, Dwt.ABSOLUTE_STYLE);
-	Dwt.setLocation(kbff, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
+	kbff.style.position = Dwt.ABSOLUTE_STYLE;
+	kbff.style.top = kbff.style.left = Dwt.LOC_NOWHERE;
 	kbff.onblur = DwtKeyboardMgr.__onBlurHdlr;
 	kbff.onfocus = DwtKeyboardMgr.__onFocusHdlr;
 	document.body.appendChild(kbff);
@@ -459,8 +468,11 @@ function(focusObj) {
 
 	if (!focusObj) { return; }
 	
-	var dwtInputCtrl = focusObj.isInputControl;
-	
+	var dwtInputCtrl = (Dwt.instanceOf(focusObj, "DwtInputField") ||
+						Dwt.instanceOf(focusObj, "DwtHtmlEditor") ||
+						Dwt.instanceOf(focusObj, "DwtCheckbox") ||
+						Dwt.instanceOf(focusObj, "DwtRadioButton") ||
+						Dwt.instanceOf(focusObj, "ZmAdvancedHtmlEditor"));
 //	DBG.println("kbnav", "DwtKeyboardMgr._doGrabFocus: " + focusObj);
 	DBG.println("focus", "DwtKeyboardMgr._doGrabFocus: " + focusObj);
 	if (dwtInputCtrl || !(focusObj instanceof DwtControl)) {
@@ -503,9 +515,7 @@ function(focusObj) {
 		} else {
 			DwtKeyboardMgr.__onFocusHdlr();
 			// input -> ctrl: set browser focus to keyboard input field
-			if (this.__enabled) {
-				this._kbFocusField.focus();
-			}
+			this._kbFocusField.focus();
 		}
 	}
 };
@@ -676,7 +686,7 @@ function(kbMgr, obj) {
 	
 //	DBG.println("kbnav", "DwtKeyboardMgr.__syncFocus: focus obj: " + kbMgr.__focusObj + " - obj: " + obj);
 	if (!kbMgr.__dwtCtrlHasFocus) {
-		// DwtInputField
+		// DwtInputField DwtHtmlEditor
 		if ((obj != kbMgr.__focusObj) && !kbMgr.__dwtInputCtrl) {
 //			DBG.println("kbnav", "Focus out of sync, resetting");
 			if (kbMgr.__currTabGroup && kbMgr.__currTabGroup.setFocusMember(obj)) {
@@ -720,9 +730,9 @@ function(ev) {
 	// Sync up focus if needed
 	var focusInTGMember = DwtKeyboardMgr.__syncFocus(kbMgr, kev.target);
 	
-//	if (!focusInTGMember) {
+	if (!focusInTGMember) {
 //		DBG.println("kbnav", "Object is not in tab hierarchy");
-//	}
+	}
 			
 	/* The first thing we care about is the tab key since we want to manage
 	 * focus based on the tab groups. 
@@ -781,7 +791,7 @@ function(ev) {
 	// Filter out modifier keys. If we're in an input field, filter out legitimate input.
 	// (A shortcut from an input field must use a modifier key.)
 	if (DwtKeyMap.IS_MODIFIER[keyCode] || (!kbMgr.__dwtCtrlHasFocus && (kbMgr.__killKeySeqTimedActionId == -1) &&
-		kev.target && DwtKeyMapMgr.isInputElement(kev.target) && !kev.target["data-hidden"] && !DwtKeyboardMgr.isPossibleInputShortcut(kev))) {
+		DwtKeyMapMgr.isInputElement(kev.target) && !DwtKeyboardMgr.isPossibleInputShortcut(kev))) {
 
 	 	return kbMgr.__processKeyEvent(ev, kev, true, DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
 	}
@@ -806,7 +816,6 @@ function(ev) {
 
 	// First see if the control that currently has focus can handle the key event
 	var obj = ev.focusObj || kbMgr.__focusObj;
-	DBG.println("focus", "DwtKeyboardMgr::__keyDownHdlr - focus object: " + obj);
 	if (obj && (obj.handleKeyAction) && (kbMgr.__dwtCtrlHasFocus || kbMgr.__dwtInputCtrl || (obj.hasFocus && obj.hasFocus()))) {
 //		DBG.println("kbnav", obj + " has focus: " + obj.hasFocus());
 		handled = kbMgr.__dispatchKeyEvent(obj, kev);
@@ -818,17 +827,11 @@ function(ev) {
 
 	// If the currently focused control didn't handle the event, hand it to the default key
 	// event handler
-	if (handled === DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED && kbMgr.__currDefaultHandler) {
+	if ((handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && kbMgr.__currDefaultHandler &&
+		!(kbMgr.__currTabGroup && kbMgr.__currTabGroup.isDefaultHandlingBlocked())) {
 		handled = kbMgr.__dispatchKeyEvent(kbMgr.__currDefaultHandler, kev);
 	}
 
-	// see if we should let browser handle the event as well; note that we need to set the 'handled' var rather than
-	// just the 'propagate' one below, since the keyboard mgr isn't built for both it and the browser to handle the event.
-	if (kev.forcePropagate) {
-		handled = DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
-		kev.forcePropagate = false;
-	}
-	
 	kbMgr.__kbEventStatus = handled;
 	var propagate = (handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
 

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -68,7 +68,7 @@ AjxColor.color = function(r, g, b) {
 	].join("");
 };
 
-/**
+/*
  * Returns a color string that is the inverse of the given color.
  *
  * @param color [string] Color value defined as "#rrggbb".

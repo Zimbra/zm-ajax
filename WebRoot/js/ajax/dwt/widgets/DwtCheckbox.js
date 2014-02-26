@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -50,9 +50,10 @@ DwtCheckbox = function(params) {
 DwtCheckbox.prototype = new DwtControl;
 DwtCheckbox.prototype.constructor = DwtCheckbox;
 
-DwtCheckbox.prototype.isDwtCheckbox = true;
-DwtCheckbox.prototype.isInputControl = true;
-DwtCheckbox.prototype.toString = function() { return "DwtCheckbox"; };
+DwtCheckbox.prototype.toString =
+function() {
+	return "DwtCheckbox";
+};
 
 //
 // Constants
@@ -286,7 +287,7 @@ function(oel, nel, inheritClass, inheritStyle) {
 		this.setHtmlElementId(oel.id+"_control");
 		nel.id = oel.id;
 		if (this._textEl) {
-			this._textEl.setAttribute(AjxEnv.isIE ? "htmlFor" : "for", oel.id);
+			this._textEl.setAttribute("for", oel.id);
 		}
 	}
 };

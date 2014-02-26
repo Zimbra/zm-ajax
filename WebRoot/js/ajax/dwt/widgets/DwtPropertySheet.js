@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -29,12 +29,12 @@ DwtPropertySheet = function(parent, className, posStyle, labelSide) {
 	this._propertyMap = {};
 	
 	this._tableEl = document.createElement("TABLE");
-	// Cellspacing needed for IE in quirks mode
-	this._tableEl.cellSpacing = 6;
+	this._tableEl.border = 0;
+	this._tableEl.cellSpacing = 3;
+	this._tableEl.cellPadding = 0;
 	
 	var element = this.getHtmlElement();
 	element.appendChild(this._tableEl);
-	this._setAllowSelection();
 }
 
 DwtPropertySheet.prototype = new DwtComposite;
@@ -53,8 +53,16 @@ DwtPropertySheet.DEFAULT = DwtPropertySheet.LEFT;
 
 // Data
 
+DwtPropertySheet.prototype._labelSide;
+
 DwtPropertySheet.prototype._labelCssClass = "Label";
 DwtPropertySheet.prototype._valueCssClass = "Field";
+
+DwtPropertySheet.prototype._tableEl;
+
+DwtPropertySheet.prototype._propertyIdCount;
+DwtPropertySheet.prototype._propertyList;
+DwtPropertySheet.prototype._propertyMap;
 
 // Public methods
 
@@ -129,25 +137,25 @@ DwtPropertySheet.prototype._insertValue = function(row, value, required) {
 
 DwtPropertySheet.prototype.removeProperty = function(id) {
 	var prop = this._propertyMap[id];
-	if (prop) {
+	if (prop.visible) {
 		var propIndex = prop.index;
-		if (prop.visible) {
-			var tableIndex = this.__getTableIndex(propIndex);
-			var row = this._tableEl.rows[tableIndex];
-			row.parentNode.removeChild(row);
-		}
-		prop.row = null;
-		for (var i = propIndex + 1; i < this._propertyList.length; i++) {
-			this._propertyList[i].index--;
-		}
-		this._propertyList.splice(propIndex, 1);
-		delete this._propertyMap[id];
+		var tableIndex = this.__getTableIndex(propIndex);
+		var row = this._tableEl.rows[tableIndex];
+		row.parentNode.removeChild(row);
 	}
+
+	prop.row = null;
+	for (var i = index + 1; i < this._propertyList.length; i++) {
+		var prop = this._propertyList[i];
+		prop.index--;
+	}
+	this._propertyList.splice(index, 1);
+	delete this._propertyMap[id];
 };
 
 DwtPropertySheet.prototype.setPropertyVisible = function(id, visible) {
 	var prop = this._propertyMap[id];
-	if (prop && prop.visible != visible) {
+	if (prop.visible != visible) {
 		prop.visible = visible;
 		var propIndex = prop.index;
 		if (visible) {

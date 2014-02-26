@@ -46,6 +46,7 @@ AjxPackage.require("ajax.util.AjxEmailAddress");
 AjxPackage.require("ajax.util.AjxHistoryMgr");
 
 // DWT files
+
 AjxPackage.require("ajax.dwt.core.Dwt");
 AjxPackage.require("ajax.dwt.core.DwtId");
 AjxPackage.require("ajax.dwt.core.DwtException");
@@ -68,6 +69,7 @@ AjxPackage.require("ajax.dwt.events.DwtMouseEvent");
 AjxPackage.require("ajax.dwt.events.DwtMouseEventCapture");
 AjxPackage.require("ajax.dwt.events.DwtListViewActionEvent");
 AjxPackage.require("ajax.dwt.events.DwtSelectionEvent");
+AjxPackage.require("ajax.dwt.events.DwtHtmlEditorStateEvent");
 AjxPackage.require("ajax.dwt.events.DwtTreeEvent");
 AjxPackage.require("ajax.dwt.events.DwtHoverEvent");
 AjxPackage.require("ajax.dwt.events.DwtOutsideMouseEventMgr");
@@ -100,6 +102,7 @@ AjxPackage.require("ajax.dwt.widgets.DwtBorderlessButton");
 AjxPackage.require("ajax.dwt.widgets.DwtMenuItem");
 AjxPackage.require("ajax.dwt.widgets.DwtMenu");
 AjxPackage.require("ajax.dwt.widgets.DwtMessageDialog");
+AjxPackage.require("ajax.dwt.widgets.DwtHtmlEditor");
 AjxPackage.require("ajax.dwt.widgets.DwtInputField");
 AjxPackage.require("ajax.dwt.widgets.DwtPasswordField");
 AjxPackage.require("ajax.dwt.widgets.DwtSash");
@@ -121,12 +124,10 @@ AjxPackage.require("ajax.dwt.widgets.DwtProgressBar");
 AjxPackage.require("ajax.dwt.widgets.DwtPropertyEditor");
 AjxPackage.require("ajax.dwt.widgets.DwtConfirmDialog");
 AjxPackage.require("ajax.dwt.widgets.DwtChooser");
+AjxPackage.require("ajax.dwt.widgets.DwtGridSizePicker");
 AjxPackage.require("ajax.dwt.widgets.DwtSpinner");
 AjxPackage.require("ajax.dwt.widgets.DwtButtonColorPicker");
 AjxPackage.require("ajax.dwt.widgets.DwtMessageComposite");
 AjxPackage.require("ajax.dwt.widgets.DwtRadioButtonGroup");
 AjxPackage.require("ajax.dwt.widgets.DwtForm");
 AjxPackage.require("ajax.dwt.widgets.DwtComboBox");
-
-AjxPackage.require("ajax.3rdparty.jquery.jquery");
-

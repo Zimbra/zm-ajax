@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -55,7 +55,6 @@ ZmBatchCommand = function(continueOnError, accountName, useJson) {
 	this._onError = (continueOnError === false) ? ZmBatchCommand.STOP : ZmBatchCommand.CONTINUE;
 	this._accountName = accountName;
 	this._useJson = useJson;
-    this._requestBody = null;
 
 	this.curId = 0;
     this._cmds = [];
@@ -79,7 +78,6 @@ function() {
 //
 
 ZmBatchCommand.prototype._sensitive = false;
-ZmBatchCommand.prototype._noAuthToken = false;
 
 //
 // Constants
@@ -100,15 +98,6 @@ ZmBatchCommand.CONTINUE = "continue";
  */
 ZmBatchCommand.prototype.setSensitive = function(sensitive) {
 	this._sensitive = this._sensitive || sensitive;
-};
-
-/**
- * Sets the noAuthToken flag.
- *
- * @param	{Boolean}	noAuthToken		<code>true</code> to send command with noAuthToken
- */
-ZmBatchCommand.prototype.setNoAuthToken = function(noAuthToken) {
-	this._noAuthToken = noAuthToken;
 };
 
 /**
@@ -153,7 +142,7 @@ function() {
  *										stop.
  */
 ZmBatchCommand.prototype.run =
-function(callback, errorCallback, offlineCallback) {
+function(callback, errorCallback) {
 
 	// Invoke each command so that it hands us its SOAP doc, response callback,
 	// and error callback
@@ -165,11 +154,9 @@ function(callback, errorCallback, offlineCallback) {
 
 	var params = {
 		sensitive:		this._sensitive,
-        noAuthToken:	this._noAuthToken,
 		asyncMode:		true,
 		callback:		new AjxCallback(this, this._handleResponseRun, [callback, errorCallback]),
 		errorCallback:	errorCallback,
-		offlineCallback: offlineCallback,
 		accountName:	this._accountName
 	};
 
@@ -181,19 +168,15 @@ function(callback, errorCallback, offlineCallback) {
 		if (size && this._requests.length) {
 			for (var i = 0; i < size; i++) {
 				var request = this._requests[i];
-                //Bug fix # 67110 the request object is sometimes undefined
-                if(request) {
-                    request.requestId = i;
-                    var methodName = ZmCsfeCommand.getMethodName(request);
-                    if (!batchRequest[methodName]) {
-                        batchRequest[methodName] = [];
-                    }
-				    request[methodName].requestId = i;
-				    batchRequest[methodName].push(request[methodName]);
-                }
+				request.requestId = i;
+				var methodName = ZmCsfeCommand.getMethodName(request);
+				if (!batchRequest[methodName]) {
+					batchRequest[methodName] = [];
+				}
+				request[methodName].requestId = i;
+				batchRequest[methodName].push(request[methodName]);
 			}
 			params.jsonObj = jsonObj;
-            this._requestBody = jsonObj;
 		}
 	}
 	else {
@@ -210,7 +193,6 @@ function(callback, errorCallback, offlineCallback) {
 				batchSoapDoc.getMethod().appendChild(node);
 			}
 			params.soapDoc = batchSoapDoc;
-            this._requestBody = batchSoapDoc;
 		}
 	}
 
@@ -222,11 +204,6 @@ function(callback, errorCallback, offlineCallback) {
 		callback.run();
 	}
 };
-
-ZmBatchCommand.prototype.getRequestBody =
-function() {
-    return this._requestBody;
-}
 
 /**
  * @private

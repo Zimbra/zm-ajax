@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -63,7 +63,8 @@ DwtToolBar = function(params) {
     this._numFillers = 0;
 	this._curFocusIndex = 0;
 
-	this._keyMapName = (this._style == DwtToolBar.HORIZ_STYLE) ? DwtKeyMap.MAP_TOOLBAR_HORIZ : DwtKeyMap.MAP_TOOLBAR_VERT;
+	var suffix = (this._style == DwtToolBar.HORIZ_STYLE) ? "horiz" : "vert";
+	this._keyMapName = ["DwtToolBar", suffix].join("-");
 };
 
 DwtToolBar.PARAMS = ["parent", "className", "posStyle", "style", "index", "id"];
@@ -71,8 +72,15 @@ DwtToolBar.PARAMS = ["parent", "className", "posStyle", "style", "index", "id"];
 DwtToolBar.prototype = new DwtComposite;
 DwtToolBar.prototype.constructor = DwtToolBar;
 
-DwtToolBar.prototype.isDwtToolBar = true;
-DwtToolBar.prototype.toString = function() { return "DwtToolBar"; };
+/**
+ * Returns a string representation of the object.
+ * 
+ * @return		{string}		a string representation of the object
+ */
+DwtToolBar.prototype.toString =
+function() {
+	return "DwtToolBar";
+};
 
 //
 // Constants
@@ -227,13 +235,10 @@ function(className, index) {
  */
 DwtToolBar.prototype.addChild =
 function(child, index) {
-	
-	if (child.isDwtControl) {
-    	DwtComposite.prototype.addChild.apply(this, arguments);
-	}
+    DwtComposite.prototype.addChild.apply(this, arguments);
 
     var itemEl = this._createItemElement();
-    itemEl.appendChild(child.isDwtControl ? child.getHtmlElement() : child);
+    itemEl.appendChild(child.getHtmlElement());
 
     this._addItem(DwtToolBar.ELEMENT, itemEl, index);
 };
@@ -402,13 +407,13 @@ function(item) {
 			var kmm = kbm.__keyMapMgr;
 			if (kmm) {
 				if (this._style == DwtToolBar.HORIZ_STYLE) {
-					kmm.removeMapping(DwtKeyMap.MAP_BUTTON, "ArrowRight");
-					kmm.setMapping(DwtKeyMap.MAP_BUTTON, "ArrowDown", DwtKeyMap.SUBMENU);
+					kmm.removeMapping("DwtButton", "ArrowRight");
+					kmm.setMapping("DwtButton", "ArrowDown", DwtKeyMap.SUBMENU);
 				} else {
-					kmm.removeMapping(DwtKeyMap.MAP_BUTTON, "ArrowDown");
-					kmm.setMapping(DwtKeyMap.MAP_BUTTON, "ArrowRight", DwtKeyMap.SUBMENU);
+					kmm.removeMapping("DwtButton", "ArrowDown");
+					kmm.setMapping("DwtButton", "ArrowRight", DwtKeyMap.SUBMENU);
 				}
-				kmm.reloadMap(DwtKeyMap.MAP_BUTTON);
+				kmm.reloadMap("DwtButton");
 			}
 		}
 		this._submenuKeySet = true;
@@ -510,53 +515,31 @@ function(id, opened) {
 };
 
 /**
- * Find the array index of a toolbar button by id.
- *
- * Works only if descendent classes implement the _buttons property as a
- * native Array.
- * @param id {number} Index to check and see if exists in the array.
- * @return {number} Index of the id in the array, or -1 if the id does not
- * exist.
  * @private
  */
 DwtToolBar.prototype.__getButtonIndex =
 function(id) {
-    var toolBarButtons = this.getChildren();
-    var button = this._buttons[id];
-    if (toolBarButtons && toolBarButtons.length && button)
-        return AjxUtil.indexOf(toolBarButtons, button);
+    var i = 0;
+    for (var name in this._buttons) {
+        if (name == id) {
+            return i;
+        }
+        i++;
+    }
     return -1;
 };
 
 /**
- * Find a toolbar button by id.
- *
- * Works only if descendent classes implement the _buttons property as a
- * native Array.
- * @param index {number} The integer index of the button to retrieve.
- * @return {DwtButton} The DWT button at the current index, or null if the
- * buton does not exist.
  * @private
  */
 DwtToolBar.prototype.__getButtonAt =
 function(index) {
     var i = 0;
-    // NOTE: _buttons seems to always be implemented as an Array.
-    // This code should not be needed because:
-    // * If we're working with Objects-as-associative-arrays, we don't want
-    //   numeric indexes.
-    // * If we're working with arrays, id will ALWAYS be i if found, or
-    //   undefined if not found. This function could be done via a simple
-    //   return this._buttons && this._buttons[index];
-    //   or something close to that if falsey values might be valid.
     for (var name in this._buttons) {
-        // NOTE: Protect from native Array.prototype extensions
-        if (this._buttons.hasOwnProperty(name)) {
-            if (i == index) {
-                return this._buttons[name];
-            }
-            i++;
+        if (i == index) {
+            return this._buttons[name];
         }
+        i++;
     }
     return null;
 };
@@ -593,9 +576,6 @@ DwtToolBarButton.PARAMS = ["parent", "style", "className", "posStyle", "actionTi
 
 DwtToolBarButton.prototype = new DwtButton;
 DwtToolBarButton.prototype.constructor = DwtToolBarButton;
-
-DwtToolBarButton.prototype.isDwtToolBarButton = true;
-DwtToolBarButton.prototype.toString = function() { return "DwtToolBarButton"; };
 
 // Data
 DwtToolBarButton.prototype.TEMPLATE = "dwt.Widgets#ZToolbarButton";

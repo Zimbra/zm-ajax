@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -43,9 +43,6 @@ DwtKeyMap = function(subclassInit) {
 	DwtKeyMap.MOD_ORDER[DwtKeyMap.SHIFT]	= 4;
 };
 
-DwtKeyMap.prototype.isDwtKeyMap = true;
-DwtKeyMap.prototype.toString = function() { return "DwtKeyMap"; };
-
 DwtKeyMap.deserialize =
 function(keymap) {
 	alert("DwtKeyMap.deserialize: NOT IMPLEMENTED");
@@ -56,16 +53,26 @@ function(keymap) {
 	alert("DwtKeyMap.serialize: NOT IMPLEMENTED");
 };
 
-DwtKeyMap.MAP_DIALOG		= "dialog";
-DwtKeyMap.MAP_BUTTON		= "button";
-DwtKeyMap.MAP_LIST			= "list";
-DwtKeyMap.MAP_MENU			= "menu";
-DwtKeyMap.MAP_EDITOR		= "editor";
-DwtKeyMap.MAP_TOOLBAR_HORIZ	= "toolbarHorizontal";
-DwtKeyMap.MAP_TOOLBAR_VERT	= "toolbarVertical";
-DwtKeyMap.MAP_TAB_VIEW		= "tabView";
-DwtKeyMap.MAP_TREE			= "tree";
+// translations for map names used in properties file
+DwtKeyMap.MAP_NAME = {};
+DwtKeyMap.MAP_NAME["dialog"]			= "DwtDialog";
+DwtKeyMap.MAP_NAME["button"]			= "DwtButton";
+DwtKeyMap.MAP_NAME["list"]				= "DwtListView";
+DwtKeyMap.MAP_NAME["menu"]				= "DwtMenu";
+DwtKeyMap.MAP_NAME["editor"]			= "DwtHtmlEditor";
+DwtKeyMap.MAP_NAME["toolbar"]			= "DwtToolBar";
+DwtKeyMap.MAP_NAME["toolbarHorizontal"]	= "DwtToolBar-horiz";
+DwtKeyMap.MAP_NAME["toolbarVertical"]	= "DwtToolBar-vert";
+DwtKeyMap.MAP_NAME["tabView"]			= "DwtTabView";
+DwtKeyMap.MAP_NAME["tree"]				= "DwtTreeItem";
 
+// reverse map of above
+DwtKeyMap.MAP_NAME_R = {};
+(function() {
+    for (var i in DwtKeyMap.MAP_NAME) {
+        DwtKeyMap.MAP_NAME_R[DwtKeyMap.MAP_NAME[i]] = i;
+    }
+})();
 
 // Returns true if the given key is a modifier. The list of modifier keys is
 // taken from the AjxKeys properties file.
@@ -264,10 +271,6 @@ DwtKeyMap.TEXT_UNDERLINE	= "Underline";
  * Defines the "text strikethru" action.
  */
 DwtKeyMap.TEXT_STRIKETHRU	= "Strikethru";
-/**
- * Defines the "text InsertLink" action.
- */
-DwtKeyMap.INSERT_LINK	= "InsertLink";
 
 DwtKeyMap.YES				= "Yes";
 
@@ -293,11 +296,14 @@ function() {
  * 
  * @param {hash}	map			the hash to populate with shortcuts
  * @param {hash}	keys			the properties version of shortcuts
+ * @param {hash}	[mapNames]		the additional map for getting internal map names
  * 
  * @private
  */
 DwtKeyMap.prototype._load =
-function(map, keys) {
+function(map, keys, mapNames) {
+
+	mapNames = mapNames || {};
 
 	// preprocess for platform-specific bindings
 	var curPlatform = AjxEnv.platform.toLowerCase();
@@ -325,7 +331,7 @@ function(map, keys) {
 			continue;
 		}
 		if (field != DwtKeyMap.INHERIT && field != "keycode") { continue; }
-		var mapName = parts[0];
+		var mapName = DwtKeyMap.MAP_NAME[parts[0]] || mapNames[parts[0]];
 		if ((this._checkedMap[mapName] === false) ||
 			(!this._checkedMap[mapName] && !this._checkMap(mapName))) { continue; }
 		if (!map[mapName]) {
@@ -339,7 +345,7 @@ function(map, keys) {
 				var parents = ks.split(/\s*,\s*/);
 				var parents1 = [];
 				for (var p = 0; p < parents.length; p++) {
-					parents1[p] = parents[p];
+					parents1[p] = DwtKeyMap.MAP_NAME[parents[p]] || mapNames[parents[p]];
 				}
 				map[mapName][parts[1]] = parents1.join(",");
 			} else if (field == "keycode") {

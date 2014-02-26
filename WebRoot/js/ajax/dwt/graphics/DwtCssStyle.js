@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -99,7 +99,7 @@ function(htmlElement, cssPropName) {
 	var result;
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not support ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
+		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -111,7 +111,7 @@ function(htmlElement, cssPropName) {
 			return cssDecl.getPropertyValue(cssPropName);
 		}
 	}
-	
+
 	// Convert CSS -> DOM name for IE etc
 	var tokens = cssPropName.split("-");
 	// Shift one word off the array and capitalize the rest
@@ -128,7 +128,7 @@ DwtCssStyle.getComputedStyleObject =
 function(htmlElement) {
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not suppoert ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
+		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -158,128 +158,6 @@ DwtCssStyle.removeProperty = function(el, prop) {
 		} else {
 			prop = prop.replace(/([A-Z])/g, "-$1");
 			el.style.removeProperty(prop);
-		}
-	}
-};
-
-/**
- * Adds a rule to a stylesheet.
- * 
- * @param {StyleSheet}	stylesheet		a CSS stylesheet
- * @param {string}		selector		rule selector
- * @param {string}		declaration		styles
- * @param {string}		index			insertion index (optional)
- * 
- * @return	index at which rule was inserted (for later removal)
- */
-DwtCssStyle.addRule =
-function(stylesheet, selector, declaration, index) {
-	if (stylesheet.addRule) {	// IE
-		//if index is not specified insert at the end so that new rule takes precedence
-		index = index || (stylesheet.rules.length);
-		stylesheet.addRule(selector, declaration, index);
-	}
-	else {
-		//if index is not specified insert at the end so that new rule takes precedence
-		index = index || (stylesheet.cssRules.length);
-		stylesheet.insertRule(selector + "{" + declaration + "}", index);
-	}
-	return index;
-};
-
-/**
- * Removes the rule at the given index.
- * 
- * @param {StyleSheet}	stylesheet		a CSS stylesheet
- * @param {string}		index			insertion index (optional)
- */
-DwtCssStyle.removeRule =
-function(stylesheet, index) {
-	if (stylesheet.removeRule) {	// IE
-		stylesheet.removeRule(index);
-	}
-	else {
-		stylesheet.deleteRule(index);
-	}
-};
-
-DwtCssStyle.__PIXEL_RE = /^(-?[0-9]+(?:\.[0-9]*)?)px$/;
-DwtCssStyle.__DIMENSION_RE = /^(-?[0-9]+(?:\.[0-9]*)?)([a-z]*|%)$/;
-DwtCssStyle.__NUMBER_RE = /^(-?[0-9]+(?:\.[0-9]*)?)+$/
-
-/**
- * Obtain the font size of the root element. We assume and verify that
- * it's specified in pixels.
- */
-DwtCssStyle.__getRootFontSize =
-function() {
-	var fontsize =
-		DwtCssStyle.getProperty(document.documentElement, 'font-size');
-
-	if (!DwtCssStyle.__PIXEL_RE.test(fontsize)) {
-		throw new Error('font size of root element is not in pixels!');
-	}
-
-	return parseInt(fontsize);
-};
-
-/**
- * Convert a CSS value to a pixel count; unhandled units raise an error.
- */
-DwtCssStyle.asPixelCount =
-function(val) {
-	var dimension, unit, match;
-
-	// assume pixels if no unit is specified
-	if (typeof val === 'number' || DwtCssStyle.__NUMBER_RE.test(val)) {
-		dimension = Number(val);
-		unit = 'px';
-	} else if ((match = DwtCssStyle.__DIMENSION_RE.exec(val))) {
-		dimension = Number(match[1]);
-		unit = match[2];
-	} else {
-		throw new Error('unsupported argument: ' + val);
-	}
-
-	switch (unit) {
-		case 'rem': {
-			return dimension * DwtCssStyle.__getRootFontSize();
-		}
-
-		// see http://www.w3.org/TR/css3-values/#absolute-lengths
-		case 'mm': {
-			dimension /= 10;
-		}
-
-		case 'cm': {
-			dimension /= 2.54;
-		}
-
-		case 'in': {
-			dimension *= 6;
-		}
-
-		case 'pc': {
-			dimension *= 12;
-		}
-
-		case 'pt': {
-			dimension /= 0.75;
-		}
-
-		case 'px': {
-			return dimension;
-		}
-
-		case 'ch':
-		case 'em':
-		case 'ex': {
-			throw new Error('cannot convert context-dependent CSS unit ' +
-							unit);
-		}
-
-		default: {
-			throw new Error('unrecognized CSS unit ' + unit);
 		}
 	}
 };

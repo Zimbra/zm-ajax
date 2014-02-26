@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -56,23 +56,8 @@ DwtAlert.WARNING = 1;
  */
 DwtAlert.CRITICAL = 2;
 
-/**
- * Defines the "success" style
- */
-DwtAlert.SUCCESS = 3;
-
-DwtAlert._ICONS = [
-    AjxImg.getClassForImage("Information_32"),
-    AjxImg.getClassForImage("Warning_32"),
-    AjxImg.getClassForImage("Critical_32"),
-    AjxImg.getClassForImage("Success")
-];
-DwtAlert._CLASSES = [
-    "DwtAlertInfo",
-    "DwtAlertWarn",
-    "DwtAlertCrit",
-    "DwtAlertWarn"    // Reuse for Success
-];
+DwtAlert._ICONS = [ AjxImg.getClassForImage("Information_32"), AjxImg.getClassForImage("Warning_32"), AjxImg.getClassForImage("Critical_32") ];
+DwtAlert._CLASSES = [ "DwtAlertInfo", "DwtAlertWarn", "DwtAlertCrit" ];
 
 DwtAlert._RE_ICONS = new RegExp(DwtAlert._ICONS.join("|"));
 DwtAlert._RE_CLASSES = new RegExp(DwtAlert._CLASSES.join("|"));
@@ -90,7 +75,7 @@ DwtAlert.prototype.TEMPLATE = "dwt.Widgets#DwtAlert";
 /**
  * Sets the style.
  * 
- * @param	{DwtAlert.INFORMATION|DwtAlert.WARNING|DwtAlert.CRITICAL|DwtAlert.SUCCESS}	style		the style
+ * @param	{DwtAlert.INFORMATION|DwtAlert.WARNING|DwtAlert.CRITICAL}	style		the style
  */
 DwtAlert.prototype.setStyle = function(style) {
 	this._alertStyle = style || DwtAlert.INFORMATION;
@@ -103,7 +88,7 @@ DwtAlert.prototype.setStyle = function(style) {
 /**
  * Gets the style.
  * 
- * @return	{DwtAlert.INFORMATION|DwtAlert.WARNING|DwtAlert.CRITICAL|DwtAlert.SUCCESS}		the style
+ * @return	{DwtAlert.INFORMATION|DwtAlert.WARNING|DwtAlert.CRITICAL}		the style
  */
 DwtAlert.prototype.getStyle = function() {
 	return this._alertStyle;

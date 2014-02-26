@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -38,7 +38,6 @@ public class ImageMergerTask
 	private File outputDir;
 	private String cssFilename;
 	private String cssPath;
-	private String spacerImagesPath;
 
 	// optional
 
@@ -70,11 +69,6 @@ public class ImageMergerTask
 
 	public void setCssPath(String path) {
 		cssPath = path;
-	}
-
-
-	public void setSpacerImagesPath(String path) {
-		spacerImagesPath = path;
 	}
 
     // optional
@@ -114,14 +108,12 @@ public class ImageMergerTask
 		assertAndThrow(inputDirs.size() > 0, "missing <dirset> element(s)");
 		assertAndThrow(cssFilename != null && cssFilename.length() > 0, "missing cssfile attribute");
 		assertAndThrow(cssPath != null, "missing csspath attribute");
-		assertAndThrow(spacerImagesPath != null, "missing spacerimagespath attribute");
 
         // create merger
         ImageMerger merger = new ImageMerger();
         merger.setOutputDirectory(outputDir);
         merger.setCssFilename(cssFilename);
         merger.setCssPath(cssPath);
-		merger.setSpacerImagesPath(spacerImagesPath);
         merger.setCacheFilename(cacheFilename);
         merger.setJsFilename(jsFilename);
         merger.setCopyFiles(copyFiles);

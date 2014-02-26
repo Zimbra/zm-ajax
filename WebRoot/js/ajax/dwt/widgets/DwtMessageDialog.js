@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -31,7 +31,6 @@
  * @param {string}	params.className 		the CSS class
  * @param {array}	params.buttons				the buttons to show. Defaults to {@link DwtDialog.OK_BUTTON} button
  * @param {array}	params.extraButtons	  	a list of {@link DwtDialog_ButtonDescriptor} objects describing custom buttons to add to the dialog
- * @param {String} params.helpText  shows a left aligned help button with the text specified in this param.
  * 
  * @extends	DwtDialog
  */
@@ -40,17 +39,7 @@ DwtMessageDialog = function(params) {
 	params = Dwt.getParams(arguments, DwtMessageDialog.PARAMS);
 	this._msgCellId = Dwt.getNextId("MessageDialog_");
 	params.standardButtons = params.buttons || [DwtDialog.OK_BUTTON];
-	if (params.helpText) {
-		var helpButton = new DwtDialog_ButtonDescriptor(DwtMessageDialog.HELP_BUTTON, params.helpText, DwtDialog.ALIGN_LEFT);
-		params.extraButtons = params.extraButtons || [];
-		params.extraButtons.push(helpButton);
-		DwtDialog.call(this, params);
-		this.registerCallback(DwtMessageDialog.HELP_BUTTON, function() {
-			ZmZimbraMail.helpLinkCallback(this._helpURL);
-		},this);
-	} else {
-		DwtDialog.call(this, params);
-	}
+	DwtDialog.call(this, params);
 	
 	this.setContent(this._contentHtml());
 	this._msgCell = document.getElementById(this._msgCellId);
@@ -85,7 +74,7 @@ DwtMessageDialog.ICON[DwtMessageDialog.CRITICAL_STYLE] = "Critical_32";
 DwtMessageDialog.ICON[DwtMessageDialog.INFO_STYLE] = "Information_32";
 DwtMessageDialog.ICON[DwtMessageDialog.WARNING_STYLE] = "Warning_32";
 
-DwtMessageDialog.HELP_BUTTON = "Help";
+
 // Public methods
 
 /**
@@ -124,16 +113,6 @@ function(msgStr, style, title) {
 	}
 };
 
-/**
- * Sets the message style (info/warning/critical) and content.
- *
- * @param {string}	url		the url of the help
- */
-DwtMessageDialog.prototype.setHelpURL =
-function(url) {
-	this._helpURL = url;
-}
-
 DwtMessageDialog.prototype.setSize =
 function(width, height) {
 	var msgCell = document.getElementById(this._msgCellId);
@@ -149,7 +128,6 @@ function(width, height) {
 DwtMessageDialog.prototype.reset = 
 function() {
 	this._msgCell.innerHTML = "";
-	this._helpURL = "";
 	DwtDialog.prototype.reset.call(this);
 };
 

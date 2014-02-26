@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -24,8 +24,10 @@ AjxSoapDoc = function() {
 	this._soapURI = AjxSoapDoc._SOAP_URI;
 }
 
-AjxSoapDoc.prototype.isAjxSoapDoc = true;
-AjxSoapDoc.prototype.toString = function() { return "AjxSoapDoc"; };
+AjxSoapDoc.prototype.toString =
+function() {
+	return "AjxSoapDoc";
+};
 
 AjxSoapDoc._SOAP_URI = "http://www.w3.org/2003/05/soap-envelope";
 // AjxSoapDoc._SOAP_URI = "http://schemas.xmlsoap.org/soap/envelope/";
@@ -231,9 +233,9 @@ function() {
  */
 AjxSoapDoc.prototype.getHeader =
 function() {
-	// fall back to getElementsByTagName in IE 8 and earlier
+	// would love to use getElementsByTagNameNS, but IE does not support it
 	var d = this._xmlDoc.getDoc();
-	var nodeList = !d.getElementsByTagNameNS
+	var nodeList = AjxEnv.isIE
 		? (d.getElementsByTagName(d.firstChild.prefix + ":Header"))
 		: (d.getElementsByTagNameNS(this._soapURI, "Header"));
 
@@ -247,9 +249,9 @@ function() {
  */
 AjxSoapDoc.prototype.getBody =
 function() {
-	// fall back to getElementsByTagName in IE 8 and earlier
+	// would love to use getElementsByTagNameNS, but IE does not support it
 	var d = this._xmlDoc.getDoc();
-	var nodeList = !d.getElementsByTagNameNS
+	var nodeList = AjxEnv.isIE
 		? (d.getElementsByTagName(d.firstChild.prefix + ":Body"))
 		: (d.getElementsByTagNameNS(this._soapURI, "Body"));
 
@@ -315,7 +317,7 @@ function(node) {
  */
 AjxSoapDoc.prototype.getXml =
 function() {
-	return AjxEnv.isSafari || AjxEnv.isOpera || AjxEnv.isIE9up
+	return AjxEnv.isSafari || AjxEnv.isOpera
 		? (AjxXmlDoc.getXml(this._xmlDoc.getDoc()))
 		: AjxXmlDoc.replaceInvalidChars(this._xmlDoc.getDoc().xml);
 };

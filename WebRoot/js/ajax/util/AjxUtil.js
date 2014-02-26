@@ -28,7 +28,6 @@ AjxUtil.FLOAT_RE = /^[+\-]?((\d+(\.\d*)?)|((\d*\.)?\d+))([eE][+\-]?\d+)?$/;
 AjxUtil.NOTFLOAT_RE = /[^\d\.]/;
 AjxUtil.NOTINT_RE = /[^0-9]+/;
 AjxUtil.LIFETIME_FIELD = /^([0-9])+([dhms]|ms)?$/;
-AjxUtil.INT_RE = /^\-?(0|[1-9]\d*)$/;
 
 AjxUtil.isSpecified 		= function(aThing) { return ((aThing !== void 0) && (aThing !== null)); };
 AjxUtil.isUndefined 		= function(aThing) { return (aThing === void 0); };
@@ -42,10 +41,10 @@ AjxUtil.isFunction 			= function(aThing) { return (typeof(aThing) == 'function')
 AjxUtil.isDate 				= function(aThing) { return AjxUtil.isInstance(aThing, Date); };
 AjxUtil.isLifeTime 			= function(aThing) { return AjxUtil.LIFETIME_FIELD.test(aThing); };
 AjxUtil.isNumeric 			= function(aThing) { return (!isNaN(parseFloat(aThing)) && AjxUtil.FLOAT_RE.test(aThing) && !AjxUtil.NOTFLOAT_RE.test(aThing)); };
-AjxUtil.isInt				= function(aThing) { return AjxUtil.INT_RE.test(aThing); };
-AjxUtil.isPositiveInt		= function(aThing) { return AjxUtil.isInt(aThing) && parseInt(aThing, 10) > 0; }; //note - assume 0 is not positive
-AjxUtil.isLong = AjxUtil.isInt;
-AjxUtil.isNonNegativeLong	= function(aThing) { return AjxUtil.isLong(aThing) && parseInt(aThing, 10) >= 0; };
+AjxUtil.isLong			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
+AjxUtil.isNonNegativeLong   = function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isLong(aThing) && (parseFloat(aThing) >= 0)); };
+AjxUtil.isInt			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
+AjxUtil.isPositiveInt   	= function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isInt(aThing) && (parseInt(aThing) > 0)); };
 AjxUtil.isEmpty				= function(aThing) { return ( AjxUtil.isNull(aThing) || AjxUtil.isUndefined(aThing) || (aThing === "") || (AjxUtil.isArray(aThing) && (aThing.length==0))); };
 // REVISIT: Should do more precise checking. However, there are names in
 //			common use that do not follow the RFC patterns (e.g. domain
@@ -59,8 +58,6 @@ AjxUtil.HOST_NAME_RE = /^[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{1,})*(\.[A-Za-z0-9\-]
 AjxUtil.HOST_NAME_WITH_PORT_RE = /^[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})*:([0-9])+$/;
 AjxUtil.EMAIL_SHORT_RE = /^[^@\s]+$/;
 AjxUtil.EMAIL_FULL_RE = /^[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+$/;
-AjxUtil.FULL_URL_RE = /^[A-Za-z0-9]{2,}:\/\/[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*(:([0-9])+)?(\/[\w\.\|\^\*\[\]\{\}\(\)\-<>~,'#_;@:!%]+)*(\/)?(\?[\w\.\|\^\*\+\[\]\{\}\(\)\-<>~,'#_;@:!%&=]*)?$/;
-AjxUtil.IP_FULL_URL_RE = /^[A-Za-z0-9]{2,}:\/\/\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?(:([0-9])+)?(\/[\w\.\|\^\*\[\]\{\}\(\)\-<>~,'#_;@:!%]+)*(\/)?(\?[\w\.\|\^\*\+\[\]\{\}\(\)\-<>~,'#_;@:!%&=]*)?$/;
 AjxUtil.SHORT_URL_RE = /^[A-Za-z0-9]{2,}:\/\/[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*(:([0-9])+)?$/;
 AjxUtil.IP_SHORT_URL_RE = /^[A-Za-z0-9]{2,}:\/\/\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?(:([0-9])+)?$/;
 
@@ -148,6 +145,7 @@ function(size, units, round, fractions) {
 		case AjxUtil.SIZE_MEGABYTES: { size /= 1048576; break; }
 		case AjxUtil.SIZE_KILOBYTES: { size /= 1024; break; }
 	}
+	
 	var dot = I18nMsg.numberSeparatorDecimal !='' ? I18nMsg.numberSeparatorDecimal : '.';
 	var pattern = I18nMsg.formatNumber.replace(/\..*$/, ""); // Strip off decimal, we'll be adding one anyway
 	pattern = pattern.replace(/,/, "");       // Remove the ,
@@ -358,7 +356,6 @@ function(list) {
 
 AjxUtil.arrayAsHash =
 function(array, valueOrFunc) {
-	array = AjxUtil.toArray(array);
 	var hash = {};
 	var func = typeof valueOrFunc == "function" && valueOrFunc;
 	var value = valueOrFunc || true; 
@@ -407,11 +404,6 @@ function(array, object, strict) {
 	return -1;
 };
 
-AjxUtil.arrayContains =
-function(array, object, strict) {
-	return AjxUtil.indexOf(array, object, strict) != -1;
-};
-
 AjxUtil.keys = function(object, acceptFunc) {
     var keys = [];
     for (var p in object) {
@@ -429,53 +421,10 @@ AjxUtil.values = function(object, acceptFunc) {
     return values;
 };
 
-/**
- * Generate another hash mapping property values to their names. Each value
- * should be unique; otherwise the results are undefined.
- *
- * @param obj                   An object, treated as a hash.
- * @param func [function]       An optional function for filtering properties.
- */
-AjxUtil.valueHash = function(obj, acceptFunc) {
-    // don't rely on the value in the object itself
-    var hasown = Object.prototype.hasOwnProperty.bind(obj);
-
-    var r = {};
-    for (var k in obj) {
-        var v = obj[k];
-
-        if (!hasown(k) || (acceptFunc && !acceptFunc(k, obj)))
-            continue;
-        r[v] = k;
-    }
-    return r;
-};
-AjxUtil.backMap = AjxUtil.valueHash;
-
-/**
- * Call a function with the the items in the given object, which special logic
- * for handling of arrays.
- *
- * @param obj                   Array or other object
- * @param func [function]       Called with index or key and value.
- */
-AjxUtil.foreach = function(obj, func) {
+AjxUtil.foreach = function(array, func) {
     if (!func) return;
-
-    if ('length' in obj) {
-        var array = obj;
-
-        for (var i = 0; i < array.length; i++) {
-            func(array[i], i);
-        }
-    } else {
-        // don't rely on the value in the object itself
-        hasown = Object.prototype.hasOwnProperty.bind(obj);
-
-        for (var k in obj) {
-            if (hasown(k))
-                func(obj[k], k)
-        }
+    for (var i = 0; i < array.length; i++) {
+        func(array[i], i);
     }
 };
 
@@ -493,41 +442,6 @@ AjxUtil.uniq = function(array) {
 	}
 	return AjxUtil.keys(object);
 };
-
-
-/**
- * Remove duplicates from the given array,
- * <strong>in-place</strong>. Stable with regards to ordering.
- *
- * Please note that this method is O(n^2) if Array is backed by an
- * array/vector data structure.
- *
- * @param array [array]     array to process
- * @param keyfn [function]  used to extract a comparison key from each
- *                          list element, default is to compare
- *                          elements directly. if the comparison key
- *                          is 'undefined', the element is always
- *                          retained
- */
-AjxUtil.dedup = function(array, keyfn) {
-	if (!keyfn)
-		keyfn = function(v) { return v; };
-
-	var seen = {};
-
-	for (var i = 0; i < array.length; i++) {
-		var key = keyfn(array[i]);
-
-		if (key !== undefined && seen[key]) {
-			array.splice(i, 1);
-			i -= 1;
-		}
-
-		seen[key] = true;
-	}
-};
-
-
 AjxUtil.concat = function(array1 /* ..., arrayN */) {
 	var array = [];
 	for (var i = 0; i < arguments.length; i++) {
@@ -639,23 +553,6 @@ AjxUtil.byStringProp = function(prop, a, b) {
 };
 
 /**
- * returns the size of the given array, i.e. the number of elements in it, regardless of whether the array is associative or not.
- * so for example for array that is set simply by a = []; a[50] = "abc"; arraySize(a) == 1. For b = []; b["abc"] = "def"; arraySize(b) == 1 too.
- * Incredibly JavasCript does not have a built in simple way to get that.
- * @param arr
- */
-AjxUtil.arraySize =
-function(a) {
-	var size = 0;
-	for(var e in a) {
-		if (a.hasOwnProperty(e)) {
-			size ++;
-		}
-	}
-	return size;
-};
-
-/**
  * mergesort+dedupe
 **/
 AjxUtil.mergeArrays =
@@ -720,7 +617,7 @@ AjxUtil.__mergeArrays_orderfunc = function (val1,val2) {
     if(val1 == val2) return  0;
 };
 
-AjxUtil.arraySubtract = function (arr1, arr2, orderfunc) {
+AjxUtil.arraySubstract = function (arr1, arr2, orderfunc) {
 	if(!orderfunc) {
 		orderfunc = function (val1,val2) {
 			if(val1>val2)
@@ -768,11 +665,7 @@ AjxUtil.arraySubtract = function (arr1, arr2, orderfunc) {
 	}
 	
 	return resArr;
-};
-
-// Support deprecated, misspelled version
-AjxUtil.arraySubstract = AjxUtil.arraySubtract;
-
+}
 /**
  * Returns the keys of the given hash as a sorted list.
  *
@@ -871,24 +764,13 @@ function(hash1, hash2, overwrite, ignore) {
 // can get lost in new window
 AjxUtil.isArray1 =
 function(arg) {
-	return !!(arg && (arg.length != null) && arg.splice && arg.slice);
+	return Boolean(arg && (arg.length != null) && arg.splice && arg.slice);
 };
 
 // converts the arg to an array if it isn't one
 AjxUtil.toArray =
 function(arg) {
-	if (!arg) {
-		return [];
-	}
-	else if (AjxUtil.isArray1(arg)) {
-		return arg;
-	}
-	else if (arg.isAjxVector) {
-        return arg.getArray();
-	}
-	else {
-		return [arg];
-	}
+	return AjxUtil.isArray1(arg) ? arg : (arg === undefined) ? [] : [arg];
 };
 
 /**
@@ -913,134 +795,4 @@ AjxUtil.get = function(object /* , propName1, ... */) {
         object = object[arguments[i]];
     }
     return object;
-};
-
-
-/**
- *  Convert non-ASCII characters to valid HTML UNICODE entities 
- * @param {string}
- * 
-*/
-AjxUtil.convertToEntities = function (source){
-	var result = '';
-	var length = 0;
-    
-    if (!source || !(length = source.length)) return source;
-    
-	for (var i = 0; i < length; i++) {
-		if (source.charCodeAt(i) > 127) {
-			var temp = source.charCodeAt(i).toString(10);
-			while (temp.length < 4) {
-				temp = '0' + temp;
-			}
-			result += '&#' + temp + ';';
-		} else {
-			result += source.charAt(i);
-		}
-	}
-	return result;
-};
-
-/**
- *  Get the class attribute string from the given class.
- * @param {array} - An array of class names to be converted to a class attribute.
- * returns the attribute string with the class names or empty string if no class is passed.
-	*
- */
-AjxUtil.getClassAttr = function (classes){
-	var attr = [];
-	if (classes && classes.length > 0) {
-		//remove duplicate css classes
-		classes = AjxUtil.uniq(classes);
-		return ["class='" , classes.join(" "), "'"].join("");
-	}
-	return "";
-};
-
-/**
- * converts datauri string to blob object used for uploading the image
- * @param {dataURI} - datauri string  data:image/png;base64,iVBORw0
- *
- */
-AjxUtil.dataURItoBlob =
-function (dataURI) {
-
-    if (!(dataURI && typeof window.atob === "function" && typeof window.Blob === "function")) {
-        return;
-    }
-
-    var dataURIArray = dataURI.split(",");
-    if (dataURIArray.length === 2) {
-        if (dataURIArray[0].indexOf('base64') === -1) {
-            return;
-        }
-        // convert base64 to raw binary data held in a string
-        // doesn't handle URLEncoded DataURIs
-        try{
-            var byteString = window.atob(dataURIArray[1]);
-        }
-        catch(e){
-            return;
-        }
-        if (!byteString) {
-            return;
-        }
-        // separate out the mime component
-        var mimeString = dataURIArray[0].split(':');
-        if (!mimeString[1]) {
-            return;
-        }
-        mimeString = mimeString[1].split(';')[0];
-        if (mimeString) {
-            // write the bytes of the string to an ArrayBuffer
-            var byteStringLength = byteString.length,
-                ab = new ArrayBuffer(byteStringLength),
-                ia = new Uint8Array(ab);
-            for (var i = 0; i < byteStringLength; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            return new Blob([ab], {"type" : mimeString});
-        }
-    }
-
-};
-
-AjxUtil.reduce = function(array, callback, opt_initialValue) {
-	var reducefn = Array.prototype.reduce;
-
-	if (reducefn) {
-		return reducefn.call(array, callback, opt_initialValue);
-	} else {
-		// polyfill from the Mozilla Developer Network for browsers without
-		// reduce -- i.e. IE8.
-
-		if (array === null || 'undefined' === typeof array) {
-			throw new TypeError('AjxUtil.reduce called on null or undefined');
-		}
-		if ('function' !== typeof callback) {
-			throw new TypeError(callback + ' is not a function');
-		}
-		var index, value,
-		length = array.length >>> 0,
-		isValueSet = false;
-		if (1 < arguments.length) {
-			value = opt_initialValue;
-			isValueSet = true;
-		}
-		for (index = 0; length > index; ++index) {
-			if (array.hasOwnProperty(index)) {
-				if (isValueSet) {
-					value = callback(value, array[index], index, array);
-				}
-				else {
-					value = array[index];
-					isValueSet = true;
-				}
-			}
-		}
-		if (!isValueSet) {
-			throw new TypeError('Reduce of empty array with no initial value');
-		}
-		return value;
-	}
 };

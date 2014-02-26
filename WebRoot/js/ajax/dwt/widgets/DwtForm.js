@@ -98,9 +98,7 @@ DwtForm.prototype.setValue = function(id, value, force) {
  * @return	{string}	the value
  */
 DwtForm.prototype.getValue = function(id, defaultValue) {
-	if (typeof id !== "string") {
-		id = String(id);
-	}
+	if (typeof id != "string") id = String(id);
 	if (id.match(/\./) || id.match(/\[/)) {
 		var parts = id.replace(/\[(\d+)\](\.)?/,".$1$2").split(".");
 		var control = this.getControl(parts[0]);
@@ -110,16 +108,12 @@ DwtForm.prototype.getValue = function(id, defaultValue) {
 		return null;
 	}
 	var item = this._items[id];
-	if (!item) {
-		return;
-	}
+	if (!item) return;
 	if (item.getter) {
 		return this._call(item.getter) || defaultValue;
 	}
 	var value = this._getControlValue(id);
-    if (value == null) {
-		value = item.value;
-	}
+    if (value == null) value = item.value;
 
     //added <|| ""> because ... if value="" than it always returns defaultValue which could be undefined.
 	return value || defaultValue || "";
@@ -168,25 +162,6 @@ DwtForm.prototype.setLabel = function(id, label) {
 	if (control.setLabel) { control.setLabel(label); return; }
 	if (control.setText) { control.setText(label); return; }
 };
-
-/**
- * Sets the image.
- *
- * @param	{string}	id 		the id
- * @param	{string}	image 	the image
- */
-DwtForm.prototype.setImage = function(id, image) {
-	var item = this._items[id];
-	if (!item) {
-		return;
-	}
-	var control = item.control;
-	if (!control) {
-		return;
-	}
-	control.setImage(image);
-};
-
 
 /**
  * Gets the label.
@@ -589,15 +564,9 @@ DwtForm.prototype._getControlValue = function(id) {
 		if (control instanceof DwtCheckbox || control instanceof DwtRadioButton) {
 			return control.isSelected();
 		}
-		if (control.getSelectedValue) {
-			return control.getSelectedValue();
-		}
-		if (control.getValue) {
-			return control.getValue();
-		}
-		if (control.getText && !(control instanceof DwtButton)) {
-			return control.getText();
-		}
+		if (control.getSelectedValue) return control.getSelectedValue();
+		if (control.getValue) return control.getValue();
+		if (control.getText && !(control instanceof DwtButton)) return control.getText();
 		if (!(control instanceof DwtControl)) {
 			if (control.type == "checkbox" || control == "radio") return control.checked;
 			return control.value;
@@ -934,16 +903,17 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 		var changehandler = DwtForm.__makeFunc(itemDef.onchange);
 		var onkeyup = AjxCallback.simpleClosure(this._input2model2handler, this, id, changehandler);
 		control.setHandler(DwtEvent.ONKEYUP, onkeyup);
-        if (AjxEnv.isFirefox){
-            var onkeydown = this._onkeydownhandler.bind(this, id, changehandler);
-            control.setHandler(DwtEvent.ONKEYDOWN, onkeydown);
-        }
+
+		if (AjxEnv.isFirefox){
+		    var onkeydown = this._onkeydownhandler.bind(this, id, changehandler);
+		    control.setHandler(DwtEvent.ONKEYDOWN, onkeydown);
+		} 
 		var blurhandler = DwtForm.__makeFunc(itemDef.onblur);
         if (blurhandler) {
 		    var onblur = AjxCallback.simpleClosure(this._input2model2handler, this, id, blurhandler);
 		    control.setHandler(DwtEvent.ONBLUR, onblur);
         }
-
+		
 		control.setHint(itemDef.hint);
 	}
 
@@ -1169,7 +1139,7 @@ DwtForm.__makeGetter = function(item) {
 
 	var parts = ref.split(".");
 	var body = [
-		"var context = this.model;"
+		"var context = this.model;",
 	];
 	for (var i = 0; i < parts.length; i++) {
 		var name = parts[i];
@@ -1195,7 +1165,7 @@ DwtForm.__makeSetter = function(item) {
 
 	var parts = ref.split(".");
 	var body = [
-		"var context = this.model;"
+		"var context = this.model;",
 	];
 	for (var i = 0; i < parts.length; i++) {
 		var isLast = i == parts.length - 1;
