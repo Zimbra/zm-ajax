@@ -28,7 +28,6 @@ AjxUtil.FLOAT_RE = /^[+\-]?((\d+(\.\d*)?)|((\d*\.)?\d+))([eE][+\-]?\d+)?$/;
 AjxUtil.NOTFLOAT_RE = /[^\d\.]/;
 AjxUtil.NOTINT_RE = /[^0-9]+/;
 AjxUtil.LIFETIME_FIELD = /^([0-9])+([dhms]|ms)?$/;
-AjxUtil.INT_RE = /^\-?(0|[1-9]\d*)$/;
 
 AjxUtil.isSpecified 		= function(aThing) { return ((aThing !== void 0) && (aThing !== null)); };
 AjxUtil.isUndefined 		= function(aThing) { return (aThing === void 0); };
@@ -38,15 +37,14 @@ AjxUtil.isString 			= function(aThing) { return (typeof(aThing) == 'string'); };
 AjxUtil.isNumber 			= function(aThing) { return (typeof(aThing) == 'number'); };
 AjxUtil.isObject 			= function(aThing) { return ((typeof(aThing) == 'object') && (aThing !== null)); };
 AjxUtil.isArray 			= function(aThing) { return AjxUtil.isInstance(aThing, Array); };
-AjxUtil.isArrayLike			= function(aThing) { return typeof aThing !== 'string' && typeof aThing.length === 'number'; };
 AjxUtil.isFunction 			= function(aThing) { return (typeof(aThing) == 'function'); };
 AjxUtil.isDate 				= function(aThing) { return AjxUtil.isInstance(aThing, Date); };
 AjxUtil.isLifeTime 			= function(aThing) { return AjxUtil.LIFETIME_FIELD.test(aThing); };
 AjxUtil.isNumeric 			= function(aThing) { return (!isNaN(parseFloat(aThing)) && AjxUtil.FLOAT_RE.test(aThing) && !AjxUtil.NOTFLOAT_RE.test(aThing)); };
-AjxUtil.isInt				= function(aThing) { return AjxUtil.INT_RE.test(aThing); };
-AjxUtil.isPositiveInt		= function(aThing) { return AjxUtil.isInt(aThing) && parseInt(aThing, 10) > 0; }; //note - assume 0 is not positive
-AjxUtil.isLong = AjxUtil.isInt;
-AjxUtil.isNonNegativeLong	= function(aThing) { return AjxUtil.isLong(aThing) && parseInt(aThing, 10) >= 0; };
+AjxUtil.isLong			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
+AjxUtil.isNonNegativeLong   = function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isLong(aThing) && (parseFloat(aThing) >= 0)); };
+AjxUtil.isInt			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
+AjxUtil.isPositiveInt   	= function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isInt(aThing) && (parseInt(aThing) > 0)); };
 AjxUtil.isEmpty				= function(aThing) { return ( AjxUtil.isNull(aThing) || AjxUtil.isUndefined(aThing) || (aThing === "") || (AjxUtil.isArray(aThing) && (aThing.length==0))); };
 // REVISIT: Should do more precise checking. However, there are names in
 //			common use that do not follow the RFC patterns (e.g. domain
@@ -430,53 +428,10 @@ AjxUtil.values = function(object, acceptFunc) {
     return values;
 };
 
-/**
- * Generate another hash mapping property values to their names. Each value
- * should be unique; otherwise the results are undefined.
- *
- * @param obj                   An object, treated as a hash.
- * @param func [function]       An optional function for filtering properties.
- */
-AjxUtil.valueHash = function(obj, acceptFunc) {
-    // don't rely on the value in the object itself
-    var hasown = Object.prototype.hasOwnProperty.bind(obj);
-
-    var r = {};
-    for (var k in obj) {
-        var v = obj[k];
-
-        if (!hasown(k) || (acceptFunc && !acceptFunc(k, obj)))
-            continue;
-        r[v] = k;
-    }
-    return r;
-};
-AjxUtil.backMap = AjxUtil.valueHash;
-
-/**
- * Call a function with the the items in the given object, which special logic
- * for handling of arrays.
- *
- * @param obj                   Array or other object
- * @param func [function]       Called with index or key and value.
- */
-AjxUtil.foreach = function(obj, func) {
+AjxUtil.foreach = function(array, func) {
     if (!func) return;
-
-    if (AjxUtil.isArrayLike(obj)) {
-        var array = obj;
-
-        for (var i = 0; i < array.length; i++) {
-            func(array[i], i);
-        }
-    } else {
-        // don't rely on the value in the object itself
-        hasown = Object.prototype.hasOwnProperty.bind(obj);
-
-        for (var k in obj) {
-            if (hasown(k))
-                func(obj[k], k)
-        }
+    for (var i = 0; i < array.length; i++) {
+        func(array[i], i);
     }
 };
 
@@ -721,7 +676,7 @@ AjxUtil.__mergeArrays_orderfunc = function (val1,val2) {
     if(val1 == val2) return  0;
 };
 
-AjxUtil.arraySubtract = function (arr1, arr2, orderfunc) {
+AjxUtil.arraySubstract = function (arr1, arr2, orderfunc) {
 	if(!orderfunc) {
 		orderfunc = function (val1,val2) {
 			if(val1>val2)
@@ -769,11 +724,7 @@ AjxUtil.arraySubtract = function (arr1, arr2, orderfunc) {
 	}
 	
 	return resArr;
-};
-
-// Support deprecated, misspelled version
-AjxUtil.arraySubstract = AjxUtil.arraySubtract;
-
+}
 /**
  * Returns the keys of the given hash as a sorted list.
  *
@@ -884,14 +835,6 @@ function(arg) {
 	else if (AjxUtil.isArray1(arg)) {
 		return arg;
 	}
-	else if (AjxUtil.isArrayLike(arg)) {
-		try {
-			// fails in IE8
-			return Array.prototype.slice.call(arg);
-		} catch (e) {
-			return AjxUtil.map(arg);
-		}
-	}
 	else if (arg.isAjxVector) {
         return arg.getArray();
 	}
@@ -931,15 +874,14 @@ AjxUtil.get = function(object /* , propName1, ... */) {
  * 
 */
 AjxUtil.convertToEntities = function (source){
-	var result = '';
-	var length = 0;
+	var result = '', temp, length = 0, i = 0;
     
     if (!source || !(length = source.length)) return source;
     
-	for (var i = 0; i < length; i++) {
-		if (source.charCodeAt(i) > 127) {
-			var temp = source.charCodeAt(i).toString(10);
-			while (temp.length < 4) {
+	for(i; i < length; ++i){
+		if(source.charCodeAt(i) > 127){
+			temp = source.charCodeAt(i).toString(10);
+			while(temp.length < 4){
 				temp = '0' + temp;
 			}
 			result += '&#' + temp + ';';
@@ -948,108 +890,4 @@ AjxUtil.convertToEntities = function (source){
 		}
 	}
 	return result;
-};
-
-/**
- *  Get the class attribute string from the given class.
- * @param {array} - An array of class names to be converted to a class attribute.
- * returns the attribute string with the class names or empty string if no class is passed.
-	*
- */
-AjxUtil.getClassAttr = function (classes){
-	var attr = [];
-	if (classes && classes.length > 0) {
-		//remove duplicate css classes
-		classes = AjxUtil.uniq(classes);
-		return ["class='" , classes.join(" "), "'"].join("");
-	}
-	return "";
-};
-
-/**
- * converts datauri string to blob object used for uploading the image
- * @param {dataURI} - datauri string  data:image/png;base64,iVBORw0
- *
- */
-AjxUtil.dataURItoBlob =
-function (dataURI) {
-
-    if (!(dataURI && typeof window.atob === "function" && typeof window.Blob === "function")) {
-        return;
-    }
-
-    var dataURIArray = dataURI.split(",");
-    if (dataURIArray.length === 2) {
-        if (dataURIArray[0].indexOf('base64') === -1) {
-            return;
-        }
-        // convert base64 to raw binary data held in a string
-        // doesn't handle URLEncoded DataURIs
-        try{
-            var byteString = window.atob(dataURIArray[1]);
-        }
-        catch(e){
-            return;
-        }
-        if (!byteString) {
-            return;
-        }
-        // separate out the mime component
-        var mimeString = dataURIArray[0].split(':');
-        if (!mimeString[1]) {
-            return;
-        }
-        mimeString = mimeString[1].split(';')[0];
-        if (mimeString) {
-            // write the bytes of the string to an ArrayBuffer
-            var byteStringLength = byteString.length,
-                ab = new ArrayBuffer(byteStringLength),
-                ia = new Uint8Array(ab);
-            for (var i = 0; i < byteStringLength; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            return new Blob([ab], {"type" : mimeString});
-        }
-    }
-
-};
-
-AjxUtil.reduce = function(array, callback, opt_initialValue) {
-	var reducefn = Array.prototype.reduce;
-
-	if (reducefn) {
-		return reducefn.call(array, callback, opt_initialValue);
-	} else {
-		// polyfill from the Mozilla Developer Network for browsers without
-		// reduce -- i.e. IE8.
-
-		if (array === null || 'undefined' === typeof array) {
-			throw new TypeError('AjxUtil.reduce called on null or undefined');
-		}
-		if ('function' !== typeof callback) {
-			throw new TypeError(callback + ' is not a function');
-		}
-		var index, value,
-		length = array.length >>> 0,
-		isValueSet = false;
-		if (1 < arguments.length) {
-			value = opt_initialValue;
-			isValueSet = true;
-		}
-		for (index = 0; length > index; ++index) {
-			if (array.hasOwnProperty(index)) {
-				if (isValueSet) {
-					value = callback(value, array[index], index, array);
-				}
-				else {
-					value = array[index];
-					isValueSet = true;
-				}
-			}
-		}
-		if (!isValueSet) {
-			throw new TypeError('Reduce of empty array with no initial value');
-		}
-		return value;
-	}
 };

@@ -1,7 +1,8 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -305,9 +306,6 @@ function(delay, kbGenerated) {
 		x = pb.x + pb.width + vBorder;
 		hBorder = (ppHtmlElement.style.borderTopWidth == "") ? 0 : parseInt(ppHtmlElement.style.borderTopWidth);
 		y = pb.y + hBorder;
-        if (menu.centerOnParentVertically()) {
-            y += pb.height / 2;
-        }
 		//x = ((x + s.x) >= ws.x) ? pb.x - s.x - vBorder : x;
 	}
 	menu.popup(delay, x, y, kbGenerated);
@@ -397,13 +395,9 @@ function(ev) {
  */
 DwtMenuItem.prototype.getRowElement =
 function() {
-	var el = this._textEl ||
-		this._dropDownEl ||
-		(this._iconEl && this._iconEl.left) ||
-		(this._iconEl && this._iconEl.right);
-	if (el) {
-		return el.parentNode;
-	}
+   var el = this._textEl ? this._textEl : this._iconEl ? this._iconEl : this._dropDownEl;
+   if (el)
+    return el.parentNode;
 };
 
 DwtMenuItem._listeners = {};

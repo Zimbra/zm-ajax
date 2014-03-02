@@ -110,9 +110,6 @@ DwtControl = function(params) {
 	 */
 	this._disposed = false;
 
-	// set to true for an event type to override default behavior of swallowing the event
-	this._propagateEvent = {};
-
  	if (!parent) { return; }
 
 	/** CSS class name
@@ -208,7 +205,7 @@ DwtControl = function(params) {
 
 	// set to true to ignore OVER and OUT mouse events between elements in the same control
 	this._ignoreInternalOverOut = false;
-	
+
 	// override this control's default template
 	this.TEMPLATE = params.template || this.TEMPLATE;
 };
@@ -793,28 +790,12 @@ function(eventType) {
 };
 
 /**
- * Set the default behavior for whether an event will propagate (bubble up).
- * 
- * @param {boolean}		propagate		if true, event will propagate
- * @param {array}		events			one or more events
- */
-DwtControl.prototype.setEventPropagation =
-function(propagate, events) {
-	events = AjxUtil.toArray(events);
-	for (var i = 0; i < events.length; i++) {
-		this._propagateEvent[events[i]] = propagate;
-	}
-};
-
-/**
  * Gets the bounds of the component. Bounds includes the location (not relevant for
  * statically position elements) and dimensions of the control (i.e. the <code>&lt;div&gt;</code> element).
  *
  * @return {DwtRectangle}		the control bounds
  *
  * @see DwtRectangle
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -835,61 +816,6 @@ function() {
 };
 
 /**
- * Gets the inset bounds of the component. Similar to the bounds, but excluding borders and paddings.
- *
- * @return {DwtRectangle}		the control inset bounds
- *
- * @see DwtRectangle
- * @see #getBounds
- * @see #getInsets
- * @see #getSize
- * @see #getLocation
- * @see #getH
- * @see #getW
- * @see #getX
- * @see #getXW
- * @see #getY
- * @see #getYH
- * @see #setBounds
- * @see #setSize
- * @see #setLocation
- */
-DwtControl.prototype.getInsetBounds =
-function() {
-	if (!this._checkState()) { return; }
-
-	return Dwt.getInsetBounds(this.getHtmlElement());
-};
-
-/**
- * Gets the insets of the component, i.e. the width of borders and paddings.
- *
- * @return {DwtRectangle}		the control insets
- *
- * @see DwtRectangle
- * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
- * @see #getSize
- * @see #getLocation
- * @see #getH
- * @see #getW
- * @see #getX
- * @see #getXW
- * @see #getY
- * @see #getYH
- * @see #setBounds
- * @see #setSize
- * @see #setLocation
- */
-DwtControl.prototype.getInsets =
-function() {
-	if (!this._checkState()) { return; }
-
-	return Dwt.getInsets(this.getHtmlElement());
-};
-
-/**
  * Sets the bounds of a control. The position type of the control must
  * be absolute or else an exception is thrown. To omit setting a value set the
  * actual parameter value to <i>Dwt.DEFAULT</i>
@@ -903,8 +829,6 @@ function() {
  *
  * @see DwtRectangle
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #setSize
  * @see #setLocation
  * @see #getSize
@@ -1365,8 +1289,6 @@ function(id) {
  * @return {number}		the X coordinate of the control 
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -1391,8 +1313,6 @@ function() {
  * @return {number} 	the horizontal extent of the control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -1418,8 +1338,6 @@ function() {
  * @return {number}		the Y coordinate of the control 
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -1444,8 +1362,6 @@ function() {
  * @return {number}		the vertical extent of the control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -1493,8 +1409,6 @@ function(posStyle) {
  * @return {DwtPoint}		the location of the control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #setLocation
  * @see #getH
@@ -1526,8 +1440,6 @@ function() {
  * @return {DwtControl}		this control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -1628,8 +1540,6 @@ function(position) {
  * @return	{number}		the width of the control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -1654,8 +1564,6 @@ function() {
  * @return {number}	the height of the control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #getLocation
  * @see #getW
@@ -1681,8 +1589,6 @@ function() {
  * @return {DwtPoint}		the control size
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getLocation
  * @see #getH
  * @see #getW
@@ -1710,8 +1616,6 @@ function(getFromStyle) {
  * @return {DwtControl}	this control
  *
  * @see #getBounds
- * @see #getInsetBounds
- * @see #getInsets
  * @see #getSize
  * @see #setLocation
  * @see #getH
@@ -1916,16 +1820,6 @@ function(targetEl) {
 };
 
 /**
- * Returns the content of the control HTML element.
- * 
- * @return {string}		HTML content
- */
-DwtControl.prototype.getContent =
-function() {
-	return this.getHtmlElement().innerHTML;
-};
-
-/**
  * Sets the content of the control HTML element to the provided
  * content. Care should be taken when using this method as it can blow away all
  * the content of the control which can be particularly bad if the control is
@@ -1936,9 +1830,8 @@ function() {
  */
 DwtControl.prototype.setContent =
 function(content) {
-	if (content) {
+	if (content)
 		this.getHtmlElement().innerHTML = content;
-	}
 };
 
 /**
@@ -2000,19 +1893,15 @@ function(oel, nel, inheritClass, inheritStyle) {
         if (style) {
             if (AjxUtil.isString(style)) { // All non-IE browsers
                 nel.setAttribute("style", [nel.getAttribute("style"),style].join(";"));
-            } else if (AjxUtil.isString(style.cssText)) {
-				if (style.cssText) {
-					nel.setAttribute("style", [nel.getAttribute("style"),style.cssText].join(";"));
-				}
-			} else {
-				for (var attribute in style) {
-					if (style[attribute]) {
+            } else {
+                for (var attribute in style) {
+                    if (style[attribute]) {
 						try {
-							nel.style[attribute] = style[attribute];
+                        	nel.style[attribute] = style[attribute];
 						} catch (e) {}
-					}
-				}
-			}
+                    }
+                }
+            }
         }
     }
 };
@@ -2669,8 +2558,7 @@ function() {
 		var ev = DwtShell.focusEvent;
 		ev.dwtObj = this;
 		ev.state = DwtFocusEvent.BLUR;
-		var mouseEv = DwtShell.mouseEvent;
-		this.notifyListeners(DwtEvent.ONBLUR, mouseEv);
+		obj.notifyListeners(DwtEvent.ONBLUR, mouseEv);
 	}
 	this._blur();
 };
@@ -2690,8 +2578,7 @@ function() {
 		var ev = DwtShell.focusEvent;
 		ev.dwtObj = this;
 		ev.state = DwtFocusEvent.FOCUS;
-		var mouseEv = DwtShell.mouseEvent;
-		this.notifyListeners(DwtEvent.ONFOCUS, mouseEv);
+		obj.notifyListeners(DwtEvent.ONFOCUS, mouseEv);
 	}
 	this._focus();
 };
@@ -3246,7 +3133,6 @@ function(ev) {
  */
 DwtControl.__mouseEvent =
 function(ev, eventType, obj, mouseEv) {
-
 	var obj = obj ? obj : DwtControl.getTargetControl(ev);
 	if (!obj) { return false; }
 
@@ -3255,13 +3141,15 @@ function(ev, eventType, obj, mouseEv) {
 		mouseEv.setFromDhtmlEvent(ev, obj);
 	}
 
-	// By default, we halt event processing. The default can be overridden here through
-	// the use of setEventPropagation(). A listener may also change the event props when called.
+	// By default, we halt event processing. Listeners may override
 	var tn = mouseEv.target.tagName && mouseEv.target.tagName.toLowerCase();
-	var propagate = obj._propagateEvent[eventType] || (tn === "input" || tn === "textarea" || tn === "a");
-	mouseEv._stopPropagation = !propagate;
-	mouseEv._dontCallPreventDefault = propagate;
-	mouseEv._returnValue = propagate;
+	if (!tn || (tn != "input" && tn != "textarea" && tn != "a")) {
+		mouseEv._stopPropagation = true;
+		mouseEv._returnValue = false;
+	} else {
+		mouseEv._stopPropagation = false;
+		mouseEv._returnValue = true;
+	}
 
 	// notify global listeners
 	DwtEventManager.notifyListeners(eventType, mouseEv);
@@ -3398,7 +3286,7 @@ function(event) {
 		content = "";
 	} else if (typeof(tooltip) == "string") {
 		content = tooltip;
-	} else if (tooltip.isAjxCallback || AjxUtil.isFunction(tooltip)) {
+	} else if (tooltip.isAjxCallback) {
 		callback = tooltip;
 	} else if (typeof(tooltip) == "object") {
 		content = tooltip.content;
@@ -3515,32 +3403,4 @@ function() {
 DwtControl.prototype.getTooltipBase =
 function(hoverEv) {
 	return this.getHtmlElement();
-};
-
-DwtControl.prototype.boundsForChild =
-function(child) {
-	if (child && child.getHtmlElement) {
-		child = child.getHtmlElement();
-	}
-
-	var fn = function(bounds, node) {
-		var margins = Dwt.getMargins(node);
-		var bounds = Dwt.insetBounds(bounds, Dwt.getInsets(node));
-		bounds.width -= margins.left + margins.right;
-		bounds.height -= margins.top + margins.bottom;
-		return bounds;
-	};
-
-	var bounds = this.getBounds();
-
-	if (isNaN(bounds.x) || !bounds.x) {
-		bounds.x = 0;
-	}
-
-	if (isNaN(bounds.y) || !bounds.y) {
-		bounds.y = 0;
-	}
-
-	return AjxUtil.reduce(Dwt.getAncestors(child, this.getHtmlElement(), true),
-	                      fn, bounds);
 };

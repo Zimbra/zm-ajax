@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.4 ("License"); you may not use this file except in
@@ -26,14 +26,17 @@
  * tab group. The root tab group tracks where focus is.
  * 
  * @param {string}	name					the name of this tab group
- *
+ * @param {boolean}	blockDefaultHandling	if <code>true</code>, do not fall back to default key
+ * 											handler for this tab group
+ * 
  * @author Ross Dargahi
  */
-DwtTabGroup = function(name) {
+DwtTabGroup = function(name, blockDefaultHandling) {
 
 	this.__members = new AjxVector();
 	this.__parent = null;
 	this.__name = name;
+	this.__blockApplicationHandling = blockDefaultHandling;
 	this.__currFocusMember = null;
 	this.__evtMgr = new AjxEventMgr();
 };
@@ -209,10 +212,6 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
 			this.__notifyListeners(newFocusMember);
 		}
 	}
-
-	if (newMember instanceof DwtTabGroup) {
-		newMember.newParent(this);
-	}
 		
 	return newMember ? this.__members.replaceObject(oldMember, newMember) : this.__members.remove(oldMember);
 };
@@ -382,6 +381,16 @@ function(checkEnabled, skipNotify) {
 	this.__currFocusMember = focusMember;
 	
 	return this.__currFocusMember;
+};
+
+DwtTabGroup.prototype.blockDefaultHandling =
+function(block) {
+	this.__blockDefaultHandling = blockDefaultHandling;
+};
+
+DwtTabGroup.prototype.isDefaultHandlingBlocked =
+function(block) {
+	return this.__blockDefaultHandling;
 };
 
 /**

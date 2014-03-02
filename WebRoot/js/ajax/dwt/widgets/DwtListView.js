@@ -57,10 +57,11 @@ DwtListView = function(params) {
         var headHtml = document.getElementById(headId);
         this._listColDiv = document.createElement("div");
         this._listColDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_HEADERS);
+        this._listColDiv.className = "DwtListView-ColHeader";
         headHtml.appendChild(this._listColDiv);
 
         var colHtml = document.getElementById(colId);
-        this._listDiv = this.useListElement() ? document.createElement("ul"):document.createElement("div");
+        this._listDiv = document.createElement("div");
         this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
         this._listDiv.className = "DwtListView-Rows";
         colHtml.appendChild(this._listDiv);
@@ -71,7 +72,6 @@ DwtListView = function(params) {
 		this._currentColId = null;
 		this.sortingEnabled = true;
 	} else {
-		this._listDiv = document.getElementById(params.id);
 		this.setScrollStyle(DwtControl.SCROLL); // auto scroll
 	}
 		
@@ -99,18 +99,7 @@ DwtListView = function(params) {
 	this._stateChangeEv = new DwtEvent(true);
 	this._headerList = params.headerList;
 	this._noMaximize = params.noMaximize;
-	if (this._headerList) {
-		this._parentEl = this._listDiv;
-	} else {
-		this._parentEl = this.getHtmlElement();
-		if (this.useListElement()) {
-			//insert unordered list element
-			var ul = document.createElement("ul");
-			ul.className = "DwtListView-Rows";
-			this._parentEl.appendChild(ul);
-			this._parentEl = ul;
-		}
-	}
+	this._parentEl = this._headerList ? this._listDiv : this.getHtmlElement();
 	
 	this._list = null;
 	this.offset = 0;
@@ -215,7 +204,7 @@ function(enabled) {
 };
 
 DwtListView.prototype.createHeaderHtml =
-function(defaultColumnSort, isColumnHeaderTableFixed) {
+function(defaultColumnSort) {
 	// does this list view have headers or have they already been created?
 	if (!this._headerList || this.headerColCreated) { return; }
 
@@ -252,19 +241,6 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 	htmlArr[idx++] = "</tr></table>";
 
 	this._listColDiv.innerHTML = htmlArr.join("");
-	this._listColDiv.className = "DwtListView-ColHeader" + (isColumnHeaderTableFixed ? " FixedColumnHeaderTables" : "");
-
-	setTimeout($.proxy(function() {
-		//run this after the header is fully visible otherwise width will be inaccurate.
-		//TODO run this as a callback after grid is visible instead of settimeout.
-		for (var i = 0; i < numCols; i++) {
-			//find the elements with width auto and create the styles for it.
-			var headerCol = this._headerList[i];
-			if (headerCol._cssClass && headerCol._resizeable && headerCol._width === 'auto') {
-				this._createHeaderCssStyle(headerCol, this._calcRelativeWidth(i));
-			}
-		}
-	}, this), 0);
 
 	// for each sortable column, sets its identifier
 	var numResizeable = 0, resizeableCol;
@@ -312,9 +288,6 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._width) {
 		htmlArr[idx++] = " width=";
 		htmlArr[idx++] = headerCol._width;
-		if (headerCol._cssClass && headerCol._resizeable && headerCol._width !== 'auto') {
-			this._createHeaderCssStyle(headerCol, headerCol._width);
-		}
 		if (headerCol._widthUnits) {
 			htmlArr[idx++] = headerCol._widthUnits;
 		}
@@ -365,7 +338,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._sortable && !headerCol._noSortArrow) {
 		var arrowIcon = this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow";
 
-		htmlArr[idx++] = "<td align=right style='padding-right:2px' width='8px' id='";
+		htmlArr[idx++] = "<td align=right style='padding-right:2px' width=100% id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
 		htmlArr[idx++] = "'>";
 		var isDefault = (field == defaultColumnSort);
@@ -379,14 +352,14 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	// ALWAYS add "sash" separators
 	if (i < (numCols - 1)) {
 		htmlArr[idx++] = "<td width=6>";
-		htmlArr[idx++] = "<table align=right width=4 height=100% id='";
+		htmlArr[idx++] = "<table align=right width=6 height=100% id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_SASH, this._view, field);
 		htmlArr[idx++] = "'><tr>";
 		htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
 		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
 		htmlArr[idx++] = "px; background-color: #8A8A8A;margin-left:2px'></div></td><td class='DwtListView-Sash'><div style='width: 1px; height: ";
 		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
-		htmlArr[idx++] = "px;'></div></td></tr></table>";
+		htmlArr[idx++] = "px; background-color: #FFFFFF;margin-right:2px'></div></td></tr></table>";
 		htmlArr[idx++] = "</td>";
 	}
 
@@ -396,23 +369,6 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	return idx;
 };
 
-DwtListView.prototype._createHeaderCssStyle =
-	function(headerCol, width) {
-		if (headerCol._cssClass && headerCol._resizeable) {
-			if (headerCol._cssRuleIndex) {
-				DwtCssStyle.removeRule(document.styleSheets[0], headerCol._cssRuleIndex);
-			}
-			//add a dynamic stylesheet for this header
-			var selector = '';
-			if (this.parent && this.parent._className) {
-				//add the parent class name to selector so that styles for all types of view can co-exist
-				selector += "." + this.parent._className;
-			}
-			selector += " ." + headerCol._cssClass;
-			var declaration = "width:" + width + ($.isNumeric(width)?"px":"") + ";";
-			headerCol._cssRuleIndex = DwtCssStyle.addRule(document.styleSheets[0], selector, declaration,headerCol._cssRuleIndex);
-		}
-	}
 /**
  * Gets the index of the given item.
  *
@@ -1174,8 +1130,8 @@ DwtListView.prototype.setListDivHeight =
 function (listViewHeight) {
 	if (this._listDiv && this._listColDiv) {
 		var headerHeight = Dwt.getSize (this._listColDiv).y ;
-		//the 25px allows for the diff between container and list for all browsers and eliminates vertical unnecessary scrolls
-		var listDivHeight = listViewHeight - headerHeight - 25;
+		//the 10px allows for the diff between container and list for all browsers and eliminates vertical unnecessary scrolls
+		var listDivHeight = listViewHeight - headerHeight - 10; 
 		Dwt.setSize(this._listDiv, Dwt.DEFAULT, listDivHeight);
 	}
 };
@@ -1267,18 +1223,10 @@ function(item, params, asHtml, count) {
 	if (asHtml) {
 		idx = this._getDivHtml(item, params, htmlArr, idx, count);
 	} else {
-		if (params.div) {
-			var classes = [this._getDivClass(params.divClass || this._normalClass, item, params),
-				(count % 2) ? DwtListView.ROW_CLASS_EVEN : DwtListView.ROW_CLASS_ODD];
-			params.div.className = classes.join(" ");
-		}
 		div = params.div || this._getDiv(item, params);
 	}
 
-	var useListEl = this.useListElement();
-	if (!useListEl) {
-		idx = this._getTable(htmlArr, idx, params);
-	}
+	idx = this._getTable(htmlArr, idx, params);
 	idx = this._getRow(htmlArr, idx, item, params);
 
 	// Cells
@@ -1294,10 +1242,10 @@ function(item, params, asHtml, count) {
 		idx = this._getCell(htmlArr, idx, item, null, null, params);
 	}
 
-	htmlArr[idx++] = useListEl ? "</div>" : "</tr></table>";
+	htmlArr[idx++] = "</tr></table>";
 
 	if (asHtml) {
-		htmlArr[idx++] = useListEl ? "</li>" : "</div>";
+		htmlArr[idx++] = "</div>";
 		return htmlArr.join("");
 	}
 
@@ -1355,18 +1303,17 @@ function(item) {
  * @param {array}	html		the array used to contain HTML code
  * @param {number}	idx		the index used to contain HTML code
  * @param {number}	count		the count of row currently being processed
- * @param {array}	classes		the css classes to be assigned to this element
  * 
  * @private
  */
 DwtListView.prototype._getDivHtml =
-function(item, params, html, idx, count, classes) {
+function(item, params, html, idx, count) {
 
-	html[idx++] = this.useListElement()? "<li ":"<div ";
-	classes = classes || [];
-	classes.push(this._getDivClass(params.divClass || this._normalClass, item, params));
-	classes.push((count % 2) ? DwtListView.ROW_CLASS_EVEN : DwtListView.ROW_CLASS_ODD);
-	html[idx++] = AjxUtil.getClassAttr(classes);
+	html[idx++] = "<div class='";
+	html[idx++] = this._getDivClass(params.divClass || this._normalClass, item, params);
+	html[idx++] = " ";
+	html[idx++] = (count % 2) ? DwtListView.ROW_CLASS_EVEN : DwtListView.ROW_CLASS_ODD;
+	html[idx++] = "'";
 
 	var style = [];
 	if (params.isDragProxy && AjxEnv.isMozilla) {
@@ -1374,7 +1321,6 @@ function(item, params, html, idx, count, classes) {
 	}
 	if (params.isDragProxy) {
 		style.push("position:absolute");
-		style.push("width:" + this.getSize().x + "px");
 	}
 
 	var extraStyle = this._getExtraStyle(item);
@@ -1435,39 +1381,17 @@ function(htmlArr, idx, params) {
  * @param {number}	idx		the current line of array
  * @param {object}	item		the item to render
  * @param {hash}	params	a hash of optional parameters
- * @param {array}	classes	a list of css classes for this row
  * 
  * @private
  */
 DwtListView.prototype._getRow =
-function(htmlArr, idx, item, params, classes) {
+function(htmlArr, idx, item, params) {
 	var rowId = this._getRowId(item, params) || Dwt.getNextId();
 	var className = this._getRowClass(item, params);
-	if (this.useListElement()) {
-		htmlArr[idx++] =  "<div ";
-		classes = classes || [];
-		if (className) {
-			classes.push(className);
-		}
-		if (rowId) {
-			htmlArr[idx++] = ["id='", rowId, "'"].join("");
-		}
-		htmlArr[idx++] = AjxUtil.getClassAttr(classes) + ">";
-	} else {
-		htmlArr[idx++] = rowId ? ["<tr id='", rowId, "'"].join("") : "<tr";
-		htmlArr[idx++] = className ? ([" class='", className, "'>"].join("")) : ">";
-	}
+	htmlArr[idx++] = rowId ? ["<tr id='", rowId, "'"].join("") : "<tr";
+	htmlArr[idx++] = className ? ([" class='", className, "'>"].join("")) : ">";
 	return idx;
 };
-
-/**
- * Use the list elements <ul> and <li> instead of div and table elements
- *
- */
-DwtListView.prototype.useListElement =
-function() {
-	return false;
-}
 
 /**
  * Returns the class name for this item's TR.
@@ -1510,30 +1434,21 @@ function(item, params) {
  */
 DwtListView.prototype._getCell =
 function(htmlArr, idx, item, field, colIdx, params) {
-	if (this.useListElement()) {
-		var classes = [];
-		var className = this._getCellClass(item, field, params);
-		if (className) {
-			classes.push(className);
-		}
-		idx = this._getCellContents(htmlArr, idx, item, field, colIdx, params, [className || ""])
-	} else {
-		var cellId = this._getCellId(item, field, params);
-		var idText = cellId ? [" id=", "'", cellId, "'"].join("") : "";
-		var width = this._getCellWidth(colIdx, params);
-		var widthText = width ? ([" width=", width].join("")) : (" width='100%'");
-		var className = this._getCellClass(item, field, params);
-		var classText = className ? [" class=", className].join("") : "";
-		var alignValue = this._getCellAlign(colIdx, params);
-		var alignText = alignValue ? [" align=", alignValue].join("") : "";
-		var otherText = (this._getCellAttrText(item, field, params)) || "";
-		var attrText = [idText, widthText, classText, alignText, otherText].join(" ");
-		htmlArr[idx++] = "<td";
-		htmlArr[idx++] = attrText ? (" " + attrText) : "";
-		htmlArr[idx++] = ">";
-		idx = this._getCellContents(htmlArr, idx, item, field, colIdx, params);
-		htmlArr[idx++] = "</td>";
-	}
+	var cellId = this._getCellId(item, field, params);
+	var idText = cellId ? [" id=", "'", cellId, "'"].join("") : "";
+	var width = this._getCellWidth(colIdx, params);
+	var widthText = width ? ([" width=", width].join("")) : (" width='100%'");
+	var className = this._getCellClass(item, field, params);
+	var classText = className ? [" class=", className].join("") : "";
+	var alignValue = this._getCellAlign(colIdx, params);
+	var alignText = alignValue ? [" align=", alignValue].join("") : "";
+	var otherText = (this._getCellAttrText(item, field, params)) || "";
+	var attrText = [idText, widthText, classText, alignText, otherText].join(" ");
+	htmlArr[idx++] = "<td";
+	htmlArr[idx++] = attrText ? (" " + attrText) : "";
+	htmlArr[idx++] = ">";
+	idx = this._getCellContents(htmlArr, idx, item, field, colIdx, params);
+	htmlArr[idx++] = "</td>";
 
 	return idx;
 };
@@ -1839,7 +1754,7 @@ function(mouseEv, div) {
 	if (type == DwtListView.TYPE_HEADER_ITEM){
 		var hdr = this.getItemFromElement(div);
 		if (hdr && this.sortingEnabled && hdr._sortable && !this._headerClone) {
-			div.className += " DwtListView-ColumnHover";
+			div.className = "DwtListView-Column DwtListView-ColumnHover";
 		}
 	} else if (type == DwtListView.TYPE_HEADER_SASH) {
 		div.style.cursor = AjxEnv.isIE ? "col-resize" : "e-resize";
@@ -2602,13 +2517,6 @@ function(ev) {
 		col._width = "auto";
 	}
 
-	//recalculate the css styles after the width changes
-	for (var i = 0; i < this._headerList.length; i++) {
-		var headerCol = this._headerList[i];
-		if (headerCol._cssClass && headerCol._resizeable) {
-			this._createHeaderCssStyle(headerCol, this._calcRelativeWidth(i));
-		}
-	}
 	this._relayout();
 	this._resetColWidth();
 
@@ -2844,7 +2752,6 @@ DwtListHeaderItem = function(params) {
 	this._align = params.align;
 	this._noRemove = params.noRemove;
 	this._tooltip = params.tooltip;
-	this._cssClass = params.cssClass;
 	
 	// width:
 	var w = parseInt(params.width);
