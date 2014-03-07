@@ -3146,7 +3146,10 @@ var Dom = YAHOO.util.Dom,
             }
 
             if (this.browser.ie || this.browser.webkit || this.browser.opera || (navigator.userAgent.indexOf('Firefox/1.5') != -1)) {
-                //Firefox 1.5 doesn't like setting designMode on an document created with a data url
+                if (this.browser.ie == 11) {
+ 	                this.browser.ie = 0;
+ 	            }
+		        //Firefox 1.5 doesn't like setting designMode on an document created with a data url
                 try {
                     //Adobe AIR Code
                     if (this.browser.air) {
