@@ -2093,11 +2093,8 @@ AjxStringUtil._checkNode = function(el) {
 		}
 		type = type || AjxStringUtil._checkNodeContent(el);
 	}
-	// SPAN: check for Outlook ID used as delimiter, then check text content
+	// SPAN: check text content
 	else if (nodeName === "span") {
-		if (el.id === "OLK_SRC_BODY_SECTION") {
-			type = AjxStringUtil.ORIG_SEP_STRONG;
-		}
 		type = type || AjxStringUtil._checkNodeContent(el);
 	}
 	// IMG: treat as original content
