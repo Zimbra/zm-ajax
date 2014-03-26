@@ -2133,19 +2133,19 @@ AjxStringUtil._checkNodeContent = function(node) {
  * 
  * @param {string}	html			HTML text
  * @param {array}	okTags			whitelist of allowed tags
- * @param {array}	attrsToRemove	list of attributes to remove from each element
+ * @param {array}	untrustedAttrs	list of attributes to not allow in non-iframe.
  */
 AjxStringUtil.checkForCleanHtml =
-function(html, okTags, attrsToRemove) {
+function(html, okTags, untrustedAttrs) {
 
     //Bug: 83708 - strip hashed anchor links from email msg
     html = html.replace(new RegExp("href\s*=\s*['\"]\s*#.*['\"]", "g"), '');
 
 	var htmlNode = AjxStringUtil._writeToTestIframeDoc(html);
 	var ctxt = {
-		tags:	AjxUtil.arrayAsHash(okTags),
-		attrs:	attrsToRemove || []
-	}
+		allowedTags: AjxUtil.arrayAsHash(okTags),
+		untrustedAttrs:	untrustedAttrs || []
+	};
 	AjxStringUtil._traverseCleanHtml(htmlNode, ctxt);
 
 	var result = "<html>" + htmlNode.innerHTML + "</html>";
@@ -2173,7 +2173,7 @@ function(el, ctxt) {
 	}
 	
 	// see if tag is allowed
-	else if (ctxt.tags[nodeName]) {
+	else if (ctxt.allowedTags[nodeName]) {
 
         //checks for invalid styles and removes them.  Bug: 78875 - bad styles from user = email displays incorrectly
         if (el.style) {
@@ -2187,8 +2187,10 @@ function(el, ctxt) {
 
 		if (el.removeAttribute && el.attributes && el.attributes.length) {
 			// check for blacklisted attrs
-			for (var i = 0; i < ctxt.attrs.length; i++) {
-				el.removeAttribute(ctxt.attrs[i]);
+			for (var i = 0; i < ctxt.untrustedAttrs.length; i++) {
+				if (el.hasAttribute(ctxt.untrustedAttrs[i])) {
+					isCleanHtml = false;
+				}
 			}
 			
 			// Note that DOM-based handling of attributes is horribly broken in IE, in all sorts of ways.
