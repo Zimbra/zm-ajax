@@ -2614,16 +2614,21 @@ function(ev) {
 	}
 
 	//recalculate the css styles after the width changes
+	this.recalculateCssStyle();
+	this._relayout();
+	this._resetColWidth();
+
+	return true;
+};
+
+DwtListView.prototype.recalculateCssStyle =
+function() {
 	for (var i = 0; i < this._headerList.length; i++) {
 		var headerCol = this._headerList[i];
 		if (headerCol._cssClass && headerCol._resizeable) {
 			this._createHeaderCssStyle(headerCol, this._calcRelativeWidth(i));
 		}
 	}
-	this._relayout();
-	this._resetColWidth();
-
-	return true;
 };
 
 DwtListView.prototype._calcRelativeWidth =
