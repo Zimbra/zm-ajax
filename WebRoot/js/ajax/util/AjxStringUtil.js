@@ -2356,36 +2356,33 @@ AjxStringUtil.trimHtml = function(html) {
 // regex for removing empty doc tags from an HTML string
 AjxStringUtil.DOC_TAG_REGEX = /<\/?(html|head|body)>/gi;
 
-// Replaces img src to cid for inline or dfsrc if external image and remove dfsrc before sending for a given htmlContent
-AjxStringUtil.defangHtmlContent =
-function(htmlContent) {
-
-	var content = htmlContent;
-	var imgContent = content && content.match(/<img/i) && content.split(/<img/i);
-	if (imgContent && imgContent.length) {
-		for (var i = 0; i < imgContent.length; i++) {
-			var externalImage = false;
-			var dfsrc = imgContent[i].match(/dfsrc=[\"|\'](cid:[^\"\']+)/); //look for CID assignment in image
-			if (dfsrc && dfsrc.length > 1) {
-				dfsrc = [dfsrc[1]]; //the cid is the 2nd element, but next lines expect it as first
+// Convert the html to DOM nodes, update the img src with the defanged field value,
+// and then return the html inside the body.
+// TODO: See about using a DocumentFragment
+AjxStringUtil.defangHtmlContent = function(html) {
+	var htmlNode = AjxStringUtil._writeToTestIframeDoc(html);
+	var images = htmlNode.getElementsByTagName("img");
+	if (images && images.length) {
+		var imgEl;
+		var dfSrcContent;
+		for (var i = 0; i < images.length; i++) {
+			imgEl = images[i];
+			dfSrcContent = imgEl.getAttribute("dfsrc");
+			if (dfSrcContent && (dfSrcContent !== "#")) {
+				imgEl.setAttribute("src", dfSrcContent);
 			}
-			if (!dfsrc) {
-				dfsrc = imgContent[i].match(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/); //look for dfsrc="" in image
-				externalImage = dfsrc ? true : false;
-			}
-			if (dfsrc && dfsrc.length > 0 && !externalImage) {
-				var tempStr = imgContent[i].replace(/\s+src=[\"\'][^\"\']+[\"\']/," src=\""+dfsrc[0]+"\""); //set src to cid
-				tempStr = tempStr.replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']+/,"");
-				content = content.replace(imgContent[i], tempStr);
-			}
-			else if (dfsrc && dfsrc.length > 0 && externalImage) {
-				var tempArr = imgContent[i].match(/\s+dfsrc=[\"\']([^\"\']+)[\"\']/); //match dfsrc
-				if (tempArr && tempArr.length > 1) {
-				   var tempStr = imgContent[i].replace(/\s+dfsrc=[\"\'][^\"\']+[\"\']/," src=\""+tempArr[1]+"\"");
-				   content = content.replace(imgContent[i], tempStr);
-				}
-			}
+			imgEl.removeAttribute("dfsrc");
 		}
 	}
+	var content = "";
+	var children = htmlNode.childNodes;
+	for (var i = 0; i < children.length; i++) {
+		if (children[i].tagName.toLowerCase() === "body") {
+			content = children[i].innerHTML;
+			break;
+		}
+	}
+	AjxStringUtil._removeTestIframeDoc();
 	return content;
 };
+
