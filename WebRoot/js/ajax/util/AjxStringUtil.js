@@ -1332,21 +1332,23 @@ AjxStringUtil.parseMailtoLink = function(str) {
 /**
  * Parse the query string (part after the "?") and return it as a hash of key/value pairs.
  * 
- * @param	{String}	sourceUri		the source query string
- * @return	{Hash}	a hash of query string params
+ * @param	{String}	sourceUri		the source location or query string
+ * @return	{Object}	a hash of query string params
  */
 AjxStringUtil.parseQueryString =
 function(sourceUri) {
 
 	var location = sourceUri || ("" + window.location);
 	var idx = location.indexOf("?");
-	if (idx == -1) { return null; }
-	var qs = location.substring(idx + 1).replace(/#.*$/, '');
+	var qs = (idx === -1) ? location : location.substring(idx + 1);
+	qs = qs.replace(/#.*$/, '');    // strip anchor
 	var list = qs.split("&");
-	var params = {};
+	var params = {}, pair, key, value;
 	for (var i = 0; i < list.length; i++) {
-		var pair = list[i].split("=");
-		params[pair[0]] = pair[1];
+		pair = list[i].split("=");
+		key = decodeURIComponent(pair[0]),
+		value = pair[1] ? decodeURIComponent(pair[1]) : true;   // if no value given, set to true so we know it's there
+		params[key] = value;
 	}
 	return params;
 };
