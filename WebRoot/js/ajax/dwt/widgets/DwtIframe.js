@@ -322,5 +322,7 @@ function(src){
 DwtIframe.prototype.setIframeContent =
 function(html){    
     var iDoc = this.getDocument();
-    iDoc.body.innerHTML = html;
+	if (iDoc.body) {
+        iDoc.body.innerHTML = html;
+	}
 };
