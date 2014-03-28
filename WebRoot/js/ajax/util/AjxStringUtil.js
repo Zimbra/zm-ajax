@@ -1256,21 +1256,25 @@ function(a, b) {
 AjxStringUtil.clipFile =
 function(fileName, limit) {
 	var index = fileName.lastIndexOf('.');
-	var len = index ? (index + 1) : fileName.length;
 
-	if (len <= limit) {
-		return fileName;
-	} else {
-		var fName = fileName.substr(0, index);
-		var ext = fileName.substr(index+1, fileName.length-1);
-
-		return [
-			fName.substr(0, limit/2),
-			'...',
-			fName.substring(len - ((limit/2) - 3), len),
-			'.', (ext ? ext : '')  // file extension
-		].join("")
+	// fallback - either not found or starts with delimiter
+	if (index <= 0) {
+		index = fileName.length;
 	}
+
+	if (index <= limit) {
+		return fileName;
+	}
+
+	var fName = fileName.slice(0, index);
+	var ext = fileName.slice(index);
+
+	return [
+		fName.slice(0, limit/2),
+		AjxMsg.ellipsis,
+		fName.slice(-Math.ceil(limit/2) + AjxMsg.ellipsis.length),
+		ext
+	].join("")
 };
 
 
