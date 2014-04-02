@@ -30,6 +30,11 @@ AjxStringUtil.COMPRESS_RE = /\s+/g;
 AjxStringUtil.ELLIPSIS = " ... ";
 AjxStringUtil.LIST_SEP = ", ";
 
+AjxStringUtil.CRLF = "\r\n";
+AjxStringUtil.CRLF2 = "\r\n\r\n";
+AjxStringUtil.CRLF_HTML = "<br>";
+AjxStringUtil.CRLF2_HTML = "<div><br></div><div><br></div>";
+
 //Regex for image tag having src starting with cid:
 AjxStringUtil.IMG_SRC_CID_REGEX = /<img([^>]*)\ssrc=["']cid:/gi;
 
