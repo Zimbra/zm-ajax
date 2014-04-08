@@ -3533,15 +3533,8 @@ function(child) {
 		return bounds;
 	};
 
-	var bounds = this.getBounds();
-
-	if (isNaN(bounds.x) || !bounds.x) {
-		bounds.x = 0;
-	}
-
-	if (isNaN(bounds.y) || !bounds.y) {
-		bounds.y = 0;
-	}
+	var bounds = new DwtRectangle(0, 0, this.getHtmlElement().clientWidth,
+	                              this.getHtmlElement().clientHeight);
 
 	return AjxUtil.reduce(Dwt.getAncestors(child, this.getHtmlElement(), true),
 	                      fn, bounds);

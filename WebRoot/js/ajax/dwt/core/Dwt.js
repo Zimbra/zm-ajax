@@ -1940,3 +1940,18 @@ function(htmlElement, id) {
     }
     return descendant;
 };
+
+Dwt.getScrollbarSizes = function(node) {
+    var insets = Dwt.getInsets(node);
+    var style = DwtCssStyle.getComputedStyleObject(node);
+
+    var bl = parseInt(style.borderLeftWidth)    || 0;
+    var bt = parseInt(style.borderTopWidth)     || 0;
+    var br = parseInt(style.borderRightWidth)   || 0;
+    var bb = parseInt(style.borderBottomWidth)  || 0;
+
+    var width = node.offsetWidth - node.clientWidth - bl - br;
+    var height = node.offsetHeight - node.clientHeight - bt - bb;
+
+    return new DwtPoint(width, height);
+};
