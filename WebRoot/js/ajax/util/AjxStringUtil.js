@@ -2390,7 +2390,7 @@ AjxStringUtil.defangHtmlContent = function(html) {
 	var content = "";
 	var children = htmlNode.childNodes;
 	for (var i = 0; i < children.length; i++) {
-		if (children[i].tagName.toLowerCase() === "body") {
+		if (children[i].tagName && (children[i].tagName.toLowerCase() === "body")) {
 			content = children[i].innerHTML;
 			break;
 		}
