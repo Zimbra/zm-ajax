@@ -785,13 +785,15 @@ function() {
 };
 
 DwtListView.prototype.setSelection =
-function(item, skipNotify) {
+function(item, skipNotify, forceSelection) {
 
-	if (!item) { return; }
+	if (!item) {
+		return;
+	}
 
 	var el = this._getElFromItem(item);
 	if (el) {
-		if ((this._selectedItems.size() == 1) && (this._selectedItems.get(0) == el)) {
+		if (this._selectedItems.size() == 1 && this._selectedItems.get(0) == el && !forceSelection) {
 			return;
 		}
 		this.deselectAll();
