@@ -921,8 +921,7 @@ function() {
 	html[idx++] = "</tr>";
 
 	for (var i = 0; i < 6; i++) {
-		// bug fix #3355 - linux fix and bug fix #25564 for Mac
-		html[idx++] = (AjxEnv.isLinux  || AjxEnv.isMac) ? "<tr style='line-height:12px'>" : "<tr>";
+		html[idx++] = "<tr>";
 		if (this._showWeekNumber) {
 			html[idx++] = "<td class='DwtCalendarWeekNo' id='" + this._getWeekNumberCellId('kw' + i * 7) + "'>&nbsp;</td>";
 		}
