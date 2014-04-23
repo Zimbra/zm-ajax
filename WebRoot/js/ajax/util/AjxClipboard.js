@@ -66,9 +66,14 @@ AjxClipboard.prototype.addClient = function(name, op, listeners) {
 
 	// For some reason, superimposing the movie on just our menu item doesn't work, so we surround our
 	// menu item HTML with a friendly container.
-	var content = op.getContent();
-	op.setContent('<div id="d_clip_container" style="position:relative"><div id="d_clip_button">' + content + '</div></div>');
-	clip.glue('d_clip_button', 'd_clip_container');
+	var content = op.getContent(),
+		seq = ZeroClipboard.nextId,
+		containerId = "d_clip_container" + seq,
+		buttonId = "d_clip_button" + seq;
+
+	op.setContent('<div id="' + containerId + '" style="position:relative"><div id="' + buttonId + '">' + content + '</div></div>');
+	Dwt.setZIndex(buttonId, Dwt.Z_TOAST);
+	clip.glue(buttonId, containerId);
 
 	for (var event in listeners) {
 		clip.addEventListener(event, listeners[event]);
