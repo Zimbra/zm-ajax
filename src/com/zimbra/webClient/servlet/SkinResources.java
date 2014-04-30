@@ -872,6 +872,10 @@ public class SkinResources
 			// Append the alert sound file
 			sb.append("\n").append(appContextPath).append("/public/sounds/im/alert.wav");
 
+			sb.append("\n#movie files\n");
+            //ZeroClipboard dynamically loads this movie file. Don't append cacheBusterVersion.
+            sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/zeroclipboard/ZeroClipboard.swf");
+
 			sb.append("\nNETWORK:\n").append("*\n");
 		
 			return sb.toString();
