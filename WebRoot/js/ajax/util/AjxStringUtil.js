@@ -1684,21 +1684,22 @@ AjxStringUtil.ORIG_INTRO_RE = new RegExp("^(-{2,}|" + AjxMsg.on + ")", "i")
 // Lazily creates a test hidden IFRAME and writes the given html to it, then returns the HTML element.
 AjxStringUtil._writeToTestIframeDoc =
 function(html) {
+	var iframe;
 
-	var idoc = AjxStringUtil._htmlContentIframeDoc;
-	// Firefox has weird issue where iframe gets stuck with first content written to it; subsequent opens do not truncate
-	// IE sometimes throws "Permission denied" error
-	if (!idoc || AjxEnv.isFirefox || AjxEnv.isIE) {
-		var iframe = document.createElement("IFRAME");
-		iframe.id = Dwt.getNextId();	// without an ID, IE will throw "Permission denied" errors ?!
+	if (!AjxStringUtil.__curIframeId) {
+		iframe = document.createElement("IFRAME");
+		AjxStringUtil.__curIframeId = iframe.id = Dwt.getNextId();
 		
 		// position offscreen rather than set display:none so we can get metrics if needed; no perf difference seen
 		Dwt.setPosition(iframe, Dwt.ABSOLUTE_STYLE);
 		Dwt.setLocation(iframe, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
 		document.body.appendChild(iframe);
-		idoc = AjxStringUtil._htmlContentIframeDoc = Dwt.getIframeDoc(iframe);
-		AjxStringUtil.__curIframeId = AjxEnv.isFirefox ? iframe.id : null;
+	} else {
+		iframe = document.getElementById(AjxStringUtil.__curIframeId);
 	}
+
+	var idoc = Dwt.getIframeDoc(iframe);
+
     html = html && html.replace(AjxStringUtil.IMG_SRC_CID_REGEX, '<img $1 pnsrc="cid:');
 	idoc.open();
 	idoc.write(html);
@@ -1710,7 +1711,7 @@ function(html) {
 // Firefox only - clean up test iframe since we can't reuse it
 AjxStringUtil._removeTestIframeDoc =
 function() {
-	if (AjxStringUtil.__curIframeId) {
+	if (AjxEnv.isFirefox) {
 		var iframe = document.getElementById(AjxStringUtil.__curIframeId);
 		if (iframe) {
 			iframe.parentNode.removeChild(iframe);
