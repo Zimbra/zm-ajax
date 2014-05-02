@@ -691,14 +691,16 @@ public class SkinResources
             String reloadStr = (getCookie(req, "ZM_CACHE_RELOAD") != null) ? getCookie(req, "ZM_CACHE_RELOAD").getValue() : null;
 			String skinStr = null;
 			String localeStr = null;
-            String offlineAccessEnabled = null;
+			String offlineBrowserKey = (getCookie(req, "ZM_OFFLINE_KEY") != null) ? getCookie(req, "ZM_OFFLINE_KEY").getValue() : null;
+			String offlineBrowserKeyAttr = null;
+			Boolean isOfflineAccessEnabled = false;
             try{
                 AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
                 Provisioning prov = Provisioning.getInstance();
                 Account account = prov.getAccountById(authToken.getAccountId());
                 skinStr = account.getAttr(Provisioning.A_zimbraPrefSkin);
                 localeStr = account.getAttr(Provisioning.A_zimbraPrefLocale);
-                offlineAccessEnabled = account.getAttr(Provisioning.A_zimbraPrefWebClientOfflineAccessEnabled);
+				offlineBrowserKeyAttr = account.getAttr(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey);
 				if (skinStr == null) {
 					skinStr = skin;
 				}
@@ -707,8 +709,11 @@ public class SkinResources
 					String country = requestedLocale.getCountry();
 					localeStr = language + "_" + country;
 				}
+				if (offlineBrowserKeyAttr != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
+					isOfflineAccessEnabled = true;
+				}
                 if (ZimbraLog.webclient.isDebugEnabled()) {
-                    ZimbraLog.webclient.debug("DEBUG: offlineAccessEnabled :: " + offlineAccessEnabled + " :: skin :: " + skinStr + " :: locale :: " + localeStr);
+					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabled :: " + isOfflineAccessEnabled + " :: skin :: " + skinStr + " :: locale :: " + localeStr);
                 }
             } catch(Exception e){
 
@@ -716,9 +721,9 @@ public class SkinResources
 			//create the full manifest file.
 			StringBuffer sb = new StringBuffer();
 			sb.append("CACHE MANIFEST\n");
-            if (Boolean.FALSE.toString().equalsIgnoreCase(offlineAccessEnabled)) {
+			if (!isOfflineAccessEnabled) {
                 if (ZimbraLog.webclient.isDebugEnabled()) {
-                    ZimbraLog.webclient.debug("DEBUG: offlineAccessEnabledofflineAccessEnabled :: " + offlineAccessEnabled);
+					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabledisOfflineAccessEnabled :: " + isOfflineAccessEnabled);
                 }
                 sb.append("\nNETWORK:\n").append("*\n");
                 return sb.toString();
