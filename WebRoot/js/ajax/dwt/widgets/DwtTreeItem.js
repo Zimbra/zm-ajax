@@ -553,7 +553,9 @@ function(index, realizeDeferred, forceNode) {
 
 	if (this._dynamicWidth){
 		var tableNode = document.getElementById(data.id + "_table");
-		tableNode.style.tableLayout = "auto";
+		if (tableNode) {
+			tableNode.style.tableLayout = "auto";
+		}
 	}
 
 
