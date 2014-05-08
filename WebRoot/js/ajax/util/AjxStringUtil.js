@@ -1676,9 +1676,9 @@ AjxStringUtil.MSG_REGEXES = [
 AjxStringUtil.HTML_SEP_ID = "zwchr";
 
 // regexes for finding a delimiter such as "On DATE, NAME (EMAIL) wrote:"
-AjxStringUtil.ORIG_EMAIL_RE = /[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+/;	// see AjxUtil.EMAIL_FULL_RE
-AjxStringUtil.ORIG_DATE_RE = /(\/|, )20\d\d/;                                       // matches "03/07/2014" or "March 3, 2014" by looking for year 20xx
-AjxStringUtil.ORIG_INTRO_RE = new RegExp("^(-{2,}|" + AjxMsg.on + ")", "i")
+AjxStringUtil.ORIG_EMAIL_RE = /[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+/;    // see AjxUtil.EMAIL_FULL_RE
+AjxStringUtil.ORIG_DATE_RE = /(\/|\-|, )20\d\d/;                                    // matches "03/07/2014" or "March 3, 2014" by looking for year 20xx
+AjxStringUtil.ORIG_INTRO_RE = new RegExp("^(-{2,}|" + AjxMsg.on + ")", "i");
 
 
 // Lazily creates a test hidden IFRAME and writes the given html to it, then returns the HTML element.
@@ -1888,7 +1888,7 @@ function(testLine) {
 		if (verb) {
 			var points = 0;
 			// look for "wrote:" (and discount "changed:", which is used by Bugzilla)
-			points = points + (verb === AjxMsg.wrote) ? 5 : (verb === AjxMsg.changed) ? 0 : 3;
+			points = points + (verb === AjxMsg.wrote) ? 5 : (verb === AjxMsg.changed) ? 0 : 2;
 			if (AjxStringUtil.ORIG_EMAIL_RE.test(testLine)) {
 				points += 4;
 			}
@@ -1959,8 +1959,10 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
 		//
 		//     On Feb 28, 2014, at 3:42 PM, Joe Smith &lt;<a href="mailto:jsmith@zimbra.com" target="_blank">jsmith@zimbra.com</a>&gt; wrote:
 
-		// If the current node is a #text with a date, find #text nodes within the next ten nodes, concatenate them, and check the result.
-		if (type === AjxStringUtil.ORIG_UNKNOWN && el.nodeName === '#text' && AjxStringUtil.ORIG_DATE_RE.test(el.nodeValue)) {
+		// If the current node is a #text with a date or "On ...", find #text nodes within the next ten nodes, concatenate them, and check the result.
+		if (type === AjxStringUtil.ORIG_UNKNOWN && el.nodeName === '#text' &&
+			(AjxStringUtil.ORIG_DATE_RE.test(el.nodeValue) || AjxStringUtil.ORIG_INTRO_RE.test(el.nodeValue))) {
+
 			var str = el.nodeValue;
 			for (var j = 1; j < 10; j++) {
 				var el1 = nodeList[i + j];
