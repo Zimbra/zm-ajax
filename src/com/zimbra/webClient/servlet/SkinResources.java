@@ -739,7 +739,6 @@ public class SkinResources
             if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
                 sb.append("?dev=1");
             }
-            sb.append("\n/public/404.html");
 			sb.append("\n\n#images\n\n");
 			sb.append("/img/zimbra.gif\n"); //TODO remove this hardcoded image.
 			sb.append("/img/zimbra.png\n"); //TODO remove this hardcoded image.
