@@ -561,7 +561,7 @@ function(index, realizeDeferred, forceNode) {
 
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
-		this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
+		this._nodeCell.style.minWidth = this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
 		if (this._children.size() > 0 || forceNode) {
 			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
 			this.addNodeIconListeners();
