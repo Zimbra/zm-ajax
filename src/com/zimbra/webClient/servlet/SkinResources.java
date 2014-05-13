@@ -364,7 +364,7 @@ public class SkinResources
 				ZimbraLog.webclient.debug("DEBUG: buffer.length: "+buffer.length());
 
 				// write buffer to cache file
-				if (!debug) {
+				if (!type.equals(T_APPCACHE) && !debug) {
 					// NOTE: This assumes that the cacheId will *end* with the compressed
 					// NOTE: extension. Therefore, make sure to keep in sync.
 					String uncompressedCacheId = compress ?
@@ -407,6 +407,8 @@ public class SkinResources
 			}
             if (type.equals(T_APPCACHE)){
 				resp.setHeader("Cache-Control", "max-age=0");
+				resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
+				resp.setHeader("Pragma", "no-cache");
             }
 
 			// NOTE: I cast the file length to an int which I think is
@@ -688,10 +690,16 @@ public class SkinResources
 			if (debugStr != null && !"".equals(debugStr)) {
 				debug = "debug=" + debugStr + "&";
 			}
-            String reloadStr = (getCookie(req, "ZM_CACHE_RELOAD") != null) ? getCookie(req, "ZM_CACHE_RELOAD").getValue() : null;
 			String skinStr = null;
 			String localeStr = null;
-			String offlineBrowserKey = (getCookie(req, "ZM_OFFLINE_KEY") != null) ? getCookie(req, "ZM_OFFLINE_KEY").getValue() : null;
+			String offlineKey = (getCookie(req, "ZM_OFFLINE_KEY") != null) ? getCookie(req, "ZM_OFFLINE_KEY").getValue() : null;
+			String offlineBrowserKey = null;
+			String reloadStr = null;
+			if (offlineKey != null) {
+				String[] parts = offlineKey.split(",");
+				offlineBrowserKey = parts[0];
+				reloadStr = parts[1];
+			}
 			String offlineBrowserKeyAttr = null;
 			Boolean isOfflineAccessEnabled = false;
             try{
