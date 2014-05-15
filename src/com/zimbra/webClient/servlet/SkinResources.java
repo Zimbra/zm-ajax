@@ -764,7 +764,8 @@ public class SkinResources
 			}
             File imgFile = null;
             for (String fileName : imgSet){
-                imgFile = new File(context.getRealPath(fileName));
+                String relativePath = fileName.startsWith("/zimbra") ? fileName = fileName.substring(7) : fileName;
+                imgFile = new File(context.getRealPath(relativePath));
                 if (!imgFile.exists()){
                     continue;
                 }
