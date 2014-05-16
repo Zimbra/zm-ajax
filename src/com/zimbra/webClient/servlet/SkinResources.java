@@ -715,7 +715,12 @@ public class SkinResources
 				if (localeStr == null) {
 					String language = requestedLocale.getLanguage();
 					String country = requestedLocale.getCountry();
-					localeStr = language + "_" + country;
+					if (country != null && !"".equals(country)) {
+						localeStr = language + "_" + country;
+					}
+					else {
+						localeStr = language;
+					}
 				}
 				if (offlineBrowserKeyAttr != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
 					isOfflineAccessEnabled = true;
@@ -801,13 +806,13 @@ public class SkinResources
               .append('&')
               .append(debug);
 			if (localeStr != null && !"".equals(localeStr)) {
-				sb.append("language=").append(requestedLocale.getLanguage());
-                String country = requestedLocale.getCountry();
-                if (country != null){
-                    sb.append("&country=").append(country).append("&");
+				String[] parts = localeStr.split("_");
+				sb.append("language=").append(parts[0]);
+				if (parts.length > 1) {
+					sb.append("&country=").append(parts[1]);
                 }
 			}
-            sb.append("skin=").append(skinStr);
+			sb.append("&skin=").append(skinStr);
 
 			sb.append("\n").append(appContextPath).append("/js/skin.js?");
             if (client != null && !"".equals(client)) {
