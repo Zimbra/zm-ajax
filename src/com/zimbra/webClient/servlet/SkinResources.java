@@ -752,12 +752,12 @@ public class SkinResources
             if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
                 sb.append("?dev=1");
             }
-			sb.append("\n\n#images\n\n");
-			sb.append("/img/zimbra.gif\n"); //TODO remove this hardcoded image.
-			sb.append("/img/zimbra.png\n"); //TODO remove this hardcoded image.
-			sb.append("/img/large/ImgPerson_48.png?v=").append(cacheBusterVersion).append(" \n");
-            sb.append("/skins/_base/logos/LoginBanner.png?v=").append(cacheBusterVersion).append(" \n"); //TODO remove this hardcoded image.
-			sb.append("\n#style sheet images\n");
+			sb.append("\n\n#images\n");
+			sb.append("\n").append(appContextPath).append("/img/zimbra.gif"); //TODO remove this hardcoded image.
+			sb.append("\n").append(appContextPath).append("/img/zimbra.png"); //TODO remove this hardcoded image.
+			sb.append("\n").append(appContextPath).append("/img/large/ImgPerson_48.png?v=").append(cacheBusterVersion);
+			sb.append("\n").append(appContextPath).append("/skins/_base/logos/LoginBanner.png?v=").append(cacheBusterVersion); //TODO remove this hardcoded image.
+			sb.append("\n\n#style sheet images\n");
 			//find all the css rules with a url in it
 			Set<String> imgSet = new LinkedHashSet();
 			for(String s: cout.toString().split("\\r?\\n")) {
@@ -774,10 +774,7 @@ public class SkinResources
                 if (!imgFile.exists()){
                     continue;
                 }
-                fileName = fileName + "?v=" + cacheBusterVersion;
-                sb.append("\n")
-                .append(fileName);
-
+				sb.append("\n").append(appContextPath).append(fileName).append("?v=").append(cacheBusterVersion);
             }
 			sb.append("\n\n#style sheets\n");
 			//create the url of the css files
