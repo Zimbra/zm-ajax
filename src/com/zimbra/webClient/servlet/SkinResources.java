@@ -28,6 +28,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -789,6 +790,21 @@ public class SkinResources
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/skin.min.css");
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/content.min.css");
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/fonts/tinymce-small.woff");
+			String tinyMCELocale = null;
+			List tinyMCELocaleList = Arrays.asList("ar", "bg_BG", "bs", "ca", "cs", "cy", "da", "de", "de_AT", "el", "es", "et", "eu", "fa", "fi", "fo", "fr_FR", "gl", "he_IL", "hr", "hu_HU", "hy", "id", "it", "ja", "ka_GE", "ko_KR", "lb", "lt", "lv", "nb_NO", "nl", "pl", "pt_BR", "pt_PT", "ro", "ru", "si_LK", "sk", "sl_SI", "sr", "sv_SE", "ta", "ta_IN", "tg", "th_TH", "tr_TR", "ug", "uk", "uk_UA", "vi", "vi_VN", "zh_CN", "zh_TW");
+			if (tinyMCELocaleList.contains(localeStr)) {
+				tinyMCELocale = localeStr;
+			}
+			else if ("zh_HK".equals(localeStr)) {// AFAICT both Taiwan and Hong-Kong use Traditional Chinese
+				tinyMCELocale = "zh_TW";
+			}
+			else if (tinyMCELocaleList.contains(localeStr.split("_")[0])) {
+				tinyMCELocale = localeStr.split("_")[0];
+			}
+			if (tinyMCELocale != null) {
+				sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/langs/" + tinyMCELocale + ".js");
+			}
+			sb.append("\n").append(appContextPath).append("/css/tinymce-content.css?v=").append(cacheBusterVersion);
 			sb.append("\n\n#resources\n");
             sb.append("\n")
               .append(appContextPath);
