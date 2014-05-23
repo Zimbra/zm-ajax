@@ -698,9 +698,13 @@ public class SkinResources
 			String reloadStr = null;
 			if (offlineKey != null) {
 				String[] parts = offlineKey.split(",");
-				offlineBrowserKey = parts[0];
-				reloadStr = parts[1];
-			}
+                if (parts.length == 2) {
+                    offlineBrowserKey = parts[0];
+                    reloadStr = parts[1];
+                } else if (ZimbraLog.webclient.isDebugEnabled()) {
+                    ZimbraLog.webclient.debug("DEBUG: malformed offlineKey = " + offlineKey);
+                }
+            }
 			String offlineBrowserKeyAttr = null;
 			Boolean isOfflineAccessEnabled = false;
             try{
