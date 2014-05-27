@@ -349,12 +349,13 @@ DwtLabel.prototype._createHtmlFromTemplate = function(templateId, data) {
  * @param	{string}	direction		position of the image
  */
 DwtLabel.prototype._getIconEl = function(direction) {
-	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
+    var _dir = this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT;
+    direction = typeof direction === 'boolean' ? _dir : (direction || _dir);    // fix for Bug 90130
 	// MOW: getting the proper icon element on demand rather than all the time for speed
 	this._iconEl = this._iconEl || {};
 	return this._iconEl[direction] ||
 		(this._iconEl[direction] = document.getElementById(this._htmlElId+"_"+direction+"_icon"));
-}
+};
 
 //
 // Private methods
