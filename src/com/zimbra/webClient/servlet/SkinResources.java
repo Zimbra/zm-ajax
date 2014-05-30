@@ -891,7 +891,7 @@ public class SkinResources
 				sb.append("\n").append(appContextPath).append("/js/CalendarCore_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/Calendar_all.js.zgz?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/CalendarAppt_all.js.zgz?v=").append(cacheBusterVersion);
-				//sb.append("\n").append(appContextPath).append("/js/Share_all.js.zgz").append(cacheBusterVersion);
+				sb.append("\n").append(appContextPath).append("/js/Share_all.js.zgz").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/Zimlet_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/ContactsCore_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/Extras_all.js.zgz?v=").append(cacheBusterVersion);
