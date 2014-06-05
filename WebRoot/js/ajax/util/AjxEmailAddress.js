@@ -29,13 +29,13 @@
  * @param {boolean}	isGroup		if <code>true</code>, the address param is really a list of email addresses
  * 
  */
-AjxEmailAddress = function(address, type, name, dispName, isGroup) {
+AjxEmailAddress = function(address, type, name, dispName, isGroup, canExpand) {
 	this.address = address;
 	this.name = this._setName(name);
 	this.dispName = dispName;
 	this.type = type || AjxEmailAddress.TO;
 	this.isGroup = isGroup;
-	this.canExpand = false;
+	this.canExpand = canExpand;
 };
 
 AjxEmailAddress.prototype.isAjxEmailAddress = true;
@@ -486,10 +486,8 @@ function() {
  */
 AjxEmailAddress.prototype.clone =
 function() {
-	var addr = new AjxEmailAddress(this.address, this.type, this.name, this.dispName);
+	var addr = new AjxEmailAddress(this.address, this.type, this.name, this.dispName, this.isGroup, this.canExpand);
 	addr.icon = this.icon;
-	addr.isGroup = this.isGroup;
-	addr.canExpand = this.canExpand;
 	return addr;
 };
 
@@ -501,10 +499,8 @@ function() {
  */
 AjxEmailAddress.copy =
 function(obj){    
-    var addr = new AjxEmailAddress(obj.address, obj.type, obj.name, obj.dispName);
+    var addr = new AjxEmailAddress(obj.address, obj.type, obj.name, obj.dispName, obj.isGroup, obj.canExpand);
     addr.icon = obj.icon;
-	addr.isGroup = obj.isGroup;
-	addr.canExpand = obj.canExpand;
     return addr;
 };
 
