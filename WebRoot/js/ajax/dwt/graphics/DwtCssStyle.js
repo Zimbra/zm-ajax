@@ -45,6 +45,11 @@ DwtCssStyle.ACTIVE = "active";
 DwtCssStyle.SELECTED = "selected";
 
 /**
+ * Currently used for item that is currently viewed, but not selected (other checkboxes are checked, or a right click action is on a different item).
+ */
+DwtCssStyle.ALT_SELECTED = "altSelected";
+
+/**
  * "disabled": item is not actionable (for example: because not appropriate or some other condition needs to be true).
  */
 DwtCssStyle.DISABLED = "disabled";

@@ -126,6 +126,7 @@ DwtListView = function(params) {
     this._rowClass = [ this._className, DwtListView.ROW_CLASS ].join("");
 	var nc = this._normalClass = DwtListView.ROW_CLASS;
 	this._selectedClass = [nc, DwtCssStyle.SELECTED].join("-");
+	this._viewedButUnselectedClass = [nc, DwtCssStyle.ALT_SELECTED].join("-");
 	this._disabledSelectedClass = [this._selectedClass, DwtCssStyle.DISABLED].join("-");
 	this._kbFocusClass = [nc, DwtCssStyle.FOCUSED].join("-");
 	this._dndClass = [nc, DwtCssStyle.DRAG_PROXY].join("-");
@@ -468,6 +469,7 @@ function(list, defaultColumnSort, noResultsOk) {
 	if (this._selectedItems) {
 		this._selectedItems.removeAll();
 	}
+	this._curViewedItem = null;
 	this._rightSelItem = null;
 	this.sortingEnabled = true;
 	this._resetList();
@@ -750,6 +752,22 @@ function() {
 	}
 };
 
+DwtListView.prototype._markUnselectedViewedItem =
+function(on) {
+	var viewedItem = this._curViewedItem;
+	var viewedEl = viewedItem && this._getElFromItem(viewedItem);
+	if (!viewedEl) {
+		return;
+	}
+	if (on) {
+		Dwt.delClass(viewedEl, this._styleRe, this._viewedButUnselectedClass);  //ADDING the selectedForViewOnly class
+	}
+	else {
+		//turn off the highlight
+		Dwt.delClass(viewedEl, this._viewedButUnselectedClass);
+	}
+};
+
 DwtListView.prototype.getDnDSelection =
 function() {
 	if (this._dndSelection instanceof AjxVector) {
@@ -832,13 +850,7 @@ function(clickedEl, bContained, ev) {
 
 	// Remove the keyboard hilite from the current anchor
 	if (this._kbAnchor && this._kbAnchor != clickedEl) {
-		var kbAnchor = this._kbAnchor;
-		var selClass = this._selectedClass;
-		if (kbAnchor.className.indexOf(selClass) != -1) {
-			Dwt.delClass(kbAnchor, this._styleRe, selClass);
-		} else {
-			Dwt.delClass(kbAnchor, this._styleRe);	// , this._normalClass MOW
-		}
+		Dwt.delClass(this._kbAnchor, this._kbFocusClass);
 	}
 
 	// The element that was part of the ctrl action always becomes the anchor
@@ -1195,7 +1207,8 @@ function (listViewHeight) {
 // returns a regex that matches modified styles such as "Row-selected-actioned"
 DwtListView.prototype._getStyleRegex =
 function() {
-	return new RegExp("\\bRow(-(" + [DwtCssStyle.SELECTED,
+	return new RegExp("\\bRow(-(" + [DwtCssStyle.ALT_SELECTED,
+									 DwtCssStyle.SELECTED,
 									 DwtCssStyle.ACTIONED,
 									 DwtCssStyle.FOCUSED,
 									 DwtCssStyle.DISABLED,
@@ -1758,10 +1771,16 @@ function() {
 
 DwtListView.prototype._clearRightSel =
 function() {
-	if (this._rightSelItem) {
-		Dwt.delClass(this._rightSelItem, this._styleRe);	// , this._normalClass MOW
-		this._rightSelItem = null;
+	if (!this._rightSelItem) {
+		return;
 	}
+	Dwt.delClass(this._rightSelItem, this._rightClickClass);
+	this._rightSelItem = null;
+	if (!this._curViewedItem) {
+		return;
+	}
+	this.deselectAll();
+	this.selectItem(this._curViewedItem, true);
 };
 
 DwtListView.prototype._getItemId =
@@ -2065,6 +2084,10 @@ function(next) {
 	if (!this._list) { return; }
 
 	var orig = this._kbAnchor;
+	if (orig) {
+		this._unmarkKbAnchorElement();
+	}
+
 	if (next && next !== true) {
 		this._kbAnchor = next;
 	} else if (this._kbAnchor) {
@@ -2073,17 +2096,7 @@ function(next) {
 		this._kbAnchor = this._parentEl.firstChild;
 	}
 
-	if (this._kbAnchor != orig) {
-		if (orig) {
-			var selClass = this._selectedClass;
-			if (orig.className.indexOf(selClass) != -1) {
-				Dwt.delClass(orig, this._styleRe, selClass);
-			} else {
-				Dwt.delClass(orig, this._styleRe);		// , this._normalClass		MOW
-			}
-		}
-		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
-	}
+	Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 
 	if (this._kbAnchor && !this._duringFocusByMouseDown) {
 		this._scrollList(this._kbAnchor);
@@ -2111,6 +2124,9 @@ function(itemDiv, ev) {
 		}
 
 		var item = this.getItemFromElement(itemDiv);
+		//since we now select a new item, unmark the list item that was marked as viewed but unselected (if any)
+		this._markUnselectedViewedItem(false);
+		this._curViewedItem = item;
 		this.firstSelIndex = (this._list && item) ? this._list.indexOf(item) : -1;
 		//DwtKeyboardMgr.grabFocus(this);
 	}
@@ -2140,9 +2156,12 @@ function(clickedEl, ev) {
 		else if (ev.button == DwtMouseEvent.RIGHT && !bContained &&
 				this._evtMgr.isListenerRegistered(DwtEvent.ACTION))
 		{
+			//Right click - OUTSIDE of selection
+
 			// Deselect all - otherwise, we can have a selection that is already showing,
 			// but the context menu is not applied to it - very confusing
 			this.deselectAll();
+			this._markUnselectedViewedItem(true);
 
 			// save right click selection
 			this._rightSelItem = clickedEl;
@@ -2791,11 +2810,7 @@ function() {
 DwtListView.prototype._unmarkKbAnchorElement =
 function(clear) {
 	if (this._kbAnchor) {
-		if (this._selectedItems.contains(this._kbAnchor)) {
-			Dwt.delClass(this._kbAnchor, this._styleRe, this._selectedClass);
-		} else {
-			Dwt.delClass(this._kbAnchor, this._styleRe);	// , this._normalClass		MOW
-		}
+		Dwt.delClass(this._kbAnchor, this._kbFocusClass);
 	}
 	if (clear) {
 		this._kbAnchor = null;
