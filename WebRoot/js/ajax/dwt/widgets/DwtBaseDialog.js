@@ -36,6 +36,7 @@
  * @param	{number}	[params.zIndex=Dwt.Z_DIALOG]		the z-index to set for this dialog when it is visible
  * @param	{DwtBaseDialog.MODAL|DwtBaseDialog.MODELESS}	[params.mode=DwtBaseDialog.MODAL] 		the modality of the dialog
  * @param	{DwtPoint}	params.loc			the location at which to popup the dialog. Defaults to being centered within its parent
+ * @param	{boolean}		params.disposeOnPopDown		    destroy the content of dialog on popdown, Defaults to false
  * @param	{DwtControl}	params.view 		the the control whose element is to be re-parented
  * @param	{string}	params.dragHandleId 		the the ID of element used as drag handle
  * 
@@ -54,7 +55,7 @@ DwtBaseDialog = function(params) {
 	this._title = params.title || "";
 
 	DwtComposite.call(this, params);
-
+    this._disposeOnPopDown = params.disposeOnPopDown || false;
 	this._shell = parent;
 	this._zIndex = params.zIndex || Dwt.Z_DIALOG;
 	this._mode = params.mode || DwtBaseDialog.MODAL;
@@ -66,7 +67,7 @@ DwtBaseDialog = function(params) {
 	} else {
 		this._loc.x = this._loc.y = Dwt.LOC_NOWHERE;
 	}
-	
+
 	// Default dialog tab group.
 	this._tabGroup = new DwtTabGroup(this.toString());
 
@@ -282,7 +283,12 @@ function() {
 			this._shell._veilOverlay.activeDialogs.pop();
 		}
 		//this.removeKeyListeners();
-		
+
+        //Dispose the dialog if _disposeOnPopDown is set to true
+		if (this._disposeOnPopDown === true) {
+            this.dispose();
+        }
+
 		// Pop our tab group
 		var kbMgr = this._shell.getKeyboardMgr();
 		kbMgr.popTabGroup(this._tabGroup);

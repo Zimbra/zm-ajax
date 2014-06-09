@@ -35,6 +35,7 @@
  * @param	{array}	params.extraButtons		  			a list of {@link DwtDialog_ButtonDescriptor} objects describing custom buttons to add to the dialog
  * @param	{number}	params.zIndex							the z-index to set for this dialog when it is visible. Defaults to {@link Dwt.Z_DIALOG}.
  * @param	{DwtDialog.MODELESS|DwtDialog.MODAL}	params.mode 						the modality of the dialog. Defaults to {@link DwtDialog.MODAL}.
+ * @param	{boolean}		params.disposeOnPopDown		    destroy the content of dialog on popdown, Defaults to false
  * @param	{DwtPoint}		params.loc						the location at which to popup the dialog. Defaults to centered within its parent.
  * 
  * @see		DwtDialog.CANCEL_BUTTON
@@ -63,7 +64,7 @@ DwtDialog = function(params) {
 	} else if (standardButtons && !standardButtons.length) {
 		standardButtons = [standardButtons];
 	}
-	
+
 	// assemble the list of button IDs, and the list of button descriptors
 	this._buttonList = [];
 	var buttonOrder = {};
