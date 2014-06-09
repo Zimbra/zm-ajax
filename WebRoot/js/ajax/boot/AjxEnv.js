@@ -173,6 +173,10 @@ AjxEnv.supportsHTML5File;
 
 AjxEnv.supported = Modernizr;
 
+// Test for HTML's New Template Tag support
+AjxEnv.supported.addTest('template', function() {
+	return 'content' in document.createElement('template');
+});
 
 /** Supports indirect global eval() **/
 AjxEnv.indirectEvalIsGlobal;
@@ -491,7 +495,7 @@ function() {
 
 AjxEnv.parseUA();
 
-AjxEnv.isOfflineSupported = (AjxEnv.isFirefox || AjxEnv.isChrome) && AjxEnv.supported.localstorage && AjxEnv.supported.applicationcache && AjxEnv.supported.indexeddb;
+AjxEnv.isOfflineSupported = (AjxEnv.isFirefox || AjxEnv.isChrome) && AjxEnv.supported.localstorage && AjxEnv.supported.applicationcache && AjxEnv.supported.indexeddb && AjxEnv.supported.template;
 
 // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
 /*
