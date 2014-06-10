@@ -697,7 +697,7 @@ public class SkinResources
 			String offlineBrowserKey = null;
 			String reloadStr = null;
 			if (offlineKey != null) {
-				String[] parts = offlineKey.split(",");
+				String[] parts = offlineKey.split("_");
                 if (parts.length == 2) {
                     offlineBrowserKey = parts[0];
                     reloadStr = parts[1];
