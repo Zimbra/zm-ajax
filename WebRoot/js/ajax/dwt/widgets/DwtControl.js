@@ -3528,8 +3528,10 @@ function(child) {
 	var fn = function(bounds, node) {
 		var margins = Dwt.getMargins(node);
 		var bounds = Dwt.insetBounds(bounds, Dwt.getInsets(node));
-		bounds.width -= margins.left + margins.right;
-		bounds.height -= margins.top + margins.bottom;
+		bounds.width =
+			Math.max(bounds.width - margins.left - margins.right, 0);
+		bounds.height =
+			Math.max(bounds.height - margins.top - margins.bottom, 0);
 		return bounds;
 	};
 
