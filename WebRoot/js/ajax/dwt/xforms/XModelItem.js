@@ -29,7 +29,7 @@ XModelItemFactory = function() {}
 XModelItemFactory.createItem = function (attributes, parentItem, xmodel) {
 	// assign a modelItem to the item
 	var type = attributes.type;
-	var constructor = this.getItemTypeConstructor(type || _UNTYPED_);
+	constructor = this.getItemTypeConstructor(type || _UNTYPED_);
 
 	var item = new constructor();
 	item._setAttributes(attributes);
@@ -981,14 +981,8 @@ HostNameOrIp_XModelItem = function() {}
 XModelItemFactory.createItemType("_HOSTNAME_OR_IP_", "hostname_or_ip", HostNameOrIp_XModelItem);
 HostNameOrIp_XModelItem.prototype.validateType = XModelItem.prototype.validateString;
 HostNameOrIp_XModelItem.prototype.maxLength = 256;
-HostNameOrIp_XModelItem.prototype.pattern = [
-	AjxUtil.HOST_NAME_RE,
-	AjxUtil.IPv4_ADDRESS_RE,
-	AjxUtil.IPv6_ADDRESS_RE,
-	AjxUtil.HOST_NAME_WITH_PORT_RE,
-	AjxUtil.IPv4_ADDRESS_WITH_PORT_RE,
-	AjxUtil.IPv6_ADDRESS_WITH_PORT_RE
-];
+HostNameOrIp_XModelItem.prototype.pattern = [ AjxUtil.HOST_NAME_RE, AjxUtil.IP_ADDRESS_RE,
+						AjxUtil.IP_ADDRESS_WITH_PORT_RE , AjxUtil.HOST_NAME_WITH_PORT_RE ];
 
 ShortURL_XModelItem = function() {}
 XModelItemFactory.createItemType("_SHORT_URL_", "short_url", ShortURL_XModelItem);

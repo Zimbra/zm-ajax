@@ -98,11 +98,9 @@ AjxDebug.BAD_JSON		= "bad_json"; 	// bug 57066
 AjxDebug.PREFS			= "prefs";		// bug 60942
 AjxDebug.PROGRESS       = "progress";	// progress dialog
 AjxDebug.REMINDER       = "reminder";   // bug 60692
-AjxDebug.OFFLINE        = "offline";
 AjxDebug.TAG_ICON       = "tagIcon";    // bug 62155
 AjxDebug.DATA_URI       = "dataUri";    // bug 64693
 AjxDebug.MSG_DISPLAY	= "msgDisplay";	// bugs 68599, 69616
-AjxDebug.ZIMLET			= "zimlet";		// bugs 83009
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
 AjxDebug.BUFFER_MAX[AjxDebug.RPC]			= 200;
@@ -114,12 +112,10 @@ AjxDebug.BUFFER_MAX[AjxDebug.SCROLL]		= 100;
 AjxDebug.BUFFER_MAX[AjxDebug.BAD_JSON]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.PREFS] 		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.REMINDER]		= 200;
-AjxDebug.BUFFER_MAX[AjxDebug.OFFLINE]		= 400;
 AjxDebug.BUFFER_MAX[AjxDebug.TAG_ICON]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.PROGRESS]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.DATA_URI]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.MSG_DISPLAY]	= 200;
-AjxDebug.BUFFER_MAX[AjxDebug.ZIMLET]		= 200;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
 
@@ -587,9 +583,7 @@ function() {
 		html[i++] = "_clear'>Clear</button></td><td><button id='";
 		html[i++] = AjxDebug._BOTTOM_FRAME_ID;
 		html[i++] = "_pause'>Pause</button></td></tr></table>";
-		if (doc.body) {
-			doc.body.innerHTML = html.join("");
-		}
+		doc.body.innerHTML = html.join("");
 	}
 	catch (ex) {
 		// IE chokes on the popup window on cold start-up (when IE is started

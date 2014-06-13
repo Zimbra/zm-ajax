@@ -241,7 +241,7 @@ DwtIframe.prototype._createFrame = function(html) {
 				    function(s, p1, p2) {
 					    return p1 + p2.replace(/@import.*?(;|[\s\t\u00A0]*$)/gi, "") + "</style>";
 				    });
-        html = AjxStringUtil.checkForCleanHtml(html, ZmMailMsgView.TRUSTED_TAGS, ZmMailMsgView.UNTRUSTED_ATTRS).html;
+        html = html.replace(AjxStringUtil.IMG_SRC_CID_REGEX, '<img $1 pnsrc="cid:');
 		iframe = self.getIframe();
 		idoc = Dwt.getIframeDoc(iframe);
 		idoc.open();
@@ -322,7 +322,5 @@ function(src){
 DwtIframe.prototype.setIframeContent =
 function(html){    
     var iDoc = this.getDocument();
-	if (iDoc.body) {
-        iDoc.body.innerHTML = html;
-	}
+    iDoc.body.innerHTML = html;
 };

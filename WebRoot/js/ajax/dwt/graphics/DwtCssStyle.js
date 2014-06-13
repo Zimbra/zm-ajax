@@ -45,11 +45,6 @@ DwtCssStyle.ACTIVE = "active";
 DwtCssStyle.SELECTED = "selected";
 
 /**
- * Currently used for item that is currently viewed, but not selected (other checkboxes are checked, or a right click action is on a different item).
- */
-DwtCssStyle.ALT_SELECTED = "altSelected";
-
-/**
  * "disabled": item is not actionable (for example: because not appropriate or some other condition needs to be true).
  */
 DwtCssStyle.DISABLED = "disabled";
@@ -104,7 +99,7 @@ function(htmlElement, cssPropName) {
 	var result;
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not support ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
+		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -133,7 +128,7 @@ DwtCssStyle.getComputedStyleObject =
 function(htmlElement) {
 	if (htmlElement.ownerDocument == null) {
 		// IE5.5 does not suppoert ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
+		for(var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode);
 		var doc = parent;
 	} else {
 		var doc = htmlElement.ownerDocument;
@@ -180,16 +175,13 @@ DwtCssStyle.removeProperty = function(el, prop) {
 DwtCssStyle.addRule =
 function(stylesheet, selector, declaration, index) {
 	if (stylesheet.addRule) {	// IE
-		//if index is not specified insert at the end so that new rule takes precedence
-		index = index || (stylesheet.rules.length);
 		stylesheet.addRule(selector, declaration, index);
+		return (index == null) ? (stylesheet.rules.length - 1) : index;
 	}
 	else {
-		//if index is not specified insert at the end so that new rule takes precedence
-		index = index || (stylesheet.cssRules.length);
-		stylesheet.insertRule(selector + "{" + declaration + "}", index);
+		stylesheet.insertRule(selector + "{" + declaration + "}", index || 0);
+		return (index == null) ? (stylesheet.cssRules.length - 1) : index;
 	}
-	return index;
 };
 
 /**
@@ -205,86 +197,5 @@ function(stylesheet, index) {
 	}
 	else {
 		stylesheet.deleteRule(index);
-	}
-};
-
-DwtCssStyle.__PIXEL_RE = /^(-?[0-9]+(?:\.[0-9]*)?)px$/;
-DwtCssStyle.__DIMENSION_RE = /^(-?[0-9]+(?:\.[0-9]*)?)([a-z]*|%)$/;
-DwtCssStyle.__NUMBER_RE = /^(-?[0-9]+(?:\.[0-9]*)?)+$/
-
-/**
- * Obtain the font size of the root element. We assume and verify that
- * it's specified in pixels.
- */
-DwtCssStyle.__getRootFontSize =
-function() {
-	var fontsize =
-		DwtCssStyle.getProperty(document.documentElement, 'font-size');
-
-	if (!DwtCssStyle.__PIXEL_RE.test(fontsize)) {
-		throw new Error('font size of root element is not in pixels!');
-	}
-
-	return parseInt(fontsize);
-};
-
-/**
- * Convert a CSS value to a pixel count; unhandled units raise an error.
- */
-DwtCssStyle.asPixelCount =
-function(val) {
-	var dimension, unit, match;
-
-	// assume pixels if no unit is specified
-	if (typeof val === 'number' || DwtCssStyle.__NUMBER_RE.test(val)) {
-		dimension = Number(val);
-		unit = 'px';
-	} else if ((match = DwtCssStyle.__DIMENSION_RE.exec(val))) {
-		dimension = Number(match[1]);
-		unit = match[2];
-	} else {
-		throw new Error('unsupported argument: ' + val);
-	}
-
-	switch (unit) {
-		case 'rem': {
-			return dimension * DwtCssStyle.__getRootFontSize();
-		}
-
-		// see http://www.w3.org/TR/css3-values/#absolute-lengths
-		case 'mm': {
-			dimension /= 10;
-		}
-
-		case 'cm': {
-			dimension /= 2.54;
-		}
-
-		case 'in': {
-			dimension *= 6;
-		}
-
-		case 'pc': {
-			dimension *= 12;
-		}
-
-		case 'pt': {
-			dimension /= 0.75;
-		}
-
-		case 'px': {
-			return dimension;
-		}
-
-		case 'ch':
-		case 'em':
-		case 'ex': {
-			throw new Error('cannot convert context-dependent CSS unit ' +
-							unit);
-		}
-
-		default: {
-			throw new Error('unrecognized CSS unit ' + unit);
-		}
 	}
 };

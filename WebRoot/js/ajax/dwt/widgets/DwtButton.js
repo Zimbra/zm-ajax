@@ -317,13 +317,13 @@ function(enabled) {
  * @param	{string}	imageInfo		the image
  */
 DwtButton.prototype.setImage =
-function(imageInfo, direction) {
+function(imageInfo) {
 	// This button is set to not show image. Doing it here is safer against bugs resulting from dynamically modified images and text such as teh case of spam vs. "no spam".
 	// This way you don't have to worry in that code whether we show image or not (Which could change for example as it does in this bug when moving the button to the main buttons).
 	if (this.whatToShow && !this.whatToShow.showImage) {
 		return;
 	}
-	DwtLabel.prototype.setImage.call(this, imageInfo, direction);
+	DwtLabel.prototype.setImage.call(this, imageInfo);
 	this._setMinWidth();
 };
 
@@ -358,13 +358,10 @@ function() {
  * Sets the hover image.
  * 
  * @param	{string}	hoverImageInfo		the image
- * @param	{string}	direction			position of the image
  */
 DwtButton.prototype.setHoverImage =
-function (hoverImageInfo, direction) {
-	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
-	this._hoverImageInfo = this._hoverImageInfo || {};
-	this._hoverImageInfo[direction] = hoverImageInfo;
+function (hoverImageInfo) {
+    this._hoverImageInfo = hoverImageInfo;
 };
 
 /**
@@ -382,12 +379,9 @@ function (hoverImageInfo, direction) {
 DwtButton.prototype.setMenu =
 function(params) {
 	
-	params = Dwt.getParams(arguments, DwtButton.setMenuParams, (arguments.length == 1 && arguments[0] && !arguments[0].menu));
-
-    if (params){
-	    this._menu = params.menu;
-    }
-
+	params = Dwt.getParams(arguments, DwtButton.setMenuParams, (arguments.length == 1 && !arguments[0].menu));
+	
+	this._menu = params.menu;
 	if (this._menu) {
 		// if menu is a callback, wait until it's created to set menu-related properties
 		if (this._menu.isDwtMenu) {
@@ -622,22 +616,6 @@ function(actionCode, ev) {
 	return true;
 };
 
-/**
- * Removes options from drop down menu
- */
-DwtButton.prototype.removePullDownMenuOptions =
-function() {
-    if (this._menu) {
-        this._setDropDownCellMouseHandlers(false);
-        if (this._dropDownEl && this._dropDownImg) {
-            // removes initial down arrow
-            AjxImg.setImage(this._dropDownEl, "");
-            // removes arrow image set by mouse hover, click, etc.
-            this.setDropDownImages("", "", "", "");
-        }
-    }
-};
-
 // Private methods
 
 /**
@@ -668,7 +646,7 @@ function() {
 	var p = Dwt.toWindow(htmlEl);
 	var mev = new DwtMouseEvent();
 	this._setMouseEvent(mev, {dwtObj:this, target:htmlEl, button:DwtMouseEvent.LEFT, docX:p.x, docY:p.y});
-	DwtButton._dropDownCellMouseUpHdlr(mev);
+	DwtButton._dropDownCellMouseDownHdlr(mev);
 };
 
 /**
@@ -778,18 +756,6 @@ DwtButton.prototype.dontStealFocus = function(val) {
 /**
  * @private
  */
-DwtButton.prototype._toggleHoverClass =
-function(show, direction) {
-	var iconEl = this._getIconEl(direction);
-	if (iconEl) {  //add a null check so buttons with no icon elements don't break the app.
-		var info = show ? this._hoverImageInfo[direction] : this.__imageInfo[direction];
-		iconEl.firstChild.className = AjxImg.getClassForImage(info);
-	}
-};
-
-/**
- * @private
- */
 DwtButton.prototype._showHoverImage =
 function(show) {
 	// if the button is image-only, DwtLabel#setImage is bad
@@ -798,14 +764,12 @@ function(show) {
 	// re-sets the image, which results in a new mouseover
 	// event, thus looping forever eating your CPU and
 	// blinking.
-	if (!this._hoverImageInfo) {
-		return;
-	}
-	if (this._hoverImageInfo.left) {
-		this._toggleHoverClass(show, DwtLabel.LEFT);
-	}
-	if (this._hoverImageInfo.right) {
-		this._toggleHoverClass(show, DwtLabel.RIGHT);
+	if (this._hoverImageInfo){
+		var iconEl = this._getIconEl();
+		if (iconEl) {  //add a null check so buttons with no icon elements don't break the app.
+			var info = show ? this._hoverImageInfo : this.__imageInfo;
+			iconEl.firstChild.className = AjxImg.getClassForImage(info);
+		}
 	}
 };
 

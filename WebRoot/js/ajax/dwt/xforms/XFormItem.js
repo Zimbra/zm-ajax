@@ -1042,7 +1042,7 @@ XFormItem.prototype.outputLabelCellHTML = function (html,  rowSpan, labelLocatio
 	if (labelLocation == _INLINE_) {
 		var style = this.getLabelCssStyle();
 		if (style == null) style = "";
-		style = "position:relative;left:10px;top:5px;text-align:left;background-color:#eeeeee;margin-left:5px;margin-right:5px;" + style;
+		style = "position:relative;left:10;top:5;text-align:left;background-color:#eeeeee;margin-left:5px;margin-right:5px;" + style;
 		html.append( "<div id=\"", this.getId(),"___label\"", 
 								this.getLabelCssString(null, style), ">",
 								label,
@@ -1271,7 +1271,7 @@ XFormItem.prototype.getInheritedProperty = function(prop) {
 
 	// if not found there, look in the xmodel
 	var modelItem = this.__modelItem;
-	if (modelItem && modelItem[prop] !== _UNDEFINED_) return modelItem[prop];
+	if (modelItem && modelItem[prop]) return modelItem[prop];
 
 	return null;
 }
@@ -1645,9 +1645,6 @@ XFormItem.prototype.getCssString = function () {
 		if(style.length)
 			style += ";";
 			
-		if (!isNaN(Number(width)))
-			width += 'px';
-
 		style += "width:" + width;
 	}
 
@@ -1656,9 +1653,6 @@ XFormItem.prototype.getCssString = function () {
 		if(style.length)
 			style += ";";
 	
-		if (!isNaN(Number(height)))
-			height += 'px';
-
 		style += "height:" + height;
 	}
 
@@ -4782,7 +4776,7 @@ Dwt_Select_XFormItem.prototype.setElementEnabled = function (enable) {
 
 /**	
  * @class defines XFormItem type _DWT_COLORPICKER_
- * Adapts a DwtButtonColorPicker to work with the XForm
+ * Adapts a DwtDate to work with the XForm
  * @constructor
  * 
  * @private
@@ -4841,7 +4835,7 @@ Dwt_ColorPicker_XFormItem.prototype._colorOnChange = function (event) {
 
 /**	
  * @class defines XFormItem type _DWT_DATE_
- * Adapts a DwtCalendar to work with the XForm
+ * Adapts a DwtDate to work with the XForm
  * @constructor
  * 
  * @private
@@ -4849,7 +4843,7 @@ Dwt_ColorPicker_XFormItem.prototype._colorOnChange = function (event) {
 Dwt_Date_XFormItem = function() {}
 XFormItemFactory.createItemType("_DWT_DATE_", "dwt_date", Dwt_Date_XFormItem, Dwt_Adaptor_XFormItem)
 
-Dwt_Date_XFormItem.prototype.cssClass =  "xform_dwt_date";
+
 
 
 //	methods
@@ -4901,37 +4895,23 @@ Dwt_Date_XFormItem.prototype.getButtonLabel = function (newValue) {
 };
 
 
-/**
- * @class defines XFormItem type _DWT_TIME_
- * Adapts a DwtTimeSelect to work with the XForm
- * @constructor
- *
- * @private
- */
-Dwt_Time_XFormItem = function() {}
-XFormItemFactory.createItemType("_DWT_TIME_", "dwt_time", Dwt_Time_XFormItem, Dwt_Adaptor_XFormItem)
-
-Dwt_Time_XFormItem.prototype.cssClass =  "xform_dwt_time";
-
-Dwt_Time_XFormItem.prototype.constructWidget = function () {
-	var widget = new DwtTimeSelect(this.getForm());
-    widget.addChangeListener(this._onChange.bind(this));
-    return widget;
-};
-
-Dwt_Time_XFormItem.prototype.updateWidget = function (newValue) {
-	if (newValue == null) {
-        newValue = new Date();
-        newValue.setHours(0, 0, 0, 0);
-    }
-	this.widget.set(newValue);
-};
-
-Dwt_Time_XFormItem.prototype._onChange = function (event) {
-	var value = this.widget.getValue();
-	var elemChanged = this.getElementChangedMethod();
-	elemChanged.call(this, value, this.getInstanceValue(), event);
-};
+Dwt_Time_XFormItem = function() {
+	this.items[0].type = _DWT_SELECT_;
+	this.items[0].errorLocation = _INHERIT_;
+	this.items[1].type = _DWT_SELECT_;
+	this.items[1].errorLocation = _INHERIT_;
+	this.items[1].choices = Dwt_Time_XFormItem.TIME_MINUTE_CHOICES;
+	this.items[1].getDisplayValue = function (newValue) {
+		if (!(newValue instanceof Date)) newValue = new Date();
+		var ret = AjxDateUtil._pad(AjxDateUtil.getRoundedMins(newValue, 15));
+		return ret;
+	};
+	this.items[2].type = _DWT_SELECT_;
+    this.items[2].choices = [I18nMsg.periodAm, I18nMsg.periodPm];
+	this.items[2].errorLocation = _INHERIT_;
+}
+Dwt_Time_XFormItem.TIME_MINUTE_CHOICES = ["00","15","30","45"];
+XFormItemFactory.createItemType("_DWT_TIME_", "dwt_time", Dwt_Time_XFormItem, Time_XFormItem);
 
 
 /**

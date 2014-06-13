@@ -195,7 +195,6 @@ ZmCsfeException.MAIL_INVALID_NAME					= "mail.INVALID_NAME";
 ZmCsfeException.MAIL_INVITE_OUT_OF_DATE				= "mail.INVITE_OUT_OF_DATE";
 ZmCsfeException.MAIL_MAINTENANCE_MODE				= "mail.MAINTENANCE";
 ZmCsfeException.MAIL_MESSAGE_TOO_BIG				= "mail.MESSAGE_TOO_BIG";
-ZmCsfeException.MAIL_MUST_RESYNC					= "mail.MUST_RESYNC";
 ZmCsfeException.MAIL_NO_SUCH_CALITEM				= "mail.NO_SUCH_CALITEM";
 ZmCsfeException.MAIL_NO_SUCH_CONV					= "mail.NO_SUCH_CONV";
 ZmCsfeException.MAIL_NO_SUCH_FOLDER					= "mail.NO_SUCH_FOLDER";
@@ -218,8 +217,6 @@ ZmCsfeException.CANNOT_RENAME                       = "mail.CANNOT_RENAME";
 ZmCsfeException.CANNOT_UNLOCK                       = "mail.CANNOT_UNLOCK";
 ZmCsfeException.CANNOT_LOCK                         = "mail.CANNOT_LOCK";
 ZmCsfeException.LOCKED                              = "mail.LOCKED";
-
-ZmCsfeException.MUST_BE_ORGANIZER					= "mail.MUST_BE_ORGANIZER";
 
 
 ZmCsfeException.OFFLINE_ONLINE_ONLY_OP				= "offline.ONLINE_ONLY_OP";

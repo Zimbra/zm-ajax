@@ -28,7 +28,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -55,7 +54,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.swing.ImageIcon;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -78,9 +76,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.kabuki.util.Colors;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Account;
 
 /**
  * TODO: Clean up this code!
@@ -145,7 +140,6 @@ public class SkinResources
 	private static final String T_CSS = "css";
 	private static final String T_HTML = "html";
 	private static final String T_JAVASCRIPT = "javascript";
-    private static final String T_APPCACHE = "appcache";
 
 	private static final String N_SKIN = "skin";
 	private static final String N_IMAGES = "images";
@@ -165,12 +159,6 @@ public class SkinResources
 
 	private static final Pattern RE_VERSION = Pattern.compile("\\d+\\.\\d+");
 
-    /*
-     * this regex will match any of the below pattern
-     * url(/path/name) or url('/path/name') or url("/path/name") or url('/path/name?v=123456789')
-    */
-    private static final Pattern RE_CSSURL = Pattern.compile("^(?!/\\*).*url\\(\'?\"?(.*?)\\??v?=?\\d*\'?\"?\\)");
-
 	private static final String IMAGE_CSS = "img/images.css";
 
 	private static final Map<String, String> TYPES = new HashMap<String, String>();
@@ -182,7 +170,6 @@ public class SkinResources
 		TYPES.put("html", "text/html");
 		TYPES.put("js", "text/javascript");
 		TYPES.put("plain", "text/plain");
-        TYPES.put("appcache", "text/appcache");
 	}
 
 	//
@@ -283,7 +270,7 @@ public class SkinResources
 		String cacheId = serverName + ":" + uri + ":" + client + ":" + skin + "/templates=" + templates + ":" + browserType + ":" + cacheBusterVersion;
 
 		Locale locale = getLocale(req);
-		if (type.equals(T_JAVASCRIPT) || type.equals(T_CSS) || type.equals(T_APPCACHE)) {
+		if (type.equals(T_JAVASCRIPT) || type.equals(T_CSS)) {
 			cacheId += ":" + locale;
 		}
 
@@ -314,11 +301,7 @@ public class SkinResources
 
 		// generate buffer
 		String buffer = null;
-        File file = null;
-        //To do have to find a way to cache the appcache file
-        if (!type.equals(T_APPCACHE) && !debug) {
-            file = getCacheFile(cacheId);
-        }
+		File file = !debug ? getCacheFile(cacheId) : null;
 		if (file == null || !file.exists()) {
 			if (ZimbraLog.webclient.isDebugEnabled()) ZimbraLog.webclient.debug("DEBUG: generating buffer");
 			buffer = generate(req, resp, cacheId, macros, type, client, locale, templates, cacheBusterVersion);
@@ -365,7 +348,7 @@ public class SkinResources
 				ZimbraLog.webclient.debug("DEBUG: buffer.length: "+buffer.length());
 
 				// write buffer to cache file
-				if (!type.equals(T_APPCACHE) && !debug) {
+				if (!debug) {
 					// NOTE: This assumes that the cacheId will *end* with the compressed
 					// NOTE: extension. Therefore, make sure to keep in sync.
 					String uncompressedCacheId = compress ?
@@ -398,19 +381,14 @@ public class SkinResources
 			// Cache It!
 			String maxAge = (String)req.getAttribute("init.Expires");
 			if (maxAge == null) {
-				maxAge = "2595600";
+				maxAge = "604800";
 			}
 			resp.setHeader("Cache-control", "public, max-age="+maxAge);
-			resp.setContentType(type.equals(T_APPCACHE)? "text/cache-manifest" : contentType);
+			resp.setContentType(contentType);
 
 			if (compress && file != null) {
 				resp.setHeader("Content-Encoding", "gzip");
 			}
-            if (type.equals(T_APPCACHE)){
-				resp.setHeader("Cache-Control", "max-age=0");
-				resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
-				resp.setHeader("Pragma", "no-cache");
-            }
 
 			// NOTE: I cast the file length to an int which I think is
 			//	   fine. If the aggregated contents are larger than
@@ -519,15 +497,12 @@ public class SkinResources
 			ext = filenames.substring(dot);
 			filenames = filenames.substring(0, dot);
 		}
-        if (type.equals(T_APPCACHE)) {
-            ext = ".css";
-        }
 
 		ServletContext context = getServletContext();
 
 		String rootDirname = context.getRealPath("/");
 		File rootDir = new File(rootDirname);
-		File fileDir = new File(rootDir, type.equals(T_APPCACHE) ? "css" : type);
+		File fileDir = new File(rootDir, type);
 		String skinDirname = context.getRealPath("/skins/" + skin);
 		File skinDir = new File(skinDirname);
 		File manifestFile = new File(skinDir, SKIN_MANIFEST);
@@ -599,7 +574,7 @@ public class SkinResources
 			List<File> files = new LinkedList<File>();
 
 			if (filename.equals(N_SKIN)) {
-				if (type.equals(T_CSS) || type.equals(T_APPCACHE)) {
+				if (type.equals(T_CSS)) {
 					for (File file : manifest.getFiles(type)) {
 						files.add(file);
 						String cssFilename = file.getName().replaceAll("\\.css$", "");
@@ -656,14 +631,14 @@ public class SkinResources
 				File file = new File(dir, filenameExt);
 				if (ZimbraLog.webclient.isDebugEnabled())
 					ZimbraLog.webclient.debug("DEBUG: file " + file.getAbsolutePath());
-				if (!file.exists() && (type.equals(T_CSS) || type.equals(T_APPCACHE)) && filename.equals(N_IMAGES)) {
+				if (!file.exists() && type.equals(T_CSS) && filename.equals(N_IMAGES)) {
 					file = new File(rootDir, IMAGE_CSS);
 					dir = file.getParentFile();
 					if (ZimbraLog.webclient.isDebugEnabled())
 						ZimbraLog.webclient.debug("DEBUG: !file.exists() " + file.getAbsolutePath());
 				}
 				files.add(file);
-				if (type.equals(T_CSS) || type.equals(T_APPCACHE) || type.equals(T_JAVASCRIPT)) {
+				if (type.equals(T_CSS) || type.equals(T_JAVASCRIPT)) {
 					addLocaleFiles(files, requestedLocale, dir, filename, ext);
 				}
 			}
@@ -685,236 +660,6 @@ public class SkinResources
 
 		// return data
 		out.flush();
-		if (type.equals(T_APPCACHE)) {
-            String debugStr = req.getParameter(P_DEBUG);
-			String debug = "";
-			if (debugStr != null && !"".equals(debugStr)) {
-				debug = "debug=" + debugStr + "&";
-			}
-			String skinStr = null;
-			String localeStr = null;
-			String offlineKey = (getCookie(req, "ZM_OFFLINE_KEY") != null) ? getCookie(req, "ZM_OFFLINE_KEY").getValue() : null;
-			String offlineBrowserKey = null;
-			String reloadStr = null;
-			if (offlineKey != null) {
-				String[] parts = offlineKey.split("_");
-                if (parts.length == 2) {
-                    offlineBrowserKey = parts[0];
-                    reloadStr = parts[1];
-                } else if (ZimbraLog.webclient.isDebugEnabled()) {
-                    ZimbraLog.webclient.debug("DEBUG: malformed offlineKey = " + offlineKey);
-                }
-            }
-			String offlineBrowserKeyAttr = null;
-			Boolean isOfflineAccessEnabled = false;
-            try{
-                AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
-                Provisioning prov = Provisioning.getInstance();
-                Account account = prov.getAccountById(authToken.getAccountId());
-                skinStr = account.getAttr(Provisioning.A_zimbraPrefSkin);
-                localeStr = account.getAttr(Provisioning.A_zimbraPrefLocale);
-				offlineBrowserKeyAttr = account.getAttr(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey);
-				if (skinStr == null) {
-					skinStr = skin;
-				}
-				if (localeStr == null) {
-					String language = requestedLocale.getLanguage();
-					String country = requestedLocale.getCountry();
-					if (country != null && !"".equals(country)) {
-						localeStr = language + "_" + country;
-					}
-					else {
-						localeStr = language;
-					}
-				}
-				if (offlineBrowserKeyAttr != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
-					isOfflineAccessEnabled = true;
-				}
-                if (ZimbraLog.webclient.isDebugEnabled()) {
-					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabled :: " + isOfflineAccessEnabled + " :: skin :: " + skinStr + " :: locale :: " + localeStr);
-                }
-            } catch(Exception e){
-
-            }
-			//create the full manifest file.
-			StringBuffer sb = new StringBuffer();
-			sb.append("CACHE MANIFEST\n");
-			if (!isOfflineAccessEnabled) {
-                if (ZimbraLog.webclient.isDebugEnabled()) {
-					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabledisOfflineAccessEnabled :: " + isOfflineAccessEnabled);
-                }
-                sb.append("\nNETWORK:\n").append("*\n");
-                return sb.toString();
-            }
-            if (reloadStr != null) {
-                ZimbraLog.webclient.debug("DEBUG: reload version: "+reloadStr);
-                sb.append("#reload version ").append(reloadStr).append(" \n");
-            }
-			sb.append("#version ").append(cacheBusterVersion).append(" \n");
-			sb.append("CACHE:\n");
-            sb.append("\n#HTML files\n\n");
-            sb.append(appContextPath).append("/");
-            if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
-                sb.append("?dev=1");
-            }
-			sb.append("\n\n#images\n");
-			sb.append("\n").append(appContextPath).append("/img/zimbra.gif"); //TODO remove this hardcoded image.
-			sb.append("\n").append(appContextPath).append("/img/zimbra.png"); //TODO remove this hardcoded image.
-			sb.append("\n").append(appContextPath).append("/img/large/ImgPerson_48.png?v=").append(cacheBusterVersion);
-			sb.append("\n").append(appContextPath).append("/skins/_base/logos/LoginBanner.png?v=").append(cacheBusterVersion); //TODO remove this hardcoded image.
-			sb.append("\n\n#style sheet images\n");
-			//find all the css rules with a url in it
-			Set<String> imgSet = new LinkedHashSet();
-			for(String s: cout.toString().split("\\r?\\n")) {
-				//run the regex on each line
-				Matcher m = RE_CSSURL.matcher(s.trim());
-				if (m.find()) {
-					imgSet.add(m.group(1)); //use linked hash set to avoid duplicate images
-				}
-			}
-            File imgFile = null;
-            for (String fileName : imgSet){
-                String relativePath = fileName.startsWith("/zimbra") ? fileName = fileName.substring(7) : fileName;
-                imgFile = new File(context.getRealPath(relativePath));
-                if (!imgFile.exists()){
-                    continue;
-                }
-				sb.append("\n").append(appContextPath).append(fileName).append("?v=").append(cacheBusterVersion);
-            }
-			sb.append("\n\n#style sheets\n");
-			//create the url of the css files
-            sb.append("\n").append(appContextPath).append("/css/").append(filenames).append(".css?v=").append(cacheBusterVersion)
-              .append("&")
-              .append(debug)
-              .append("skin=").append(skinStr)
-			  .append("&locale=" + localeStr);
-
-			sb.append("\n").append(appContextPath).append("/css/msgview.css?v=").append(cacheBusterVersion);
-            //Tinymce dynamically loads this minified css and font files. Don't append cacheBusterVersion.
-            sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/skin.min.css");
-            sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/content.min.css");
-            sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/fonts/tinymce-small.woff");
-			String tinyMCELocale = null;
-			List tinyMCELocaleList = Arrays.asList("ar", "bg_BG", "bs", "ca", "cs", "cy", "da", "de", "de_AT", "el", "es", "et", "eu", "fa", "fi", "fo", "fr_FR", "gl", "he_IL", "hr", "hu_HU", "hy", "id", "it", "ja", "ka_GE", "ko_KR", "lb", "lt", "lv", "nb_NO", "nl", "pl", "pt_BR", "pt_PT", "ro", "ru", "si_LK", "sk", "sl_SI", "sr", "sv_SE", "ta", "ta_IN", "tg", "th_TH", "tr_TR", "ug", "uk", "uk_UA", "vi", "vi_VN", "zh_CN", "zh_TW");
-			if (tinyMCELocaleList.contains(localeStr)) {
-				tinyMCELocale = localeStr;
-			}
-			else if ("zh_HK".equals(localeStr)) {// AFAICT both Taiwan and Hong-Kong use Traditional Chinese
-				tinyMCELocale = "zh_TW";
-			}
-			else if (tinyMCELocaleList.contains(localeStr.split("_")[0])) {
-				tinyMCELocale = localeStr.split("_")[0];
-			}
-			if (tinyMCELocale != null) {
-				sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/langs/" + tinyMCELocale + ".js");
-			}
-			sb.append("\n").append(appContextPath).append("/css/tinymce-content.css?v=").append(cacheBusterVersion);
-			sb.append("\n\n#resources\n");
-            sb.append("\n")
-              .append(appContextPath);
-			//create the resources url
-            if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
-                sb.append("/res/I18nMsg,AjxMsg,ZMsg,ZmMsg,AjxKeys,ZmKeys,ZdMsg,AjxTemplateMsg.js?v=");
-            }
-            else {
-                sb.append("/res/I18nMsg,AjxMsg,ZMsg,ZmMsg,AjxKeys,ZmKeys,ZdMsg,AjxTemplateMsg.js.zgz?v=");
-            }
-            sb.append(cacheBusterVersion)
-              .append('&')
-              .append(debug);
-			if (localeStr != null && !"".equals(localeStr)) {
-				String[] parts = localeStr.split("_");
-				sb.append("language=").append(parts[0]);
-				if (parts.length > 1) {
-					sb.append("&country=").append(parts[1]);
-                }
-			}
-			sb.append("&skin=").append(skinStr);
-
-			sb.append("\n").append(appContextPath).append("/js/skin.js?");
-            if (client != null && !"".equals(client)) {
-                sb.append("client=").append(client).append("&");
-            }
-            sb.append("skin=").append(skinStr)
-              .append("&locale=" + localeStr)
-              .append("&")
-              .append(debug);
-
-            String templatesStr = req.getParameter(P_TEMPLATES);
-            if (templatesStr != null && !"".equals(templatesStr)) {
-                sb.append("templates=").append(templatesStr);
-            }
-            sb.append("&v=").append(cacheBusterVersion);
-
-			sb.append("\n\n#javascript files\n");
-
-			if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
-				cout = new CharArrayWriter(4096 << 2); // 16K buffer to start
-				String[] allPackages = ("Startup1_1,Startup1_2,Boot,Startup2,CalendarCore,Calendar,CalendarAppt," +
-                        "ContactsCore,Contacts,MailCore,Mail,BriefcaseCore,Briefcase,PreferencesCore,Preferences," +
-                        "TasksCore,Tasks,Extras,Share,Zimlet,ZimletApp,Alert,ImportExport,Voicemail,TinyMCE,ZeroClipboard").split(",");
-				for(String name: allPackages) {
-					File file = new File(rootDir,"js/" + name + ".appcache");
-					preprocess(file, cout, null, null, null, null, null, requestedLocale);
-				}
-				sb.append("\n");
-				sb.append((cout.toString().replaceAll("<%=contextPath%>",appContextPath)).replaceAll("<%=vers%>", cacheBusterVersion));
-				//TODO find a way to get this template files list
-				sb.append("\n").append(appContextPath).append("/templates/abook/Contacts.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/calendar/Appointment.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/calendar/Calendar.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/data/ImportExport.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/dwt/Widgets.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/mail/Message.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/prefs/Options.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/prefs/Pages.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/prefs/Widgets.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/share/App.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/share/Dialogs.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/share/Quota.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/share/Widgets.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/tasks/Tasks.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/voicemail/Voicemail.template.js?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/templates/zimbra/Widgets.template.js?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/ZeroClipboard.js?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/TinyMCE.js?v=").append(cacheBusterVersion);
-				sb.append("\n");
-
-			} else {
-				//hardcoded prod deploy manifest js files
-				//TODO find which apps have been enabled and add only those manifest files here.
-				sb.append("\n").append(appContextPath).append("/js/Startup1_1_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Startup1_2_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/MailCore_all.js.zgz?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/Mail_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Startup2_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/CalendarCore_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Calendar_all.js.zgz?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/CalendarAppt_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Share_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Zimlet_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/ContactsCore_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Extras_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/Contacts_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n").append(appContextPath).append("/js/TasksCore_all.js.zgz?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/ZeroClipboard_all.js.zgz?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/TinyMCE_all.js.zgz?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/Alert_all.js.zgz?v=").append(cacheBusterVersion);
-				sb.append("\n");
-			}
-			
-			sb.append("\n#sound files\n");
-			// Append the alert sound file
-			sb.append("\n").append(appContextPath).append("/public/sounds/im/alert.wav");
-
-			sb.append("\n#movie files\n");
-            //ZeroClipboard dynamically loads this movie file. Don't append cacheBusterVersion.
-            sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/zeroclipboard/ZeroClipboard.swf");
-
-			sb.append("\nNETWORK:\n").append("*\n");
-		
-			return sb.toString();
-		}
 		return cout.toString();
 	}
 
@@ -1010,13 +755,11 @@ public class SkinResources
 						   String commentContinue,
 						   String commentEnd)
 			throws IOException {
-		if (commentStart != null) {
-			out.println(commentStart);
-			out.print(commentContinue);
-			out.println("File: " + file.getAbsolutePath().replaceAll("^.*/webapps/",""));
-			out.println(commentEnd);
-			out.println();
-		}
+		out.println(commentStart);
+		out.print(commentContinue);
+		out.println("File: " + file.getAbsolutePath().replaceAll("^.*/webapps/",""));
+		out.println(commentEnd);
+		out.println();
 
 		BufferedReader in = new BufferedReader(new FileReader(file));
 		Stack<Boolean> ignore = new Stack<Boolean>();
@@ -1229,7 +972,8 @@ public class SkinResources
 		boolean isIE9up = false;
 		boolean isIE10 = false;
 		boolean isIE10up = false;
-		boolean isModernIE = false;
+		boolean isIE11 = false;
+		boolean isIE11up = false;
 		boolean isFirefox = false;
 		boolean isFirefox1up = false;
 		boolean isFirefox1_5up = false;
@@ -1336,6 +1080,11 @@ public class SkinResources
 				token = agtArr.hasMoreTokens() ? agtArr.nextToken() : null;
 			} while (token != null);
 
+			if (isTrident && mozVersion >= 11.0) {
+				isIE = true;
+				browserVersion = mozVersion;
+			}
+
 			isIE = (isIE && !isOpera);
 			isIE3 = (isIE && (browserVersion < 4));
 			isIE4 = (isIE && (browserVersion == 4.0));
@@ -1354,10 +1103,8 @@ public class SkinResources
 			isIE9up = (isIE && (browserVersion >= 9.0));
 			isIE10 = (isIE && (browserVersion == 10.0));
 			isIE10up = (isIE && (browserVersion >= 10.0));
-
-			isModernIE = (!isIE && isTrident &&
-			              mozVersion == browserVersion &&
-			              mozVersion > 0);
+			isIE11 = (isIE && (browserVersion == 11.0));
+			isIE11up = (isIE && (browserVersion >= 11.0));
 
 			// Note: Opera and WebTV spoof Navigator. We do strict client detection.
 			isNav = (beginsWithMozilla && !isSpoofer && !isCompatible && !isOpera && !isWebTv && !isHotJava && !isSafari && !isChrome);
@@ -1419,10 +1166,10 @@ public class SkinResources
 			define(macros, "MSIE_LOWER_THAN_9", isIE && !isIE9up);
 			define(macros, "MSIE_9", isIE9);
 			define(macros, "MSIE_9_OR_HIGHER", isIE9up);
-			define(macros, "MSIE_LOWER_THAN_10", isIE && !isIE10up);
 			define(macros, "MSIE_10", isIE10);
 			define(macros, "MSIE_10_OR_HIGHER", isIE10up);
-			define(macros, "MODERN_IE", isModernIE);
+			define(macros, "MSIE_11", isIE11);
+			define(macros, "MSIE_11_OR_HIGHER", isIE11up);
 			define(macros, "NAVIGATOR", isNav);
 			define(macros, "NAVIGATOR_4", isNav4);
 			define(macros, "NAVIGATOR_6", isNav6);
@@ -1435,7 +1182,6 @@ public class SkinResources
 			define(macros, "SAFARI_2_OR_HIGHER", isSafari2up);
 			define(macros, "SAFARI_3", isSafari3);
 			define(macros, "SAFARI_5_OR_HIGHER", isSafari5up);
-			define(macros, "TRIDENT", isTrident);
 			define(macros, "WEBKIT", isWebKitBased);
 			define(macros, "WEBTV", isWebTv);
 		}
@@ -1666,7 +1412,7 @@ public class SkinResources
 		}
 
 		public List<File> getFiles(String type) {
-			if (type.equals(SkinResources.T_CSS) || type.equals(SkinResources.T_APPCACHE)) return cssFiles();
+			if (type.equals(SkinResources.T_CSS)) return cssFiles();
 			if (type.equals(SkinResources.T_HTML)) return htmlFiles();
 			if (type.equals(SkinResources.T_JAVASCRIPT)) return scriptFiles();
 			return null;
@@ -1785,6 +1531,10 @@ public class SkinResources
 					// "image" or "img"
 					} else if (operation.equals("image") || operation.equals("img")) {
 						result = outputImage(stack, params);
+
+					// "cssShadow"
+					} else if (operation.equals("cssshadow")) {
+						result = outputCssShadow(stack, params);
 
 					// "cssText" or "cssTextProp[ertie]s"
 					} else if (operation.indexOf("csstext") == 0) {
@@ -1964,15 +1714,6 @@ public class SkinResources
 			throw new IOException("border("+type+"): type not understood: use 'transparent', 'solid', 'inset' or 'outset'");
 		}
 
-		private String getDataURI(String mimetype, String source)
-			throws IOException
-		{
-			byte[] data = source.getBytes("UTF-8");
-			String base64 = DatatypeConverter.printBase64Binary(data);
-
-			return String.format("data:%s;base64,%s", mimetype, base64);
-		}
-
 		//
 		// replace occurances of @grad(to, from, type)@, @grad(to, from) with the CSS for the cross-browser linear gradient
 		// default type is linear-vertical
@@ -1991,40 +1732,20 @@ public class SkinResources
 
 			if (type.equals("linear-horizontal")){
 				endDirection = "right";
-				gradType = 1; // for IE 8 or lower vertical:0, horizontal: 1
+				gradType = 1; // for IE 9 or lower vertical:0, horizontal: 1
 				topLeft = "left"; // used for horizontal gradient only
 			} else if (!type.equals("linear-vertical")){
 				throw new IOException("grad():type not understood: use 'linear-vertical', 'linear-horizontal");
 			}
-
-			if (from.equals(to)) {
-				// no need for all the black magic below for trivial gradients
-				result = String.format("background: %s;", from);
-			} else if (isBrowser("MSIE_9")) {
-				String svgsource = "<?xml version=\"1.0\" ?>" +
-					"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100%%\" height=\"100%%\" viewBox=\"0 0 1 1\" preserveAspectRatio=\"none\">" +
-					"<linearGradient id=\"thegradient\" gradientUnits=\"userSpaceOnUse\" x1=\"0%%\" y1=\"0%%\" x2=\"%1$s\" y2=\"%2$s\">" +
-					"<stop offset=\"0%%\" stop-color=\"%3$s\" stop-opacity=\"1\"/>" +
-					"<stop offset=\"100%%\" stop-color=\"%4$s\" stop-opacity=\"1\"/>" +
-					"</linearGradient>" +
-					"<rect x=\"0\" y=\"0\" width=\"1\" height=\"1\" fill=\"url(#thegradient)\" />" +
-					"</svg>";
-
-				svgsource = String.format(svgsource,
-										  type.equals("linear-vertical") ? "0%" : "100%",
-										  type.equals("linear-horizontal") ? "0%" : "100%",
-										  from, to);
-
-				result = String.format("background: url(\"%s\");", getDataURI("image/svg+xml", svgsource));
-			} else if (isBrowser("MSIE_LOWER_THAN_9")) {
-				result = String.format("filter: progid:DXImageTransform.Microsoft.gradient(startColorStr='%s', EndColorStr='%s' , GradientType=%d);", from, to, gradType);
+			if (isBrowser("MSIE")){
+				result = String.format("filter: progid:DXImageTransform.Microsoft.gradient(startColorStr='%s', EndColorStr='%s' , GradientType=%d);", from, to, gradType );
 			} else if (isBrowser("FIREFOX")) {
 				result = String.format("background-image: -moz-linear-gradient(top %s, %s, %s);",topLeft, from, to);
 			} else if (isBrowser("WEBKIT")){
 				result = String.format("background-image: -webkit-gradient(linear, left top, %s bottom, to(%s), from(%s)); " +
                         "background-image : -webkit-linear-gradient(%s, %s, %s);",endDirection, from, to, (gradType == 1) ? "left":"top", from, to );
 			} else { // All other browsers
-				result = String.format("background-image: linear-gradient(to %s, %s, %s);", endDirection, from, to);
+				result = String.format("background-image: linear-gradient(top %s, %s, %s);",topLeft, from, to);
 			}
 
 			return result;
@@ -2120,43 +1841,57 @@ public class SkinResources
 		}
 
 		//
+		// replace occurances of @cssShadow(size, color)@ with CSS to show a shadow, specific to the platform
+		//
+		private String outputCssShadow(Stack<String> stack, String[] params) throws IOException {
+			if (isBrowser("SAFARI_3")) {
+				String size = (params.length > 1 ? params[0] : "5px");
+				String color = (params.length > 1 ? colorToColorString(this.getColor(stack, params[1])) : "#666666");
+				return "-webkit-box-shadow:" + size + " " + color + ";";
+			}
+			return "";
+		}
+
+		//
 		// replace occurances of @roundCorners(size[ size[ size[ size]]])@ with CSS to round corners, specific to the platform
 		//
 		private String outputRoundCorners(Stack<String> stack, String[] params) throws IOException {
-			boolean isFirefox = isBrowser("FIREFOX");
+			boolean isFirefox1_5up = isBrowser("FIREFOX_1_5_OR_HIGHER");
 			boolean isFirefox4up = isBrowser("FIREFOX_4_OR_HIGHER");
-			boolean isSafari = isBrowser("SAFARI");
+			boolean isWebKitBased = isBrowser("WEBKIT");
 			boolean isSafari5up = isBrowser("SAFARI_5_OR_HIGHER");
-			boolean isChrome = isBrowser("CHROME");
 			boolean isChrome4up = isBrowser("CHROME_4_OR_HIGHER");
+			//removing IE9+ until rendering in standards mode is supported
+			//boolean isIE9up = isBrowser("MSIE_9_OR_HIGHER"); 
 
-			String propName;
+			// Pick out browsers that support rounding in some fashion
+			if (isFirefox1_5up || isWebKitBased) {
+				String propName;
 
-			// Pick out browsers that require prefixes for rounding --
-			// all other browsers either support the W3C syntax or
-			// safely disregard it.
-			//
-			// https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius
-			if (isFirefox && !isFirefox4up) {
-				propName = "-moz-border-radius:";
-			} else if ((isChrome && !isChrome4up) || (isSafari && !isSafari5up)) {
-				propName = "-webkit-border-radius:";
-			} else {
-				propName = "border-radius:";
+				if (isFirefox4up || isSafari5up || isChrome4up) { 
+					// browsers that support the w3c syntax should use it
+					propName = "border-radius:";
+				} else {
+					// otherwise use the browser-proprietary syntax where available
+					if (isWebKitBased) {
+						propName = "-webkit-border-radius:";
+					} else {
+						propName = "-moz-border-radius:";
+					}
+				}
+				String size = (params.length > 0 ? params[0] : null);
+                if (size == null || size.equals("") )
+                    return propName + "3px;";  // Default value
+                String[] tokens = size.split(" ");
+                StringBuffer outStr = new StringBuffer(propName);
+                for(int i=0; i<tokens.length; i++){
+                    String propertyString = (tokens[i].matches("^[a-zA-Z]+")) ? getProperty(stack, tokens[i]) : tokens[i];
+                    propertyString = (propertyString != null) ? propertyString : tokens[i];
+                    outStr.append(propertyString).append((i == tokens.length-1) ? ";": " ");
+                }
+                return outStr.toString();
 			}
-
-			String size = (params.length > 0 ? params[0] : null);
-			if (size == null || size.equals("") )
-				return propName + "3px;";  // Default value
-			String[] tokens = size.split(" ");
-			StringBuffer outStr = new StringBuffer(propName);
-			for(int i=0; i<tokens.length; i++){
-				String propertyString = (tokens[i].matches("^[a-zA-Z]+")) ? getProperty(stack, tokens[i]) : tokens[i];
-				propertyString = (propertyString != null) ? propertyString : tokens[i];
-				outStr.append(propertyString).append((i == tokens.length-1) ? ";": " ");
-			}
-
-			return outStr.toString();
+			return "";
 		}
 
 		//
@@ -2171,7 +1906,7 @@ public class SkinResources
 			} catch (Exception e) {
 				throw new IOException("opacity(): pass opacity as integer percentage");
 			}
-			if (isBrowser("MSIE") && !isBrowser("MSIE_9_OR_HIGHER")) {
+			if (isBrowser("MSIE")) {
 				return "filter:alpha(opacity=" + ((int)(opacity * 100)) + ");";
 			} else {
 				return "opacity:"+opacity+";";
