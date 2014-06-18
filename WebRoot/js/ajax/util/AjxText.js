@@ -1032,13 +1032,24 @@ AjxDateFormat.HourSegment.prototype.toString = function() {
 // Public methods
 
 AjxDateFormat.HourSegment.prototype.format = function(date) {
+	//getHours returns 0-23
 	var hours = date.getHours();
     if (hours > 12 && /[hK]/.test(this._s)) {
+		//changing 13-23 to 1-11 (pm)
 		hours -= 12;
 	}
     else if (hours == 0 && /[h]/.test(this._s)) {
+		//h: 1-12 am/pm
         hours = 12;
     }
+	else if (hours === 12 && /K/.test(this._s)) {
+		//K: 0-11 am/pm
+		hours = 0;
+ 	}
+	else if (hours === 0 && /k/.test(this._s)) {
+		//k: 1-24
+		hours = 24;
+	}
     /***
 	// NOTE: This is commented out to match the Java formatter output
 	//       but from the comments for these meta-chars, it doesn't
