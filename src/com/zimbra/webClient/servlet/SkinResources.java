@@ -733,7 +733,7 @@ public class SkinResources
 						localeStr = language;
 					}
 				}
-				if (offlineBrowserKeyAttr != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
+				if (offlineBrowserKeyAttr != null && offlineBrowserKey != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
 					isOfflineAccessEnabled = true;
 				}
                 if (ZimbraLog.webclient.isDebugEnabled()) {
