@@ -283,6 +283,7 @@ AjxStringUtil.HTML_QUOTE_NONPREFIX_POST	= '</div><br/>';
  * @param {boolean}		preserveReturns		if true, don't combine small lines
  * @param {boolean}		isHeaders			if true, we are wrapping a block of email headers
  * @param {boolean}		isFlowed			format text for display as flowed (RFC 3676)
+ * @param {boolean}		htmlMode			if true, surround the content with the before and after
  *
  * @return	{string}	the wrapped/quoted text
  */
