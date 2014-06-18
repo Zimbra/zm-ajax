@@ -709,6 +709,12 @@ public class SkinResources
 			Boolean isOfflineAccessEnabled = false;
             try{
                 AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
+				if (authToken == null) {
+					if (ZimbraLog.webclient.isDebugEnabled()) {
+						ZimbraLog.webclient.debug("DEBUG: authToken is :: null :: not generating appcache file");
+					}
+					return null;
+				}
                 Provisioning prov = Provisioning.getInstance();
                 Account account = prov.getAccountById(authToken.getAccountId());
                 skinStr = account.getAttr(Provisioning.A_zimbraPrefSkin);
@@ -734,7 +740,10 @@ public class SkinResources
 					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabled :: " + isOfflineAccessEnabled + " :: skin :: " + skinStr + " :: locale :: " + localeStr);
                 }
             } catch(Exception e){
-
+				if (ZimbraLog.webclient.isDebugEnabled()) {
+					ZimbraLog.webclient.debug("DEBUG: not generating appcache file", e);
+				}
+				return null;
             }
 			//create the full manifest file.
 			StringBuffer sb = new StringBuffer();
