@@ -46,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.BufferStream;
+import com.zimbra.common.util.Props2Js;
 
 /**
  * This class looks for the resource bundle for the requested file (e.g.
@@ -138,7 +139,7 @@ public class Props2JsServlet extends HttpServlet {
         Locale locale = getLocale(req);
         Map<String, byte[]> localeBuffers;
         String uri = getRequestURI(req);
-        
+
         synchronized(buffers) {
             localeBuffers = buffers.get(locale);
             if (localeBuffers == null) {
@@ -255,12 +256,6 @@ public class Props2JsServlet extends HttpServlet {
         return req.getLocale();
     }
 
-	private String getCommentSafeString(String st) {
-		return st.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-				.replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
-
-	}
-
     protected byte[] getBuffer(HttpServletRequest req,
         Locale locale, String uri) throws IOException {
         BufferStream bos = new BufferStream(24 * 1024);
@@ -268,7 +263,7 @@ public class Props2JsServlet extends HttpServlet {
 		String sanitizedLocale = locale.toString()
 				.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
 				.replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
-		out.writeBytes("// Locale: " + getCommentSafeString(locale.toString()) + '\n');
+        out.writeBytes("// Locale: " + Props2Js.getCommentSafeString(locale.toString()) + '\n');
 
         // tokenize the list of patterns
         List<String> patternsList = this.getBasenamePatternsList(req);
@@ -326,7 +321,7 @@ public class Props2JsServlet extends HttpServlet {
         String basedir, String dirname, String classname) throws IOException {
         String basename = basedir + classname;
 
-        out.writeBytes("// Basename: " + getCommentSafeString(basename) + '\n');
+        out.writeBytes("// Basename: " + Props2Js.getCommentSafeString(basename) + '\n');
         for (List<String> basenames : basenamePatterns) {
             try {
                 ClassLoader parentLoader = this.getClass().getClassLoader();
