@@ -97,7 +97,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes) {
 		html[i++] = "></div>";
 		parentEl.innerHTML = html.join("");
 		return;
-	} else if (AjxEnv.isIE) {
+	} else if (AjxEnv.isIE && !AjxEnv.isIE9up) {
 		parentEl.firstChild.innerHTML = "";
 	}
 	if (className) {
@@ -172,7 +172,6 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
 
             var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
             if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-                var clip = "";
                 var size = [
                     "width:", overlay.w, ";",
                     "height:", overlay.h, ";"
@@ -181,34 +180,24 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
                     "top:", mask.t, ";",
                     "left:", mask.l, ";"
                 ].join("");
-                if (typeof document.documentMode != 'undefined') { //IE8 is the first one to define this. IE8 can lie when in compat mode, so we need to really know it's it.
-                    clip = [
-                        'clip:rect(',
-                        (-1 * mask.t) - 1, 'px,',
-                        overlay.w - 1, 'px,',
-                        (mask.t * -1) + overlay.h - 1, 'px,',
-                        overlay.l, 'px);'
-                    ].join('');
-                }
+                var clip = [
+                    'clip:rect(',
+                    (-1 * mask.t) - 1, 'px,',
+                    overlay.w - 1, 'px,',
+                    (mask.t * -1) + overlay.h - 1, 'px,',
+                    overlay.l, 'px);'
+                ].join('');
                 var filter = 'filter:mask(color=' + color + ');';
                 html = [
                     // NOTE: Keep in sync with output of ImageMerger.java.
                     "<div class='IEImage' style='display:inline;zoom:1;position:relative;overflow:hidden;", size, styles, "' ", attrStr,">",
-                        "<div class='IEImageMask' style='overflow:hidden;position:relative;", size, "'>",
-                            "<img src='", mask.f, "?v=", window.cacheKillerVersion, "' border=0 style='position:absolute;", location, clip, filter, "'>",
+                        "<div class='IEImageMask' style='position:absolute;top:0px;left:0px;", size, "'>",
+                            "<img src='", mask.ief, "?v=", window.cacheKillerVersion, "' border=0 style='position:absolute;", location, filter, "'>",
                         "</div>",
                         "<div class='IEImageOverlay ", overlayName, "' style='", size, ";position:absolute;top:0;left:0;'></div>",
                     "</div>"
                 ].join("");
             }
-			else if (AjxEnv.isIE9up) {
-					color = color.replace("#","");
-					var className = AjxImg.getClassForImage(imageName + "_" + color, disabled);
-	                classes.push("Img" + imageName + "_" + color);
-					html = [
-						"<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, "></div>"
-					].join("");
-			}
             else {
                 if (!overlay[color]) {
                     var width = overlay.w, height = overlay.h;
