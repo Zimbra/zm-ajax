@@ -412,7 +412,11 @@ public class SkinResources
 				resp.setHeader("Cache-Control", "max-age=0");
 				resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
 				resp.setHeader("Pragma", "no-cache");
-            }
+				// Returning a 404 or 500 for application cache file will disregard the entire cache.
+				if (buffer != null && buffer.length() == 0) {
+					resp.setStatus(404);
+				}
+			}
 
 			// NOTE: I cast the file length to an int which I think is
 			//	   fine. If the aggregated contents are larger than
@@ -709,54 +713,48 @@ public class SkinResources
             }
 			String offlineBrowserKeyAttr = null;
 			Boolean isOfflineAccessEnabled = false;
-            try{
-                AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
-				if (authToken == null) {
-					if (ZimbraLog.webclient.isDebugEnabled()) {
-						ZimbraLog.webclient.debug("DEBUG: authToken is :: null :: not generating appcache file");
+			try {
+				AuthToken authToken = getAuthTokenFromCookie(req, resp, true);
+				if (authToken != null) {
+					Provisioning prov = Provisioning.getInstance();
+					Account account = prov.getAccountById(authToken.getAccountId());
+					skinStr = account.getAttr(Provisioning.A_zimbraPrefSkin);
+					localeStr = account.getAttr(Provisioning.A_zimbraPrefLocale);
+					offlineBrowserKeyAttr = account.getAttr(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey);
+					if (skinStr == null) {
+						skinStr = skin;
 					}
-					return null;
-				}
-                Provisioning prov = Provisioning.getInstance();
-                Account account = prov.getAccountById(authToken.getAccountId());
-                skinStr = account.getAttr(Provisioning.A_zimbraPrefSkin);
-                localeStr = account.getAttr(Provisioning.A_zimbraPrefLocale);
-				offlineBrowserKeyAttr = account.getAttr(Provisioning.A_zimbraPrefWebClientOfflineBrowserKey);
-				if (skinStr == null) {
-					skinStr = skin;
-				}
-				if (localeStr == null) {
-					String language = requestedLocale.getLanguage();
-					String country = requestedLocale.getCountry();
-					if (country != null && !"".equals(country)) {
-						localeStr = language + "_" + country;
+					if (localeStr == null) {
+						String language = requestedLocale.getLanguage();
+						String country = requestedLocale.getCountry();
+						if (country != null && !"".equals(country)) {
+							localeStr = language + "_" + country;
+						}
+						else {
+							localeStr = language;
+						}
 					}
-					else {
-						localeStr = language;
+					if (offlineBrowserKeyAttr != null && offlineBrowserKey != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
+						isOfflineAccessEnabled = true;
 					}
 				}
-				if (offlineBrowserKeyAttr != null && offlineBrowserKey != null && offlineBrowserKeyAttr.contains(offlineBrowserKey)) {
-					isOfflineAccessEnabled = true;
-				}
-                if (ZimbraLog.webclient.isDebugEnabled()) {
-					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabled :: " + isOfflineAccessEnabled + " :: skin :: " + skinStr + " :: locale :: " + localeStr);
-                }
-            } catch(Exception e){
+			} catch(Exception e) {
 				if (ZimbraLog.webclient.isDebugEnabled()) {
-					ZimbraLog.webclient.debug("DEBUG: not generating appcache file", e);
+					ZimbraLog.webclient.debug("DEBUG: Exception in generating appcache file", e);
 				}
-				return null;
+			}
+			if (ZimbraLog.webclient.isDebugEnabled()) {
+				ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabled :: " + isOfflineAccessEnabled + " :: skin :: " + skinStr + " :: locale :: " + localeStr);
             }
+            if (!isOfflineAccessEnabled) {
+				if (ZimbraLog.webclient.isDebugEnabled()) {
+					ZimbraLog.webclient.debug("DEBUG: Generating empty appcache file");
+				}
+				return "";
+			}
 			//create the full manifest file.
 			StringBuffer sb = new StringBuffer();
 			sb.append("CACHE MANIFEST\n");
-			if (!isOfflineAccessEnabled) {
-                if (ZimbraLog.webclient.isDebugEnabled()) {
-					ZimbraLog.webclient.debug("DEBUG: isOfflineAccessEnabledisOfflineAccessEnabled :: " + isOfflineAccessEnabled);
-                }
-                sb.append("\nNETWORK:\n").append("*\n");
-                return sb.toString();
-            }
             if (reloadStr != null) {
                 ZimbraLog.webclient.debug("DEBUG: reload version: "+reloadStr);
                 sb.append("#reload version ").append(reloadStr).append(" \n");
