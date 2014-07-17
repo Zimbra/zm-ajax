@@ -304,6 +304,7 @@ public class SkinResources
 			ZimbraLog.webclient.debug("DEBUG: === debug is " + debug+" ("+debugStr+") ===");
 			ZimbraLog.webclient.debug("DEBUG: querystring=" + req.getQueryString());
 			ZimbraLog.webclient.debug("DEBUG: uri=" + uri);
+			ZimbraLog.webclient.debug("DEBUG: included=" + isIncludedRequest(req));
 			ZimbraLog.webclient.debug("DEBUG: type=" + type);
 			ZimbraLog.webclient.debug("DEBUG: contentType=" + contentType);
 			ZimbraLog.webclient.debug("DEBUG: client=" + client);
@@ -393,8 +394,8 @@ public class SkinResources
 			if (ZimbraLog.webclient.isDebugEnabled()) ZimbraLog.webclient.debug("DEBUG: using previous buffer");
 		}
 
-		// set headers
-		try {
+		// set headers for regular requests
+		if (!isIncludedRequest(req)) {
 			// We browser sniff so need to make sure any caches do the same.
 			resp.addHeader("Vary", "User-Agent");
 			// Cache It!
@@ -428,9 +429,6 @@ public class SkinResources
 			if (!compress || file != null) {
 				resp.setContentLength(file != null ? (int)file.length() : buffer.length());
 			}
-		}
-		catch (IllegalStateException e) {
-			// ignore -- thrown if called from including JSP
 		}
 
 		// write buffer
@@ -1110,6 +1108,19 @@ public class SkinResources
 		if (servletPath == null) servletPath = req.getServletPath();
 		String pathInfo = req.getPathInfo();
 		return pathInfo != null ? servletPath + pathInfo : servletPath;
+	}
+
+	/**
+	 * Detect whether this is an included request, as in one nested
+	 * within another JSP request, or a one for the actual skin
+	 * resource. Included requests should not set any HTTP headers.
+	 *
+	 * @param req The HTTP request
+	 */
+	private static boolean isIncludedRequest(HttpServletRequest req) {
+		String servletPath = req.getParameter(P_SERVLET_PATH);
+		return (servletPath != null &&
+				!servletPath.equals(req.getServletPath()));
 	}
 
 	private static Cookie getCookie(HttpServletRequest req, String name) {
