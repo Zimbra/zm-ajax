@@ -224,6 +224,7 @@ ZmCsfeException.CANNOT_RENAME                       = "mail.CANNOT_RENAME";
 ZmCsfeException.CANNOT_UNLOCK                       = "mail.CANNOT_UNLOCK";
 ZmCsfeException.CANNOT_LOCK                         = "mail.CANNOT_LOCK";
 ZmCsfeException.LOCKED                              = "mail.LOCKED";
+ZmCsfeException.UPLOAD_REJECTED						= "mail.UPLOAD_REJECTED";
 
 ZmCsfeException.MUST_BE_ORGANIZER					= "mail.MUST_BE_ORGANIZER";
 
