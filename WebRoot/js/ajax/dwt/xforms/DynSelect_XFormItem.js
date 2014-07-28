@@ -79,6 +79,7 @@ DynSelect_XFormItem.prototype.initFormItem = function () {
     this.dataFetcherTypes = this.getInheritedProperty("dataFetcherTypes");
     this.dataFetcherAttrs = this.getInheritedProperty("dataFetcherAttrs");
     this.dataFetcherDomain = this.getInheritedProperty("dataFetcherDomain");
+    this.autoCompleteEnabled = this.getInheritedProperty("autoCompleteEnabled");
     this.dataFetcherObject = null;
     if(!this.dataFetcherMethod) {
         this.dataFetcherMethod = DynSelect_XFormItem.fetchDataDefault;
