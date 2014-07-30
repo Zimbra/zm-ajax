@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -68,6 +74,8 @@ DwtShell = function(params) {
 
 	htmlElement.className = className;
 	htmlElement.style.width = htmlElement.style.height = "100%";
+	Dwt.setPosition(htmlElement, DwtControl.ABSOLUTE_STYLE);
+
 	if (htmlElement.style.overflow) {
 		htmlElement.style.overflow = null;
 	}
@@ -85,6 +93,9 @@ DwtShell = function(params) {
 		userShellContainer.getHtmlElement().appendChild(params.userShell);
 		userShellContainer.setSize("100%", "100%");
 		userShellContainer.zShow(true);
+		this._userShell = params.userShell;
+	} else {
+		this._userShell = null;
 	}
 	this.shell = this;
 
@@ -117,7 +128,7 @@ DwtShell = function(params) {
 	}
 
 	this._uiEvent = new DwtUiEvent(true);
-	this._currWinSize = Dwt.getWindowSize();
+	this.relayout();
 
 	// tooltip singleton used by all controls in shell
 	this._toolTip = new DwtToolTip(this);
@@ -463,6 +474,90 @@ function(htmlElement) {
 	return this._busyDialog;
 };
 
+/**
+ *
+ * Relayout user skin elements. Called whenever hiding or showing a
+ * part of the user skin, or when resizing the window.
+ *
+ * The layout works on elements of class "skin_layout_filler" -- which
+ * must also be of either class "skin_layout_row" or
+ * "skin_layout_cell". It finds the size of our parent, subtract the
+ * sizes all sibling rows or cells (excluding other fillers) and
+ * divide the remaining size between this filler and any sibling
+ * fillers.
+ */
+DwtShell.prototype.relayout =
+function() {
+    this._currWinSize = Dwt.getWindowSize();
+
+    if (this._userShell) {
+        var fillers = Dwt.byClassName('skin_layout_filler', this._userShell);
+
+        AjxUtil.foreach(fillers, function(elem) {
+            if (Dwt.hasClass(elem, 'skin_layout_row')) {
+                var row = elem;
+                var table = row.parentNode;
+                var height = Dwt.getSize(table).y;
+                var nfillers = 0;
+
+                var insets = Dwt.getInsets(table);
+                height -= insets.top + insets.bottom;
+                var margins = Dwt.getMargins(row);
+                height -= margins.top + margins.bottom;
+
+                AjxUtil.foreach(table.children, function(otherrow) {
+                    var margins = Dwt.getMargins(otherrow);
+                    height -= margins.top + margins.bottom;
+
+                    if (Dwt.hasClass(otherrow, 'skin_layout_filler')) {
+                        nfillers += 1;
+                    } else {
+                        var otherheight = Dwt.getSize(otherrow).y;
+
+                        AjxUtil.foreach(otherrow.children, function(cell) {
+                            var margins = Dwt.getMargins(cell);
+                            var height = Dwt.getSize(cell).y +
+                                margins.top + margins.bottom;
+                            otherheight = Math.max(otherheight, height);
+                        });
+
+                        height -= otherheight;
+                    }
+                });
+
+                row.style.height = Math.max(height / nfillers, 0) + 'px';
+
+            } else if (Dwt.hasClass(elem, 'skin_layout_cell')) {
+                var cell = elem;
+                var row = cell.parentNode;
+                var table = row.parentNode;
+                var width = Dwt.getSize(table).x;
+                var nfillers = 0;
+
+                var insets = Dwt.getInsets(table);
+                width -= insets.left + insets.right;
+                var margins = Dwt.getMargins(row);
+                width -= margins.left + margins.left;
+
+                AjxUtil.foreach(row.children, function(othercell) {
+                    var margins = Dwt.getMargins(othercell);
+                    width -= margins.left + margins.left;
+
+                    if (Dwt.hasClass(othercell, 'skin_layout_filler')) {
+                        nfillers += 1;
+                    } else {
+                        width -= Dwt.getSize(othercell).x;
+                    }
+                });
+
+                cell.style.width = Math.max(width / nfillers, 0) + 'px';
+
+            } else if (window.console) {
+                console.warn('not fixing sizes for element!', elem);
+            }
+        });
+    }
+};
 
 // Listeners
 
@@ -527,12 +622,12 @@ function(ev) {
 	 	evt.reset();
 	 	evt.oldWidth = shell._currWinSize.x;
 	 	evt.oldHeight = shell._currWinSize.y;
-	 	shell._currWinSize = Dwt.getWindowSize();
+		shell.relayout();
 	 	evt.newWidth = shell._currWinSize.x;
 	 	evt.newHeight = shell._currWinSize.y;
 	 	shell.notifyListeners(DwtEvent.CONTROL, evt);
 	} else {
-		shell._currWinSize = Dwt.getWindowSize();
+		shell.relayout();
 	}
 };
 

@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -49,6 +55,10 @@ AjxXmlDoc.REC_AVOID_CHARS_RE = /[\u007F-\u0084\u0086-\u009F\uFDD0-\uFDDF]/g;
 
 AjxXmlDoc._inited = false;
 AjxXmlDoc._msxmlVers = null;
+AjxXmlDoc._useDOM =
+    Boolean(document.implementation && document.implementation.createDocument);
+AjxXmlDoc._useActiveX =
+    !AjxXmlDoc._useDOM && Boolean(window.ActiveXObject);
 
 /**
  * Creates an XML doc.
@@ -59,14 +69,14 @@ AjxXmlDoc.create =
 function() {
 	var xmlDoc = new AjxXmlDoc();
 	var newDoc = null;
-	if (AjxEnv.isIE) {
+	if (AjxXmlDoc._useActiveX) {
 		newDoc = new ActiveXObject(AjxXmlDoc._msxmlVers);
 		newDoc.async = true; // Force Async loading
 		if (AjxXmlDoc._msxmlVers == "MSXML2.DOMDocument.4.0") {
 			newDoc.setProperty("SelectionLanguage", "XPath");
 			newDoc.setProperty("SelectionNamespaces", "xmlns:zimbra='urn:zimbra' xmlns:mail='urn:zimbraMail' xmlns:account='urn:zimbraAccount'");
 		}
-	} else if (document.implementation && document.implementation.createDocument) {
+	} else if (AjxXmlDoc._useDOM) {
 		newDoc = document.implementation.createDocument("", "", null);
 	} else {
 		throw new AjxException("Unable to create new Doc", AjxException.INTERNAL_ERROR, "AjxXmlDoc.create");
@@ -132,7 +142,7 @@ AjxXmlDoc.prototype.loadFromString =
 function(str) {
 	var doc = this._doc;
 	doc.loadXML(str);
-	if (AjxEnv.isIE) {
+	if (AjxXmlDoc._useActiveX) {
 		if (doc.parseError.errorCode != 0)
 			throw new AjxException(doc.parseError.reason, AjxException.INVALID_PARAM, "AjxXmlDoc.loadFromString");
 	}
@@ -253,7 +263,7 @@ function(dropns, lowercase, withAttrs) {
 AjxXmlDoc.prototype.getElementsByTagNameNS = 
 function(ns, tag) {
 	var doc = this.getDoc();
-	return AjxEnv.isIE
+	return !doc.getElementsByTagNameNS
 		? doc.getElementsByTagName(ns + ":" + tag)
 		: doc.getElementsByTagNameNS(ns, tag);
 };
@@ -271,7 +281,7 @@ function(tag) {
 
 AjxXmlDoc._init =
 function() {
-	if (AjxEnv.isIE) {
+	if (AjxXmlDoc._useActiveX) {
 		var msxmlVers = ["MSXML4.DOMDocument", "MSXML3.DOMDocument", "MSXML2.DOMDocument.4.0",
 				 "MSXML2.DOMDocument.3.0", "MSXML2.DOMDocument", "MSXML.DOMDocument",
 				 "Microsoft.XmlDom"];
@@ -286,7 +296,7 @@ function() {
 		if (!AjxXmlDoc._msxmlVers) {
 			throw new AjxException("MSXML not installed", AjxException.INTERNAL_ERROR, "AjxXmlDoc._init");
 		}
-	} else if (AjxEnv.isNav || AjxEnv.isOpera || AjxEnv.isSafari) {
+	} else if (!Document.prototype.loadXML) {
 		// add loadXML to Document's API
 		Document.prototype.loadXML = function(str) {
 			var domParser = new DOMParser();

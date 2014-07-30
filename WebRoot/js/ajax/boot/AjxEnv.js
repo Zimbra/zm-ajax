@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -53,10 +59,12 @@ AjxEnv.isWindows64;
 AjxEnv.isLinux;
 /** Netscape Navigator compatible. */
 AjxEnv.isNav;
-/** Internet Explorer. */
-AjxEnv.isIE;
 /** Netscape Navigator version 4. */
 AjxEnv.isNav4;
+/** "legacy" Internet Explorer -- i.e. version 10 and earlier */
+AjxEnv.isIE;
+/** "modern" Internet Explorer -- i.e. version 11 onwards. */
+AjxEnv.isModernIE;
 
 
 AjxEnv.trueNs;
@@ -94,7 +102,12 @@ AjxEnv.isIE7up;
 AjxEnv.isIE8;
 /** Internet Explorer version 8 (or higher). */
 AjxEnv.isIE8up;
-
+/** Internet Explorer version 9. */
+AjxEnv.isIE9;
+/** Internet Explorer version 9 (or higher). */
+AjxEnv.isIE9up;
+/** Internet Explorer version 10. */
+AjxEnv.isIE10;
 
 AjxEnv.isNormalResolution;
 AjxEnv.ieScaleFactor;
@@ -161,10 +174,15 @@ AjxEnv.is800x600orLower;
 /** Screen size is less then 1024x768. */
 AjxEnv.is1024x768orLower;
 
-
 /** HTML5 Support **/
 AjxEnv.supportsHTML5File;
 
+AjxEnv.supported = Modernizr;
+
+// Test for HTML's New Template Tag support
+AjxEnv.supported.addTest('template', function() {
+	return 'content' in document.createElement('template');
+});
 
 /** Supports indirect global eval() **/
 AjxEnv.indirectEvalIsGlobal;
@@ -177,7 +195,7 @@ AjxEnv.indirectEvalIsGlobal;
 		evl('__indirectEval=true');
 		if('__indirectEval' in window){
 			AjxEnv.indirectEvalIsGlobal=true;
-			delete window.__indirectEval;
+			delete __indirectEval;
 		}
 	}catch(e){}
 })();
@@ -218,6 +236,7 @@ function() {
 	AjxEnv.isIE9   = false;
 	AjxEnv.isIE9up = false;
 	AjxEnv.isIE10  = false;
+	AjxEnv.isModernIE  = false;
 	AjxEnv.isNormalResolution = false;
 	AjxEnv.ieScaleFactor = 1;
 	AjxEnv.isFirefox = false;
@@ -254,6 +273,7 @@ function() {
     //HTML5
     AjxEnv.supportsHTML5File = false;
 	AjxEnv.supportsPlaceholder = false;
+    AjxEnv.supportsCSS3RemUnits = false;
 
 	// screen resolution - ADD MORE RESOLUTION CHECKS AS NEEDED HERE:
 	AjxEnv.is800x600orLower = screen && (screen.width <= 800 && screen.height <= 600);
@@ -378,6 +398,7 @@ function() {
 		AjxEnv.isIE9			= (AjxEnv.isIE && browserVersion >= 9.0 && browserVersion < 10.0);
 		AjxEnv.isIE9up			= (AjxEnv.isIE && browserVersion >= 9.0);
 		AjxEnv.isIE10			= (AjxEnv.isIE && browserVersion >= 10.0 && browserVersion < 11.0);
+		AjxEnv.isModernIE	   = (!AjxEnv.isIE && AjxEnv.mozVersion >= 11.0 && AjxEnv.tridentVersion >= 7.0);
 		AjxEnv.isMozilla		= ((AjxEnv.isNav && AjxEnv.mozVersion && AjxEnv.isGeckoBased && (AjxEnv.geckoDate != 0)));
 		AjxEnv.isMozilla1_4up	= (AjxEnv.isMozilla && (AjxEnv.mozVersion >= 1.4));
 		AjxEnv.isFirefox 		= ((AjxEnv.isMozilla && AjxEnv.isFirefox));
@@ -415,6 +436,7 @@ function() {
 		else if (AjxEnv.isNav6)				{	AjxEnv.browser = "NAV6";	}
 		else if (AjxEnv.isNav4)				{	AjxEnv.browser = "NAV4";	}
 		else if (AjxEnv.isIE)				{	AjxEnv.browser = "IE" + browserVersion; }
+		else if (AjxEnv.isModernIE)			{	AjxEnv.browser = "IE" + browserVersion; }
 		else if (AjxEnv.isDesktop)			{	AjxEnv.browser = "ZD" + browserVersion; }
 
 		AjxEnv.platform = "[unknown]";
@@ -432,9 +454,6 @@ function() {
 		}
 	}
 
-	// show transparent PNGs on platforms that support them well (eg: all but IE and Linux)
-	// MOW: having trouble getting safari to render transparency for shadows, skipping there, too
-	AjxEnv.useTransparentPNGs = !AjxEnv.isIE && !AjxEnv.isLinux && !AjxEnv.isSafari;
 	AjxEnv._inited = !AjxEnv.isIE;
 
 	// test for safari nightly
@@ -446,8 +465,17 @@ function() {
 	}
 
     //HTML5
-    AjxEnv.supportsHTML5File = ( window.FileReader/*Firefox*/ || AjxEnv.isChrome || AjxEnv.isSafari4up );
-	AjxEnv.supportsPlaceholder 	= !(AjxEnv.isIE || (AjxEnv.isFirefox && !AjxEnv.isFirefox4up));
+    AjxEnv.supportsHTML5File = !!( window.FileReader || AjxEnv.isChrome || AjxEnv.isSafari4up );
+    AjxEnv.supportsPlaceholder 	= 'placeholder' in document.createElement('INPUT');
+
+    try {
+        // IE8 doesn't support REM units
+        var div = document.createElement('div');
+        div.style.fontSize = '1rem';
+        AjxEnv.supportsCSS3RemUnits = (div.style.fontSize == '1rem');
+    } catch (e) {
+        AjxEnv.supportsCSS3RemUnits = false;
+    }
 };
 
 // code provided by webkit authors to determine if nightly browser
@@ -472,6 +500,8 @@ function() {
 
 
 AjxEnv.parseUA();
+
+AjxEnv.isOfflineSupported = (AjxEnv.isFirefox || AjxEnv.isChrome) && AjxEnv.supported.localstorage && AjxEnv.supported.applicationcache && AjxEnv.supported.indexeddb && AjxEnv.supported.template;
 
 // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
 /*

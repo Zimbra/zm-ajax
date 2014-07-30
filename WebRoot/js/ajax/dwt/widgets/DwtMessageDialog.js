@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -31,6 +37,7 @@
  * @param {string}	params.className 		the CSS class
  * @param {array}	params.buttons				the buttons to show. Defaults to {@link DwtDialog.OK_BUTTON} button
  * @param {array}	params.extraButtons	  	a list of {@link DwtDialog_ButtonDescriptor} objects describing custom buttons to add to the dialog
+ * @param {String} params.helpText  shows a left aligned help button with the text specified in this param.
  * 
  * @extends	DwtDialog
  */
@@ -39,11 +46,22 @@ DwtMessageDialog = function(params) {
 	params = Dwt.getParams(arguments, DwtMessageDialog.PARAMS);
 	this._msgCellId = Dwt.getNextId("MessageDialog_");
 	params.standardButtons = params.buttons || [DwtDialog.OK_BUTTON];
-	DwtDialog.call(this, params);
+	if (params.helpText) {
+		var helpButton = new DwtDialog_ButtonDescriptor(DwtMessageDialog.HELP_BUTTON, params.helpText, DwtDialog.ALIGN_LEFT);
+		params.extraButtons = params.extraButtons || [];
+		params.extraButtons.push(helpButton);
+		DwtDialog.call(this, params);
+		this.registerCallback(DwtMessageDialog.HELP_BUTTON, function() {
+			ZmZimbraMail.helpLinkCallback(this._helpURL);
+		},this);
+	} else {
+		DwtDialog.call(this, params);
+	}
 	
 	this.setContent(this._contentHtml());
 	this._msgCell = document.getElementById(this._msgCellId);
 	this.addEnterListener(new AjxListener(this, this._enterListener));
+	this._setAllowSelection();
 };
 
 DwtMessageDialog.PARAMS = ["parent", "className", "buttons", "extraButtons", "id"];
@@ -74,7 +92,7 @@ DwtMessageDialog.ICON[DwtMessageDialog.CRITICAL_STYLE] = "Critical_32";
 DwtMessageDialog.ICON[DwtMessageDialog.INFO_STYLE] = "Information_32";
 DwtMessageDialog.ICON[DwtMessageDialog.WARNING_STYLE] = "Warning_32";
 
-
+DwtMessageDialog.HELP_BUTTON = "Help";
 // Public methods
 
 /**
@@ -113,6 +131,16 @@ function(msgStr, style, title) {
 	}
 };
 
+/**
+ * Sets the message style (info/warning/critical) and content.
+ *
+ * @param {string}	url		the url of the help
+ */
+DwtMessageDialog.prototype.setHelpURL =
+function(url) {
+	this._helpURL = url;
+}
+
 DwtMessageDialog.prototype.setSize =
 function(width, height) {
 	var msgCell = document.getElementById(this._msgCellId);
@@ -128,6 +156,7 @@ function(width, height) {
 DwtMessageDialog.prototype.reset = 
 function() {
 	this._msgCell.innerHTML = "";
+	this._helpURL = "";
 	DwtDialog.prototype.reset.call(this);
 };
 

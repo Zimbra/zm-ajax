@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2006, 2007, 2008, 2009, 2010, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -26,17 +32,14 @@
  * tab group. The root tab group tracks where focus is.
  * 
  * @param {string}	name					the name of this tab group
- * @param {boolean}	blockDefaultHandling	if <code>true</code>, do not fall back to default key
- * 											handler for this tab group
- * 
+ *
  * @author Ross Dargahi
  */
-DwtTabGroup = function(name, blockDefaultHandling) {
+DwtTabGroup = function(name) {
 
 	this.__members = new AjxVector();
 	this.__parent = null;
 	this.__name = name;
-	this.__blockApplicationHandling = blockDefaultHandling;
 	this.__currFocusMember = null;
 	this.__evtMgr = new AjxEventMgr();
 };
@@ -212,6 +215,10 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
 			this.__notifyListeners(newFocusMember);
 		}
 	}
+
+	if (newMember instanceof DwtTabGroup) {
+		newMember.newParent(this);
+	}
 		
 	return newMember ? this.__members.replaceObject(oldMember, newMember) : this.__members.remove(oldMember);
 };
@@ -381,16 +388,6 @@ function(checkEnabled, skipNotify) {
 	this.__currFocusMember = focusMember;
 	
 	return this.__currFocusMember;
-};
-
-DwtTabGroup.prototype.blockDefaultHandling =
-function(block) {
-	this.__blockDefaultHandling = blockDefaultHandling;
-};
-
-DwtTabGroup.prototype.isDefaultHandlingBlocked =
-function(block) {
-	return this.__blockDefaultHandling;
 };
 
 /**

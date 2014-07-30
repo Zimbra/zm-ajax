@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -36,6 +42,7 @@
  * @param	{number}	[params.zIndex=Dwt.Z_DIALOG]		the z-index to set for this dialog when it is visible
  * @param	{DwtBaseDialog.MODAL|DwtBaseDialog.MODELESS}	[params.mode=DwtBaseDialog.MODAL] 		the modality of the dialog
  * @param	{DwtPoint}	params.loc			the location at which to popup the dialog. Defaults to being centered within its parent
+ * @param	{boolean}		params.disposeOnPopDown		    destroy the content of dialog on popdown, Defaults to false
  * @param	{DwtControl}	params.view 		the the control whose element is to be re-parented
  * @param	{string}	params.dragHandleId 		the the ID of element used as drag handle
  * 
@@ -54,7 +61,7 @@ DwtBaseDialog = function(params) {
 	this._title = params.title || "";
 
 	DwtComposite.call(this, params);
-
+    this._disposeOnPopDown = params.disposeOnPopDown || false;
 	this._shell = parent;
 	this._zIndex = params.zIndex || Dwt.Z_DIALOG;
 	this._mode = params.mode || DwtBaseDialog.MODAL;
@@ -66,11 +73,9 @@ DwtBaseDialog = function(params) {
 	} else {
 		this._loc.x = this._loc.y = Dwt.LOC_NOWHERE;
 	}
-	
-	// Default dialog tab group. Note that we disable application handling of
-	// keyboard shortcuts, since we don't want the view underneath reacting to
-	// keystrokes in the dialog.
-	this._tabGroup = new DwtTabGroup(this.toString(), true);
+
+	// Default dialog tab group.
+	this._tabGroup = new DwtTabGroup(this.toString());
 
     this._dragHandleId = params.dragHandleId || this._htmlElId + "_handle";
 	this._createHtml();
@@ -284,7 +289,12 @@ function() {
 			this._shell._veilOverlay.activeDialogs.pop();
 		}
 		//this.removeKeyListeners();
-		
+
+        //Dispose the dialog if _disposeOnPopDown is set to true
+		if (this._disposeOnPopDown === true) {
+            this.dispose();
+        }
+
 		// Pop our tab group
 		var kbMgr = this._shell.getKeyboardMgr();
 		kbMgr.popTabGroup(this._tabGroup);

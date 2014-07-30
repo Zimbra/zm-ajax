@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -317,13 +323,13 @@ function(enabled) {
  * @param	{string}	imageInfo		the image
  */
 DwtButton.prototype.setImage =
-function(imageInfo) {
+function(imageInfo, direction) {
 	// This button is set to not show image. Doing it here is safer against bugs resulting from dynamically modified images and text such as teh case of spam vs. "no spam".
 	// This way you don't have to worry in that code whether we show image or not (Which could change for example as it does in this bug when moving the button to the main buttons).
 	if (this.whatToShow && !this.whatToShow.showImage) {
 		return;
 	}
-	DwtLabel.prototype.setImage.call(this, imageInfo);
+	DwtLabel.prototype.setImage.call(this, imageInfo, direction);
 	this._setMinWidth();
 };
 
@@ -358,10 +364,13 @@ function() {
  * Sets the hover image.
  * 
  * @param	{string}	hoverImageInfo		the image
+ * @param	{string}	direction			position of the image
  */
 DwtButton.prototype.setHoverImage =
-function (hoverImageInfo) {
-    this._hoverImageInfo = hoverImageInfo;
+function (hoverImageInfo, direction) {
+	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
+	this._hoverImageInfo = this._hoverImageInfo || {};
+	this._hoverImageInfo[direction] = hoverImageInfo;
 };
 
 /**
@@ -379,9 +388,12 @@ function (hoverImageInfo) {
 DwtButton.prototype.setMenu =
 function(params) {
 	
-	params = Dwt.getParams(arguments, DwtButton.setMenuParams, (arguments.length == 1 && !arguments[0].menu));
-	
-	this._menu = params.menu;
+	params = Dwt.getParams(arguments, DwtButton.setMenuParams, (arguments.length == 1 && arguments[0] && !arguments[0].menu));
+
+    if (params){
+	    this._menu = params.menu;
+    }
+
 	if (this._menu) {
 		// if menu is a callback, wait until it's created to set menu-related properties
 		if (this._menu.isDwtMenu) {
@@ -616,6 +628,22 @@ function(actionCode, ev) {
 	return true;
 };
 
+/**
+ * Removes options from drop down menu
+ */
+DwtButton.prototype.removePullDownMenuOptions =
+function() {
+    if (this._menu) {
+        this._setDropDownCellMouseHandlers(false);
+        if (this._dropDownEl && this._dropDownImg) {
+            // removes initial down arrow
+            AjxImg.setImage(this._dropDownEl, "");
+            // removes arrow image set by mouse hover, click, etc.
+            this.setDropDownImages("", "", "", "");
+        }
+    }
+};
+
 // Private methods
 
 /**
@@ -646,7 +674,7 @@ function() {
 	var p = Dwt.toWindow(htmlEl);
 	var mev = new DwtMouseEvent();
 	this._setMouseEvent(mev, {dwtObj:this, target:htmlEl, button:DwtMouseEvent.LEFT, docX:p.x, docY:p.y});
-	DwtButton._dropDownCellMouseDownHdlr(mev);
+	DwtButton._dropDownCellMouseUpHdlr(mev);
 };
 
 /**
@@ -756,6 +784,18 @@ DwtButton.prototype.dontStealFocus = function(val) {
 /**
  * @private
  */
+DwtButton.prototype._toggleHoverClass =
+function(show, direction) {
+	var iconEl = this._getIconEl(direction);
+	if (iconEl) {  //add a null check so buttons with no icon elements don't break the app.
+		var info = show ? this._hoverImageInfo[direction] : this.__imageInfo[direction];
+		iconEl.firstChild.className = AjxImg.getClassForImage(info);
+	}
+};
+
+/**
+ * @private
+ */
 DwtButton.prototype._showHoverImage =
 function(show) {
 	// if the button is image-only, DwtLabel#setImage is bad
@@ -764,12 +804,14 @@ function(show) {
 	// re-sets the image, which results in a new mouseover
 	// event, thus looping forever eating your CPU and
 	// blinking.
-	if (this._hoverImageInfo){
-		var iconEl = this._getIconEl();
-		if (iconEl) {  //add a null check so buttons with no icon elements don't break the app.
-			var info = show ? this._hoverImageInfo : this.__imageInfo;
-			iconEl.firstChild.className = AjxImg.getClassForImage(info);
-		}
+	if (!this._hoverImageInfo) {
+		return;
+	}
+	if (this._hoverImageInfo.left) {
+		this._toggleHoverClass(show, DwtLabel.LEFT);
+	}
+	if (this._hoverImageInfo.right) {
+		this._toggleHoverClass(show, DwtLabel.RIGHT);
 	}
 };
 

@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -89,12 +95,12 @@ Dwt.DISPLAY_NONE = "none";
 /**
  * Table row style.
  */
-Dwt.DISPLAY_TABLE_ROW = AjxEnv.isIE ? Dwt.DISPLAY_BLOCK : "table-row";
+Dwt.DISPLAY_TABLE_ROW = "table-row";
 
 /**
  * Table cell style.
  */
-Dwt.DISPLAY_TABLE_CELL = AjxEnv.isIE ? Dwt.DISPLAY_BLOCK : "table-cell";
+Dwt.DISPLAY_TABLE_CELL = "table-cell";
 
 // Scroll constants
 /**
@@ -237,6 +243,9 @@ Dwt.DND_DROP_MOVE = 2;
  */
 Dwt.SCROLLBAR_WIDTH = 22;
 
+// Editor formats
+Dwt.HTML = "text/html";
+Dwt.TEXT = "text/plain";
 
 // Keys used for retrieving data
 // TODO JSDoc
@@ -412,6 +421,7 @@ function(htmlElement, style) {
  * @return {DwtRectangle}	the elements bounds
  *
  * @see #setBounds
+ * @see #getInsetBounds
  * @see #getLocation
  * @see #getSize
  */
@@ -531,7 +541,7 @@ function(htmlElement, point) {
 Dwt.setLocation =
 function(htmlElement, x, y) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	var position = htmlElement.style.position;
+	var position = DwtCssStyle.getProperty(htmlElement, 'position');
 	if (position != Dwt.ABSOLUTE_STYLE && position != Dwt.RELATIVE_STYLE && position != Dwt.FIXED_STYLE) {
 		DBG.println(AjxDebug.DBG1, "Cannot position static widget " + htmlElement.className);
 		throw new DwtException("Static widgets may not be positioned", DwtException.INVALID_OP, "Dwt.setLocation");
@@ -622,10 +632,29 @@ function(htmlElement, scrollStyle) {
 	}
 };
 
-// Note: in FireFox, offsetHeight includes border and clientHeight does not;
-// may want to look at clientHeight for FF
+
+/**
+ * Gets the size of an HTML element. Normally, this yields the
+ * calculated size of the element. However, if 'getFromStyle' is
+ * true, the style is obtained directly from the CSS style.
+ *
+ * @param {HTMLElement} htmlElement		the HTML element
+ * @param {DwtPoint} point		if given, reuse this point
+ * @param {Boolean} getFromStyle		whether to use the calculated size
+ *
+ * @return {DwtPoint}	the elements size, margins included
+ *
+ * @see #getBounds
+ * @see #setBounds
+ * @see #getInsetBounds
+ * @see #getLocation
+ * @see #getOuterSize
+ */
 Dwt.getSize =
 function(htmlElement, point, getFromStyle) {
+    // Note: in FireFox, offsetHeight includes border and clientHeight does not;
+    // may want to look at clientHeight for FF
+
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	var p;
 	if (!point) {
@@ -644,6 +673,7 @@ function(htmlElement, point, getFromStyle) {
 		if (htmlElement.style.height) {
 			p.y = parseInt(htmlElement.style.height);
 		}
+
 		return p;
 	}
 
@@ -657,7 +687,36 @@ function(htmlElement, point, getFromStyle) {
 		p.x = parseInt(htmlElement.style.pixelWidth);
 		p.y = parseInt(htmlElement.style.pixelHeight);
 	}
+
 	return p;
+};
+
+
+/**
+ * Gets the outer size -- that is, the size including margins -- of an
+ * HTML element.
+ *
+ * @param {HTMLElement} htmlElement		the HTML element
+ *
+ * @return {DwtPoint}	the elements size, margins included
+ *
+ * @see #getSize
+ * @see #getBounds
+ * @see #setBounds
+ * @see #getInsetBounds
+ * @see #getLocation
+ */
+Dwt.getOuterSize =
+function(htmlElement, point) {
+    var p = Dwt.getSize(htmlElement, point);
+
+    if (p && Dwt.getVisible(htmlElement)) {
+        var margins = Dwt.getMargins(htmlElement);
+        p.x += margins.left + margins.right;
+        p.y += margins.top + margins.bottom;
+    }
+
+    return p;
 };
 
 Dwt.setSize =
@@ -777,7 +836,7 @@ Dwt.__MSIE_OPACITY_RE = /alpha\(opacity=(\d+)\)/;
 Dwt.getOpacity =
 function(htmlElement) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	if (AjxEnv.isIE) {
+	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
 		var filter = Dwt.getIEFilter(htmlElement, "alpha");
 		var m = Dwt.__MSIE_OPACITY_RE.exec(filter) || [ filter, "100" ];
 		return Number(m[1]);
@@ -788,7 +847,7 @@ function(htmlElement) {
 Dwt.setOpacity =
 function(htmlElement, opacity) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	if (AjxEnv.isIE) {
+	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
         Dwt.alterIEFilter(htmlElement, "alpha", "alpha(opacity="+opacity+")");
 	} else {
 		htmlElement.style.opacity = opacity/100;
@@ -911,6 +970,80 @@ Dwt.insetBounds = function(bounds, insets) {
 	bounds.width  -= insets.left + insets.right;
 	bounds.height -= insets.top + insets.bottom;
 	return bounds;
+};
+
+/**
+ * Gets the bounds of an HTML element, excluding borders and paddings.
+ *
+ * @param {HTMLElement} htmlElement		the HTML element
+ *
+ * @return {DwtRectangle}	the elements bounds
+ *
+ * @see #setBounds
+ * @see #getInsetBounds
+ * @see #getLocation
+ * @see #getSize
+ */
+Dwt.getInsetBounds = function(htmlElement) {
+	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
+
+	var bounds = Dwt.getBounds(htmlElement);
+	var insets = Dwt.getInsets(htmlElement);
+
+	return Dwt.insetBounds(bounds, insets);
+};
+
+Dwt.getMargins = function(htmlElement) {
+	// return an object with the margins for each side of the element, eg:
+	//		{ left: 3, top:0, right:3, bottom:0 }
+	// NOTE: assumes values from computedStyle are returned in pixels!!!
+
+	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
+	var style = DwtCssStyle.getComputedStyleObject(htmlElement);
+
+	return {
+		left 	: parseInt(style.marginLeft) 	|| 0,
+		top  	: parseInt(style.marginTop) 	|| 0,
+		right 	: parseInt(style.marginRight) 	|| 0,
+		bottom	: parseInt(style.marginBottom)	|| 0
+	};
+};
+
+/**
+ * Get ancestor elements of the given node, up to and including the given
+ * parent node. If no parent is given, assume the root document node. If the
+ * parent node is not an ancestor of the child, return <code>null</code>.
+ *
+ * @param {HTMLElement} childNode		the child HTML element
+ * @param {HTMLElement} parentNode		the parent HTML element
+ * @param {Boolean} 	includeChild	if true, include the child itself
+ *
+ * @return {Array}						a list of HTML elements
+ */
+Dwt.getAncestors =
+function(childNode, parentNode, includeChild) {
+	var ancestors = [];
+
+	// a reasonable default
+	if (!parentNode) {
+		parentNode = document.documentElement;
+	}
+
+	if (includeChild) {
+		ancestors.push(childNode);
+	}
+
+	while (childNode && childNode != parentNode) {
+		ancestors.push(childNode.parentNode);
+		childNode = childNode.parentNode;
+	}
+
+	// check if the parent was an ancestor
+	if (ancestors[ancestors.length - 1] != parentNode) {
+		return null;
+	}
+
+	return ancestors;
 };
 
 Dwt.setStatus =
@@ -1041,6 +1174,7 @@ function(el, del, add) {
 	}
 	var className = el.className || "";
 	className = className.replace(del, " ");
+	className = AjxStringUtil.trim(className);
 	el.className = add ? className + " " + add : className;
 };
 
@@ -1100,19 +1234,20 @@ Dwt.hasClass = function(el, className) {
  * @see #getSelectionStart
  * @see #getSelectionEnd
  * @see #setSelectionText
+ * @see #moveCursorToEnd
  */
 Dwt.setSelectionRange =
 function(input, start, end) {
-	if (AjxEnv.isGeckoBased || AjxEnv.isSafari) {
+	if (input.setSelectionRange) {
         input.focus();
 		input.setSelectionRange(start, end);
-	} else if (AjxEnv.isIE) {
+	} else if (input.createTextRange) {
 		var range = input.createTextRange();
 		range.collapse(true);
 		range.moveStart("character", start);
 		range.moveEnd("character", end - start);
 		range.select();
-	} else {
+	} else if (input.select) {
 		// FIXME: find solutions for other browsers
 		input.select();
 	}
@@ -1130,20 +1265,20 @@ function(input, start, end) {
  * @see #getSelectionEnd
  * @see #setSelectionText
  * @see #setSelectionRange
+ * @see #moveCursorToEnd
  */
 Dwt.getSelectionStart =
 function(input) {
-	if (AjxEnv.isGeckoBased) {
+	if (AjxUtil.isSpecified(input.selectionStart)) {
 		return input.selectionStart;
-	}
-
-	if (AjxEnv.isIE) {
+	} else if (document.selection) {
 		var range = document.selection.createRange();
 		var isCollapsed = range.compareEndPoints("StartToEnd", range) == 0;
 		if (!isCollapsed)
 			range.collapse(true);
 		var b = range.getBookmark();
-		return b.charCodeAt(2) - 2;
+		var offset = input.createTextRange().getBookmark().charCodeAt(2);
+		return Math.max(b.charCodeAt(2) - offset, 0);
 	}
 
 	// FIXME: find solutions for other browsers
@@ -1161,20 +1296,20 @@ function(input) {
  * @see #getSelectionStart
  * @see #setSelectionText
  * @see #setSelectionRange
+ * @see #moveCursorToEnd
  */
 Dwt.getSelectionEnd =
 function(input) {
-	if (AjxEnv.isGeckoBased) {
+	if (AjxUtil.isSpecified(input.selectionEnd)) {
 		return input.selectionEnd;
-	}
-
-	if (AjxEnv.isIE) {
+	} else if (document.selection) {
 		var range = document.selection.createRange();
 		var isCollapsed = range.compareEndPoints("StartToEnd", range) == 0;
 		if (!isCollapsed)
 			range.collapse(false);
 		var b = range.getBookmark();
-		return b.charCodeAt(2) - 2;
+		var offset = input.createTextRange().getBookmark().charCodeAt(2);
+		return Math.max(b.charCodeAt(2) - offset, 0);
 	}
 
 	// FIXME: find solutions for other browsers
@@ -1191,6 +1326,7 @@ function(input) {
  * @see #getSelectionStart
  * @see #getSelectionEnd
  * @see #setSelectionRange
+ * @see #moveCursorToEnd
  */
 Dwt.setSelectionText =
 function(input, text) {
@@ -1209,6 +1345,21 @@ function(input, text) {
 		input.value = val;
 	}
 	Dwt.setSelectionRange(input, start, start + text.length);
+};
+
+/**
+ * Move cursor to the end of an input.
+ *
+ * @param {input} input	the text input for which to find the selection start point
+ *
+ * @see #getSelectionStart
+ * @see #getSelectionEnd
+ * @see #setSelectionText
+ * @see #setSelectionRange
+ */
+Dwt.moveCursorToEnd =
+function(input) {
+	Dwt.setSelectionRange(input, input.value.length, input.value.length);
 };
 
 Dwt.instanceOf =
@@ -1236,7 +1387,7 @@ function(args, paramNames, force) {
 	
 	// Check for arg-list style of passing params. There will almost always
 	// be more than one arg, and the first one is the parent DwtControl.
-	if (args.length > 1 || args[0]._eventMgr || force) {
+	if (args.length > 1 || (args[0] && args[0]._eventMgr) || force) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
 			params[paramNames[i]] = args[i];
@@ -1253,6 +1404,8 @@ function(args, paramNames, force) {
 // PRIVATE METHODS
 //////////////////////////////////////////////////////////////////////////////////
 
+Dwt.__REM_RE = /^(-?[0-9]+(?:\.[0-9]*)?)rem$/;
+
 /**
  * @private
  */
@@ -1267,6 +1420,9 @@ function(val, check) {
 	}
 	if (typeof(val) == "number") {
 		val = val + "px";
+	}
+	if (!AjxEnv.supportsCSS3RemUnits && Dwt.__REM_RE.test(val)) {
+		val = DwtCssStyle.asPixelCount(val) + "px";
 	}
 	return val;
 };
@@ -1300,9 +1456,60 @@ function(id, ancestor) {
 	return null;
 };
 
+/**
+ * Get all elements of a certain tag name. Similar to
+ * document.getElementsByTagName(), but returning an Array instead of
+ * a NodeList.
+ *
+ * @param {String} tagName	the tag name, such as "A"
+ * @param {HTMLElement} ancestor An optional ancestor element,
+ *                      defaults to the document
+ * @return	{Array}
+ */
 Dwt.byTag =
-function(tagName) {
-	return document.getElementsByTagName(tagName);
+function(tagName, ancestor) {
+	if (!ancestor) {
+		ancestor = document;
+	}
+
+	return AjxUtil.toArray(ancestor.getElementsByTagName(tagName));
+};
+
+/**
+ * Get all elements of the given class name. Similar to
+ * document.getElementsByClassName(), but returning an Array instead
+ * of a NodeList.
+ *
+ * @param {String} className
+ * @param {HTMLElement} ancestor An optional ancestor element,
+ *                      defaults to the document
+ * @return	{Array}
+ */
+Dwt.byClassName =
+function(className, ancestor) {
+	if (!ancestor) {
+        ancestor = document;
+	}
+
+    if (ancestor.getElementsByClassName) {
+        return AjxUtil.toArray(ancestor.getElementsByClassName(className));
+
+    } else {
+        /* fall back for IE 8 and earlier */
+        var pattern = new RegExp("\\b"+className+"\\b");
+        var byClass = function(element, accumulator)
+        {
+            if (element.className && element.className.match(pattern))
+                accumulator.push(element);
+
+            for (var i = 0; i < element.childNodes.length; i++)
+                byClass(element.childNodes[i], accumulator);
+
+            return accumulator;
+	    };
+
+	    return byClass(ancestor, []);
+    }
 };
 
 Dwt.show =
@@ -1319,15 +1526,6 @@ function(it) {
 	if (el) {
 		Dwt.setVisible(el,false);
 	}
-};
-
-Dwt.toggle =
-function(it, show) {
-	it = Dwt.byId(it);
-	if (show == null) {
-		show = (Dwt.getVisible(it) != true);
-	}
-	Dwt.setVisible(it, show);
 };
 
 //setText Methods
@@ -1556,6 +1754,9 @@ function(id, date) {
 		document.body.appendChild(div);
 	}
 	div.innerHTML = date.getTime();
+	if (window.appDevMode) {
+		console.profile(id);
+	}
 };
 
 /**
@@ -1576,8 +1777,33 @@ function(id, date) {
 		document.body.appendChild(div);
 	}
 	div.innerHTML = date.getTime();
+	if (window.appDevMode) {
+		console.profileEnd();
+	}
 };
 
+/**
+ * Prints the computed time from performance metrics data
+ */
+Dwt.printPerfMetric =
+function() {
+	//code to print all loading stats
+	$.each($('div[id*="_loaded"]'), function(index, elem) {
+		var end_id = $(elem).attr("id");
+		var start_id_prefix = end_id.substring(0,end_id.indexOf("_"));
+		var end_elem = $("#" + start_id_prefix+"_launched");
+		if (end_elem && end_elem.length > 0) {
+			var end_time = $("#" + start_id_prefix+"_launched").html();
+		} else {
+			end_time = $("#" + start_id_prefix+"_loading").html();
+		}
+		var log = "Load time for " + start_id_prefix + " is " + ($(elem).html()-end_time);
+		DBG.println(AjxDebug.DBG1,log);
+		if (console) {
+			console.log(log);
+		}
+	});
+}
 
 // Css for Templates
 Dwt.createLinearGradientCss =
@@ -1613,13 +1839,27 @@ function(startColor, endColor, direction) {
 
     var cssDirection;
     var gradient = {};
-    if (AjxEnv.isIE) {
+    if (AjxEnv.isIE && !AjxEnv.isIE9up) {
         cssDirection = (direction == 'v') ? 0 : 1;
         gradient.field = "filter";
         gradient.name  = "DXImageTransform.Microsoft.Gradient";
         gradient.css   = "progid:" + gradient.name + "(" +
                          "GradientType=" + cssDirection + ",startColorstr=" + startColor +
                          ",endColorstr=" + endColor + "); zoom:1;";
+    } else if (AjxEnv.isIE9) {
+        var params = {
+            x1: "0%",
+            x2: direction == 'v' ? "0%" : "100%",
+            y1: "0%",
+            y2: direction == 'v' ? "100%" : "0%",
+            startColor: startColor,
+            endColor: endColor
+        };
+        var svgsrc =
+            AjxTemplate.expand('dwt.Widgets#SVGGradient', params);
+        gradient.field = "background";
+        gradient.css   = ('url(data:image/svg+xml,' +
+                          escape(svgsrc.replace(/\s+/g, ' ')) + ')');
     } else if (AjxEnv.isFirefox3_6up) {
         cssDirection = (direction == 'v') ? 'top' : 'left';
         gradient.field = "background";
@@ -1635,6 +1875,10 @@ function(startColor, endColor, direction) {
         gradient.field = "background";
         gradient.css   = "-webkit-gradient(linear, " + startPt + ", " + endPt +
                          ", color-stop(0%, " + startColor + "), color-stop(100%, " + endColor + "))";
+    } else {
+        cssDirection = (direction == 'v') ? 'to bottom' : 'to right';
+        gradient.field = "background";
+        gradient.css   = "linear-gradient(" + cssDirection + "," + startColor + ", "  + endColor + ")";
     }
     return gradient;
 }
@@ -1642,7 +1886,7 @@ function(startColor, endColor, direction) {
 Dwt.setLinearGradient =
 function(htmlElement, startColor, endColor, direction) {
     var gradient = Dwt.createLinearGradientInfo(startColor, endColor, direction);
-    if (AjxEnv.isIE) {
+    if (gradient.field == 'filter') {
         Dwt.alterIEFilter(htmlElement, gradient.name, gradient.css);
     } else {
         htmlElement.style[gradient.field] = gradient.css;
@@ -1703,17 +1947,17 @@ function(htmlElement, id) {
     return descendant;
 };
 
-Dwt.moveCursorToEnd =
-function(input) {
-	if (AjxEnv.isIE) {
-		var tr = input.createTextRange();
-		tr.moveStart('character', input.value.length);
-		tr.collapse();
-		tr.select();
-	 }
-	else {
-		input.focus();
-		var length = input.value.length;
-		input.setSelectionRange(length, length);
-	}
+Dwt.getScrollbarSizes = function(node) {
+    var insets = Dwt.getInsets(node);
+    var style = DwtCssStyle.getComputedStyleObject(node);
+
+    var bl = parseInt(style.borderLeftWidth)    || 0;
+    var bt = parseInt(style.borderTopWidth)     || 0;
+    var br = parseInt(style.borderRightWidth)   || 0;
+    var bb = parseInt(style.borderBottomWidth)  || 0;
+
+    var width = node.offsetWidth - node.clientWidth - bl - br;
+    var height = node.offsetHeight - node.clientHeight - bt - bb;
+
+    return new DwtPoint(width, height);
 };

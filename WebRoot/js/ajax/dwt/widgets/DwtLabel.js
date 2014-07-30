@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -116,25 +122,40 @@ DwtLabel.IMAGE_LEFT = 1;
 DwtLabel.IMAGE_RIGHT = 2;
 
 /**
+ * Defines both "right" and "left" align images (i.e. align to the left and to the right of text, if all present).
+ */
+DwtLabel.IMAGE_BOTH = 4;
+
+/**
  * Defines the "left" align label.
  */
-DwtLabel.ALIGN_LEFT = 4;
+DwtLabel.ALIGN_LEFT = 8;
 
 /**
  * Defines the "right" align label.
  */
-DwtLabel.ALIGN_RIGHT = 8;
+DwtLabel.ALIGN_RIGHT = 16;
 
 /**
  * Defines the "center" align label.
  */
-DwtLabel.ALIGN_CENTER = 16;
+DwtLabel.ALIGN_CENTER = 32;
 
 /**
  * Defines the last style label (used for subclasses).
  * @private
  */
-DwtLabel._LAST_STYLE = 16;
+DwtLabel._LAST_STYLE = 32;
+
+/**
+ * Defines the "left" side icon
+ */
+DwtLabel.LEFT = "left";
+
+/**
+ * Defines the "right" side icon
+ */
+DwtLabel.RIGHT = "right";
 
 //
 // Data
@@ -168,40 +189,51 @@ DwtLabel.prototype.setEnabled =
 function(enabled) {
 	if (enabled != this._enabled) {
 		DwtControl.prototype.setEnabled.call(this, enabled);
-		this.__setImage(this.__imageInfo);
+		var direction = this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT;
+		this.__imageInfo = this.__imageInfo || {};
+		this.__setImage(this.__imageInfo[direction]);
 	}
 }
 
 /**
  * Gets the current image info.
- * 
+ *
+ * @param	{string}	direction		position of the image
+ *
  * @return	{string}	the image info
  */
 DwtLabel.prototype.getImage =
-function() {
-	return this.__imageInfo;
+function(direction) {
+	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
+	return this.__imageInfo[direction];
 }
 
 /**
  * Sets the main (enabled) image. If the label is currently enabled, the image is updated.
- * 
+ *
  * @param	{string}	imageInfo		the image
+ * @param	{string}	direction		position of the image
  */
 DwtLabel.prototype.setImage =
-function(imageInfo) {
-	this.__imageInfo = imageInfo;
-	this.__setImage(imageInfo);
+function(imageInfo, direction) {
+	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
+	this.__imageInfo = this.__imageInfo || {};
+	this.__imageInfo[direction] = imageInfo;
+	this.__setImage(imageInfo, direction);
 }
 
 /**
  *
  * Set _iconEl, used for buttons that contains only images
  *
- * @param       htmlElement/DOM node
+ * @param	htmlElement/DOM node
+ * @param	{string}				direction		position of the image
  *
  */
-DwtLabel.prototype.setIconEl = function(iconElement) {
-        this._iconEl =  iconElement;
+DwtLabel.prototype.setIconEl = function(iconElement, direction) {
+	this._iconEl = this._iconEl || {};
+	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
+	this._iconEl[direction] =  iconElement;
 }
 
 /**
@@ -282,7 +314,9 @@ function(alignStyle) {
 	this._style = alignStyle;
 
 	// reset dom since alignment style may have changed
-    this.__setImage(this.__imageInfo);
+	var direction = this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT;
+	this.__imageInfo = this.__imageInfo || {};
+    this.__setImage(this.__imageInfo[direction]);
 }
 
 /**
@@ -317,13 +351,17 @@ DwtLabel.prototype._createHtmlFromTemplate = function(templateId, data) {
 
 /**
  * @private
+ *
+ * @param	{string}	direction		position of the image
  */
-DwtLabel.prototype._getIconEl = function() {
+DwtLabel.prototype._getIconEl = function(direction) {
+    var _dir = this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT;
+    direction = typeof direction === 'boolean' ? _dir : (direction || _dir);    // fix for Bug 90130
 	// MOW: getting the proper icon element on demand rather than all the time for speed
-	var direction = (this._style & DwtLabel.IMAGE_RIGHT ? "right" : "left");
-	return this._iconEl || 
-			(this._iconEl = document.getElementById(this._htmlElId+"_"+direction+"_icon"));
-}
+	this._iconEl = this._iconEl || {};
+	return this._iconEl[direction] ||
+		(this._iconEl[direction] = document.getElementById(this._htmlElId+"_"+direction+"_icon"));
+};
 
 //
 // Private methods
@@ -333,12 +371,14 @@ DwtLabel.prototype._getIconEl = function() {
  * Set the label's image, and manage its placement.
  *
  * @private
+ *
+ * @param	{string}	imageInfo		the image
+ * @param	{string}	direction		position of the image
  */
 DwtLabel.prototype.__setImage =
-function(imageInfo) {
+function(imageInfo, direction) {
 
-
-	var iconEl = this._getIconEl();
+	var iconEl = this._getIconEl(direction);
 	if (iconEl) {
 		if (imageInfo) {
 			AjxImg.setImage(iconEl, imageInfo, null, !this._enabled);

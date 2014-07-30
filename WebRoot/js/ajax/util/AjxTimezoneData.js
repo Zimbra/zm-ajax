@@ -1,3 +1,23 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Web Client
+ * Copyright (C) 2007, 2008, 2010, 2013, 2014 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2007, 2008, 2010, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
+ * ***** END LICENSE BLOCK *****
+ */
 /**
  * DO NOT EDIT! This file is generated.
  * <p>
@@ -234,10 +254,7 @@ AjxTimezoneData.TIMEZONE_RULES = [
 	  daylight: { offset: 660, mon: 10, week: 1, wkday: 1, hour: 2, min: 0, sec: 0, trans: [ 2011, 10, 2 ], tzname: "EST" }
 	},
 	{ serverId: "Pacific/Guam", clientId: "Pacific/Guam", score: 100,  standard: { offset: 600, tzname: "ChST" } },
-	{ serverId: "Asia/Magadan", clientId: "Asia/Magadan", score: 100, 
-	  standard: { offset: 660, mon: 10, week: -1, wkday: 1, hour: 3, min: 0, sec: 0, trans: [ 2011, 10, 30 ], tzname: "MAGT" },
-	  daylight: { offset: 720, mon: 3, week: -1, wkday: 1, hour: 2, min: 0, sec: 0, trans: [ 2011, 3, 27 ], tzname: "MAGST" }
-	},
+	{ serverId: "Asia/Magadan", clientId: "Asia/Magadan", score: 100,  standard: { offset: 720, tzname: "MAGT" } },
 	{ serverId: "Asia/Kamchatka", clientId: "Asia/Kamchatka", score: 100, 
 	  standard: { offset: 720, mon: 10, week: -1, wkday: 1, hour: 3, min: 0, sec: 0, trans: [ 2011, 10, 30 ], tzname: "PETT" },
 	  daylight: { offset: 780, mon: 3, week: -1, wkday: 1, hour: 2, min: 0, sec: 0, trans: [ 2011, 3, 27 ], tzname: "PETST" }

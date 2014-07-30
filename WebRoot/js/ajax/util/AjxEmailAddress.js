@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -29,16 +35,17 @@
  * @param {boolean}	isGroup		if <code>true</code>, the address param is really a list of email addresses
  * 
  */
-AjxEmailAddress = function(address, type, name, dispName, isGroup) {
+AjxEmailAddress = function(address, type, name, dispName, isGroup, canExpand) {
 	this.address = address;
 	this.name = this._setName(name);
 	this.dispName = dispName;
 	this.type = type || AjxEmailAddress.TO;
 	this.isGroup = isGroup;
-	this.canExpand = false;
+	this.canExpand = canExpand;
 };
 
 AjxEmailAddress.prototype.isAjxEmailAddress = true;
+
 /**
  * Defines list of custom invalid RegEx patterns that are set in LDAP
  */
@@ -96,14 +103,13 @@ AjxEmailAddress.toSoapType[AjxEmailAddress.READ_RECEIPT]= "n";
 
 AjxEmailAddress.SEPARATOR = "; ";				// used to join addresses
 AjxEmailAddress.DELIMS = [';', ',', '\n', ' '];	// recognized as address delimiters
-AjxEmailAddress.IS_DELIM = {};
-for (var i = 0; i < AjxEmailAddress.DELIMS.length; i++) {
-	AjxEmailAddress.IS_DELIM[AjxEmailAddress.DELIMS[i]] = true;
-}
+AjxEmailAddress.IS_DELIM = AjxUtil.arrayAsHash(AjxEmailAddress.DELIMS);
 
 // validation patterns
 
 AjxEmailAddress.addrAnglePat = /(\s*<(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*)))>\s*)/;
+AjxEmailAddress.addrOnlyPat = /^((((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*))))$/;
+
 AjxEmailAddress.addrAngleQuotePat = /(\s*<'(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*)))'>\s*)/;
 // use addrPat to validate strings as email addresses
 AjxEmailAddress.addrPat = /(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*)))/;
@@ -113,12 +119,18 @@ AjxEmailAddress.addrPat = /(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x
 // (RFC822 wants the address part to be in <> if preceded by name part)
 AjxEmailAddress.addrPat1 = /(^|"|\s)(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*)))/;
 // pattern below is for account part of address (before @)
-AjxEmailAddress.accountPat = /((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))/;
+AjxEmailAddress.accountPat = /^([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)$/;
 // Pattern below hangs on an unclosed comment, so use simpler one if parsing for comments
 //AjxEmailAddress.commentPat = /(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|(\s*\((\s*(([^()\\])|(\\([^\x0A\x0D]))|)+)*\s*\)\s*))+)*\s*\)\s*))+)*\s*\)\s*))+)*\s*\)\s*))+)*\s*\)\s*)/;
 AjxEmailAddress.commentPat = /\((.*)\)/g;
 AjxEmailAddress.phrasePat = /(((\s*[^\x00-\x1F\x7F()<>\[\]:;@\"\s]+\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))+)/;
 AjxEmailAddress.boundAddrPat = /(\s*<?(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*"(([^\\"])|(\\([^\x0A\x0D])))+"\s*))\@((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(\.[^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+)*)\s*)|(\s*\[(\s*(([^\[\]\\])|(\\([^\x0A\x0D])))+)*\s*\]\s*)))>?\s*)$/;
+
+AjxEmailAddress.validateAddress =
+function (str) {
+	str = AjxStringUtil.trim(str);
+	return AjxEmailAddress._prelimCheck(str) && AjxEmailAddress.addrOnlyPat.test(str);
+};
 
 /**
  * Parses an email address string into its component parts. The parsing is adapted from the perl module 
@@ -134,13 +146,12 @@ AjxEmailAddress.boundAddrPat = /(\s*<?(((\s*([^\x00-\x1F\x7F()<>\[\]:;@\,."\s]+(
  * @param	{string}	str		the string to parse
  * @return	{AjxEmailAddress}	the email address or <code>null</code>
  */
-AjxEmailAddress.parse =
-function(str) {
+AjxEmailAddress.parse = function(str) {
+
 	var addr, name;
 	var str = AjxStringUtil.trim(str);
 	var prelimOkay = AjxEmailAddress._prelimCheck(str);
 	if (!(prelimOkay && str.match(AjxEmailAddress.addrPat))) {
-		DBG.println(AjxDebug.DBG2, "mailbox match failed: " + str);
 		return null;
 	}
 
@@ -153,41 +164,40 @@ function(str) {
 	if (parts && parts.length) {
 		addr = parts[2];
 		str = str.replace(AjxEmailAddress.addrAnglePat, '');
-	} else {
+	}
+	else {
 		parts = str.match(AjxEmailAddress.addrPat1);
 		if (parts && parts.length) {
-			if (parts[1] == '"') {
+			if (parts[1] === '"') {
 				return null;	// unmatched quote
 			}
-            //AjxEmailAddress.addrPat recognizes the email better than using parts[0] from AjxEmailAddress.addrPat1
-            addr = str.match(AjxEmailAddress.addrPat);
-            addr = (addr && addr.length && addr[0] != "") ? AjxStringUtil.trim(addr[0]) : parts[0];
-			if (addr && addr.indexOf("..") != -1) {
-				return null;
-			}
+            // AjxEmailAddress.addrPat recognizes the email better than using parts[0] from AjxEmailAddress.addrPat1
+            var parts1 = str.match(AjxEmailAddress.addrPat);
+            addr = parts1 && parts1.length && parts1[0] ? AjxStringUtil.trim(parts1[0]) : parts[0];
 			str = str.replace(AjxEmailAddress.addrPat, '');
 		}
 	}
- 	if (!addr) {
+
+	// double-check with validateAddress(), which uses addrOnlyPat
+	if (!addr || !AjxEmailAddress.validateAddress(addr)) {
 		return null;
 	}
-	//Invalidate if address matches any of AjxEmailAddress.customInvalidEmailPats
-	for(var i = 0; i< AjxEmailAddress.customInvalidEmailPats.length; i++) {
-	   var match = addr.match(AjxEmailAddress.customInvalidEmailPats[i]);
-		if(match) {
+
+	// Validate against any customer-provided patterns
+	for (var i = 0; i < AjxEmailAddress.customInvalidEmailPats.length; i++) {
+		if (AjxEmailAddress.customInvalidEmailPats[i].test(addr)) {
 			return null;
 		}
 	}
 
 	// What remains is the name
-	parts = str.match(AjxEmailAddress.phrasePat);
-	if (parts) {
-		name = AjxStringUtil.trim(parts[0]);
+	if (str) {
+		name = AjxStringUtil.trim(str);
 
 		// Trim off leading and trailing quotes, but leave escaped quotes and unescape them
 		name = name.replace(/\\"/g,"&quot;");
-		name = AjxStringUtil.trim(name, null, "\"");
-		name = name.replace(/&quot;/g,"\"");
+		name = AjxStringUtil.trim(name, null, '"');
+		name = name.replace(/&quot;/g, '"');
 	}
 	
 	return new AjxEmailAddress(addr, null, name);
@@ -198,9 +208,9 @@ function(str) {
  * addresses, and all addresses is returned. Strict RFC822 validation (at least as far as it goes in the
  * regexes we have) is optional. If it's off, we'll retry a failed address after quoting the personal part.
  *
- * @param {string}	emailStr	an email string with one or more addresses
- * @param {constant}	type		address type of the string
- * @param {boolean}	strict		if <code>true</code>, do strict checking
+ * @param	{string}	emailStr	an email string with one or more addresses
+ * @param	{constant}	type		address type of the string
+ * @param	{boolean}	strict		if <code>true</code>, do strict checking
  * @return	{hash}		the good/bad/all addresses
  */
 AjxEmailAddress.parseEmailString =
@@ -236,6 +246,19 @@ function(emailStr, type, strict) {
 		}
 	}
 	return {good: good, bad: bad, all: all};
+};
+
+/**
+ * Returns an AjxVector with valid email addresses
+ *
+ * @param	{string}	emailStr	an email string with one or more addresses
+ * @param	{constant}	type		address type of the string
+ * @param	{boolean}	strict		if <code>true</code>, do strict checking
+ * @return	{AjxVector}				valid addresses
+ */
+AjxEmailAddress.getValidAddresses =
+function(emailStr, type, strict) {
+	return AjxEmailAddress.parseEmailString(emailStr, type, strict).good;
 };
 
 /**
@@ -469,10 +492,8 @@ function() {
  */
 AjxEmailAddress.prototype.clone =
 function() {
-	var addr = new AjxEmailAddress(this.address, this.type, this.name, this.dispName);
+	var addr = new AjxEmailAddress(this.address, this.type, this.name, this.dispName, this.isGroup, this.canExpand);
 	addr.icon = this.icon;
-	addr.isGroup = this.isGroup;
-	addr.canExpand = this.canExpand;
 	return addr;
 };
 
@@ -484,10 +505,8 @@ function() {
  */
 AjxEmailAddress.copy =
 function(obj){    
-    var addr = new AjxEmailAddress(obj.address, obj.type, obj.name, obj.dispName);
+    var addr = new AjxEmailAddress(obj.address, obj.type, obj.name, obj.dispName, obj.isGroup, obj.canExpand);
     addr.icon = obj.icon;
-	addr.isGroup = obj.isGroup;
-	addr.canExpand = obj.canExpand;
     return addr;
 };
 

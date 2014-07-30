@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -422,8 +428,8 @@ function() {
 	var kbff = this._kbFocusField = document.createElement("textarea");
 	kbff.id = DwtKeyboardMgr.FOCUS_FIELD_ID;
 	kbff.tabIndex = 0;
-	kbff.style.position = Dwt.ABSOLUTE_STYLE;
-	kbff.style.top = kbff.style.left = Dwt.LOC_NOWHERE;
+	Dwt.setPosition(kbff, Dwt.ABSOLUTE_STYLE);
+	Dwt.setLocation(kbff, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
 	kbff.onblur = DwtKeyboardMgr.__onBlurHdlr;
 	kbff.onfocus = DwtKeyboardMgr.__onFocusHdlr;
 	document.body.appendChild(kbff);
@@ -676,7 +682,7 @@ function(kbMgr, obj) {
 	
 //	DBG.println("kbnav", "DwtKeyboardMgr.__syncFocus: focus obj: " + kbMgr.__focusObj + " - obj: " + obj);
 	if (!kbMgr.__dwtCtrlHasFocus) {
-		// DwtInputField DwtHtmlEditor
+		// DwtInputField
 		if ((obj != kbMgr.__focusObj) && !kbMgr.__dwtInputCtrl) {
 //			DBG.println("kbnav", "Focus out of sync, resetting");
 			if (kbMgr.__currTabGroup && kbMgr.__currTabGroup.setFocusMember(obj)) {
@@ -720,9 +726,9 @@ function(ev) {
 	// Sync up focus if needed
 	var focusInTGMember = DwtKeyboardMgr.__syncFocus(kbMgr, kev.target);
 	
-	if (!focusInTGMember) {
+//	if (!focusInTGMember) {
 //		DBG.println("kbnav", "Object is not in tab hierarchy");
-	}
+//	}
 			
 	/* The first thing we care about is the tab key since we want to manage
 	 * focus based on the tab groups. 
@@ -818,8 +824,7 @@ function(ev) {
 
 	// If the currently focused control didn't handle the event, hand it to the default key
 	// event handler
-	if ((handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && kbMgr.__currDefaultHandler &&
-		!(kbMgr.__currTabGroup && kbMgr.__currTabGroup.isDefaultHandlingBlocked())) {
+	if (handled === DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED && kbMgr.__currDefaultHandler) {
 		handled = kbMgr.__dispatchKeyEvent(kbMgr.__currDefaultHandler, kev);
 	}
 

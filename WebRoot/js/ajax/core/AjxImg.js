@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -42,14 +48,16 @@ AjxImg.RE_COLOR = /^(.*?),color=(.*)$/;
  * @param parentEl 		the parent element for the image
  * @param imageName 		the name of the image.  The CSS class for the image will be "Img&lt;imageName&gt;".
  * @param useParenEl 	if <code>true</code> will use the parent element as the root for the image and will not create an intermediate DIV
- * @param _disabled		if <code>true</code>, will append " ZDisabledImage" to the CSS class for the image, 
+ * @param _disabled		if <code>true</code>, will append " ZDisabledImage" to the CSS class for the image,
+ * @param {array}       classes             array of class names to be applied to this image
  *							which will make the image partly transparent
  */
 AjxImg.setImage =
-function(parentEl, imageName, useParentEl, _disabled) {
+function(parentEl, imageName, useParentEl, _disabled, classes) {
 	
 	if (!parentEl) { return; }
 	
+	classes = classes || [];
 	var origImageName = imageName;
     var color, m = imageName && imageName.match(AjxImg.RE_COLOR);
 	if (m) {
@@ -59,7 +67,8 @@ function(parentEl, imageName, useParentEl, _disabled) {
 
 	var className = AjxImg.getClassForImage(imageName, _disabled);
 	if (useParentEl) {
-		parentEl.className = className;
+		classes.push(className);
+		parentEl.className = classes.join(" ");
 		return;
 	}
 	var id = parentEl.firstChild && parentEl.firstChild.id;
@@ -75,29 +84,30 @@ function(parentEl, imageName, useParentEl, _disabled) {
 
 	if (parentEl.firstChild == null || parentEl.firstChild.nodeName.toLowerCase() != "div") {
 		var html = [], i = 0;
-		html[i++] = "<div";
+		html[i++] = "<div ";
 		if (id) {
 			html[i++] = " id='";
 			html[i++] = id;
-			html[i++] = "'";
+			html[i++] = "' ";
 		}
 		if (className) {
-			html[i++] = " class='";
-			html[i++] = className;
-			html[i++] = "'";
+			classes.push(className);
 		}
+		html[i++] = AjxUtil.getClassAttr(classes);
 		html[i++] = "></div>";
 		parentEl.innerHTML = html.join("");
 		return;
-	} else if (AjxEnv.isIE) {
+	} else if (AjxEnv.isIE && !AjxEnv.isIE9up) {
 		parentEl.firstChild.innerHTML = "";
 	}
-
-	parentEl.firstChild.className = className;
+	if (className) {
+		classes.push(className);
+	}
+	parentEl.firstChild.className = classes.join(" ");
 };
 
-AjxImg.setDisabledImage = function(parentEl, imageName, useParentEl) {
-	return AjxImg.setImage(parentEl, imageName, useParentEl, true);
+AjxImg.setDisabledImage = function(parentEl, imageName, useParentEl, classes) {
+	return AjxImg.setImage(parentEl, imageName, useParentEl, true, classes);
 };
 
 AjxImg.getClassForImage =
@@ -130,15 +140,17 @@ function(imageEl) {
  * @param {string}		attrStr			optional attributes (for example, "id=X748")
  * @param {boolean}		wrapInTable		if true, wrap the HTML in a TABLE
  * @param {boolean}		disabled		if true, show image as disabled
+ * @param {array}       classes     array of class names to be applied to this image
  * 
  * @return	{string}	the image string
  */
 AjxImg.getImageHtml = 
-function(imageName, styles, attrStr, wrapInTable, disabled) {
+function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
 
 	styles = styles || "";
 	var styleStr = styles ? " style='" + styles + "'" : "";
 	attrStr = attrStr ? " " + attrStr : "";
+	classes = classes || [];
 
 	var pre = wrapInTable ? "<table style='display:inline' cellpadding=0 cellspacing=0 border=0><tr><td align=center valign=bottom>" : "";
     var html = "";
@@ -159,8 +171,7 @@ function(imageName, styles, attrStr, wrapInTable, disabled) {
                     ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
 
             var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
-            if (AjxEnv.isIE && (!AjxEnv.tridentVersion || AjxEnv.tridentVersion < 5)) {
-                var clip = "";
+            if (AjxEnv.isIE && !AjxEnv.isIE9up) {
                 var size = [
                     "width:", overlay.w, ";",
                     "height:", overlay.h, ";"
@@ -169,33 +180,24 @@ function(imageName, styles, attrStr, wrapInTable, disabled) {
                     "top:", mask.t, ";",
                     "left:", mask.l, ";"
                 ].join("");
-                if (typeof document.documentMode != 'undefined') { //IE8 is the first one to define this. IE8 can lie when in compat mode, so we need to really know it's it.
-                    clip = [
-                        'clip:rect(',
-                        (-1 * mask.t) - 1, 'px,',
-                        overlay.w - 1, 'px,',
-                        (mask.t * -1) + overlay.h - 1, 'px,',
-                        overlay.l, 'px);'
-                    ].join('');
-                }
+                var clip = [
+                    'clip:rect(',
+                    (-1 * mask.t) - 1, 'px,',
+                    overlay.w - 1, 'px,',
+                    (mask.t * -1) + overlay.h - 1, 'px,',
+                    overlay.l, 'px);'
+                ].join('');
                 var filter = 'filter:mask(color=' + color + ');';
                 html = [
                     // NOTE: Keep in sync with output of ImageMerger.java.
-                    "<div class='IEImage' style='*display:inline;zoom:1;position:relative;overflow:hidden;", size, styles, "' ", attrStr,">",
-                        "<div class='IEImageMask' style='overflow:hidden;position:relative;", size, "'>",
-                            "<img src='", mask.f, "?v=", window.cacheKillerVersion, "' border=0 style='position:absolute;", location, clip, filter, "'>",
+                    "<div class='IEImage' style='display:inline;zoom:1;position:relative;overflow:hidden;", size, styles, "' ", attrStr,">",
+                        "<div class='IEImageMask' style='position:absolute;top:0px;left:0px;", size, "'>",
+                            "<img src='", mask.ief, "?v=", window.cacheKillerVersion, "' border=0 style='position:absolute;", location, filter, "'>",
                         "</div>",
                         "<div class='IEImageOverlay ", overlayName, "' style='", size, ";position:absolute;top:0;left:0;'></div>",
                     "</div>"
                 ].join("");
             }
-			else if (AjxEnv.isIE) {
-					color = color.replace("#","");
-					var className = AjxImg.getClassForImage(imageName + "_" + color, disabled);
-					html = [
-						"<div class='", "Img", imageName + "_" + color, "'", styleStr, attrStr, "></div>"
-					].join("");
-			}
             else {
                 if (!overlay[color]) {
                     var width = overlay.w, height = overlay.h;
@@ -256,13 +258,14 @@ function(imageName, styles, attrStr, wrapInTable, disabled) {
                 }
 
                 html = [
-                    "<img src='", overlay[color], "'"," border=0 ", styleStr, attrStr, ">"
+                    "<img src='", overlay[color], "'"," border=0 ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
                 ].join("");
             }
         }
         else {
+	        classes.push("Img" + imageName);
             html = [
-                "<div class='", "Img", imageName, "'", styleStr, attrStr, "></div>"
+                "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, "></div>"
             ].join("");
         }
 	}

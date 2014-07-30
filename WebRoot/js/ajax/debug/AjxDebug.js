@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -98,9 +104,11 @@ AjxDebug.BAD_JSON		= "bad_json"; 	// bug 57066
 AjxDebug.PREFS			= "prefs";		// bug 60942
 AjxDebug.PROGRESS       = "progress";	// progress dialog
 AjxDebug.REMINDER       = "reminder";   // bug 60692
+AjxDebug.OFFLINE        = "offline";
 AjxDebug.TAG_ICON       = "tagIcon";    // bug 62155
 AjxDebug.DATA_URI       = "dataUri";    // bug 64693
 AjxDebug.MSG_DISPLAY	= "msgDisplay";	// bugs 68599, 69616
+AjxDebug.ZIMLET			= "zimlet";		// bugs 83009
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
 AjxDebug.BUFFER_MAX[AjxDebug.RPC]			= 200;
@@ -112,10 +120,12 @@ AjxDebug.BUFFER_MAX[AjxDebug.SCROLL]		= 100;
 AjxDebug.BUFFER_MAX[AjxDebug.BAD_JSON]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.PREFS] 		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.REMINDER]		= 200;
+AjxDebug.BUFFER_MAX[AjxDebug.OFFLINE]		= 400;
 AjxDebug.BUFFER_MAX[AjxDebug.TAG_ICON]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.PROGRESS]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.DATA_URI]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.MSG_DISPLAY]	= 200;
+AjxDebug.BUFFER_MAX[AjxDebug.ZIMLET]		= 200;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
 
@@ -583,7 +593,9 @@ function() {
 		html[i++] = "_clear'>Clear</button></td><td><button id='";
 		html[i++] = AjxDebug._BOTTOM_FRAME_ID;
 		html[i++] = "_pause'>Pause</button></td></tr></table>";
-		doc.body.innerHTML = html.join("");
+		if (doc.body) {
+			doc.body.innerHTML = html.join("");
+		}
 	}
 	catch (ex) {
 		// IE chokes on the popup window on cold start-up (when IE is started
