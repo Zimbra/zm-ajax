@@ -760,7 +760,7 @@ public class SkinResources
 			sb.append("#version ").append(cacheBusterVersion).append(" \n");
 			sb.append("CACHE:\n");
             sb.append("\n#HTML files\n\n");
-            sb.append(appContextPath).append("/");
+			sb.append("/");
             if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
                 sb.append("?dev=1");
             }
@@ -919,6 +919,14 @@ public class SkinResources
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/zeroclipboard/ZeroClipboard.swf");
 
 			sb.append("\nNETWORK:\n").append("*\n");
+
+			if (appContextPath != null && !appContextPath.isEmpty()) {
+				sb.append("\nFALLBACK:\n");
+				sb.append(appContextPath).append(" ").append("/");
+				if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
+					sb.append("?dev=1");
+				}
+			}
 		
 			return sb.toString();
 		}
