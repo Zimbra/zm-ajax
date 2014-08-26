@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -23,6 +29,7 @@
  * <li>DwtMenu.BAR_STYLE - Traditional menu bar</li>
  * <li>DwtMenu.POPUP_STYLE - Popup menu</li>
  * <li>DwtMenu.DROPDOWN_STYLE - Used when a menu is a drop down (e.g. parent is a button or another menu item)</li>
+ * <li>DwtMenu.DROPDOWN_CENTERV_STYLE - like a dropdown, but position to the right, centered vertically on the parent</li>
  * <li>DwtMenu.COLOR_PICKER_STYLE - Menu is hosting a single color picker</li>
  * <li>DwtMenu.CALENDAR_PICKER_STYLE - Menu is hostng a single calendar</li>
  * <li>DwtMenu.GENERIC_WIDGET_STYLE - Menu is hosting a single "DwtInsertTableGrid"</li>
@@ -41,6 +48,7 @@
  * 
  * @extends		DwtComposite
  */
+
 DwtMenu = function(params) {
 	this._created = false;
 	if (arguments.length == 0) { return; }
@@ -50,11 +58,12 @@ DwtMenu = function(params) {
 	var parent = params.parent;
 	if (parent) {
 		if (parent instanceof DwtMenuItem || parent instanceof DwtButton) {
-			if (params.style == DwtMenu.GENERIC_WIDGET_STYLE) {
+			if ((params.style == DwtMenu.GENERIC_WIDGET_STYLE) ||
+                (params.style == DwtMenu.DROPDOWN_CENTERV_STYLE)) {
 				this._style = params.style;
 			} else {
-				this._style = DwtMenu.DROPDOWN_STYLE;
-			}
+                this._style = DwtMenu.DROPDOWN_STYLE;
+ 			}
 		} else {
 			this._style = params.style || DwtMenu.POPUP_STYLE;
 		}
@@ -78,8 +87,7 @@ DwtMenu = function(params) {
 	DwtComposite.call(this, params);
 	this.parent = parent;
 
-	var isPopup = (this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE);
-	if (isPopup && (this._layoutStyle == DwtMenu.LAYOUT_STACK)) {
+	if (this._isPopupStyle() && (this._layoutStyle == DwtMenu.LAYOUT_STACK)) {
 		this.setScrollStyle(DwtControl.SCROLL);
 	}
 
@@ -105,13 +113,15 @@ DwtMenu = function(params) {
 		this._table.border = this._table.cellPadding = this._table.cellSpacing = 0;
 		this._table.className = "DwtMenuTable";
 		this._table.id = Dwt.getNextId();
+
+
 		if (this._layoutStyle == DwtMenu.LAYOUT_SCROLL) {
 			this._setupScroll();
 		} else {
 			htmlElement.appendChild(this._table);
 		}
 		this._table.backgroundColor = DwtCssStyle.getProperty(htmlElement, "background-color");
-	}
+    }
 
 	if (params.style != DwtMenu.BAR_STYLE) {
 		this.setZIndex(Dwt.Z_HIDDEN);
@@ -133,10 +143,8 @@ DwtMenu = function(params) {
 	this.__currentItem = null;
 	this.__preventMenuFocus = false;
 
-	// Default menu tab group. Note that we disable application handling of
-	// keyboard shortcuts, since we don't want the view underneath reacting to
-	// keystrokes in the menu.
-	this._tabGroup = new DwtTabGroup(this.toString(), true);
+	// Default menu tab group.
+	this._tabGroup = new DwtTabGroup(this.toString());
 	this._tabGroup.addMember(this);
 	this._created = true;
 
@@ -157,6 +165,7 @@ DwtMenu.prototype.toString = function() { return "DwtMenu"; };
 DwtMenu.BAR_STYLE				= "BAR";
 DwtMenu.POPUP_STYLE				= "POPUP";
 DwtMenu.DROPDOWN_STYLE			= "DROPDOWN";
+DwtMenu.DROPDOWN_CENTERV_STYLE	= "DROPDOWN_CENTERV";
 DwtMenu.COLOR_PICKER_STYLE		= "COLOR";
 DwtMenu.CALENDAR_PICKER_STYLE	= "CALENDAR";
 DwtMenu.GENERIC_WIDGET_STYLE	= "GENERIC";
@@ -243,6 +252,20 @@ function(listener) {
 DwtMenu.prototype.setWidth = 
 function(width) {
 	this._width = width;
+
+    if (this._table) {
+        Dwt.setSize(this._table, width, Dwt.CLEAR);
+    }
+};
+
+DwtMenu.prototype.centerOnParentVertically =
+function() {
+    return (this._style === DwtMenu.DROPDOWN_CENTERV_STYLE);
+};
+
+DwtMenu.prototype._isPopupStyle =
+function() {
+	return (this._style === DwtMenu.POPUP_STYLE || this._style === DwtMenu.DROPDOWN_STYLE || this._style === DwtMenu.DROPDOWN_CENTERV_STYLE);
 };
 
 /**
@@ -413,6 +436,7 @@ DwtMenu.prototype._setupScroll = function() {
 
 	Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEDOWN, scrollDownStartListener);
 	Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEUP, scrollDownStopListener);
+	Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEUP, scrollDownStopListener);
 	if (!AjxEnv.isIE) {
 		Dwt.setHandler(this._bottomScroller, DwtEvent.ONMOUSEOUT, mouseOutBottomListener);
 	} else {
@@ -434,7 +458,7 @@ function(x, y) {
 	windowSize.x -= 28;
 
 	var isScroll = this._layoutStyle == DwtMenu.LAYOUT_SCROLL;
-	var isPopup = (this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE);
+	var isPopup = this._isPopupStyle();
 	var isCascade = this._layoutStyle == DwtMenu.LAYOUT_CASCADE;
 	if (this._table) {
 		if (isPopup && isCascade) {
@@ -567,6 +591,13 @@ function(x, y) {
 			}
 		}
 	}
+
+    if (this._style === DwtMenu.DROPDOWN_CENTERV_STYLE) {
+        y -=  mySize.y/2;
+        if (y < 0) {
+            y = 0;
+        }
+    }
 	var newY = isPopup && y + mySize.y >= windowSize.y ? windowSize.y - mySize.y : y;
 
 	if (this.parent instanceof DwtMenuItem && this._congruent) {
@@ -738,7 +769,8 @@ function(actionCode, ev) {
 	switch (this._style) {
 		case DwtMenu.BAR_STYLE:
 		case DwtMenu.POPUP_STYLE:
-		case DwtMenu.DROPDOWN_STYLE:
+        case DwtMenu.DROPDOWN_STYLE:
+        case DwtMenu.DROPDOWN_CENTERV_STYLE:
 			break;
 			
 		default:
@@ -1079,10 +1111,9 @@ function(x, y, kbGenerated) {
 	this.render(x, y);
 
 	var isScroll = this._layoutStyle == DwtMenu.LAYOUT_SCROLL;
-	var isPopup = (this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE);
 	var isCascade = this._layoutStyle == DwtMenu.LAYOUT_CASCADE;
 	if (!isScroll) {
-		this.setScrollStyle(isPopup && isCascade ? Dwt.CLIP : Dwt.SCROLL);
+		this.setScrollStyle(this._isPopupStyle() && isCascade ? Dwt.CLIP : Dwt.SCROLL);
 	} else if (this._tableContainer) {
 		Dwt.setScrollStyle(this._tableContainer, Dwt.CLIP);
 	}
@@ -1172,9 +1203,7 @@ function(ev) {
 	this._popdownActionId = -1;
 	this._isPoppedUp = false;
 
-	if ((this._style == DwtMenu.POPUP_STYLE || this._style == DwtMenu.DROPDOWN_STYLE) &&
-		this._table && this._table.rows && this._table.rows.length && this._table.rows[0].cells.length)
-	{
+	if (this._isPopupStyle() && this._table && this._table.rows && this._table.rows.length && this._table.rows[0].cells.length)	{
 		var numColumns = this._table.rows[0].cells.length;
 		var numRows = this._table.rows.length;
 		for (var i = 1; i < numColumns; i++) {
@@ -1224,11 +1253,6 @@ function(){
 	return null;
 };
 
-/* Note that a hack has been added to DwtHtmlEditor to call this method when the 
- * editor gets focus. The reason for this is that the editor uses an Iframe 
- * whose events are independent of the menu's document. In this case event will 
- * be null.
- */
 DwtMenu._outsideMouseDownListener =
 function(ev) {
 

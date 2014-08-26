@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -857,43 +863,39 @@ function() {
 	// icons as well as the month/year title cell
 	html[idx++] =	"<table width=100%>";
 	html[idx++] =		"<tr><td class='DwtCalendarTitlebar'>";
-	html[idx++] =			"<table width='100%'>";
+	html[idx++] =			"<table>";
 	html[idx++] =				"<tr>";
-	html[idx++] =					"<td class='";
+	html[idx++] =					"<td align='center' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:py:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FastRevArrowSmall", null, ["id='b:py:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td class='";
+	html[idx++] =					"<td align='center' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:pm:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("RevArrowSmall", null, ["id='b:pm:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td align='center' class='DwtCalendarTitleCell' 'nowrap' style='width: 60%'><span class='";
+	html[idx++] =					"<td class='DwtCalendarTitleCell' 'nowrap' style='width: 60%'><span class='";
 	html[idx++] =						DwtCalendar._TITLE_CLASS;
 	html[idx++] = 						"' id='";
 	html[idx++] =						this._monthCell;
-	html[idx++] =					"'>&nbsp;</span></td>";
-	html[idx++] =					"<td class='";
+	html[idx++] =					"'></span></td>";
+	html[idx++] =					"<td align='center' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:nm:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FwdArrowSmall", null, ["id='b:nm:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td class='";
+	html[idx++] =					"<td align='center' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:ny:";
 	html[idx++] =						this._uuid;
-	html[idx++] =						"' style='width: 10%'";
-	html[idx++] =						">";
+	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FastFwdArrowSmall", null, ["id='b:ny:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
 	html[idx++] =				"</tr>";
@@ -921,8 +923,7 @@ function() {
 	html[idx++] = "</tr>";
 
 	for (var i = 0; i < 6; i++) {
-		// bug fix #3355 - linux fix and bug fix #25564 for Mac
-		html[idx++] = (AjxEnv.isLinux  || AjxEnv.isMac) ? "<tr style='line-height:12px'>" : "<tr>";
+		html[idx++] = "<tr>";
 		if (this._showWeekNumber) {
 			html[idx++] = "<td class='DwtCalendarWeekNo' id='" + this._getWeekNumberCellId('kw' + i * 7) + "'>&nbsp;</td>";
 		}

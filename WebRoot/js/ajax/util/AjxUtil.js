@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -28,6 +34,7 @@ AjxUtil.FLOAT_RE = /^[+\-]?((\d+(\.\d*)?)|((\d*\.)?\d+))([eE][+\-]?\d+)?$/;
 AjxUtil.NOTFLOAT_RE = /[^\d\.]/;
 AjxUtil.NOTINT_RE = /[^0-9]+/;
 AjxUtil.LIFETIME_FIELD = /^([0-9])+([dhms]|ms)?$/;
+AjxUtil.INT_RE = /^\-?(0|[1-9]\d*)$/;
 
 AjxUtil.isSpecified 		= function(aThing) { return ((aThing !== void 0) && (aThing !== null)); };
 AjxUtil.isUndefined 		= function(aThing) { return (aThing === void 0); };
@@ -37,20 +44,23 @@ AjxUtil.isString 			= function(aThing) { return (typeof(aThing) == 'string'); };
 AjxUtil.isNumber 			= function(aThing) { return (typeof(aThing) == 'number'); };
 AjxUtil.isObject 			= function(aThing) { return ((typeof(aThing) == 'object') && (aThing !== null)); };
 AjxUtil.isArray 			= function(aThing) { return AjxUtil.isInstance(aThing, Array); };
+AjxUtil.isArrayLike			= function(aThing) { return typeof aThing !== 'string' && typeof aThing.length === 'number'; };
 AjxUtil.isFunction 			= function(aThing) { return (typeof(aThing) == 'function'); };
 AjxUtil.isDate 				= function(aThing) { return AjxUtil.isInstance(aThing, Date); };
 AjxUtil.isLifeTime 			= function(aThing) { return AjxUtil.LIFETIME_FIELD.test(aThing); };
 AjxUtil.isNumeric 			= function(aThing) { return (!isNaN(parseFloat(aThing)) && AjxUtil.FLOAT_RE.test(aThing) && !AjxUtil.NOTFLOAT_RE.test(aThing)); };
-AjxUtil.isLong			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
-AjxUtil.isNonNegativeLong   = function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isLong(aThing) && (parseFloat(aThing) >= 0)); };
-AjxUtil.isInt			    = function(aThing) { return (AjxUtil.isNumeric(aThing) && !AjxUtil.NOTINT_RE.test(aThing)); };
-AjxUtil.isPositiveInt   	= function(aThing) { return (AjxUtil.isNumeric(aThing) && AjxUtil.isInt(aThing) && (parseInt(aThing) > 0)); };
+AjxUtil.isInt				= function(aThing) { return AjxUtil.INT_RE.test(aThing); };
+AjxUtil.isPositiveInt		= function(aThing) { return AjxUtil.isInt(aThing) && parseInt(aThing, 10) > 0; }; //note - assume 0 is not positive
+AjxUtil.isLong = AjxUtil.isInt;
+AjxUtil.isNonNegativeLong	= function(aThing) { return AjxUtil.isLong(aThing) && parseInt(aThing, 10) >= 0; };
 AjxUtil.isEmpty				= function(aThing) { return ( AjxUtil.isNull(aThing) || AjxUtil.isUndefined(aThing) || (aThing === "") || (AjxUtil.isArray(aThing) && (aThing.length==0))); };
 // REVISIT: Should do more precise checking. However, there are names in
 //			common use that do not follow the RFC patterns (e.g. domain
 //			names that start with digits).
-AjxUtil.IP_ADDRESS_RE = /^\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?$/;
-AjxUtil.IP_ADDRESS_WITH_PORT_RE = /^\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?:\d{1,5}$/;
+AjxUtil.IPv4_ADDRESS_RE = /^\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?$/;
+AjxUtil.IPv4_ADDRESS_WITH_PORT_RE = /^\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?:\d{1,5}$/;
+AjxUtil.IPv6_ADDRESS_RE = /^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|(?:%[-\w.~]+)?$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})(?:%[-\w.~]+)?$/i;
+AjxUtil.IPv6_ADDRESS_WITH_PORT_RE = new RegExp(AjxUtil.IPv6_ADDRESS_RE.source.replace('^', '^\\[').replace('$', '\\]:\\d{1,5}$'), 'i');
 AjxUtil.SUBNET_RE = /^\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?\/\d{1,2}$/;
 AjxUtil.DOMAIN_NAME_SHORT_RE = /^[A-Za-z0-9\-]{2,}$/;
 AjxUtil.DOMAIN_NAME_FULL_RE = /^[A-Za-z0-9\-]{1,}(\.[A-Za-z0-9\-]{2,}){1,}$/;
@@ -63,8 +73,6 @@ AjxUtil.IP_FULL_URL_RE = /^[A-Za-z0-9]{2,}:\/\/\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.
 AjxUtil.SHORT_URL_RE = /^[A-Za-z0-9]{2,}:\/\/[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*(:([0-9])+)?$/;
 AjxUtil.IP_SHORT_URL_RE = /^[A-Za-z0-9]{2,}:\/\/\d{1,3}(\.\d{1,3}){3}(\.\d{1,3}\.\d{1,3})?(:([0-9])+)?$/;
 
-AjxUtil.isIpAddress 		= function(s) { return AjxUtil.IP_ADDR_RE.test(s); };
-AjxUtil.isDomain 			= function(s) {	return AjxUtil.DOMAIN_RE.test(s); };
 AjxUtil.isHostName 			= function(s) { return AjxUtil.HOST_NAME_RE.test(s); };
 AjxUtil.isDomainName = 
 function(s, shortMatch) {
@@ -428,10 +436,53 @@ AjxUtil.values = function(object, acceptFunc) {
     return values;
 };
 
-AjxUtil.foreach = function(array, func) {
+/**
+ * Generate another hash mapping property values to their names. Each value
+ * should be unique; otherwise the results are undefined.
+ *
+ * @param obj                   An object, treated as a hash.
+ * @param func [function]       An optional function for filtering properties.
+ */
+AjxUtil.valueHash = function(obj, acceptFunc) {
+    // don't rely on the value in the object itself
+    var hasown = Object.prototype.hasOwnProperty.bind(obj);
+
+    var r = {};
+    for (var k in obj) {
+        var v = obj[k];
+
+        if (!hasown(k) || (acceptFunc && !acceptFunc(k, obj)))
+            continue;
+        r[v] = k;
+    }
+    return r;
+};
+AjxUtil.backMap = AjxUtil.valueHash;
+
+/**
+ * Call a function with the the items in the given object, which special logic
+ * for handling of arrays.
+ *
+ * @param obj                   Array or other object
+ * @param func [function]       Called with index or key and value.
+ */
+AjxUtil.foreach = function(obj, func) {
     if (!func) return;
-    for (var i = 0; i < array.length; i++) {
-        func(array[i], i);
+
+    if (AjxUtil.isArrayLike(obj)) {
+        var array = obj;
+
+        for (var i = 0; i < array.length; i++) {
+            func(array[i], i);
+        }
+    } else {
+        // don't rely on the value in the object itself
+        hasown = Object.prototype.hasOwnProperty.bind(obj);
+
+        for (var k in obj) {
+            if (hasown(k))
+                func(obj[k], k)
+        }
     }
 };
 
@@ -676,7 +727,7 @@ AjxUtil.__mergeArrays_orderfunc = function (val1,val2) {
     if(val1 == val2) return  0;
 };
 
-AjxUtil.arraySubstract = function (arr1, arr2, orderfunc) {
+AjxUtil.arraySubtract = function (arr1, arr2, orderfunc) {
 	if(!orderfunc) {
 		orderfunc = function (val1,val2) {
 			if(val1>val2)
@@ -724,7 +775,11 @@ AjxUtil.arraySubstract = function (arr1, arr2, orderfunc) {
 	}
 	
 	return resArr;
-}
+};
+
+// Support deprecated, misspelled version
+AjxUtil.arraySubstract = AjxUtil.arraySubtract;
+
 /**
  * Returns the keys of the given hash as a sorted list.
  *
@@ -835,6 +890,14 @@ function(arg) {
 	else if (AjxUtil.isArray1(arg)) {
 		return arg;
 	}
+	else if (AjxUtil.isArrayLike(arg)) {
+		try {
+			// fails in IE8
+			return Array.prototype.slice.call(arg);
+		} catch (e) {
+			return AjxUtil.map(arg);
+		}
+	}
 	else if (arg.isAjxVector) {
         return arg.getArray();
 	}
@@ -874,14 +937,15 @@ AjxUtil.get = function(object /* , propName1, ... */) {
  * 
 */
 AjxUtil.convertToEntities = function (source){
-	var result = '', temp, length = 0, i = 0;
+	var result = '';
+	var length = 0;
     
     if (!source || !(length = source.length)) return source;
     
-	for(i; i < length; ++i){
-		if(source.charCodeAt(i) > 127){
-			temp = source.charCodeAt(i).toString(10);
-			while(temp.length < 4){
+	for (var i = 0; i < length; i++) {
+		if (source.charCodeAt(i) > 127) {
+			var temp = source.charCodeAt(i).toString(10);
+			while (temp.length < 4) {
 				temp = '0' + temp;
 			}
 			result += '&#' + temp + ';';
@@ -891,3 +955,151 @@ AjxUtil.convertToEntities = function (source){
 	}
 	return result;
 };
+
+/**
+ *  Get the class attribute string from the given class.
+ * @param {array} - An array of class names to be converted to a class attribute.
+ * returns the attribute string with the class names or empty string if no class is passed.
+	*
+ */
+AjxUtil.getClassAttr = function (classes){
+	var attr = [];
+	if (classes && classes.length > 0) {
+		//remove duplicate css classes
+		classes = AjxUtil.uniq(classes);
+		return ["class='" , classes.join(" "), "'"].join("");
+	}
+	return "";
+};
+
+/**
+ * converts datauri string to blob object used for uploading the image
+ * @param {dataURI} - datauri string  data:image/png;base64,iVBORw0
+ *
+ */
+AjxUtil.dataURItoBlob =
+function (dataURI) {
+
+    if (!(dataURI && typeof window.atob === "function" && typeof window.Blob === "function")) {
+        return;
+    }
+
+    var dataURIArray = dataURI.split(",");
+    if (dataURIArray.length === 2) {
+        if (dataURIArray[0].indexOf('base64') === -1) {
+            return;
+        }
+        // convert base64 to raw binary data held in a string
+        // doesn't handle URLEncoded DataURIs
+        try{
+            var byteString = window.atob(dataURIArray[1]);
+        }
+        catch(e){
+            return;
+        }
+        if (!byteString) {
+            return;
+        }
+        // separate out the mime component
+        var mimeString = dataURIArray[0].split(':');
+        if (!mimeString[1]) {
+            return;
+        }
+        mimeString = mimeString[1].split(';')[0];
+        if (mimeString) {
+            // write the bytes of the string to an ArrayBuffer
+            var byteStringLength = byteString.length,
+                ab = new ArrayBuffer(byteStringLength),
+                ia = new Uint8Array(ab);
+            for (var i = 0; i < byteStringLength; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], {"type" : mimeString});
+        }
+    }
+
+};
+
+AjxUtil.reduce = function(array, callback, opt_initialValue) {
+	var reducefn = Array.prototype.reduce;
+
+	if (reducefn) {
+		return reducefn.call(array, callback, opt_initialValue);
+	} else {
+		// polyfill from the Mozilla Developer Network for browsers without
+		// reduce -- i.e. IE8.
+
+		if (array === null || 'undefined' === typeof array) {
+			throw new TypeError('AjxUtil.reduce called on null or undefined');
+		}
+		if ('function' !== typeof callback) {
+			throw new TypeError(callback + ' is not a function');
+		}
+		var index, value,
+		length = array.length >>> 0,
+		isValueSet = false;
+		if (1 < arguments.length) {
+			value = opt_initialValue;
+			isValueSet = true;
+		}
+		for (index = 0; length > index; ++index) {
+			if (array.hasOwnProperty(index)) {
+				if (isValueSet) {
+					value = callback(value, array[index], index, array);
+				}
+				else {
+					value = array[index];
+					isValueSet = true;
+				}
+			}
+		}
+		if (!isValueSet) {
+			throw new TypeError('Reduce of empty array with no initial value');
+		}
+		return value;
+	}
+
+};
+
+
+/**
+ * Returns a value for the brightness of the given color.
+ *
+ * @param   {string}    rgb     RGB value as #RRGGBB
+ * @returns {number}    number between 0 and 255 (higher is brighter)
+ */
+AjxUtil.getBrightness = function(rgb) {
+
+	var r, g, b;
+
+	if (rgb && rgb.length === 7 && rgb.indexOf('#') === 0) {
+		rgb = rgb.substr(1);
+	}
+	else {
+		return null;
+	}
+
+	r = parseInt(rgb.substr(0, 2), 16);
+	g = parseInt(rgb.substr(2, 2), 16);
+	b = parseInt(rgb.substr(4, 2), 16);
+
+	// http://alienryderflex.com/hsp.html
+	return Math.sqrt(
+		r * r * .299 +
+			g * g * .587 +
+			b * b * .114
+	);
+};
+
+/**
+ * Returns the better foreground color based on contrast with the given background color.
+ *
+ * @param   {string}    bgColor     RGB value as #RRGGBB
+ * @returns {string}    'black' or 'white'
+ */
+AjxUtil.getForegroundColor = function(bgColor) {
+	var brightness = AjxUtil.getBrightness(bgColor);
+	return (brightness != null && brightness < 130) ? 'white' : 'black';
+};
+
+

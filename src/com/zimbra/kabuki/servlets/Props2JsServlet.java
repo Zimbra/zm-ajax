@@ -1,15 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
- * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -46,6 +48,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.BufferStream;
+import com.zimbra.common.util.Props2Js;
 
 /**
  * This class looks for the resource bundle for the requested file (e.g.
@@ -118,11 +121,13 @@ public class Props2JsServlet extends HttpServlet {
             return dirname;
         }
         String basedir = this.getServletContext().getRealPath("/");
-        if (!basedir.endsWith("/"))
+        if (!basedir.endsWith("/")) {
             basedir += "/";
+        }
         return basedir + dirname;
     }
 
+    @Override
     public void service(ServletRequest req, ServletResponse resp)
     throws IOException, ServletException {
         if (flushCache(req)) {
@@ -131,6 +136,7 @@ public class Props2JsServlet extends HttpServlet {
         super.service(req, resp);
     }
 
+    @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws
         IOException, ServletException {
         // get request info
@@ -138,7 +144,7 @@ public class Props2JsServlet extends HttpServlet {
         Locale locale = getLocale(req);
         Map<String, byte[]> localeBuffers;
         String uri = getRequestURI(req);
-        
+
         synchronized(buffers) {
             localeBuffers = buffers.get(locale);
             if (localeBuffers == null) {
@@ -147,7 +153,7 @@ public class Props2JsServlet extends HttpServlet {
                 buffers.put(locale, localeBuffers);
             }
         }
-        
+
         // get byte buffer
         byte[] buffer = debug ? null : localeBuffers.get(uri);
 
@@ -158,24 +164,27 @@ public class Props2JsServlet extends HttpServlet {
                 // gzip response
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(buffer.length / 2);
                 OutputStream gzos = new GZIPOutputStream(bos);
-                
+
                 gzos.write(buffer);
                 gzos.close();
                 buffer = bos.toByteArray();
             }
-            if (!LC.zimbra_minimize_resources.booleanValue())
+            if (!LC.zimbra_minimize_resources.booleanValue()) {
                 localeBuffers.put(uri, buffer);
+            }
         }
 
         // generate output
         OutputStream out = resp.getOutputStream();
         try {
-            if (uri.endsWith(COMPRESSED_EXT))
+            if (uri.endsWith(COMPRESSED_EXT)) {
                 resp.setHeader("Content-Encoding", "gzip");
+            }
             resp.setContentType("application/x-javascript");
         } catch (Exception e) {
-            if (isErrorEnabled())
+            if (isErrorEnabled()) {
                 error(e.getMessage());
+            }
         }
         out.write(buffer);
         out.flush();
@@ -217,19 +226,22 @@ public class Props2JsServlet extends HttpServlet {
 
     protected String getRequestURI(HttpServletRequest req) {
         String uri = (String) req.getAttribute(A_REQUEST_URI);
-        if (uri == null)
+        if (uri == null) {
             uri = req.getRequestURI();
+        }
         return uri;
     }
 
     protected List<String> getBasenamePatternsList(HttpServletRequest req) {
         List<String> list = new LinkedList<String>();
         String patterns = (String) req.getAttribute(A_BASENAME_PATTERNS);
-        
-        if (patterns == null)
+
+        if (patterns == null) {
             patterns = this.getInitParameter(P_BASENAME_PATTERNS);
-        if (patterns == null)
+        }
+        if (patterns == null) {
             patterns = "WEB-INF/classes/${dir}/${name}";
+        }
         list.add(patterns);
         return list;
     }
@@ -255,20 +267,11 @@ public class Props2JsServlet extends HttpServlet {
         return req.getLocale();
     }
 
-	private String getCommentSafeString(String st) {
-		return st.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-				.replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
-
-	}
-
     protected byte[] getBuffer(HttpServletRequest req,
         Locale locale, String uri) throws IOException {
         BufferStream bos = new BufferStream(24 * 1024);
         DataOutputStream out = new DataOutputStream(bos);
-		String sanitizedLocale = locale.toString()
-				.replaceAll("<", "") //make sure you can't start a "script" tag within the comment cuz genius IE supposedly exectutes it
-				.replaceAll("\n", ""); //make sure no newline can be injected to start a malicious script too
-		out.writeBytes("// Locale: " + getCommentSafeString(locale.toString()) + '\n');
+        out.writeBytes("// Locale: " + Props2Js.getCommentSafeString(locale.toString()) + '\n');
 
         // tokenize the list of patterns
         List<String> patternsList = this.getBasenamePatternsList(req);
@@ -304,7 +307,7 @@ public class Props2JsServlet extends HttpServlet {
         String filenames = uri.substring(uri.lastIndexOf('/') + 1);
         String classnames = filenames.substring(0, filenames.indexOf('.'));
         StringTokenizer tokenizer = new StringTokenizer(classnames, ",");
-        
+
         if (isDebugEnabled()) {
             for (List<String> basenames : basenamePatterns) {
                 debug("!!! basenames: "+basenames);
@@ -319,27 +322,29 @@ public class Props2JsServlet extends HttpServlet {
             load(req, out, locale, basenamePatterns, basedir, dirname, classname);
         }
         return bos.toByteArray();
-    } 
-    
+    }
+
     protected void load(HttpServletRequest req, DataOutputStream out,
         Locale locale, List<List<String>> basenamePatterns,
         String basedir, String dirname, String classname) throws IOException {
         String basename = basedir + classname;
 
-        out.writeBytes("// Basename: " + getCommentSafeString(basename) + '\n');
+        out.writeBytes("// Basename: " + Props2Js.getCommentSafeString(basename) + '\n');
         for (List<String> basenames : basenamePatterns) {
             try {
                 ClassLoader parentLoader = this.getClass().getClassLoader();
                 PropsLoader loader = new PropsLoader(parentLoader, basenames,
                     basedir, dirname, classname);
-                
+
                 // load path list, but not actual properties to prevent caching
                 ResourceBundle.getBundle(basename, locale, loader,  new ResourceBundle.Control()
                 {
                     @Override
                     public List<Locale> getCandidateLocales(String baseName, Locale locale)
                     {
-                        if (baseName == null) throw new NullPointerException();
+                        if (baseName == null) {
+                            throw new NullPointerException();
+                        }
                         if (locale.equals(new Locale("zh", "HK")) || locale.equals(new Locale("zh", "CN")) || locale.equals(new Locale("zh", "TW")))
                         {
                             return Arrays.asList(
@@ -383,7 +388,8 @@ public class Props2JsServlet extends HttpServlet {
         }
 
         public List<File> getFiles() { return files; }
-        
+
+        @Override
         public InputStream getResourceAsStream(String rname) {
             String filename = rname.replaceAll("^.*/", "");
             Matcher matcher = RE_LOCALE.matcher(filename);
@@ -408,7 +414,9 @@ public class Props2JsServlet extends HttpServlet {
 
         private static String replaceSystemProps(String s) {
             Matcher matcher = RE_SYSPROP.matcher(s);
-            if (!matcher.find()) return s;
+            if (!matcher.find()) {
+                return s;
+            }
             StringBuilder str = new StringBuilder();
             int index = 0;
             do {

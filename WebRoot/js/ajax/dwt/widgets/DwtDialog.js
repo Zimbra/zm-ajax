@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -35,6 +41,7 @@
  * @param	{array}	params.extraButtons		  			a list of {@link DwtDialog_ButtonDescriptor} objects describing custom buttons to add to the dialog
  * @param	{number}	params.zIndex							the z-index to set for this dialog when it is visible. Defaults to {@link Dwt.Z_DIALOG}.
  * @param	{DwtDialog.MODELESS|DwtDialog.MODAL}	params.mode 						the modality of the dialog. Defaults to {@link DwtDialog.MODAL}.
+ * @param	{boolean}		params.disposeOnPopDown		    destroy the content of dialog on popdown, Defaults to false
  * @param	{DwtPoint}		params.loc						the location at which to popup the dialog. Defaults to centered within its parent.
  * 
  * @see		DwtDialog.CANCEL_BUTTON
@@ -63,7 +70,7 @@ DwtDialog = function(params) {
 	} else if (standardButtons && !standardButtons.length) {
 		standardButtons = [standardButtons];
 	}
-	
+
 	// assemble the list of button IDs, and the list of button descriptors
 	this._buttonList = [];
 	var buttonOrder = {};
@@ -107,8 +114,8 @@ DwtDialog = function(params) {
 	this._buttonElementId = {};
 	for (var i = 0; i < this._buttonList.length; i++) {
 		var buttonId = this._buttonList[i];
+		//this._buttonElementId[this._buttonList[i]] = params.id + "_button" + buttonId + "_cell";
 		this._buttonElementId[buttonId] = this._buttonDesc[buttonId].label? this._buttonDesc[buttonId].label + "_" + Dwt.getNextId():Dwt.getNextId();
-		//this._buttonElementId[this._buttonList[i]] = Dwt.getNextId(); 
 	}
 
 	DwtBaseDialog.call(this, params);
@@ -338,7 +345,7 @@ function(buttonId) {
 
 /**
  * Registers a callback for a given button. Can be passed an AjxCallback,
- * or the params needed to create one.
+ * the params needed to create one, or as a bound function.
  *
  * @param {constant}		buttonId	one of the standard dialog buttons
  * @param {AjxCallback}	func		the callback method
@@ -347,8 +354,7 @@ function(buttonId) {
  */
 DwtDialog.prototype.registerCallback =
 function(buttonId, func, obj, args) {
-	this._buttonDesc[buttonId].callback = (func instanceof AjxCallback)
-		? func : (new AjxCallback(obj, func, args));
+	this._buttonDesc[buttonId].callback = (func && (func.isAjxCallback || (!obj && !args))) ? func : (new AjxCallback(obj, func, args));
 };
 
 /**
@@ -592,7 +598,9 @@ DwtDialog.prototype._runCallbackForButtonId =
 function(id, args) {
 	var buttonDesc = this._buttonDesc[id];
 	var callback = buttonDesc && buttonDesc.callback;
-	if (!callback) return false;
+	if (!callback) {
+		return false;
+	}
 	args = (args instanceof Array) ? args : [args];
 	callback.run.apply(callback, args);
 	return true;

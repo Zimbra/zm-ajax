@@ -1,15 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013 Zimbra Software, LLC.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.4 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
  * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2006, 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -55,6 +61,7 @@ ZmBatchCommand = function(continueOnError, accountName, useJson) {
 	this._onError = (continueOnError === false) ? ZmBatchCommand.STOP : ZmBatchCommand.CONTINUE;
 	this._accountName = accountName;
 	this._useJson = useJson;
+    this._requestBody = null;
 
 	this.curId = 0;
     this._cmds = [];
@@ -152,7 +159,7 @@ function() {
  *										stop.
  */
 ZmBatchCommand.prototype.run =
-function(callback, errorCallback) {
+function(callback, errorCallback, offlineCallback) {
 
 	// Invoke each command so that it hands us its SOAP doc, response callback,
 	// and error callback
@@ -168,6 +175,7 @@ function(callback, errorCallback) {
 		asyncMode:		true,
 		callback:		new AjxCallback(this, this._handleResponseRun, [callback, errorCallback]),
 		errorCallback:	errorCallback,
+		offlineCallback: offlineCallback,
 		accountName:	this._accountName
 	};
 
@@ -179,15 +187,19 @@ function(callback, errorCallback) {
 		if (size && this._requests.length) {
 			for (var i = 0; i < size; i++) {
 				var request = this._requests[i];
-				request.requestId = i;
-				var methodName = ZmCsfeCommand.getMethodName(request);
-				if (!batchRequest[methodName]) {
-					batchRequest[methodName] = [];
-				}
-				request[methodName].requestId = i;
-				batchRequest[methodName].push(request[methodName]);
+                //Bug fix # 67110 the request object is sometimes undefined
+                if(request) {
+                    request.requestId = i;
+                    var methodName = ZmCsfeCommand.getMethodName(request);
+                    if (!batchRequest[methodName]) {
+                        batchRequest[methodName] = [];
+                    }
+				    request[methodName].requestId = i;
+				    batchRequest[methodName].push(request[methodName]);
+                }
 			}
 			params.jsonObj = jsonObj;
+            this._requestBody = jsonObj;
 		}
 	}
 	else {
@@ -204,6 +216,7 @@ function(callback, errorCallback) {
 				batchSoapDoc.getMethod().appendChild(node);
 			}
 			params.soapDoc = batchSoapDoc;
+            this._requestBody = batchSoapDoc;
 		}
 	}
 
@@ -215,6 +228,11 @@ function(callback, errorCallback) {
 		callback.run();
 	}
 };
+
+ZmBatchCommand.prototype.getRequestBody =
+function() {
+    return this._requestBody;
+}
 
 /**
  * @private
