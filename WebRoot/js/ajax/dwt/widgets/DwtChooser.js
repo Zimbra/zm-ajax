@@ -780,12 +780,7 @@ function(ev) {
 	var sel = this.sourceListView.getSelection();
 	if (sel && sel.length) {
 		this.transfer(sel, id);
-		var list = this.sourceListView.getList();
-		if (list && list.size()) {
-			this._selectFirst(DwtChooserListView.SOURCE);
-		} else {
-			this._enableButtons();
-		}
+		this._enableButtons();
 	} else {
 		var email = this._getEmailFromText();
 		if (email) {
