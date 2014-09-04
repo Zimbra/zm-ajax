@@ -313,7 +313,7 @@ DwtColorPicker.__defineClasses = function() {
     DwtColorPicker.Button.prototype.constructor = DwtColorPicker.Button;
 
     DwtColorPicker.Button.prototype.setDefaultColor = function(color) {
-        this._colorDiv.style.backgroundColor = color;
+        this._colorDiv.style.backgroundColor = (color === null) ? "" : color;
     };
 
     DwtColorPicker.Button.prototype.toString = function() {
