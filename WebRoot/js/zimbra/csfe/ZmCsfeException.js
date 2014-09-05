@@ -217,5 +217,5 @@ ZmCsfeException.CANNOT_RENAME                       = "mail.CANNOT_RENAME";
 ZmCsfeException.CANNOT_UNLOCK                       = "mail.CANNOT_UNLOCK";
 ZmCsfeException.CANNOT_LOCK                         = "mail.CANNOT_LOCK";
 ZmCsfeException.LOCKED                              = "mail.LOCKED";
-ZmCsfeException.SCAN_ERROR  						= "mail.SCAN_ERROR"
+ZmCsfeException.UPLOAD_REJECTED  					= "mail.UPLOAD_REJECTED";
 ZmCsfeException.OFFLINE_ONLINE_ONLY_OP				= "offline.ONLINE_ONLY_OP";
