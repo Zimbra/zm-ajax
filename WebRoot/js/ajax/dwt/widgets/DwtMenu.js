@@ -143,9 +143,6 @@ DwtMenu = function(params) {
 	this.__currentItem = null;
 	this.__preventMenuFocus = false;
 
-	// Default menu tab group.
-	this._tabGroup = new DwtTabGroup(this.toString());
-	this._tabGroup.addMember(this);
 	this._created = true;
 
     // When items are added, the menu listens to selection events
@@ -161,6 +158,7 @@ DwtMenu.prototype.constructor = DwtMenu;
 
 DwtMenu.prototype.isDwtMenu = true;
 DwtMenu.prototype.toString = function() { return "DwtMenu"; };
+DwtMenu.prototype.role = "menu";
 
 DwtMenu.BAR_STYLE				= "BAR";
 DwtMenu.POPUP_STYLE				= "POPUP";
@@ -808,17 +806,15 @@ function(actionCode, ev) {
 			break;
 			
 		case DwtKeyMap.PARENTMENU:
-			if (this.parent instanceof DwtMenuItem)
+			if (this.parent instanceof DwtMenuItem) {
 				this.popdown(0);
+			}
+
+			this.parent.focus();
+
 			break;
 			
 		case DwtKeyMap.CANCEL:
-			if (this.__currentItem) {
-				var mev = new DwtMouseEvent();
-				this._setMouseEvent(mev, {dwtObj:this.__currentItem});
-				this.notifyListeners(DwtEvent.ONMOUSEOUT, mev);
-				this.__currentItem = null;
-			}
 			this.popdown(0);
 			break;		
 			
@@ -832,6 +828,8 @@ function(actionCode, ev) {
 DwtMenu.prototype._focus =
 function() {
 	//DBG.println(AjxDebug.DBG1, "DwtMenu.prototype._focus");
+	var item = this.__currentItem || this._children.get(0);
+	item.focus();
 };
 
 DwtMenu.prototype._blur =
@@ -920,17 +918,8 @@ function(which) {
 	}
 	if (!currItem) { return; }
 
-	// if we have a current item then we need to make sure we simulate a
-	// mouseout event so that the UI can behave correctly
-	var mev = new DwtMouseEvent();
-	if (this.__currentItem) {
-		this._setMouseEvent(mev, {dwtObj:this.__currentItem});
-		this.__currentItem.notifyListeners(AjxEnv.isIE ? DwtEvent.ONMOUSELEAVE : DwtEvent.ONMOUSEOUT, mev);
-	}
-	this._setMouseEvent(mev, {dwtObj:currItem});
-	currItem.notifyListeners(AjxEnv.isIE ? DwtEvent.ONMOUSEENTER : DwtEvent.ONMOUSEOVER, mev);	// mouseover selects a menu item
-	this.__currentItem = currItem;
 	this.scrollToItem(currItem, true);
+	currItem.focus();
 };
 
 DwtMenu.prototype.clearExternallySelectedItems =
@@ -1151,15 +1140,13 @@ function(x, y, kbGenerated) {
 
 	// Put our tabgroup in play
 	if (!this.__preventMenuFocus) {
-		DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this._tabGroup);
+		DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this.getTabGroupMember());
 	}
 	
-	/* If the popup was keyboard generated, then pick the first enabled child item
-	 * we do this by simulating a DwtKeyMap.SELECT_NEXT keyboard action */
-	if (kbGenerated) {
-	 	this.handleKeyAction(DwtKeyMap.SELECT_NEXT);
-	} else if (this.__currentItem) {
-		this.setSelectedItem(this.__currentItem);
+	/* If the popup was keyboard generated, then pick the first enabled child
+	   item */
+	if (kbGenerated || !this.parent.isDwtMenu) {
+	 	this.setSelectedItem(0);
 	}
 };
 
@@ -1227,19 +1214,13 @@ function(ev) {
 			}
 		}
 	}
-	
-	// set the current item (used in kb nav) to null
-	this.__currentItem = null;
 
-	// Undo highlight if there's a hovered-over item
-	if (this._hoveredItem) {
-		var ev = new DwtMouseEvent();
-		ev.dwtObj = this._hoveredItem;
-		DwtButton._mouseOutListener(ev);
+	if (this.__currentItem) {
+		this.__currentItem.blur();
 	}
-	
+
 	// Take our tabgroup out of play
-	DwtShell.getShell(window).getKeyboardMgr().popTabGroup(this._tabGroup);	
+	DwtShell.getShell(window).getKeyboardMgr().popTabGroup(this.getTabGroupMember());
 };
 
 DwtMenu.prototype._getActiveItem = 

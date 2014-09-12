@@ -56,8 +56,10 @@ DwtToolBar = function(params) {
 		this._hasSetMouseEvents = params.parent._hasSetMouseEvents;
 	}
 	if (params.handleMouse !== false && !this._hasSetMouseEvents) {
-		var events = AjxEnv.isIE ? [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP] :
-								   [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP, DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT];
+		var events = [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP, DwtEvent.ONCLICK];
+		if (!AjxEnv.isIE) {
+			events.push(DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT);
+		}
 		this._setEventHdlrs(events);
 		this._hasSetMouseEvents = true;
 	}
@@ -76,6 +78,7 @@ DwtToolBar.PARAMS = ["parent", "className", "posStyle", "style", "index", "id"];
 
 DwtToolBar.prototype = new DwtComposite;
 DwtToolBar.prototype.constructor = DwtToolBar;
+DwtToolBar.prototype.role = 'toolbar';
 
 DwtToolBar.prototype.isDwtToolBar = true;
 DwtToolBar.prototype.toString = function() { return "DwtToolBar"; };

@@ -247,6 +247,8 @@ DwtEvent.KEY_EVENTS = [DwtEvent.ONKEYDOWN, DwtEvent.ONKEYPRESS, DwtEvent.ONKEYUP
 /**
  * An array of mouse event types.
  */
-DwtEvent.MOUSE_EVENTS = [DwtEvent.ONCONTEXTMENU, DwtEvent.ONDBLCLICK, DwtEvent.ONMOUSEDOWN,
-						 DwtEvent.ONMOUSEMOVE, DwtEvent.ONMOUSEUP, DwtEvent.ONSELECTSTART,
-						 DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT];
+DwtEvent.MOUSE_EVENTS = [
+	DwtEvent.ONCONTEXTMENU, DwtEvent.ONCLICK, DwtEvent.ONDBLCLICK,
+	DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEMOVE, DwtEvent.ONMOUSEUP,
+	DwtEvent.ONSELECTSTART, DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT
+];

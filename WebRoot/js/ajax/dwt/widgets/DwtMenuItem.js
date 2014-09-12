@@ -83,6 +83,7 @@ DwtMenuItem.prototype.constructor = DwtMenuItem;
 
 DwtMenuItem.prototype.isDwtMenuItem = true;
 DwtMenuItem.prototype.toString = function() { return "DwtMenuItem"; };
+DwtMenuItem.prototype.role = "menuitem";
 
 //
 // Constants
@@ -228,6 +229,20 @@ function() {
 	return Boolean(this._style & DwtMenuItem.SEPARATOR_STYLE);
 };
 
+DwtMenuItem.prototype.handleKeyAction =
+function(actionCode, ev) {
+	if (this.parent) {
+		return this.parent.handleKeyAction(actionCode, ev)
+	} else {
+		return DwtButton.prototype.handleKeyAction.call(this, actionCode, ev);
+	}
+};
+
+DwtMenuItem.prototype.getKeyMapName =
+function() {
+	return DwtKeyMap.MAP_MENU;
+};
+
 //
 // Protected methods
 //
@@ -333,6 +348,38 @@ function() {
 	return (menu && menu.isPoppedUp());
 };
 
+DwtMenuItem.prototype._blur =
+function() {
+	var menu = this.parent;
+	var mev = new DwtMouseEvent();
+
+	this._setMouseEvent(mev, {
+		dwtObj: this,
+		ersatz: true,
+		type: DwtEvent.ONMOUSEOUT
+	});
+	this.notifyListeners(DwtEvent.ONMOUSEOUT, mev);
+	menu.__currentItem = null;
+
+	DwtButton.prototype._blur.call(this);
+};
+
+DwtMenuItem.prototype._focus =
+function() {
+	var menu = this.parent;
+	var currItem = menu.__currentItem;
+	var mev = new DwtMouseEvent();
+
+	if (currItem && currItem != this) {
+		currItem.blur();
+	}
+
+	this._setMouseEvent(mev, {dwtObj:this, ersatz: true});
+	this.notifyListeners(AjxEnv.isIE ? DwtEvent.ONMOUSEENTER : DwtEvent.ONMOUSEOVER, mev);	// mouseover selects a menu item
+	menu.__currentItem = this;
+
+	DwtButton.prototype._focus.call(this);
+}
 
 //
 // Private methods
@@ -356,7 +403,7 @@ function(event) {
 				DwtMenu.closeActiveMenu(event);
 			}
 			else {
-				this._popupMenu();
+				this._popupMenu(DwtKeyEvent.isKeyEvent(ev));
 			}
 		}
 		return;
@@ -373,17 +420,14 @@ function(ev) {
 	var menuItem = ev.dwtObj;
 	if (!menuItem) { return false; }
 	var menu = menuItem.parent;
-	if (menu._hoveredItem) {
-		var mouseEv = new DwtMouseEvent();
-		mouseEv.dwtObj = menu._hoveredItem;
-		DwtButton._mouseOutListener(mouseEv);
-	}
 	if (menuItem.isSeparator()) { return false; }
 	DwtButton._mouseOverListener(ev, menuItem);
-	menu._hoveredItem = menuItem;
 	menu._popdownSubmenus();
 	if (menuItem._menu && !ev.ersatz) {
 		menuItem._popupMenu(menuItem._hoverDelay);
+	}
+	if (!menuItem.hasFocus() && menuItem.getEnabled()) {
+		menuItem.focus();
 	}
 };
 
@@ -393,9 +437,6 @@ function(ev) {
 	var submenu = menuItem && menuItem.getMenu();
 	if (submenu && submenu.isPoppedUp()) { return; }
 	DwtButton._mouseOutListener(ev);
-	if (menuItem) {
-		menuItem.parent._hoveredItem = null;
-	}
 };
 
 /*

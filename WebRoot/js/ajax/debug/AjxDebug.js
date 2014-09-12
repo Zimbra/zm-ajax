@@ -109,6 +109,9 @@ AjxDebug.TAG_ICON       = "tagIcon";    // bug 62155
 AjxDebug.DATA_URI       = "dataUri";    // bug 64693
 AjxDebug.MSG_DISPLAY	= "msgDisplay";	// bugs 68599, 69616
 AjxDebug.ZIMLET			= "zimlet";		// bugs 83009
+AjxDebug.KEYBOARD		= "kbnav";		// keyboard manager debugging
+AjxDebug.FOCUS			= "focus";		// focus
+AjxDebug.ACCESSIBILITY	= "a11y";		// accessibility logging
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
 AjxDebug.BUFFER_MAX[AjxDebug.RPC]			= 200;
@@ -126,6 +129,9 @@ AjxDebug.BUFFER_MAX[AjxDebug.PROGRESS]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.DATA_URI]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.MSG_DISPLAY]	= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.ZIMLET]		= 200;
+AjxDebug.BUFFER_MAX[AjxDebug.KEYBOARD]		= null;
+AjxDebug.BUFFER_MAX[AjxDebug.FOCUS]			= null;
+AjxDebug.BUFFER_MAX[AjxDebug.ACCESSIBILITY]	= null;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
 

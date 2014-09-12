@@ -210,7 +210,7 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
 	}
 	if (newFocusMember && !noFocus) {
 		root.__currFocusMember = newFocusMember;
-//		DBG.println("kbnav", "DwtTabGroup.replaceMember: current focus member is now " + root.__currFocusMember);
+		DBG.println(AjxDebug.FOCUS, "DwtTabGroup.replaceMember: current focus member is now " + root.__currFocusMember);
 		if (!skipNotify) {
 			this.__notifyListeners(newFocusMember);
 		}
@@ -319,7 +319,7 @@ function(member, checkEnabled, skipNotify) {
 	var tg = this.__getTabGroupForMember(member);
 	if (tg) {
 		this.__currFocusMember = member;
-//		DBG.println("kbnav", "DwtTabGroup.setFocusMember: current focus member is now " + this.__currFocusMember);
+		DBG.println(AjxDebug.FOCUS, "DwtTabGroup.setFocusMember: current focus member is now " + this.__currFocusMember);
 		if (!skipNotify) {
 			this.__notifyListeners(this.__currFocusMember);
 		}
@@ -384,7 +384,7 @@ function(checkEnabled, skipNotify) {
 	if ((focusMember != this.__currFocusMember) && !skipNotify) {
 		this.__notifyListeners(this.__currFocusMember);
 	}
-//	DBG.println("kbnav", "DwtTabGroup.resetFocusMember: current focus member is now " + this.__currFocusMember);
+	DBG.println(AjxDebug.FOCUS, "DwtTabGroup.resetFocusMember: current focus member is now " + this.__currFocusMember);
 	this.__currFocusMember = focusMember;
 	
 	return this.__currFocusMember;
@@ -636,7 +636,7 @@ function(next, checkEnabled, skipNotify) {
 
 	this.__currFocusMember = m;
 	
-//	DBG.println("kbnav", "DwtTabGroup._setFocusMember: current focus member is now " + this.__currFocusMember);
+	DBG.println(AjxDebug.FOCUS, "DwtTabGroup._setFocusMember: current focus member is now " + this.__currFocusMember);
 	if (!skipNotify) {
 		this.__notifyListeners(this.__currFocusMember);
 	}

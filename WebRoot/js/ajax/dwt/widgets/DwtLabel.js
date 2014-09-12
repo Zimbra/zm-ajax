@@ -63,7 +63,7 @@
  * @param	{string}	params.id			the to use for the control HTML element
  * @param	{number}	params.index 		the index at which to add this control among parent's children
  *        
- * @extends DwtControl
+ * @extends DwtComposite
  */
 DwtLabel = function(params) {
 	if (arguments.length == 0) { return; }
@@ -95,6 +95,8 @@ DwtLabel.PARAMS = ["parent", "style", "className", "posStyle", "id", "index"];
 
 DwtLabel.prototype = new DwtComposite;
 DwtLabel.prototype.constructor = DwtLabel;
+
+DwtLabel.prototype.isFocusable = true;
 
 /**
  * Returns a string representation of the object.

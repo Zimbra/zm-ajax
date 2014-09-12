@@ -222,6 +222,7 @@ DwtControl = function(params) {
 DwtControl.prototype.isDwtControl = true;
 DwtControl.prototype.toString = function() { return "DwtControl"; };
 
+DwtControl.prototype.isFocusable = null;
 
 DwtControl.PARAMS = ["parent", "className", "posStyle", "deferred", "id", "index", "template"];
 
@@ -348,13 +349,6 @@ DwtControl.SCROLL = Dwt.SCROLL;
  */
 DwtControl.FIXED_SCROLL = Dwt.FIXED_SCROLL;
 
-
-/**
- * Defines the default value for sizing/position methods.
- * 
- * @see Dwt.DEFAULT
- */
-DwtControl.DEFAULT = Dwt.DEFAULT;
 
 // DnD states
 /**
@@ -612,7 +606,11 @@ function() {
  * @return	{DwtControl}	by default, returns this object
  */
 DwtControl.prototype.getTabGroupMember = function() {
-	return this;
+	if (this.isFocusable) {
+		return this.getInputElement();
+	} else {
+		return this;
+	}
 };
 
 /**
@@ -1276,6 +1274,15 @@ function() {
 	}
 	return this._elRef = htmlEl;
 };
+
+DwtControl.prototype.getInputElement =
+function() {
+	if (this.isFocusable) {
+		return this.getHtmlElement();
+	} else {
+		return null;
+	}
+}
 
 /**
  * Returns the control associated with the given element, if any.
@@ -2378,15 +2385,41 @@ function(ev) {
 };
 
 /**
+  * Use this protected method for making a child element focusable.
+  *
+  * @param {HTMLElement} element	a child element (optional)
+  *
+  * @private
+  */
+DwtControl.prototype._makeFocusable =
+function(element) {
+	if (!element) {
+		element = this.getHtmlElement();
+	}
+
+	element.tabIndex = 0;
+
+	// clear the event handlers, just in case
+	this._setMouseEventHdlrs(true, element);
+	this._setKeyEventHdlrs(true, element);
+
+	this._setMouseEventHdlrs(false, element);
+	this._setKeyEventHdlrs(false, element);
+
+}
+
+/**
  * This convenience methods sets or clears the control's event handler for key
  * press events as defined by {@link DwtEvent.ONKEYPRESS}.
  *
  * @param {boolean} clear	if <code>true</code>, clear the keypress events handler
+ * @param {HTMLElement} element	if specified, assign event handlers to this element (optional)
+ *
  * @private
  */
 DwtControl.prototype._setKeyPressEventHdlr =
-function(clear) {
-	this._setEventHdlrs([DwtEvent.ONKEYPRESS], clear);
+function(clear, element) {
+	this._setEventHdlrs([DwtEvent.ONKEYPRESS], clear, element);
 };
 
 /**
@@ -2394,11 +2427,27 @@ function(clear) {
  * events as defined by <i>DwtEvent.MOUSE_EVENTS</i>
  *
  * @param {boolean} clear	if <code>true</code>, clear the mouse events handlers
+ * @param {HTMLElement} element	if specified, assign event handlers to this element (optional)
+ *
  * @private
  */
 DwtControl.prototype._setMouseEventHdlrs =
-function(clear) {
-	this._setEventHdlrs(DwtEvent.MOUSE_EVENTS, clear);
+function(clear, element) {
+	this._setEventHdlrs(DwtEvent.MOUSE_EVENTS, clear, element);
+};
+
+/**
+ * This convenience methods sets or clears the control's event handlers for keyboard
+ * events as defined by <i>DwtEvent.KEY_EVENTS</i>
+ *
+ * @param {boolean} clear	if <code>true</code>, clear the mouse events handlers
+ * @param {HTMLElement} element	if specified, assign event handlers to this element (optional)
+ *
+ * @private
+ */
+DwtControl.prototype._setKeyEventHdlrs =
+function(clear, element) {
+	this._setEventHdlrs(DwtEvent.KEY_EVENTS, clear, element);
 };
 
 /**
@@ -2423,16 +2472,17 @@ function(clear) {
  * 		<li><i>DwtEvent.ONKEYPRESS</i></li>
  * 		</ul>
  * @param {boolean} clear	if <code>true</code>, the event handlers are cleared for the set of events
+ * @param {HTMLElement} element	if specified, assign event handlers to this element (optional)
  *
  * @see Dwt#setHandler
  * @see Dwt#clearHandler
  * @private
  */
 DwtControl.prototype._setEventHdlrs =
-function(events, clear) {
+function(events, clear, element) {
 	if (!this._checkState()) { return; }
 
-	var htmlElement = this.getHtmlElement();
+	var htmlElement = element || this.getHtmlElement();
 	for (var i = 0; i < events.length; i++) {
 		if (clear !== true) {
 			Dwt.setHandler(htmlElement, events[i], DwtControl.__HANDLER[events[i]]);
@@ -2649,6 +2699,67 @@ function(ev) {
 	}
 };
 
+
+/**
+ * @private
+ */
+DwtControl.__keyUpHdlr = function(ev) {
+	return DwtKeyboardMgr.__keyUpHdlr.apply(this, arguments);
+
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
+
+	/* TODO */
+};
+
+/**
+ * @private
+ */
+DwtControl.__keyDownHdlr = function(ev) {
+	return DwtKeyboardMgr.__keyDownHdlr.apply(this, arguments);
+
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
+
+	/* TODO */
+};
+
+/**
+ * @private
+ */
+DwtControl.__focusHdlr = function(ev) {
+	return DwtKeyboardMgr.__onFocusHdlr.apply(this, arguments);
+
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
+
+	if (obj.isListenerRegistered(DwtEvent.ONFOCUS)) {
+		var ev = DwtShell.focusEvent;
+		ev.dwtObj = obj;
+		ev.state = DwtFocusEvent.FOCUS;
+		var mouseEv = DwtShell.mouseEvent;
+		obj.notifyListeners(DwtEvent.ONFOCUS, mouseEv);
+	}
+};
+
+/**
+ * @private
+ */
+DwtControl.__blurHdlr = function(ev) {
+	return DwtKeyboardMgr.__onBlurHdlr.apply(this, arguments);
+
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
+
+	if (obj.isListenerRegistered(DwtEvent.ONBLUR)) {
+		var ev = DwtShell.focusEvent;
+		ev.dwtObj = obj;
+		ev.state = DwtFocusEvent.BLUR;
+		var mouseEv = DwtShell.mouseEvent;
+		obj.notifyListeners(DwtEvent.ONBLUR, mouseEv);
+	}
+};
+
 /**
  * Returns true if the control has static tooltip content, or if it has overridden
  * getToolTipContent() to return dynamic content. Essentially, it means that this
@@ -2671,7 +2782,7 @@ function() {
  */
 DwtControl.prototype.__doBlur =
 function() {
-	DBG.println("focus", "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
+	DBG.println(AjxDebug.FOCUS, "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
 	this._hasFocus = false;
 	if (this.isListenerRegistered(DwtEvent.ONBLUR)) {
 		var ev = DwtShell.focusEvent;
@@ -2692,8 +2803,13 @@ function() {
  */
 DwtControl.prototype.__doFocus =
 function() {
-	DBG.println("focus", "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
+	DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
 	this._hasFocus = true;
+
+	if (this.isFocusable) {
+		this.getHtmlElement().focus();
+	}
+
 	if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
 		var ev = DwtShell.focusEvent;
 		ev.dwtObj = this;
@@ -3281,6 +3397,60 @@ function(ev, eventType, obj, mouseEv) {
 
 	// publish our settings to the DOM
 	mouseEv.setToDhtmlEvent(ev);
+
+	// Some screen readers exclusively trigger ONCLICK events, but
+	// Zimbra relies on ONMOUSEDOWN/ONMOUSEUP sequences for buttons
+	// and some other controls, so we detect non-mouse clicks and
+	// introduce the ability to 'fake' ONMOUSEDOWN/ONMOUSEUP sequences
+	// for them. This triggers when the control element has a listener
+	// for ONCLICK, but the DwtControl doesn't.
+	if (eventType == DwtEvent.ONMOUSELEAVE ||
+		eventType == DwtEvent.ONMOUSEOUT) {
+		// we're 'switching' elements, so the browser won't
+		// trigger a click event
+		obj.__ignoreNextClick = false;
+
+	} else if (eventType == DwtEvent.ONMOUSEUP) {
+		// yes, ignore the next click -- ZCS' built-in click-ish
+		// thing will work just fine
+		obj.__ignoreNextClick = true;
+
+	} else if (eventType == DwtEvent.ONCLICK) {
+		if (obj.__ignoreNextClick) {
+			DBG.println(AjxDebug.ACCESSIBILITY,
+			            "DwtControl: ignoring a click!");
+			obj.__ignoreNextClick = false;
+			return true;
+		}
+
+		// check whether the target control listens for clicks,
+		// and if not, fake a mouseup/mousedown event pair
+		if (obj.isListenerRegistered && !obj.isListenerRegistered(DwtEvent.ONCLICK)) {
+			DBG.println(AjxDebug.ACCESSIBILITY,
+			            "DwtControl: faking a click!");
+
+			eventType = DwtEvent.ONMOUSEDOWN;
+			if (ev) {
+				ev.type = eventType;
+			}
+
+			DwtControl.__mouseEvent(ev, eventType, obj, DwtShell.mouseEvent);
+
+			eventType = DwtEvent.ONMOUSEUP;
+			if (ev) {
+				ev.type = eventType;
+			}
+
+			DwtControl.__mouseEvent(ev, eventType, obj, DwtShell.mouseEvent);
+
+			return DwtShell.mouseEvent._returnValue;
+		} else {
+			DBG.println(AjxDebug.ACCESSIBILITY,
+			            "DwtControl: skipping a click!");
+			window.console && console.warn('skipping a click!');
+		}
+	}
+
 	return mouseEv._returnValue;
 };
 
@@ -3302,6 +3472,10 @@ DwtControl.__HANDLER[DwtEvent.ONMOUSEUP] = DwtControl.__mouseUpHdlr;
 DwtControl.__HANDLER[DwtEvent.ONMOUSEWHEEL] = DwtControl.__mouseWheelHdlr;
 DwtControl.__HANDLER[DwtEvent.ONSELECTSTART] = DwtControl.__selectStartHdlr;
 DwtControl.__HANDLER[DwtEvent.ONKEYPRESS] = DwtControl.__keyPressHdlr;
+DwtControl.__HANDLER[DwtEvent.ONKEYUP] = DwtControl.__keyUpHdlr;
+DwtControl.__HANDLER[DwtEvent.ONKEYDOWN] = DwtControl.__keyDownHdlr;
+DwtControl.__HANDLER[DwtEvent.ONFOCUS] = DwtControl.__focusHdlr;
+DwtControl.__HANDLER[DwtEvent.ONBLUR] = DwtControl.__blurHdlr;
 
 /**
  * @private
@@ -3324,10 +3498,17 @@ function() {
 	htmlElement.style.position = this.__posStyle || DwtControl.STATIC_STYLE;
 	htmlElement.className = this._className;
 	htmlElement.style.overflow = "visible";
+	if (this.role) {
+		htmlElement.setAttribute('role', this.role);
+	}
 	this._enabled = true;
 	this.__controlEvent = DwtControl.__controlEvent;
 	this._dragging = DwtControl._NO_DRAG;
 	this.__ctrlInited = true;
+
+	if (this.isFocusable) {
+		this._makeFocusable(htmlElement);
+	}
 
 	// Make sure this is the last thing we do
 	this.parent.addChild(this, this.__index);

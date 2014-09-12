@@ -93,7 +93,7 @@ DwtButton = function(params) {
 		events = AjxEnv.isIE
 			? [DwtEvent.ONMOUSEENTER, DwtEvent.ONMOUSELEAVE]
 			: [DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT];
-		events = events.concat([DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP]);
+		events.push(DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP, DwtEvent.ONCLICK);
 	}
 	if (events && events.length) {
 		this._setEventHdlrs(events);
@@ -117,6 +117,8 @@ DwtButton.prototype.constructor = DwtButton;
 DwtButton.prototype.isDwtButton = true;
 DwtButton.prototype.toString = function() { return "DwtButton"; };
 
+DwtButton.prototype.role = 'button';
+
 //
 // Constants
 //
@@ -134,6 +136,14 @@ DwtButton.MENU_POPUP_STYLE_BELOW	= "BELOW";		// menu pops up just below the butt
 DwtButton.MENU_POPUP_STYLE_ABOVE	= "ABOVE";		// menu pops up above the button
 DwtButton.MENU_POPUP_STYLE_RIGHT	= "RIGHT";		// menu pops up below the button, with right edges aligned
 DwtButton.MENU_POPUP_STYLE_CASCADE	= "CASCADE";	// menu pops up to right of the button
+
+DwtButton.MOUSE_EVENTS = [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP];
+
+if (AjxEnv.isIE) {
+	DwtButton.MOUSE_EVENTS.push(DwtEvent.ONMOUSEENTER, DwtEvent.ONMOUSELEAVE);
+} else {
+	DwtButton.MOUSE_EVENTS.push(DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT);
+}
 
 //
 // Data
@@ -239,12 +249,9 @@ function(hovImg) {
  */
 DwtButton.prototype._addMouseListeners =
 function() {
-	var events = [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP];
-	events = events.concat(AjxEnv.isIE ? [DwtEvent.ONMOUSEENTER, DwtEvent.ONMOUSELEAVE] :
-										 [DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT]);
-	for (var i = 0; i < events.length; i++) {
-		this.addListener(events[i], this._listeners[events[i]]);
-	}
+	AjxUtil.foreach(DwtButton.MOUSE_EVENTS, (function(event) {
+		this.addListener(event, this._listeners[event]);
+	}).bind(this));
 };
 
 /**
@@ -252,12 +259,9 @@ function() {
  */
 DwtButton.prototype._removeMouseListeners =
 function() {
-	var events = [DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEUP];
-	events = events.concat(AjxEnv.isIE ? [DwtEvent.ONMOUSEENTER, DwtEvent.ONMOUSELEAVE] :
-										 [DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT]);
-	for (var i = 0; i < events.length; i++) {
-		this.removeListener(events[i], this._listeners[events[i]]);
-	}
+	AjxUtil.foreach(DwtButton.MOUSE_EVENTS, (function(event) {
+		this.removeListener(event, this._listeners[event]);
+	}).bind(this));
 };
 
 /**
@@ -551,7 +555,7 @@ function() {
  * @param	{DwtMenu}	menu		the menu to use or <code>null</code> to use currently set menu
  */
 DwtButton.prototype.popup =
-function(menu) {
+function(menu, event) {
 	menu = menu || this.getMenu();
 
     if (!menu) { return; }
@@ -564,6 +568,7 @@ function(menu) {
 	// since buttons are often absolutely positioned, and menus aren't, we need x,y relative to window
 	var parentLocation = Dwt.toWindow(parentElement, 0, 0);
 	var leftBorder = (parentElement.style.borderLeftWidth == "") ? 0 : parseInt(parentElement.style.borderLeftWidth);
+	var kbGenerated = Boolean(event && DwtKeyEvent.isKeyEvent(event));
 
 	var x;
 	if (this._menuPopupStyle == DwtButton.MENU_POPUP_STYLE_RIGHT) {
@@ -589,7 +594,8 @@ function(menu) {
 		horizontalBorder += (parentElement.style.borderBottomWidth == "") ? 0 : parseInt(parentElement.style.borderBottomWidth);
 		y = parentLocation.y + parentBounds.height + horizontalBorder;
 	}
-	menu.popup(0, x, y);
+	menu.popup(0, x, y, kbGenerated);
+	menu.setSelectedItem(0);
 };
 
 /**
@@ -655,12 +661,17 @@ function() {
 	var htmlEl = this.getHtmlElement();
 	var p = Dwt.toWindow(htmlEl);
 	var mev = new DwtMouseEvent();
-	this._setMouseEvent(mev, {dwtObj:this, target:htmlEl, button:DwtMouseEvent.LEFT, docX:p.x, docY:p.y});
-	if (this._actionTiming == DwtButton.ACTION_MOUSEDOWN) {
-		this.notifyListeners(DwtEvent.ONMOUSEDOWN, mev);
-	} else {
-		this.notifyListeners(DwtEvent.ONMOUSEUP, mev);
-	}
+	this._setMouseEvent(mev, {
+		type: this._actionTiming == DwtButton.ACTION_MOUSEDOWN ?
+			DwtEvent.ONMOUSEDOWN : DwtEvent.ONMOUSEUP,
+		dwtObj: this,
+		target: htmlEl,
+		button: DwtMouseEvent.LEFT,
+		docX: p.x,
+		docY: p.y,
+		kbNavEvent: true
+	});
+	this.notifyListeners(mev.type, mev);
 };
 
 /**
@@ -673,7 +684,14 @@ function() {
 
 	var p = Dwt.toWindow(htmlEl);
 	var mev = new DwtMouseEvent();
-	this._setMouseEvent(mev, {dwtObj:this, target:htmlEl, button:DwtMouseEvent.LEFT, docX:p.x, docY:p.y});
+	this._setMouseEvent(mev, {
+		dwtObj: this,
+		target: htmlEl,
+		button: DwtMouseEvent.LEFT,
+		docX: p.x,
+		docY: p.y,
+		kbNavEvent: true
+	});
 	DwtButton._dropDownCellMouseUpHdlr(mev);
 };
 
@@ -712,19 +730,19 @@ function() {
  * @private
  */
 DwtButton.prototype._toggleMenu =
-function () {
+function (event) {
 	if (this._shouldToggleMenu){
         var menu = this.getMenu();
         if (!menu.isPoppedUp()){
-			this.popup();
+			this.popup(null, event);
 			this._menuUp = true;
 		} else {
-			menu.popdown();
+			menu.popdown(0, event);
 			this._menuUp = false;
             this.deactivate();
         }
 	} else {
-		this.popup();
+		this.popup(null, event);
 	}
 };
 
@@ -835,7 +853,7 @@ function(ev) {
 		if(this._menu.isDwtMenu && !this.isListenerRegistered(DwtEvent.SELECTION)) {
 			this._menu.setAssociatedObj(this);	
 		}		
-		this._toggleMenu();
+		this._toggleMenu(ev);
 	}
 };
 
@@ -912,7 +930,7 @@ function(ev) {
 					selEv.item = obj;
 					obj._dropDownEvtMgr.notifyListeners(DwtEvent.SELECTION, selEv);
 				} else {
-					obj._toggleMenu();
+					obj._toggleMenu(ev);
 				}
 			}
 		}

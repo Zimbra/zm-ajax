@@ -67,7 +67,7 @@ function() {
 
 DwtKeyEvent.isKeyEvent =
 function(ev) {
-	return (ev.type.search(/^key/i) != -1);
+	return ev.type && ev.type.search(/^key/i) != -1;
 }
 
 DwtKeyEvent.isKeyPressEvent =
