@@ -547,7 +547,7 @@ DwtSelect.prototype.dispose =
 function() {
 	this._selectEl = null;
 	if (this._pseudoItemsEl) {
-		this._pseudoItemsEl.innerHTML = "";
+		this._pseudoItemsEl.outerHTML = "";
 		this._pseudoItemsEl = null;
 	}
 	this._containerEl = null;
