@@ -1748,7 +1748,7 @@ function(text, isHtml) {
 	var results = [];
 	var lines = text.split(AjxStringUtil.SPLIT_RE);
 	
-	var curType, curBlock = [], count = {}, isMerged, unknownBlock;
+	var curType, curBlock = [], count = {}, isMerged, unknownBlock, isBugzilla = false;
 	for (var i = 0; i < lines.length; i++) {
 		var line = lines[i];
 		var testLine = AjxStringUtil.trim(line);
@@ -1759,12 +1759,18 @@ function(text, isHtml) {
 			continue;
 		}
 		
-		// Bugzilla is very good at fooling us, and does not have quoted content, so bail
+		// Bugzilla summary looks like QUOTED; it should be treated as UNKNOWN
 		if ((testLine.indexOf("| DO NOT REPLY") === 0) && (lines[i + 2].indexOf("bugzilla") !== -1)) {
-			return text;
+			isBugzilla = true;
 		}
 
 		var type = AjxStringUtil._getLineType(testLine);
+		if (type === AjxStringUtil.ORIG_QUOTED) {
+			type = isBugzilla ? AjxStringUtil.ORIG_UNKNOWN : type;
+		}
+		else {
+			isBugzilla = false;
+		}
 
 		// WROTE can stretch over two lines; if so, join them into one line
 		var nextLine = lines[i + 1];
