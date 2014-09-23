@@ -423,11 +423,11 @@ function(ev) {
 	if (menuItem.isSeparator()) { return false; }
 	DwtButton._mouseOverListener(ev, menuItem);
 	menu._popdownSubmenus();
-	if (menuItem._menu && !ev.ersatz) {
-		menuItem._popupMenu(menuItem._hoverDelay);
-	}
 	if (!menuItem.hasFocus() && menuItem.getEnabled()) {
 		menuItem.focus();
+	}
+	if (menuItem._menu && !ev.ersatz) {
+		menuItem._popupMenu(menuItem._hoverDelay);
 	}
 };
 
