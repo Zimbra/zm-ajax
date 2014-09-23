@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.service.ExternalUserProvServlet;
 import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
@@ -71,6 +72,10 @@ public class ServiceServlet extends HttpServlet {
                     doFlushUistrings(req, resp);
                 } else if ("/flushzimlets".equals(path)) {
                     doFlushZimlets(req, resp);
+                } else if ("/extuserprov".equals(path)) {
+                    doExtUserProv(req, resp);
+                } else if ("/publiclogin".equals(path)) {
+                    doPublicLoginProv(req, resp);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
@@ -184,4 +189,19 @@ public class ServiceServlet extends HttpServlet {
         FileUtil.deleteDir(zimletDir);
         ZimbraLog.zimlet.info("zimlet directory %s is deleted", zimletDir.getName());
     }
+
+    private void doExtUserProv(HttpServletRequest req, HttpServletResponse resp) throws ServiceException, ServletException, IOException {
+        String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
+        RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(ExternalUserProvServlet.PUBLIC_EXTUSERPROV_JSP);
+        ZimbraLog.misc.debug("ExternalUserProvServlet: sending extuserprov request");
+        dispatcher.forward(req, resp);
+    }
+
+    private void doPublicLoginProv(HttpServletRequest req, HttpServletResponse resp) throws ServiceException, ServletException, IOException {
+        String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
+        RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(ExternalUserProvServlet.PUBLIC_LOGIN_JSP);
+        ZimbraLog.misc.debug("ExternalUserProvServlet: sending publc login request");
+        dispatcher.forward(req, resp);
+    }
+
 }
