@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -191,6 +192,10 @@ public class ServiceServlet extends HttpServlet {
     }
 
     private void doExtUserProv(HttpServletRequest req, HttpServletResponse resp) throws ServiceException, ServletException, IOException {
+        String extUserEmail = req.getHeader("extuseremail");
+        String param = req.getHeader("ZM_PRELIM_AUTH_TOKEN");
+        resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
+        req.setAttribute("extuseremail", extUserEmail);
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
         RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(ExternalUserProvServlet.PUBLIC_EXTUSERPROV_JSP);
         ZimbraLog.misc.debug("ExternalUserProvServlet: sending extuserprov request");
@@ -199,6 +204,8 @@ public class ServiceServlet extends HttpServlet {
 
     private void doPublicLoginProv(HttpServletRequest req, HttpServletResponse resp) throws ServiceException, ServletException, IOException {
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
+        String vacctdomain = req.getHeader("virtualacctdomain");
+        req.setAttribute("virtualacctdomain", vacctdomain);
         RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(ExternalUserProvServlet.PUBLIC_LOGIN_JSP);
         ZimbraLog.misc.debug("ExternalUserProvServlet: sending publc login request");
         dispatcher.forward(req, resp);
