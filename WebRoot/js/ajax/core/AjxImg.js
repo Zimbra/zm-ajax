@@ -173,8 +173,8 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
             var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
             if (AjxEnv.isIE && !AjxEnv.isIE9up) {
                 var size = [
-                    "width:", overlay.w, ";",
-                    "height:", overlay.h, ";"
+                    "width:", overlay.w, "px;",
+                    "height:", overlay.h, "px;"
                 ].join("");
                 var location = [
                     "top:", mask.t, ";",
@@ -190,11 +190,11 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
                 var filter = 'filter:mask(color=' + color + ');';
                 html = [
                     // NOTE: Keep in sync with output of ImageMerger.java.
-                    "<div class='IEImage' style='display:inline;zoom:1;position:relative;overflow:hidden;", size, styles, "' ", attrStr,">",
+                    "<div class='IEImage' style='display:inline-block;zoom:1;position:relative;overflow:hidden;", size, styles, "' ", attrStr,">",
                         "<div class='IEImageMask' style='position:absolute;top:0px;left:0px;", size, "'>",
                             "<img src='", mask.ief, "?v=", window.cacheKillerVersion, "' border=0 style='position:absolute;", location, filter, "'>",
                         "</div>",
-                        "<div class='IEImageOverlay ", overlayName, "' style='", size, ";position:absolute;top:0;left:0;'></div>",
+                        "<div class='IEImageOverlay ", overlayName, "' style='", size, "position:absolute;top:0;left:0;'></div>",
                     "</div>"
                 ].join("");
             }
