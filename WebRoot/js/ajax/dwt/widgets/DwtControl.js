@@ -2783,6 +2783,9 @@ function() {
 DwtControl.prototype.__doBlur =
 function() {
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
+
+	if (!this._checkState()) { return; }
+
 	this._hasFocus = false;
 	if (this.isListenerRegistered(DwtEvent.ONBLUR)) {
 		var ev = DwtShell.focusEvent;
@@ -2804,6 +2807,9 @@ function() {
 DwtControl.prototype.__doFocus =
 function() {
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
+
+	if (!this._checkState()) { return; }
+
 	this._hasFocus = true;
 
 	if (this.isFocusable) {
