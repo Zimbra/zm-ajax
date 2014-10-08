@@ -773,6 +773,7 @@ DwtForm.prototype._registerControl = function(itemDef, parentDef,
 	}
 	if (element && control instanceof DwtInputField) {
 		control.getInputElement().id += "_input";
+		control.setHandler(DwtEvent.ONPASTE, this._onPaste.bind(this, id));
 	}
 
 	// add to list of tab indexes
@@ -795,6 +796,17 @@ DwtForm.prototype._registerControl = function(itemDef, parentDef,
 	// return control
 	return control;
 };
+
+
+DwtForm.prototype._onPaste = function(id, evt) {
+	// Delay the value processing - the paste text will not be applied to the control till after this event
+	AjxTimedAction.scheduleAction(new AjxTimedAction(this, this._applyPasteInput, [id]), 100);
+};
+
+DwtForm.prototype._applyPasteInput = function(id, value) {
+	this._setModelValue(id, this._getControlValue(id));
+}
+
 
 DwtForm.prototype._attachElementHandlers = function(itemDef, parentDef, tabIndexes, parent, element) {
 	var id = itemDef.id;
