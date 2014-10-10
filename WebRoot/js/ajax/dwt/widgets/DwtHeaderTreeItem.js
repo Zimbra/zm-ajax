@@ -70,6 +70,12 @@ function(template, data) {
 DwtHeaderTreeItem.prototype._initialize =
 function() {
 	DwtTreeItem.prototype._initialize.apply(this, arguments);
+
+	// We must label the tree root, otherwise IE will let screen readers read
+	// THE ENTIRE TREE when it gets focus
+	var treeEl = this._tree.getHtmlElement();
+	treeEl.setAttribute("aria-labelledby", this._textCell.id);
+
 	if (this._optButton) {
 		this._optButtonId = this._htmlElId + "_optButton";
 		var optButtonEl = document.getElementById(this._optButtonId);

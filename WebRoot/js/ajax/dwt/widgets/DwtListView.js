@@ -146,6 +146,8 @@ DwtListView.prototype.constructor = DwtListView;
 
 DwtListView.prototype.isDwtListView = true;
 DwtListView.prototype.toString = function() { return "DwtListView"; };
+DwtListView.prototype.role = 'tree';
+DwtListView.prototype.itemRole = 'treeitem';
 
 // Consts
 
@@ -502,23 +504,23 @@ function(list, noResultsOk, doAdd) {
 		var now = new Date();
 		var size = list.size();
 		var htmlArr = [];
+
+		if (!doAdd) {
+			this._parentEl.innerHTML = '';
+		}
+
 		for (var i = 0; i < size; i++) {
 			var item = list.get(i);
-			var div = this._createItemHtml(item, {now:now}, !doAdd, i);
+			var div = this._createItemHtml(item, {now:now}, false, i);
 			if (div) {
 				if (div instanceof Array) {
 					for (var j = 0; j < div.length; j++){
 						this._addRow(div[j]);
 					}
-				} else if (div.tagName || doAdd) {
-					this._addRow(div);
 				} else {
-					htmlArr.push(div);
+					this._addRow(div);
 				}
 			}
-		}
-		if (htmlArr.length) {
-			this._parentEl.innerHTML = htmlArr.join("");
 		}
 	} else if (!noResultsOk) {
 		this._setNoResultsHtml();
@@ -641,7 +643,7 @@ function(item) {
 
         //update the _kbAnchor as the old element has been swapped with the new element
         if (this._kbAnchor === odiv){
-            this._kbAnchor = ndiv;
+            this._setKbFocusElement(ndiv);
         }
     }
 };
@@ -748,6 +750,7 @@ function() {
 		var sz = this._selectedItems.size();
 		for (var i = 0; i < sz; i++) {
 	        Dwt.delClass(a[i], this._styleRe);
+	        a[i].removeAttribute('aria-selected');
 	    }
 	    this._selectedItems.removeAll();
 		this._rightSelItem = this._selAnchor = null;
@@ -822,7 +825,8 @@ function(item, skipNotify, forceSelection) {
 		}
 		this.deselectAll();
 		this._unmarkKbAnchorElement(true);
-		this._selAnchor = this._kbAnchor = el;
+		this._setKbFocusElement(el);
+		this._selAnchor = el;
 		this.selectItem(item, this.getEnabled());
 
 		// reset the selected index
@@ -846,10 +850,12 @@ DwtListView.prototype.setMultiSelection =
 function(clickedEl, bContained, ev) {
 	if (bContained) {
 		this._selectedItems.remove(clickedEl);
+		clickedEl.removeAttribute('aria-selected');
 		Dwt.delClass(clickedEl, this._styleRe);		// , this._normalClass	MOW
 		this._selEv.detail = DwtListView.ITEM_DESELECTED;
 	} else {
 		this._selectedItems.add(clickedEl, null, true);
+		clickedEl.setAttribute('aria-selected', true);
 		Dwt.delClass(clickedEl, this._styleRe, this._selectedClass);
 		this._selEv.detail = DwtListView.ITEM_SELECTED;
 	}
@@ -861,7 +867,8 @@ function(clickedEl, bContained, ev) {
 
 	// The element that was part of the ctrl action always becomes the anchor
 	// since it gets focus
-	this._selAnchor = this._kbAnchor = clickedEl;
+	this._setKbFocusElement(clickedEl);
+	this._selAnchor = clickedEl;
 	Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 };
 
@@ -887,8 +894,13 @@ function(item, selected) {
 		Dwt.delClass(el, this._styleRe, selected ? this._selectedClass : this._disabledSelectedClass);
 		if (this._kbAnchor == el && this.hasFocus()) {
 			Dwt.addClass(el, this._kbFocusClass);
+			el.focus();
 		}
 		this._selectedItems.add(el);
+		el.setAttribute('aria-selected', true);
+
+		this.getTabGroupMember().removeAllMembers();
+		this.getTabGroupMember().addMember(el);
 	}
 };
 
@@ -1102,6 +1114,24 @@ function() {
 	return this._list;
 };
 
+DwtListView.prototype.getTabGroupMember =
+function() {
+	if (!this._tabGroup) {
+		this._tabGroup = new DwtTabGroup(this.getHTMLElId());
+	}
+
+	return this._tabGroup;
+};
+
+DwtListView.prototype.getInputElement =
+function() {
+	if (!this._kbAnchor) {
+		this._setKbFocusElement();
+	}
+
+	return this._kbAnchor;
+};
+
 // this method simply appends the given list to this current one
 DwtListView.prototype.replenish =
 function(list) {
@@ -1222,6 +1252,10 @@ function() {
 					  "))+\\b", "g");
 };
 
+/**
+ * This is the designated means of adding a row to the table. It does certain
+ * processing on the row, so don't use any other means.
+ */
 DwtListView.prototype._addRow =
 function(row, index) {
 
@@ -1235,6 +1269,9 @@ function(row, index) {
 		this._parentEl.appendChild(row);
 	}
 	this._fixAlternation((index != null) ? index : len);
+
+	this._makeFocusable(row);
+	row.setAttribute('role', this.itemRole);
 };
 
 DwtListView.prototype._fixAlternation =
@@ -2079,6 +2116,10 @@ function(params) {
 /**
  * Sets the anchor row for selection and keyboard nav.
  *
+ * Please note that merely assigning to this._kbAnchor is insufficient;
+ * accessibility technologies require that the element receive browser focus as
+ * well.
+ *
  * @private
  *
  * @param {boolean|Element}		next	row to make anchor, or if true, move anchor
@@ -2107,6 +2148,10 @@ function(next) {
 	if (this._kbAnchor && !this._duringFocusByMouseDown) {
 		this._scrollList(this._kbAnchor);
 	}
+
+	if (this.hasFocus()) {
+		this._kbAnchor.focus();
+	}
 };
 
 DwtListView.prototype._itemSelected =
@@ -2122,8 +2167,10 @@ function(itemDiv, ev) {
 
 		// save new left click selection
 		this._selectedItems.add(itemDiv);
+		itemDiv.setAttribute('aria-selected', true);
 
-		this._selAnchor = this._kbAnchor = itemDiv;
+		this._setKbFocusElement(itemDiv);
+		this._selAnchor = itemDiv;
 		Dwt.delClass(itemDiv, this._styleRe, this._selectedClass);
 		if (this.hasFocus()) {
 			Dwt.addClass(itemDiv, this._kbFocusClass);
@@ -2210,6 +2257,7 @@ function(clickedEl, ev) {
 					state++;
 					if (el.className.indexOf(selStyleClass) == -1) {
 						this._selectedItems.add(el);
+						el.setAttribute('aria-selected', true);
 					}
 					Dwt.delClass(el, this._styleRe, selStyleClass);
 					continue;
@@ -2220,17 +2268,17 @@ function(clickedEl, ev) {
 				if (state != 1 && el.className.indexOf(selStyleClass) != -1 && el != clickedEl) {
 					Dwt.delClass(el, this._styleRe);		// , this._normalClass	MOW
 					this._selectedItems.remove(el);
+					el.removeAttribute('aria-selected');
 				} else if (state == 1 || el == clickedEl) {
 					if (el.className.indexOf(selStyleClass) == -1) {
 						this._selectedItems.add(el);
 					}
+					el.setAttribute('aria-selected', true);
 					Dwt.delClass(el, this._styleRe, selStyleClass);
 				}
 			}
 
-			this._kbAnchor = clickedEl;
-			Dwt.addClass(this._kbAnchor, this._kbFocusClass);
-			//DwtKeyboardMgr.grabFocus(this); // Will cause the kbAnchor element to get the right style
+			this._setKbFocusElement(clickedEl);
 
 			var newSelectedItems = this._selectedItems.size();
 			if (numSelectedItems < newSelectedItems) {

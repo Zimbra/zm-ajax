@@ -119,6 +119,10 @@ DwtControl = function(params) {
 	// set to true for an event type to override default behavior of swallowing the event
 	this._propagateEvent = {};
 
+	// don't swallow mouse wheel events; we often want to react to them, while
+	// letting the browser continue to scroll
+	this._propagateEvent[DwtEvent.ONMOUSEWHEEL] = true;
+
  	if (!parent) { return; }
 
 	/** CSS class name
@@ -267,14 +271,26 @@ DwtControl.DEFAULT = "ZDefault";
  */
 DwtControl.ERROR = "ZError";
 
+DwtControl._STATES = [
+	DwtControl.ACTIVE,  DwtControl.FOCUSED,     DwtControl.DISABLED,
+	DwtControl.HOVER,   DwtControl.SELECTED,    DwtControl.DEFAULT,
+	DwtControl.ERROR
+];
+
 DwtControl._RE_STATES = new RegExp(
-    "\\b(" +
-    [   DwtControl.ACTIVE,  DwtControl.FOCUSED,     DwtControl.DISABLED,
-        DwtControl.HOVER,   DwtControl.SELECTED,    DwtControl.DEFAULT,
-        DwtControl.ERROR
-    ].join("|") +
-    ")\\b", "g"
+    "\\b(" + DwtControl._STATES.join("|") + ")\\b", "g"
 );
+
+DwtControl._RE_STATE = AjxUtil.arrayAsHash(
+	DwtControl._STATES,
+	function(state) {
+		return new RegExp("\\b" + state + "\\b", "g");
+	});
+
+DwtControl._ARIA_STATES = {};
+DwtControl._ARIA_STATES[DwtControl.DISABLED] = 'aria-disabled';
+DwtControl._ARIA_STATES[DwtControl.SELECTED] = 'aria-selected';
+DwtControl._ARIA_STATES[DwtControl.ERROR] = 'aria-invalid';
 
 // Try to use browser tooltips (setting 'title' attribute) if possible
 DwtControl.useBrowserTooltips = false;
@@ -1041,10 +1057,21 @@ function(state) {
         }
         state = a.join(" ");
     }
-    if (this._displayState != state) {
-        this._displayState = state;
-        Dwt.delClass(this.getHtmlElement(), DwtControl._RE_STATES, state);
+
+    if (this._displayState == state) {
+        return;
     }
+
+    this._displayState = state;
+    Dwt.delClass(this.getHtmlElement(), DwtControl._RE_STATES, state);
+
+    AjxUtil.foreach(DwtControl._ARIA_STATES, (function(attribute, state) {
+        if (DwtControl._RE_STATE[state].test(this._displayState)) {
+            this.getHtmlElement().setAttribute(attribute, true);
+        } else {
+            this.getHtmlElement().removeAttribute(attribute);
+        }
+    }).bind(this));
 };
 
 /**
@@ -2399,14 +2426,11 @@ function(element) {
 
 	element.tabIndex = 0;
 
-	// clear the event handlers, just in case
-	this._setMouseEventHdlrs(true, element);
-	this._setKeyEventHdlrs(true, element);
+	// clear the event handlers first, just in case
+	this._setEventHdlrs(AjxUtil.keys(DwtControl.__HANDLER), true, element);
 
-	this._setMouseEventHdlrs(false, element);
-	this._setKeyEventHdlrs(false, element);
-
-}
+	this._setEventHdlrs(AjxUtil.keys(DwtControl.__HANDLER), false, element);
+};
 
 /**
  * This convenience methods sets or clears the control's event handler for key
@@ -2728,36 +2752,20 @@ DwtControl.__keyDownHdlr = function(ev) {
  * @private
  */
 DwtControl.__focusHdlr = function(ev) {
-	return DwtKeyboardMgr.__onFocusHdlr.apply(this, arguments);
-
 	var obj = obj ? obj : DwtControl.getTargetControl(ev);
 	if (!obj) return false;
 
-	if (obj.isListenerRegistered(DwtEvent.ONFOCUS)) {
-		var ev = DwtShell.focusEvent;
-		ev.dwtObj = obj;
-		ev.state = DwtFocusEvent.FOCUS;
-		var mouseEv = DwtShell.mouseEvent;
-		obj.notifyListeners(DwtEvent.ONFOCUS, mouseEv);
-	}
+	obj.__doFocus();
 };
 
 /**
  * @private
  */
 DwtControl.__blurHdlr = function(ev) {
-	return DwtKeyboardMgr.__onBlurHdlr.apply(this, arguments);
-
 	var obj = obj ? obj : DwtControl.getTargetControl(ev);
 	if (!obj) return false;
 
-	if (obj.isListenerRegistered(DwtEvent.ONBLUR)) {
-		var ev = DwtShell.focusEvent;
-		ev.dwtObj = obj;
-		ev.state = DwtFocusEvent.BLUR;
-		var mouseEv = DwtShell.mouseEvent;
-		obj.notifyListeners(DwtEvent.ONBLUR, mouseEv);
-	}
+	obj.__doBlur();
 };
 
 /**
@@ -3321,9 +3329,7 @@ function(ev) {
 
 	try {
 
-	var obj = DwtControl.getTargetControl(ev);
-	if (!obj) return false;
-	return DwtControl.__mouseEvent(ev, DwtEvent.ONMOUSEWHEEL, obj);
+	return DwtControl.__mouseEvent(ev, DwtEvent.ONMOUSEWHEEL);
 
 	} catch (ex) {
 		AjxException.reportScriptError(ex);

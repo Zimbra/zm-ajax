@@ -66,10 +66,10 @@ DwtTreeItem = function(params) {
 
 	this._origClassName = params.className || "DwtTreeItem";
 	this._textClassName = [this._origClassName, "Text"].join("-");
-	this._selectedClassName = [this._origClassName, DwtCssStyle.SELECTED].join("-");
-	this._selectedFocusedClassName = [this._origClassName, DwtCssStyle.SELECTED, DwtCssStyle.FOCUSED].join("-");
-	this._actionedClassName = [this._origClassName, DwtCssStyle.ACTIONED].join("-");
-	this._dragOverClassName = [this._origClassName, DwtCssStyle.DRAG_OVER].join("-");
+	this._selectedClassName = this._origClassName + ' ' + [this._origClassName, DwtCssStyle.SELECTED].join("-");
+	this._selectedFocusedClassName = this._selectedClassName + ' ' + [this._origClassName, DwtCssStyle.SELECTED, DwtCssStyle.FOCUSED].join("-");
+	this._actionedClassName = this._origClassName + ' ' + [this._origClassName, DwtCssStyle.ACTIONED].join("-");
+	this._dragOverClassName = this._origClassName + ' ' + [this._origClassName, DwtCssStyle.DRAG_OVER].join("-");
     this._treeItemTextClass = "DwtTreeItem-Text";
     this._treeItemExtraImgClass = "DwtTreeItem-ExtraImg";
 
@@ -123,6 +123,9 @@ DwtTreeItem.prototype.isDwtTreeItem = true;
 DwtTreeItem.prototype.toString = function() { return "DwtTreeItem"; };
 
 DwtTreeItem.prototype.TEMPLATE = "dwt.Widgets#ZTreeItem";
+
+DwtTreeItem.prototype.role = "treeitem";
+DwtTreeItem.prototype.isFocusable = true;
 
 DwtTreeItem.prototype._checkBoxVisible = true; // Assume it's shown, if check style
 
@@ -267,6 +270,17 @@ function() {
 DwtTreeItem.prototype.getChildIndex =
 function(item) {
 	return this._children.indexOf(item);
+};
+
+/**
+ * Get the nesting level; the toplevel tree is zero, and each lower layer
+ * increases by one.
+ * 
+ * @return	{number}	the child item count
+ */
+DwtTreeItem.prototype.getNestingLevel =
+function() {
+	return this.parent.getNestingLevel() + 1;
 };
 
 /**
@@ -483,9 +497,23 @@ function(actionCode, ev) {
 			break;
 		}
 
+		case DwtKeyMap.SELECT_FIRST:
+		case DwtKeyMap.SELECT_LAST: {
+			var ti = (actionCode === DwtKeyMap.SELECT_FIRST) ?
+				this._getFirstTreeItem() : this._getLastTreeItem();
+			if (ti) {
+				ti._tree.setSelection(ti, false, true);
+			}
+			break;
+		}
+
 		case DwtKeyMap.EXPAND: {
 			if (!this._expanded) {
 				this.setExpanded(true, false, true);
+			} else if (this._children.size() > 0) {
+				// Select first child node
+				var firstChild = this._children.get(0);
+				this._tree.setSelection(firstChild, false, true);
 			}
 			break;
 		}
@@ -493,6 +521,9 @@ function(actionCode, ev) {
 		case DwtKeyMap.COLLAPSE: {
 			if (this._expanded) {
 				this.setExpanded(false, false, true);
+			} else if (this.parent.isDwtTreeItem) {
+				// select parent
+				this._tree.setSelection(this.parent, false, true);
 			}
 			break;
 		}
@@ -556,6 +587,17 @@ function(index, realizeDeferred, forceNode) {
 	this._imageCell = document.getElementById(data.id + "_imageCell");
 	this._textCell = document.getElementById(data.id + "_textCell");
 	this._extraCell = document.getElementById(data.id + "_extraCell");
+
+	var el = this.getHtmlElement();
+
+	/* assign the ARIA level */
+	el.setAttribute("aria-level", this.getNestingLevel());
+
+	/* add a label for screenreaders, so that they don't read the entire
+	   element */
+	if (this._textCell) {
+		el.setAttribute("aria-labelledby", this._textCell.id);
+	}
 
 	if (this._dynamicWidth){
 		var tableNode = document.getElementById(data.id + "_table");
@@ -668,6 +710,8 @@ function(item, index, realizeDeferred) {
 		this._childDiv = document.createElement("div");
 		this._childDiv.className = (this.parent != this._tree)
 			? "DwtTreeItemChildDiv" : "DwtTreeItemLevel1ChildDiv";
+		this._childDiv.setAttribute('role', 'group');
+		this._childDiv.setAttribute('aria-labelledby', this._itemDiv.id);
 		this.getHtmlElement().appendChild(this._childDiv);
 		if (!this._expanded) {
 			this._childDiv.style.display = "none";
@@ -839,6 +883,9 @@ function(expand, ev, skipNotify) {
 			}
 			this._tree._itemExpanded(this, ev, skipNotify);
 		}	
+
+		this.getHtmlElement().setAttribute('aria-expanded', expand);
+		this._childDiv.setAttribute('aria-expanded', expand);
 	}
 };
 
@@ -910,6 +957,17 @@ function(selected, noFocus) {
 			this._setTreeElementStyles("Blank_16", false);
 			this._itemDiv.className = this._origClassName;;
 			return false;
+		}
+
+		this.getHtmlElement().setAttribute('aria-selected', selected);
+		/* TODO: disable on IE? screenreaders in IE may announce items twice if
+		 * we do the below, which is not strictly necessary */
+		var treeEl = this._tree.getHtmlElement();
+
+		if (selected) {
+			treeEl.setAttribute('aria-activedescendant', this.getHTMLElId());
+		} else {
+			treeEl.removeAttribute('aria-activedescendant');
 		}
 	}
 };
