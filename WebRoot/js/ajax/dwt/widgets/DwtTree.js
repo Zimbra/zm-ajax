@@ -73,6 +73,7 @@ DwtTree.PARAMS = ["parent", "style", "className", "posStyle"];
 
 DwtTree.prototype = new DwtComposite;
 DwtTree.prototype.constructor = DwtTree;
+DwtTree.prototype.role = "tree";
 
 DwtTree.prototype.toString = 
 function() {
@@ -109,6 +110,16 @@ DwtTree.ITEM_COLLAPSED = 2;
 DwtTree.prototype.getStyle =
 function() {
 	return this._style;
+};
+
+/**
+ * Get the nesting level; this is zero for trees.
+ *
+ * @return	{number}	the child item count
+ */
+DwtTree.prototype.getNestingLevel =
+function() {
+	return 0;
 };
 
 /**
@@ -329,9 +340,9 @@ function(child) {
 };
 
 /**
- * Returns the next (or previous) tree item relative to the currently selected item,
- * in top-to-bottom order as the tree appears visually. Items such as separators (and
- * possibly headers) that cannot be selected are skipped.
+ * Returns the next (or previous) tree item relative to the currently selected
+ * item, in top-to-bottom order as the tree appears visually. Items such as
+ * separators that cannot be selected are skipped.
  * </p><p>
  * If there is no currently selected item, return the first or last item. If we go past
  * the beginning or end of the tree, return null.
@@ -368,6 +379,24 @@ function(next) {
 		}
 	}
 	return nextItem;
+};
+
+DwtTree.prototype._getFirstTreeItem =
+function() {
+	var a = this.getTreeItemList(true);
+	if (a && a.length > 1) {
+		return a[0];
+	}
+	return null;
+};
+
+DwtTree.prototype._getLastTreeItem =
+function() {
+	var a = this.getTreeItemList(true);
+	if (a && a.length > 1) {
+		return a[a.length - 1];
+	}
+	return null;
 };
 
 /**

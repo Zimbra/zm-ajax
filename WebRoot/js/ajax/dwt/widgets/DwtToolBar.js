@@ -425,8 +425,7 @@ function(item) {
 
 	item = item ? item : this._getFocusItem(this._curFocusIndex);
 	if (item) {
-		item._hasFocus = true;	// so that focus class is set
-		item._focus();
+		item.focus();
 	} else {
 		// if current item isn't focusable, find first one that is
 		this._moveFocus();
@@ -443,8 +442,7 @@ function(item) {
 	DBG.println(AjxDebug.DBG3, "DwtToolBar: BLUR");
 	item = item ? item : this._getFocusItem(this._curFocusIndex);
 	if (item) {
-		item._hasFocus = false;
-		item._blur();
+		item.blur();
 	}
 };
 
@@ -465,6 +463,7 @@ function(index) {
 	if (item._noFocus)							{ return null; }
 	if (item.getEnabled && !item.getEnabled())	{ return null; }
 	if (item.getVisible && !item.getVisible())	{ return null; }
+	if (item instanceof DwtText && !item.getText())	{ return null; }
 	return item;
 };
 

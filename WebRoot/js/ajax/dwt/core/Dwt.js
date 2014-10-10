@@ -864,6 +864,11 @@ Dwt.setZIndex =
 function(htmlElement, idx) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	htmlElement.style.zIndex = idx;
+	if (idx < Dwt.Z_VIEW) {
+		htmlElement.setAttribute('aria-hidden', true);
+	} else {
+		htmlElement.removeAttribute('aria-hidden');
+	}
 };
 
 Dwt.getDisplay =
