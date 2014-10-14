@@ -710,10 +710,6 @@ DwtKeyboardMgr.prototype.__warnFocus = function() {
 		this.__focusObj.toString()
 	]);
 	DBG.println(AjxDebug.FOCUS, '<b>' + msg + '</b>');
-
-	if (window.console && console.error) {
-		console.error(msg);
-	}
 };
 
 /**
