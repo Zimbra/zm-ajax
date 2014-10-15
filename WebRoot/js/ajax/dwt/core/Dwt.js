@@ -514,6 +514,8 @@ function(htmlElement, point) {
 	point = point || new DwtPoint(0, 0);
 
 	if (htmlElement.style.position == Dwt.ABSOLUTE_STYLE) {
+		// parseInt will return NaN if "top" or "left" is "auto" or not set.
+		// TODO: We should test for that and just go to toWindow in that case.
 		point.set(parseInt(DwtCssStyle.getProperty(htmlElement, "left")),
 				parseInt(DwtCssStyle.getProperty(htmlElement, "top")));
 		return point;
