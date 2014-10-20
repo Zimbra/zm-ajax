@@ -705,10 +705,19 @@ function(kbMgr, obj) {
 };
 
 DwtKeyboardMgr.prototype.__warnFocus = function() {
-	var msg = AjxMessageFormat.format('KBFF focused for {0} ({1})', [
-		this.__focusObj.getHTMLElId(),
-		this.__focusObj.toString()
-	]);
+	var id, desc;
+
+	if (this.__focusObj.isDwtControl) {
+		id = this.__focusObj.getHTMLElId();
+		desc = this.__focusObj.toString()
+	} else {
+		id = this.__focusObj.id,
+		desc = String(this.__focusObj);
+	}
+
+	var msg =
+		AjxMessageFormat.format('KBFF focused for {0} ({1})', [desc, id]);
+
 	DBG.println(AjxDebug.FOCUS, '<b>' + msg + '</b>');
 };
 
