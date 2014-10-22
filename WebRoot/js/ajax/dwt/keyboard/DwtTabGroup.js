@@ -130,7 +130,7 @@ function(member, index) {
  */
 DwtTabGroup.prototype.addMemberAfter =
 function(newMember, afterMember) {
-	this.addMember(newMember, this.__members.indexOf(afterMember) + 1);
+	this.addMember(newMember, this.__indexOfMember(afterMember) + 1);
 };
 
 /**
@@ -141,7 +141,7 @@ function(newMember, afterMember) {
  */
 DwtTabGroup.prototype.addMemberBefore =
 function(newMember, beforeMember) {
-	this.addMember(newMember, this.__members.indexOf(beforeMember));
+	this.addMember(newMember, this.__indexOfMember(beforeMember));
 };
 
 /**
@@ -420,7 +420,7 @@ DwtTabGroup.prototype.__getPrevMember =
 function(member, checkEnabled) {
 	var a = this.__members.getArray();
 	// Start working from the member to the immediate left, then keep going left
-	for (var i = this.__members.indexOf(member) - 1; i > -1; i--) {
+	for (var i = this.__lastIndexOfMember(member) - 1; i > -1; i--) {
 		var prevMember = a[i];
 		/* if sibling is not a tab group, then it is the previous child. If the
 		 * sibling is a tab group, get its rightmost member.*/
@@ -461,6 +461,33 @@ function(member, checkEnabled) {
 };
 
 /**
+ * Key function for comparing members. The argument can also be passed as
+ * 'this', making it suitable for AjxVector.indexOfLike.
+ */
+DwtTabGroup.__memberKeyFunc =
+function(member) {
+	member = member || this;
+
+	if (member.getInputElement) {
+		return member.getInputElement() || member;
+	} else {
+		return member;
+	}
+};
+
+DwtTabGroup.prototype.__indexOfMember =
+function(member) {
+	var keyfunc = DwtTabGroup.__memberKeyFunc;
+	return this.__members.indexOfLike(member, keyfunc);
+};
+
+DwtTabGroup.prototype.__lastIndexOfMember =
+function(member) {
+	var keyfunc = DwtTabGroup.__memberKeyFunc;
+	return this.__members.lastIndexOfLike(member, keyfunc);
+};
+
+/**
  * Sets and returns the next member in the tag group.
  * 
  * @private
@@ -471,7 +498,7 @@ function(member, checkEnabled) {
 	var sz = this.__members.size();
 
 	// Start working from the member to the immediate left of <member> rightwards
-	for (var i = this.__members.indexOf(member) + 1; i < sz; i++) {
+	for (var i = this.__indexOfMember(member) + 1; i < sz; i++) {
 		var nextMember = a[i];
 		/* if sibling is not a tab group, then it is the next child. If the
 		 * sibling is a tab group, get its leftmost member.*/
@@ -655,7 +682,8 @@ function(member) {
 	var m;
 	for (var i = 0; i < sz; i++) {
 		m = a[i];
-		if (m == member) {
+		if (m == member || (DwtTabGroup.__memberKeyFunc(member) ==
+		                    DwtTabGroup.__memberKeyFunc(m))) {
 			return this;
 		} else if (m instanceof DwtTabGroup && (m = m.__getTabGroupForMember(member))) {
 			return m;
