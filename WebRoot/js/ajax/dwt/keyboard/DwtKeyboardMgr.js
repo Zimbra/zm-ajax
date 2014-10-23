@@ -534,7 +534,7 @@ function(ev) {
 
 	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
 	kbMgr.__dwtCtrlHasFocus = true;
-	var focusObj = kbMgr.__focusObj;
+	var focusObj = (ev && DwtControl.findControl(ev.target)) || kbMgr.__focusObj;
 	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr: ONFOCUS - " + focusObj);
 	if (focusObj && focusObj.__doFocus) {
 		focusObj.__doFocus();

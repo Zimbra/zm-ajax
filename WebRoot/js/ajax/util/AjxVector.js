@@ -223,12 +223,14 @@ function(obj, newObj) {
  */
 AjxVector.prototype.indexOf =
 function(obj) {
-	if (obj == null)
+	if (obj == null) {
 		return -1;
+	}
 
 	for (var i = 0; i < this._array.length; i++) {
-		if (this._array[i] == obj)
+		if (this._array[i] == obj) {
 			return i;
+		}
 	}
 	return -1;
 };
@@ -237,15 +239,55 @@ function(obj) {
  * Returns the index of the obj given w/in vector
  *
  * @param {Object}	obj			the object being looked for
- * @param {function}	compareFunc	a function for comparing objects
+ * @param {function}	keyFunc	a function for transforming objects
  * @return	{number}	the index or -1 if not found
  */
 AjxVector.prototype.indexOfLike =
-function(obj, compareFunc) {
-	var value = compareFunc.call(obj);
+function(obj, keyFunc) {
+	var value = keyFunc.call(obj);
 
 	for (var i = 0; i < this._array.length; i++) {
-		var test = compareFunc.call(this._array[i]);
+		var test = keyFunc.call(this._array[i]);
+		if (test == value) {
+			return i;
+		}
+	}
+	return -1;
+};
+
+/**
+ * Returns the last index of the obj given w/in vector
+ *
+ * @param {Object}	obj			the object being looked for
+ * @return	{number}	the index or -1 if not found
+ */
+AjxVector.prototype.lastIndexOf =
+function(obj) {
+	if (obj == null) {
+		return -1;
+	}
+
+	for (var i = this._array.length - 1; i >= 0; i--) {
+		if (this._array[i] == obj) {
+			return i;
+		}
+	}
+	return -1;
+};
+
+/**
+ * Returns the last index of the obj given w/in vector
+ *
+ * @param {Object}	obj			the object being looked for
+ * @param {function}	keyFunc	a function for transforming objects
+ * @return	{number}	the index or -1 if not found
+ */
+AjxVector.prototype.lastIndexOfLike =
+function(obj, keyFunc) {
+	var value = keyFunc.call(obj);
+
+	for (var i = this._array.length - 1; i >= 0; i--) {
+		var test = keyFunc.call(this._array[i]);
 		if (test == value)
 			return i;
 	}
@@ -283,14 +325,14 @@ function(obj) {
  * or a base type.
  *
  * @param {Object}	obj			the object being looked for
- * @param {function}	compareFunc	a function for comparing objects
+ * @param {function}	keyFunc	a function for transforming objects
  * @return	{boolean}	<code>true</code> if the object is found
  */
 AjxVector.prototype.containsLike =
-function(obj, compareFunc) {
-	var value = compareFunc.call(obj);
+function(obj, keyFunc) {
+	var value = keyFunc.call(obj);
 	for (var i = 0; i < this._array.length; i++) {
-		var test = compareFunc.call(this._array[i]);
+		var test = keyFunc.call(this._array[i]);
 		if (test == value)
 			return true;
 	}
