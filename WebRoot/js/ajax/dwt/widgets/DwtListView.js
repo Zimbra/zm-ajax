@@ -121,7 +121,7 @@ DwtListView = function(params) {
 	this._list = null;
 	this.offset = 0;
 	this.headerColCreated = false;
-	this.multiSelectEnabled = true;
+	this.setMultiSelect(true);
 	this.firstSelIndex = -1;
 
 	// the key is the HTML ID of the item's associated DIV; the value is an object
@@ -1218,12 +1218,15 @@ function(actionCode, ev) {
 
 DwtListView.prototype.setMultiSelect =
 function (enabled) {
-	this.multiSelectEnabled = enabled;
+	this.getHtmlElement().setAttribute('aria-multiselectable',
+	                                   Boolean(enabled));
 };
 
 DwtListView.prototype.isMultiSelectEnabled =
 function () {
-	return this.multiSelectEnabled;
+	var r = this.getHtmlElement().getAttribute('aria-multiselectable');
+
+	return r === "true";
 };
 
 // DO NOT REMOVE - used by xforms
@@ -2197,7 +2200,7 @@ function(clickedEl, ev) {
 	var numSelectedItems = this._selectedItems.size();
 	var bContained = this._selectedItems.contains(clickedEl);
 
-	if ((!ev.shiftKey && !ev.ctrlKey) || !this.multiSelectEnabled) {
+	if ((!ev.shiftKey && !ev.ctrlKey) || !this.isMultiSelectEnabled()) {
 		// always reset detail if left/right click
 		if (ev.button == DwtMouseEvent.LEFT || ev.button == DwtMouseEvent.RIGHT) {
 			this._selEv.detail = DwtListView.ITEM_SELECTED;
