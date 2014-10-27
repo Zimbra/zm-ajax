@@ -344,6 +344,13 @@ function(imageInfo, direction) {
  */
 DwtButton.prototype.setText =
 function(text) {
+	// assign the ARIA label directly; we want it to override the tooltip, if any
+	if (text) {
+		this.getHtmlElement().setAttribute('aria-label', text);
+	} else {
+		this.getHtmlElement().removeAttribute('aria-label');
+	}
+
 	//see explanation in setImage
 	if (this.whatToShow && !this.whatToShow.showText) {
 		return;
