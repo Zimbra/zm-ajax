@@ -1684,8 +1684,8 @@ AjxStringUtil.HTML_SEP_ID = "zwchr";
 
 // regexes for finding a delimiter such as "On DATE, NAME (EMAIL) wrote:"
 AjxStringUtil.ORIG_EMAIL_RE = /[^@\s]+@[A-Za-z0-9\-]{2,}(\.[A-Za-z0-9\-]{2,})+/;    // see AjxUtil.EMAIL_FULL_RE
-AjxStringUtil.ORIG_DATE_RE = /(\/|\-|, )20\d\d/;                                    // matches "03/07/2014" or "March 3, 2014" by looking for year 20xx
-AjxStringUtil.ORIG_INTRO_RE = new RegExp("^(-{2,}|" + AjxMsg.on + ")", "i");
+AjxStringUtil.ORIG_DATE_RE = /\d+\s*(\/|\-|, )20\d\d/;                                    // matches "03/07/2014" or "March 3, 2014" by looking for year 20xx
+AjxStringUtil.ORIG_INTRO_RE = new RegExp("^(-{2,}|" + AjxMsg.on + "\\s+)", "i");
 
 
 // Lazily creates a test hidden IFRAME and writes the given html to it, then returns the HTML element.
