@@ -2303,6 +2303,16 @@ function(clickedEl, ev) {
 			this._evtMgr.notifyListeners(DwtEvent.ACTION, this._actionEv);
 		}
 	}
+
+	if (!this.hasFocus()) {
+		this.focus();
+	}
+};
+
+DwtListView.prototype._focusByMouseDownEvent =
+function() {
+	// Do nothing, we'll focus manually later. If we focus now, the list will
+	// jump to the top before an item is selected
 };
 
 /**
