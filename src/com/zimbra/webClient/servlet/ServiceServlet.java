@@ -210,5 +210,4 @@ public class ServiceServlet extends HttpServlet {
         ZimbraLog.misc.debug("ExternalUserProvServlet: sending publc login request");
         dispatcher.forward(req, resp);
     }
-
 }
