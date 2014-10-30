@@ -707,11 +707,16 @@ function(kbMgr, obj) {
 DwtKeyboardMgr.prototype.__warnFocus = function() {
 	var id, desc;
 
+	if (!this.__focusObj) {
+		DBG.println(AjxDebug.FOCUS, '<b>KBFF focus object is null</b>');
+		return;
+	}
+
 	if (this.__focusObj.isDwtControl) {
 		id = this.__focusObj.getHTMLElId();
 		desc = this.__focusObj.toString()
 	} else {
-		id = this.__focusObj.id,
+		id = this.__focusObj.id;
 		desc = String(this.__focusObj);
 	}
 
