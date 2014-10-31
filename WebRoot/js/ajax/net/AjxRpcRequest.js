@@ -114,6 +114,17 @@ function(requestStr, serverUrl, requestHeaders, callback, method, timeout) {
 	if (method) {
 		httpMethod = method === true ? AjxRpcRequest.HTTP_GET : method;
 	}
+
+	if (window.csrfToken &&
+		(httpMethod === AjxRpcRequest.HTTP_POST ||
+		httpMethod === AjxRpcRequest.HTTP_PUT ||
+		httpMethod === AjxRpcRequest.HTTP_DELETE)) {
+
+		requestHeaders = requestHeaders || {};
+		requestHeaders["X-Zimbra-Csrf-Token"] = window.csrfToken;
+
+	}
+
 	this.__httpReq.open(httpMethod, serverUrl, asyncMode);
 
 	if (asyncMode) {
