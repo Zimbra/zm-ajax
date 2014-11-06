@@ -384,7 +384,7 @@ function(next) {
 DwtTree.prototype._getFirstTreeItem =
 function() {
 	var a = this.getTreeItemList(true);
-	if (a && a.length > 1) {
+	if (a && a.length > 0) {
 		return a[0];
 	}
 	return null;
@@ -393,7 +393,7 @@ function() {
 DwtTree.prototype._getLastTreeItem =
 function() {
 	var a = this.getTreeItemList(true);
-	if (a && a.length > 1) {
+	if (a && a.length > 0) {
 		return a[a.length - 1];
 	}
 	return null;
