@@ -500,7 +500,7 @@ function(actionCode, ev) {
 		case DwtKeyMap.SELECT_FIRST:
 		case DwtKeyMap.SELECT_LAST: {
 			var ti = (actionCode === DwtKeyMap.SELECT_FIRST) ?
-				this._getFirstTreeItem() : this._getLastTreeItem();
+				this._tree._getFirstTreeItem() : this._tree._getLastTreeItem();
 			if (ti) {
 				ti._tree.setSelection(ti, false, true);
 			}
