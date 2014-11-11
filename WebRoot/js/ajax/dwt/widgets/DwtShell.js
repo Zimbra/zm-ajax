@@ -356,9 +356,9 @@ DwtShell.prototype.addFocusListener =
 function(listener) {
 	if (!this._hasFocusHandler) {
 		var doc = document;
-		if (typeof doc.onfocusin != "undefined" ) {  // if (IE)
+		if ((typeof doc.onfocusin != "undefined" ) && doc.attachEvent) {  // if (IE)
 			doc.attachEvent("onfocusin", DwtShell.__focusHdlr);
-		} else {
+		} else if (window.addEventListener) {
 			window.addEventListener("focus", DwtShell.__focusHdlr, false);
 		}
 		this._hasFocusHandler = true;
@@ -375,9 +375,9 @@ DwtShell.prototype.addBlurListener =
 function(listener) {
 	if (!this._hasBlurHandler) {
 		var doc = document;
-		if (typeof doc.onfocusout != "undefined") {  // if (IE)
+		if ((typeof doc.onfocusin != "undefined" ) && doc.attachEvent) {  // if (IE)
 			doc.attachEvent("onfocusout", DwtShell.__blurHdlr);
-		} else {
+		} else if (window.addEventListener) {
 			window.addEventListener("blur", DwtShell.__blurHdlr, false);
 		}
 		this._hasBlurHandler = true;
