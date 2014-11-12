@@ -2010,7 +2010,7 @@ function(ev) {
 		if (ev.button == DwtMouseEvent.LEFT) {
 			this._columnClicked(div, ev);
 		} else if (ev.button == DwtMouseEvent.RIGHT) {
-			var actionMenu = this._getActionMenuForColHeader();
+			var actionMenu = this._colHeaderActionMenu = this._getActionMenuForColHeader();
 			if (actionMenu && actionMenu instanceof DwtMenu) {
 				actionMenu.popup(0, ev.docX, ev.docY);
 			}
