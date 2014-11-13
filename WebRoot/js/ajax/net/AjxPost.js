@@ -90,7 +90,9 @@ function(callback, form, optionalTimeout) {
 			continue;
 		}
 	}
-
+	if (window.csrfToken) {
+		this._addHiddenField(inputs[0], "csrf", window.csrfToken);
+	}
     this._addHiddenFileNames(inputs);
 
 	form.target = this._iframeId;
@@ -132,12 +134,14 @@ function(inputs){
 
 AjxPost.prototype._addHiddenFileName =
 function(inputField, fileName, index){
-    var hidden = document.createElement("input");
-    hidden.type = "hidden";
-    hidden.name = "filename" + (index);
-    hidden.value = fileName;
-    inputField.parentNode.insertBefore(hidden, inputField);
-
+	this._addHiddenField(inputField, "filename" + (index), fileName);
+};
+AjxPost.prototype._addHiddenField = function(referenceElement, fieldName, fieldValue){
+	var hidden   = document.createElement("input");
+	hidden.type  = "hidden";
+	hidden.name  = fieldName;
+	hidden.value = fieldValue;
+	referenceElement.parentNode.insertBefore(hidden, referenceElement);
 };
 
 
