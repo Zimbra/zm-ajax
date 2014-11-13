@@ -609,24 +609,34 @@ function() {
 DwtTabGroup.prototype.__dump =
 function(tg, debugLevel, level) {
 	level = level || 0;
-	var levelIndent = "";
-	for (var i = 0; i < level; i++) {
-		levelIndent += "&nbsp;&nbsp;&nbsp;&nbsp;";
-	}
+	var stringIndent = AjxStringUtil.repeat("\t", level);
+	var htmlIndent = AjxStringUtil.repeat("&nbsp;&nbsp;&nbsp;&nbsp;", level);
 	
 	debugLevel = debugLevel || AjxDebug.DBG1;
-	DBG.println(debugLevel, levelIndent + " TABGROUP: " + tg.__name);
-	levelIndent += "&nbsp;&nbsp;&nbsp;&nbsp;";
+	DBG.println(debugLevel, htmlIndent + " TABGROUP: " + tg.__name);
+	if (window.console && window.console.log) {
+		console.log(stringIndent + "TABGROUP: " + tg.__name);
+	}
+
+	htmlIndent += "&nbsp;&nbsp;&nbsp;&nbsp;";
+	stringIndent += "\t";
 	
 	var sz = tg.__members.size();
 	var a = tg.__members.getArray();
 	for (var i = 0; i < sz; i++) {
 		if (a[i] instanceof DwtTabGroup) {
 			tg.__dump(a[i], debugLevel, level + 1);
-		} else if (a[i].toString) {
-			DBG.println(debugLevel, levelIndent + "   " + a[i].toString());
 		} else {
-			DBG.println(debugLevel, levelIndent + "   " + a[i].tagName);
+			var desc = a[i].nodeName ?
+				(a[i].nodeName + ' ' + a[i].outerHTML) :
+				(String(a[i]) + ' ' + a[i]._htmlElId);
+
+			DBG.println(debugLevel, htmlIndent + "   " +
+			            AjxStringUtil.htmlEncode(desc));
+
+			if (window.console && window.console.log) {
+				console.log(stringIndent + desc);
+			}
 		}
 	}
 };
