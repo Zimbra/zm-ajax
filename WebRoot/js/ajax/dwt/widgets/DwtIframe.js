@@ -26,16 +26,18 @@
  * forwards any events to the parent widget, translating mouse coordinates in
  * between.
  *
- * @param {hash}	params		a hash of parameters
- * @param	{DwtComposite}		params.parent		the parent 
- * @param {string}	params.html 	the HTML code to be inserted in the IFRAME.  There will be
+ * @param {hash}	params		a hash of parameters:
+ *
+ * @param   {DwtComposite}		parent	                the parent
+ * @param   {string}	        html 	                the HTML code to be inserted in the IFRAME.  There will be
  *   slight modifications to it (i.e. the margins and paddings of the HTML
  *   element will be set to 0, also any margins for BODY).
- * @param {boolean}		[params.noscroll=false] 	if <code>true</code>, do not show the scroll bars
- * @param {constant}	params.posStyle		the position style (see {@link DwtControl})
- * @param {AjxCallback}	params.processHtmlCallback		the callback that will be called
+ * @param   {boolean}		    noscroll 	            if <code>true</code>, do not show the scroll bars
+ * @param   {string}	        posStyle	            the position style (see {@link DwtControl})
+ * @param   {AjxCallback}	    processHtmlCallback		the callback that will be called
  *   immediately after the HTML code was inserted. A reference to the document object will be passed
- * @param {boolean}	params.useKbMgmt	if <code>true</code>, participate in keyboard management
+ * @param   {boolean}	        useKbMgmt	            if <code>true</code>, participate in keyboard management
+ * @param   {string}            title                   title for the IFRAME
  * 
  * @author Mihai Bazon
  * 
@@ -51,6 +53,8 @@ DwtIframe = function(params) {
 	this._onLoadHandler = params.onload;	
 	this._processHtmlCallback = params.processHtmlCallback;
 	this._hidden = params.hidden;
+	this._title = params.title;
+
 	if (!this._createFrame(params.html)) {
 		this.initFailed = true;
 		return;	// this object is still returned
@@ -231,6 +235,9 @@ DwtIframe.prototype._createFrame = function(html) {
 		if (self._hidden) {
 			tmp[i++] = " style='visibility:hidden'";
 		}
+		if (self._title) {
+			tmp[i++] = " title='" + self._title + "'";
+		}
 		tmp[i++] = " frameborder='0' width='100%' id='";
 		tmp[i++] = self._iframeID;
 		tmp[i++] = "' name='"+ self._iframeID + "'";
@@ -270,6 +277,13 @@ DwtIframe.prototype._createFrame = function(html) {
 		tmp.margin = tmp.padding = "0";
 		if (idoc.body) {
 			idoc.body.style.margin = "0";
+		}
+
+		// set language in IFRAME <html> element
+		var htmlEl = idoc.firstChild && idoc.firstChild.tagName && idoc.firstChild.tagName.toLowerCase() === 'html' ? idoc.firstChild : null,
+			langAttr = htmlEl && htmlEl.getAttribute('lang');
+		if (htmlEl && !langAttr) {
+			htmlEl.setAttribute('lang', window.appLang);
 		}
 
 		// assign event handlers
