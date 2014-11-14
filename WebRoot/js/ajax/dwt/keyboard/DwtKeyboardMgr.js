@@ -434,7 +434,6 @@ function() {
 	 */
 	var kbff = this._kbFocusField = document.createElement("textarea");
 	kbff.id = DwtKeyboardMgr.FOCUS_FIELD_ID;
-	kbff.tabIndex = 0;
 	kbff.title = AjxMsg.kbffTitle;
 	Dwt.setPosition(kbff, Dwt.ABSOLUTE_STYLE);
 	Dwt.setLocation(kbff, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
