@@ -98,6 +98,9 @@ DwtBaseDialog.PARAMS = ["parent", "className", "title", "zIndex", "mode", "loc",
 DwtBaseDialog.prototype = new DwtComposite;
 DwtBaseDialog.prototype.constructor = DwtBaseDialog;
 
+DwtBaseDialog.prototype.role = 'dialog';
+DwtBaseDialog.prototype.isFocusable = true;
+
 /**
  * Returns a string representation of the class.
  * 
@@ -358,6 +361,8 @@ function(title) {
     if (this._titleEl) {
         this._titleEl.innerHTML = title || "";
     }
+
+    this._title = title;
 };
 
 /**
@@ -470,6 +475,10 @@ DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
     this._titleBarEl = document.getElementById(data.id+"_titlebar");
     this._titleEl = document.getElementById(data.id+"_title");
     this._contentEl = document.getElementById(data.id+"_content");
+
+    this.getHtmlElement().setAttribute('aria-labelledby', this._titleEl.id);
+    this.getHtmlElement().setAttribute('aria-describedby', this._contentEl.id);
+	this._contentEl.setAttribute('role', 'document');
 
     // NOTE: This is for backwards compatibility. There are just
     //       too many sub-classes of dialog that expect to return

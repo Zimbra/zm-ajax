@@ -145,7 +145,7 @@ function(imageEl) {
  * @return	{string}	the image string
  */
 AjxImg.getImageHtml = 
-function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
+function(imageName, styles, attrStr, wrapInTable, disabled, classes, altText) {
 
 	styles = styles || "";
 	var styleStr = styles ? " style='" + styles + "'" : "";
@@ -171,6 +171,12 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
                     ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
 
             var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
+
+            // we're creating IMG elements here, so we can use the alt attribute
+            if (altText) {
+                attrStr += " alt='" + AjxStringUtil.encodeQuotes(altText) + "'";
+            }
+
             if (AjxEnv.isIE && !AjxEnv.isIE9up) {
                 var size = [
                     "width:", overlay.w, "px;",
@@ -265,14 +271,35 @@ function(imageName, styles, attrStr, wrapInTable, disabled, classes) {
         else {
 	        classes.push("Img" + imageName);
             html = [
-                "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, "></div>"
-            ].join("");
+                "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
+            ];
+            if (altText) {
+                // alt is invalid on DIVs, so use a hidden element
+                html.push(
+                    "<span class='ScreenReaderOnly'>",
+                    AjxStringUtil.htmlEncode(altText),
+                    "</span>"
+                );
+            };
+            html.push("</div>");
+
+            html = html.join("");
         }
 	}
     else {
         html = [
-            "<div", styleStr, attrStr, "></div>"
-        ].join("");
+            "<div", styleStr, attrStr, ">"
+        ];
+        if (altText) {
+            // alt is invalid on DIVs, so use a hidden element
+            html.push(
+                "<span class='ScreenReaderOnly'>",
+                AjxStringUtil.htmlEncode(altText),
+                "</span>"
+            );
+        };
+        html.push("</div>");
+        html = html.join("");
     }
 	return pre || post ? [pre,html,post].join("") : html;
 };
