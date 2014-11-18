@@ -599,9 +599,6 @@ function(index, realizeDeferred, forceNode) {
 		el.setAttribute("aria-labelledby", this._textCell.id);
 	}
 
-	// we start as collapsed
-	this.getHtmlElement().setAttribute('aria-expanded', false);
-
 	if (this._dynamicWidth){
 		var tableNode = document.getElementById(data.id + "_table");
 		if (tableNode) {
@@ -715,7 +712,6 @@ function(item, index, realizeDeferred) {
 			? "DwtTreeItemChildDiv" : "DwtTreeItemLevel1ChildDiv";
 		this._childDiv.setAttribute('role', 'group');
 		this._childDiv.setAttribute('aria-labelledby', this._itemDiv.id);
-		this._childDiv.setAttribute('aria-expanded', false);
 		this.getHtmlElement().appendChild(this._childDiv);
 		if (!this._expanded) {
 			this._childDiv.style.display = "none";
