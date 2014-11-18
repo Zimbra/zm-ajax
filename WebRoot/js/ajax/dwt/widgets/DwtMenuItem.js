@@ -55,10 +55,14 @@ DwtMenuItem = function(params) {
 	}
 
 	// call super constructor
+	params.className = params.className || "ZMenuItem";
 	style &= ~DwtLabel.IMAGE_RIGHT; // remove image right style
 	style |= DwtButton.ALWAYS_FLAT | DwtLabel.IMAGE_LEFT; // set default styles
-	params.className = (style & DwtMenuItem.SEPARATOR_STYLE)
-		? "ZMenuItemSeparator" : (params.className || "ZMenuItem");
+	var isSeparator = (style & DwtMenuItem.SEPARATOR_STYLE);
+	if (isSeparator) {
+		params.className = "ZMenuItemSeparator";
+		this.isFocusable = false;
+	}
 	params.listeners = DwtMenuItem._listeners;
 	DwtButton.call(this, params);
 
@@ -71,7 +75,7 @@ DwtMenuItem = function(params) {
 	}
 
 	// add listeners if not menu item separator
-	if (!(style & DwtMenuItem.SEPARATOR_STYLE)) {
+	if (!isSeparator) {
 		this.addSelectionListener(this.__handleItemSelect.bind(this));
 	}
 };
