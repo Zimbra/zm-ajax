@@ -2298,14 +2298,14 @@ function(clickedEl, ev) {
 		if (this._setListEvent(ev, this._selEv, clickedEl)) {
 			this._evtMgr.notifyListeners(DwtEvent.SELECTION, this._selEv);
 		}
+
+		if (!this.hasFocus()) {
+			this.focus();
+		}
 	} else if (ev.button == DwtMouseEvent.RIGHT && !ev.shiftKey && !ev.ctrlKey && this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
 		if (this._setListEvent(ev, this._actionEv, clickedEl)) {
 			this._evtMgr.notifyListeners(DwtEvent.ACTION, this._actionEv);
 		}
-	}
-
-	if (!this.hasFocus()) {
-		this.focus();
 	}
 };
 
