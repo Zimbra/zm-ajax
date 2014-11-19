@@ -91,7 +91,7 @@ function(callback, form, optionalTimeout) {
 		}
 	}
 	if (window.csrfToken) {
-		this._addHiddenField(inputs[0], "csrf", window.csrfToken);
+		this._addHiddenField(inputs[0], "csrfToken", window.csrfToken);
 	}
     this._addHiddenFileNames(inputs);
 
