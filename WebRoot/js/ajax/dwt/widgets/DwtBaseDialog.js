@@ -479,6 +479,8 @@ DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
     this.getHtmlElement().setAttribute('aria-labelledby', this._titleEl.id);
     this.getHtmlElement().setAttribute('aria-describedby', this._contentEl.id);
 	this._contentEl.setAttribute('role', 'document');
+	this._titleEl.setAttribute('role', 'header');
+	this._titleEl.setAttribute('aria-level', '2');
 
     // NOTE: This is for backwards compatibility. There are just
     //       too many sub-classes of dialog that expect to return
