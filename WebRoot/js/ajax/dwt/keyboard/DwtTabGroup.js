@@ -454,9 +454,11 @@ function(member, checkEnabled) {
 	if (!checkEnabled) return true;
 	if (!member || member.noTab) return false;
 	if (member instanceof DwtControl) {
-		return (member.getEnabled() && member.getVisible());
+		return member.getEnabled() &&
+			(member.getVisible() || member.getZIndex() > Dwt.Z_HIDDEN);
 	} else {
-		return !member.disabled && Dwt.getVisible(member);
+		return !member.disabled &&
+			(Dwt.getVisible(member) || Dwt.getZIndex(member) > Dwt.Z_HIDDEN);
 	}
 };
 

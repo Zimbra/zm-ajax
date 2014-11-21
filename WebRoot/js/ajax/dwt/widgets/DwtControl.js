@@ -2755,7 +2755,7 @@ DwtControl.__focusHdlr = function(ev) {
 	var obj = obj ? obj : DwtControl.getTargetControl(ev);
 	if (!obj) return false;
 
-	obj.__doFocus();
+	obj.__doFocus(ev);
 };
 
 /**
@@ -2765,7 +2765,7 @@ DwtControl.__blurHdlr = function(ev) {
 	var obj = obj ? obj : DwtControl.getTargetControl(ev);
 	if (!obj) return false;
 
-	obj.__doBlur();
+	obj.__doBlur(ev);
 };
 
 /**
@@ -2789,18 +2789,20 @@ function() {
  * @private
  */
 DwtControl.prototype.__doBlur =
-function() {
+function(ev) {
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
 
 	if (!this._checkState()) { return; }
 
 	this._hasFocus = false;
 	if (this.isListenerRegistered(DwtEvent.ONBLUR)) {
-		var ev = DwtShell.focusEvent;
+		if (!ev) {
+			ev = DwtShell.focusEvent;
+		}
+
 		ev.dwtObj = this;
 		ev.state = DwtFocusEvent.BLUR;
-		var mouseEv = DwtShell.mouseEvent;
-		this.notifyListeners(DwtEvent.ONBLUR, mouseEv);
+		this.notifyListeners(DwtEvent.ONBLUR, ev);
 	}
 	this._blur();
 };
@@ -2813,7 +2815,7 @@ function() {
  * @private
  */
 DwtControl.prototype.__doFocus =
-function() {
+function(ev) {
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
 
 	if (!this._checkState()) { return; }
@@ -2825,11 +2827,13 @@ function() {
 	}
 
 	if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
-		var ev = DwtShell.focusEvent;
+		if (!ev) {
+			ev = DwtShell.focusEvent;
+		}
+
 		ev.dwtObj = this;
 		ev.state = DwtFocusEvent.FOCUS;
-		var mouseEv = DwtShell.mouseEvent;
-		this.notifyListeners(DwtEvent.ONFOCUS, mouseEv);
+		this.notifyListeners(DwtEvent.ONFOCUS, ev);
 	}
 	this._focus();
 };
