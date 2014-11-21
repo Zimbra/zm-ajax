@@ -85,6 +85,10 @@ DwtIframe.prototype.getIframe = function() {
 	return document.getElementById(this._iframeID);
 };
 
+DwtIframe.prototype.getInputElement = function() {
+	return this.getIframe();
+};
+
 /**
  * Gets the iframe window document.
  * 
