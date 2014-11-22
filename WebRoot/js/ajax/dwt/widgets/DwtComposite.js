@@ -47,8 +47,7 @@ DwtComposite = function(params) {
 	params.className = params.className || "DwtComposite";
 	DwtControl.call(this, params);
 
-	this._compositeTabGroup =
-		new DwtTabGroup(Dwt.getNextId('DwtCompositeTabGroup'));
+	this._compositeTabGroup = new DwtTabGroup(Dwt.getNextId('DwtCompositeTabGroup'));
 
 	/**
 	 * Vector of child elements
@@ -96,10 +95,13 @@ function() {
 	if (this._disposed) return;
 
 	var children = this._children.getArray();
-	while (children.length > 0)
+	while (children.length > 0) {
         children.pop().dispose();
+	}
 
-	this._compositeTabGroup.removeAllMembers();
+	if (this._compositeTabGroup) {
+		this._compositeTabGroup.removeAllMembers();
+	}
 	this._compositeTabGroup = null;
 
 	DwtControl.prototype.dispose.call(this);
@@ -176,9 +178,12 @@ function() {
 DwtComposite.prototype.removeChildren =
 function() {
 	var a = this._children.getArray();
-	while (a.length > 0)
+	while (a.length > 0) {
 		a[0].dispose();
-	this._compositeTabGroup.removeAllMembers();
+	}
+	if (this._compositeTabGroup) {
+		this._compositeTabGroup.removeAllMembers();
+	}
 }
 
 /**

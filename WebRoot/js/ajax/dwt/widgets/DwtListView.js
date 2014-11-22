@@ -2146,14 +2146,16 @@ function(next) {
 		this._kbAnchor = this._parentEl.firstChild;
 	}
 
-	Dwt.addClass(this._kbAnchor, this._kbFocusClass);
+	if (this._kbAnchor) {
+		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 
-	if (this._kbAnchor && !this._duringFocusByMouseDown) {
-		this._scrollList(this._kbAnchor);
-	}
+		if (!this._duringFocusByMouseDown) {
+			this._scrollList(this._kbAnchor);
+		}
 
-	if (this.hasFocus()) {
-		this._kbAnchor.focus();
+		if (this.hasFocus()) {
+			this._kbAnchor.focus();
+		}
 	}
 };
 
