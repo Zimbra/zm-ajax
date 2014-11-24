@@ -149,6 +149,13 @@ DwtMenu = function(params) {
     // and will propagate the event to listeners that are registered
     // on the menu itself.
     this._itemSelectionListener = new AjxListener(this, this._propagateItemSelection);
+
+	// Accessibility
+	if (parent.isDwtButton) {
+		var parentEl = parent.getHtmlElement();
+		parentEl.setAttribute("aria-haspopup", true);
+		parentEl.setAttribute("aria-controls", this._htmlElId);
+	}
 };
 
 DwtMenu.PARAMS = ["parent", "style", "className", "posStyle", "cascade", "id"];

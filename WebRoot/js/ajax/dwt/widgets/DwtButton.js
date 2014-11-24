@@ -109,6 +109,9 @@ DwtButton = function(params) {
 	this._actionTiming = params.actionTiming || DwtButton.ACTION_MOUSEUP;
 	this.__preventMenuFocus = null;
 	this._menuPopupStyle = DwtButton.MENU_POPUP_STYLE_BELOW;
+
+	// Accessibility
+	this.getHtmlElement().setAttribute("aria-haspopup", false);
 };
 
 DwtButton.prototype = new DwtLabel;
