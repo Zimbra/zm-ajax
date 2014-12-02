@@ -78,7 +78,11 @@ function(parentEl, imageName, useParentEl, _disabled, classes) {
 	if (color && window.AjxImgData && AjxImgData[overlayName] && AjxImgData[maskName]) {
 		color = (color.match(/^\d$/) ? ZmOrganizer.COLOR_VALUES[color] : color) ||
 				ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
-		parentEl.innerHTML = AjxImg.getImageHtml(origImageName, null, id ? "id='"+id+"'" : null, false, _disabled);
+		parentEl.innerHTML = AjxImg.getImageHtml({
+			imageName: origImageName,
+			attrStr: id ? "id='"+id+"'" : null,
+			disabled: _disabled
+		});
 		return;
 	}
 
@@ -132,29 +136,45 @@ function(imageEl) {
 	return imageEl.parentNode;
 };
 
+AjxImg.GET_IMAGE_HTML_PARAMS = [
+	"imageName",
+	"styles",
+	"attrStr",
+	"wrapInTable",
+	"disabled",
+	"classes",
+	"altText"
+];
+
 /**
  * Returns the HTML needed to display the given image.
  *
+ * @param {object}		params		hash of params:
  * @param {string}		imageName		the image you want to render
  * @param {string}		styles			optional style info (for example, "display:inline")
  * @param {string}		attrStr			optional attributes (for example, "id=X748")
  * @param {boolean}		wrapInTable		if true, wrap the HTML in a TABLE
  * @param {boolean}		disabled		if true, show image as disabled
- * @param {array}       classes     array of class names to be applied to this image
+ * @param {array}		classes			array of class names to be applied to this image
+ * @param {string}		altText			alternative text for non-visual users
  * 
  * @return	{string}	the image string
  */
 AjxImg.getImageHtml = 
-function(imageName, styles, attrStr, wrapInTable, disabled, classes, altText) {
+function() {
+	var params = Dwt.getParams(arguments, AjxImg.GET_IMAGE_HTML_PARAMS);
 
-	styles = styles || "";
+	var imageName = params.imageName;
+	var styles = params.styles || "";
 	var styleStr = styles ? " style='" + styles + "'" : "";
-	attrStr = attrStr ? " " + attrStr : "";
-	classes = classes || [];
+	var attrStr = params.attrStr ? " " + params.attrStr : "";
+	var disabled = params.disabled;
+	var classes = params.classes || [];
+	var altText = params.altText;
 
-	var pre = wrapInTable ? "<table style='display:inline' cellpadding=0 cellspacing=0 border=0><tr><td align=center valign=bottom>" : "";
+	var pre = params.wrapInTable ? "<table style='display:inline' cellpadding=0 cellspacing=0 border=0><tr><td align=center valign=bottom>" : "";
     var html = "";
-	var post = wrapInTable ? "</td></tr></table>" : "";
+	var post = params.wrapInTable ? "</td></tr></table>" : "";
 
 	if (imageName) {
         var color, m = imageName.match(AjxImg.RE_COLOR);
