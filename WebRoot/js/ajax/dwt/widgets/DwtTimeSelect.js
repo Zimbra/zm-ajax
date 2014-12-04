@@ -667,8 +667,6 @@ function(enabled) {
 
 DwtTimeInput.prototype._timeButtonListener =
 function(ev) {
-	var timeFormatter = AjxDateFormat.getTimeInstance(AjxDateFormat.SHORT);
-	var defaultTopMenuItem;
     if(!this._menuItemsAdded) {
         var j,
             k,
@@ -679,7 +677,9 @@ function(ev) {
             minutesSelectMenu,
             now = new Date(),
             timeSelectButton = this._timeSelectBtn,
-            menuSelectionListener = new AjxListener(this, this._timeSelectionListener);
+            timeFormatter = AjxDateFormat.getTimeInstance(AjxDateFormat.SHORT),
+            menuSelectionListener = new AjxListener(this, this._timeSelectionListener),
+            defaultTopMenuItem;
 
         for (j = 0; j < 24; j++) {
             now.setHours(j);
@@ -713,13 +713,12 @@ function(ev) {
         }
         this._hoursSelectMenu.setWidth(timeSelectButton.getW() + this._timeSelectInput.getW());
 
+	if (defaultTopMenuItem)
+		this._hoursSelectMenu.scrollToItem(defaultTopMenuItem);
+        this._scrollToValue(timeFormatter.format(this.getValue()));
         this._menuItemsAdded = true;
     }
 	ev.item.popup();
-	if (defaultTopMenuItem) {
-		this._hoursSelectMenu.scrollToItem(defaultTopMenuItem);
-	}
-	this._scrollToValue(timeFormatter.format(this.getValue()));
 };
 
 DwtTimeInput.prototype._timeSelectionListener =
