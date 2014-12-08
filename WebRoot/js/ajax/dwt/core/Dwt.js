@@ -1392,10 +1392,9 @@ Dwt.getParams =
 function(args, paramNames, force) {
 	if (!AjxUtil.isArrayLike(args)) { return {}; }
 
-	// Check for arg-list style of passing params, which usually involves
-	// either passing multiple arguments, or having a non-trivial object as the
-	// single argument.
-	if (args.length > 1 || !AjxUtil.isHash(args[0]) || force) {
+	// Check for arg-list style of passing params. There will almost always
+	// be more than one arg, and the first one is the parent DwtControl.
+	if (args.length > 1 || (args[0] && args[0].isDwtControl) || force) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
 			params[paramNames[i]] = args[i];
