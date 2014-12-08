@@ -899,7 +899,7 @@ function(field, value, skipNotify) {
  * 									if <code>int</code>, selects the menu item with that index
  */
 DwtMenu.prototype.setSelectedItem =
-function(which) {
+function(which, preventFocus) {
 	var currItem = this.__currentItem;
 	if (typeof(which) == "boolean") {
 		currItem = !currItem
@@ -915,7 +915,9 @@ function(which) {
 	// While the current item is not enabled or is a separator, try another
 	while (currItem) {
 		if (!currItem.isStyle) { // this is not a DwtMenuItem
-			currItem.focus();
+			if (!preventFocus) {
+				currItem.focus();
+			}
 			break;
 		}
 		else if (!currItem.isStyle(DwtMenuItem.SEPARATOR_STYLE) && currItem.getEnabled() && currItem.getVisible()) {
@@ -926,7 +928,9 @@ function(which) {
 	if (!currItem) { return; }
 
 	this.scrollToItem(currItem, true);
-	currItem.focus();
+	if (!preventFocus) {
+		currItem.focus();
+	}
 };
 
 DwtMenu.prototype.clearExternallySelectedItems =
@@ -1146,14 +1150,12 @@ function(x, y, kbGenerated) {
 	DwtMenu._activeMenus.add(this, null, true);
 
 	// Put our tabgroup in play
-	if (!this.__preventMenuFocus) {
-		DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this.getTabGroupMember());
-	}
-	
+	DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this.getTabGroupMember(), this.__preventMenuFocus);
+
 	/* If the popup was keyboard generated, then pick the first enabled child
 	   item */
 	if (kbGenerated || !this.parent.isDwtMenu) {
-	 	this.setSelectedItem(0);
+	 	this.setSelectedItem(0, this.__preventMenuFocus);
 	}
 };
 

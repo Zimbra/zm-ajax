@@ -612,7 +612,6 @@ DwtTimeInput.prototype.addChangeListener =
 function(listener) {
     this._changeListener = listener;
     var callback = AjxCallback.simpleClosure(this.handleTimeChange, this, listener);
-    this._timeSelectInput.setHandler(DwtEvent.ONFOCUS, callback);
     this._timeSelectInput.setHandler(DwtEvent.ONBLUR, callback);
 };
 
@@ -689,7 +688,7 @@ function(ev) {
             text = timeFormatter.format(now); // Regular formatter, returns the I18nMsg formatted time
             this.putTimeIndex(text, j);
 
-            if (j==0 || j==12) {
+			if (j==0 || j==12) {
                 text = DwtTimeSelect.format(now); // Specialized formatter, returns AjxMsg.midnight for midnight and AjxMsg.noon for noon
                 this.putTimeIndex(text, j); // Both should go in the indexer
             }
@@ -703,7 +702,8 @@ function(ev) {
             minutesSelectMenu = new DwtMenu({parent:mi, style:DwtMenu.DROPDOWN_CENTERV_STYLE, layout:DwtMenu.LAYOUT_CASCADE, maxRows:maxMinutesItem, congruent: true});
             mi.setMenu(minutesSelectMenu, true);
             mi.setSelectableWithSubmenu(true);
-            for (k = 1; k < maxMinutesItem; k++) {
+			minutesSelectMenu.dontStealFocus(true);
+			for (k = 1; k < maxMinutesItem; k++) {
                 now.setMinutes(k*this._interval);
                 smi = new DwtMenuItem({parent: minutesSelectMenu, style: DwtMenuItem.NO_STYLE});
                 smi.setText(timeFormatter.format(now));

@@ -117,7 +117,7 @@ function(ev) {
  * @see		#popTabGroup
  */
 DwtKeyboardMgr.prototype.pushTabGroup =
-function(tabGroup) {
+function(tabGroup, preventFocus) {
 	DBG.println(AjxDebug.FOCUS, "PUSH tab group " + tabGroup.__name);
 	if (!this.__keyboardHandlingInited || !tabGroup) { return; }
 		
@@ -132,7 +132,9 @@ function(tabGroup) {
 		return;
 	}
 	tabGroup.addFocusChangeListener(this.__tabGroupChangeListenerObj);
-	this.grabFocus(focusMember);
+	if (!preventFocus) {
+		this.grabFocus(focusMember);
+	}
 };
 
 /**
