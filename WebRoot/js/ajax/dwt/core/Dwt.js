@@ -1386,15 +1386,18 @@ function(objOrClassName, className) {
  * 
  * @param {Object}	args			Array-like structure of arguments
  * @param {array}	paramNames		an ordered list of param names
- * @param {boolean}	force			if true, a single arg is not a params hash
  */
-Dwt.getParams =
-function(args, paramNames, force) {
-	if (!AjxUtil.isArrayLike(args)) { return {}; }
+Dwt.getParams = function(args, paramNames) {
+
+	if (!args || args.length === 0) {
+		return {};
+	}
 
 	// Check for arg-list style of passing params. There will almost always
-	// be more than one arg, and the first one is the parent DwtControl.
-	if (args.length > 1 || (args[0] && args[0].isDwtControl) || force) {
+	// be more than one arg, and the first one may be the parent DwtControl.
+	// Conversion is not done if there is a single argument that is a simple
+	// hash, or a proxy for a simple hash (see AjxUtil.createProxy).
+	if (args.length > 1 || !AjxUtil.isHash(args[0]._object_ || args[0])) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
 			params[paramNames[i]] = args[i];
