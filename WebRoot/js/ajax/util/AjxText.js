@@ -634,9 +634,14 @@ AjxDateFormat.prototype.parse = function(s) {
 		object = AjxFormat.prototype.parse.call(this, s);
 		
 		// set the date components in proper order
-		var date = new Date(0, 0, 1, 0, 0, 0, 0);
+
+		// Use day 2 for the initial date - even if the setFullYear call screws up (see Bugzilla@Mozilla,
+		// Bug 1079720), it won't get the wrong year.
+		var date = new Date(0, 0, 2, 0, 0, 0, 0);
 		if (object.year != null) { date.setFullYear(object.year); }
 		if (object.month != null) { date.setMonth(object.month); }
+		// To insure the same behavior (if object does not set the day), init the day to 1.
+		date.setDate(1);
 		if (object.dayofmonth != null) { date.setDate(object.dayofmonth); }
 		else if (object.dayofyear != null) { date.setMonth(0, object.dayofyear); }
 		if (object.hours != null) { date.setHours(object.hours); }
