@@ -456,6 +456,8 @@ function(child) {
 	if (this._children.size() == 0) {
 		if (this._expanded)
 			this._expanded = false;
+
+		this._expandable = false;
 		
 		if (this._initialized && this._nodeCell) {
 			AjxImg.setImage(this._nodeCell, "Blank_16");
@@ -609,11 +611,13 @@ function(index, realizeDeferred, forceNode) {
 		}
 	}
 
+	this._expandable = false;
 
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
 		this._nodeCell.style.minWidth = this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
 		if (this._children.size() > 0 || forceNode) {
+			this._expandable = true;
 			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
 			this.addNodeIconListeners();
 		}
@@ -692,6 +696,7 @@ function(child, index) {
 			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
 			if (imgEl) {
+				this._expandable = true;
 				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
 				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEUP, DwtTreeItem._nodeIconMouseUpHdlr);
 			}
@@ -708,6 +713,7 @@ function(item, index, realizeDeferred) {
 	if (!this._children.contains(item)) {
 		this._children.add(item, index);
 	}
+	this._expandable = true;
 
 	if (this._childDiv == null) {
 		this._childDiv = document.createElement("div");
@@ -1071,6 +1077,11 @@ function(ev) {
 	// are indented using padding-left style); however, mozilla
 	// reports mouse events that happen in the padding area
 	if (ev.target == treeItem._childDiv) { return; }
+
+	//ignore the collapse/expand arrow. This is handled in DwtTreeItem._nodeIconMouseDownHdlr. It should only collapse/expand and never select this item, so no point in going on.
+	if (treeItem._expandable && ev.target === AjxImg.getImageElement(treeItem._nodeCell)) {
+		return;
+	}
 
 	if (ev.button == DwtMouseEvent.LEFT && treeItem._gotMouseDownLeft) {
 		treeItem._tree._itemClicked(treeItem, ev);
