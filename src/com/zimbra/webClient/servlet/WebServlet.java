@@ -57,6 +57,15 @@ public class WebServlet extends HttpServlet {
         String id = name + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, port);
         // TODO tag service with http/https read from java:comp/env in production (see ZCServlet static init)
+
+        String scheme = "http";
+        String url = scheme + "://localhost:" + port + "/zimbra/";
+        CatalogRegistration.Check check = new CatalogRegistration.Check(id + ":health", name);
+        check.script = "/opt/zimbra/libexec/zmhealthcheck-web " + url;
+        check.interval = "1m";
+
+        service.check = check;
+
         return service;
     }
 

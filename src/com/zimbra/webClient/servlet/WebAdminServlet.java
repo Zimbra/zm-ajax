@@ -57,6 +57,12 @@ public class WebAdminServlet extends HttpServlet {
         String id = name + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, port);
         // TODO tag service with http/https read from java:comp/env in production (see ZCServlet static init)
+
+        String url = "https://localhost:" + port + "/zimbraAdmin/";
+        CatalogRegistration.Check check = new CatalogRegistration.Check(id + ":health", name);
+        check.script = "/opt/zimbra/libexec/zmhealthcheck-webadmin " + url;
+        check.interval = "1m";
+
         return service;
     }
 
