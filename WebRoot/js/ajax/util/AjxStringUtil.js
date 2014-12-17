@@ -2018,8 +2018,8 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
 		AjxStringUtil._prune(sepNode, true);
 	}
 
-	// convert back to text, restoring html, head, and body nodes
-	var result = done ? "<html>" + htmlNode.innerHTML + "</html>" : text;
+	// convert back to text, restoring html, head, and body nodes; if there is nothing left, return original text
+	var result = done && htmlNode.innerText.length > 0 ? "<html>" + htmlNode.innerHTML + "</html>" : text;
 
 	AjxStringUtil._removeTestIframeDoc();
 	return result;
@@ -2035,15 +2035,16 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
  */
 AjxStringUtil._flatten = function(node, list) {
 
+	var nodeName = node && node.nodeName.toLowerCase();
+	if (AjxStringUtil.IGNORE_NODE[nodeName]) {
+		return;
+	}
+
 	list.push(node);
 
 	var children = node.childNodes || [];
 	for (var i = 0; i < children.length; i++) {
-		var el = children[i],
-			nodeName = el.nodeName.toLowerCase();
-		if (nodeName !== 'blockquote' && !AjxStringUtil.IGNORE_NODE[nodeName]) {
-			this._flatten(el, list);
-		}
+		this._flatten(children[i], list);
 	}
 };
 
