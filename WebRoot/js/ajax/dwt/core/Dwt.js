@@ -1389,7 +1389,7 @@ function(objOrClassName, className) {
  */
 Dwt.getParams = function(args, paramNames) {
 
-	if (!args || args.length === 0) {
+	if (!args || args.length === 0 || (args.length === 1 && !args[0])) {
 		return {};
 	}
 
@@ -1397,6 +1397,7 @@ Dwt.getParams = function(args, paramNames) {
 	// be more than one arg, and the first one may be the parent DwtControl.
 	// Conversion is not done if there is a single argument that is a simple
 	// hash, or a proxy for a simple hash (see AjxUtil.createProxy).
+
 	if (args.length > 1 || !AjxUtil.isHash(args[0]._object_ || args[0])) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
