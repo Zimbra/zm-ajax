@@ -41,6 +41,7 @@ DwtPropertyPage = function(params) {
 	this._fieldIds = new Object();
 	this._fildDivIds = new Object();
 	this._isDirty = false;
+	this._tabGroup = new DwtTabGroup(this.toString());
 };
 
 DwtPropertyPage.prototype = new DwtComposite;
@@ -74,6 +75,11 @@ DwtPropertyPage.prototype.isDirty =
 function () {
 	return this._isDirty;
 }
+
+DwtPropertyPage.prototype.getTabGroupMember =
+function (){
+	return this._tabGroup;
+};
 
 /**
  * @param field either key to the field ID in the _fieldIds or reference to the field

@@ -33,11 +33,13 @@ DwtPropertySheet = function(parent, className, posStyle, labelSide) {
 	this._propertyIdCount = 0;
 	this._propertyList = [];
 	this._propertyMap = {};
-	
+
+	this._tabGroup = new DwtTabGroup(this.toString());
+
 	this._tableEl = document.createElement("TABLE");
 	// Cellspacing needed for IE in quirks mode
 	this._tableEl.cellSpacing = 6;
-	
+
 	var element = this.getHtmlElement();
 	element.appendChild(this._tableEl);
 	this._setAllowSelection();
@@ -72,7 +74,7 @@ DwtPropertySheet.prototype._valueCssClass = "Field";
  * @param value The property value. If the value is an instance of DwtControl
  *				the element returned by <code>getHtmlElement</code> is used;
  *				if the value is an instance of Element, it is added directly;
- * 				anything else is set as the inner HTML of the property value
+ *				anything else is set as the inner HTML of the property value
  *				cell.
  * @param required [boolean] Determines if the property should be marked as
  *				   required. This is denoted by an asterisk next to the label.
@@ -83,15 +85,16 @@ DwtPropertySheet.prototype.addProperty = function(label, value, required) {
 	var row = this._tableEl.insertRow(index);
 	row.vAlign = this._vAlign ? this._vAlign : "top";
 
+	var nextId = Dwt.getNextId();
 	if (this._labelSide == DwtPropertySheet.LEFT) {
-		this._insertLabel(row, label, required);
-		this._insertValue(row, value, required);
+		this._insertLabel(row, label, required, nextId);
+		this._insertValue(row, value, required, nextId);
 	}
 	else {
-		this._insertValue(row, value, required);
-		this._insertLabel(row, label, required);
+		this._insertValue(row, value, required, nextId);
+		this._insertLabel(row, label, required, nextId);
 	}
-	
+
 	var id = this._propertyIdCount++;
 	var property = { id: id, index: index, row: row, visible: true };
 	this._propertyList.push(property);
@@ -99,9 +102,10 @@ DwtPropertySheet.prototype.addProperty = function(label, value, required) {
 	return id;
 };
 
-DwtPropertySheet.prototype._insertLabel = function(row, label, required) {
+DwtPropertySheet.prototype._insertLabel = function(row, label, required, id) {
 	var labelCell = row.insertCell(-1);
 	labelCell.className = this._labelCssClass;
+	labelCell.setAttribute("for", id);
 	if (this._labelSide != DwtPropertySheet.LEFT) {
 		labelCell.width = "100%";
 		labelCell.style.textAlign = "left";
@@ -114,13 +118,16 @@ DwtPropertySheet.prototype._insertLabel = function(row, label, required) {
 	}
 };
 
-DwtPropertySheet.prototype._insertValue = function(row, value, required) {
+DwtPropertySheet.prototype._insertValue = function(row, value, required, id) {
 	var valueCell = row.insertCell(-1);
 	valueCell.className = this._valueCssClass;
+	valueCell.id = id;
+
 	if (!value) {
 		valueCell.innerHTML = "&nbsp;";
 	} else if (value instanceof DwtControl) {
 		valueCell.appendChild(value.getHtmlElement());
+		this._tabGroup.addMember(value);
 	}
 	/**** NOTE: IE says Element is undefined
 	else if (value instanceof Element) {
@@ -128,9 +135,40 @@ DwtPropertySheet.prototype._insertValue = function(row, value, required) {
 	else if (value.nodeType == AjxUtil.ELEMENT_NODE) {
 	/***/
 		valueCell.appendChild(value);
+		this._addTabGroupMemberEl(valueCell);
 	} else {
 		valueCell.innerHTML = String(value);
+		this._addTabGroupMemberEl(valueCell);
 	}
+};
+
+/**
+ * Add element's leaf children to tabgroup.
+ *
+ * @param element HTML element.
+ */
+DwtPropertySheet.prototype._addTabGroupMemberEl = function(element){
+	var obj = this;
+
+	// recursive funtion to add HTML leafs
+	function addChildren(el){
+		if(el.children.length > 0){
+			AjxUtil.foreach(el.children, function(child){
+				addChildren(child);
+			});
+		}
+		else{
+			// add leaf to tabgroup
+			obj._makeFocusable(el);
+			obj._tabGroup.addMember(el);
+		}
+	}
+
+	addChildren(element);
+};
+
+DwtPropertySheet.prototype.getTabGroupMember = function() {
+	return this._tabGroup;
 };
 
 DwtPropertySheet.prototype.removeProperty = function(id) {
