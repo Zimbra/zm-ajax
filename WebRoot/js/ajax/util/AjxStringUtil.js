@@ -2019,7 +2019,7 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
 	}
 
 	// convert back to text, restoring html, head, and body nodes; if there is nothing left, return original text
-	var result = done && htmlNode.innerText.length > 0 ? "<html>" + htmlNode.innerHTML + "</html>" : text;
+	var result = done && htmlNode.textContent ? "<html>" + htmlNode.innerHTML + "</html>" : text;
 
 	AjxStringUtil._removeTestIframeDoc();
 	return result;
@@ -2140,13 +2140,13 @@ AjxStringUtil._checkNode = function(el) {
 };
 
 /**
- * Checks innerText to see if it's a separator.
+ * Checks textContent to see if it's a separator.
  * @param {Element} node
  * @return {String}
  * @private
  */
 AjxStringUtil._checkNodeContent = function(node) {
-	var content = node.innerText || '';
+	var content = node.textContent || '';
 	if (!AjxStringUtil._NON_WHITESPACE.test(content) || content.length > 200) {
 		return null;
 	}
