@@ -67,7 +67,7 @@ public final class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter
 
     protected int debug = 0;
     protected String jsVersion = null;
-	protected boolean allowInFrame = false;
+    protected boolean allowInFrame = false;
     protected FilterConfig config = null;
     protected Pattern extensionPattern = null;
     protected boolean serverSupportsGzip = true;
@@ -166,7 +166,7 @@ public final class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter
         if (filterConfig != null) {
             debug = getInitParameterInt("debug", 0);
             jsVersion = getInitParameter("jsVersion", "0");
-			allowInFrame = getInitParameterBool("allowInFrame", false);
+            allowInFrame = getInitParameterBool("allowInFrame", false);
             serverSupportsGzip = getInitParameterBool("shouldSupportGzip",true);
             getExtensionsRegex();
             getNoCachePatternList();
@@ -421,6 +421,10 @@ public final class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter
 
         if ("true".equals(req.getParameter("weboffline"))) return;
 
+        if (!allowInFrame) {
+            resp.setHeader(HEADER_X_FRAME_OPTIONS, X_FRAME_OPTIONS_VALUE);
+        }
+
         if (isDynamicContent(uri)){
             setJspCacheControlHeaders(resp);
         } else {
@@ -444,9 +448,6 @@ public final class SetHeaderFilter extends com.zimbra.cs.servlet.SetHeaderFilter
         resp.setHeader(HEADER_EXPIRES, ALREADY_EXPIRED);
         resp.setHeader(HEADER_CACHE_CONTROL, NO_CACHE_CONTROL_VALUE);
         resp.setHeader(HEADER_PRAGMA, NO_CACHE_PRAGMA_VALUE);
-		if (!allowInFrame) {
-			resp.setHeader(HEADER_X_FRAME_OPTIONS, X_FRAME_OPTIONS_VALUE);
-		}
     }
 
     private void setStaticResourceCacheControlHeaders(HttpServletRequest req, HttpServletResponse resp) {
