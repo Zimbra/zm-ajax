@@ -1021,6 +1021,18 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOne
 		}
 	} else if (nodeName == "p") {
 		text[idx++] = onlyOneNewLinePerP ? "\n" : "\n\n";
+	} else if (nodeName === "a") {
+		if (el.href) {
+			//format as [ href | text ] (if no text, format as [ href ]
+			text[idx++] = "[ ";
+			text[idx++] = el.href;
+			if (el.textContent) {
+				text[idx++] = " | ";
+				text[idx++] = el.textContent;
+			}
+			text[idx++] = " ] ";
+			return idx; // returning since we take care of all the child nodes via the "textContent" above. No need to parse further.
+		}
 	} else if (listType == AjxStringUtil._NO_LIST && (nodeName == "br" || nodeName == "hr")) {
 		text[idx++] = "\n";
 	} else if (nodeName == "ol" || nodeName == "ul") {
