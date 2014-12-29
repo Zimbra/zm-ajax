@@ -405,7 +405,18 @@ function() {
 		return false;
 	}
 	if (this._target == AjxDebug.TGT_WINDOW) {
-		return (!this._isPaused && this._debugWindow && !this._debugWindow.closed);
+		try {
+			return (!this._isPaused && this._debugWindow && !this._debugWindow.closed);
+		} catch (ex) {
+			// OMG accessing the debugWindow in IE12 is sometimes throwing a COM exception 'An outgoing call
+			// cannot be made since the application is dispatching an input-synchronous call'.  IOleWindow.GetWindow
+			// is marked with input-sync and the exception implies an attempt to access another COM apartment while
+			// executing it.  Sounds like an IE12 Bug with this preview version.
+
+			// Just suppress the logging for this call, since it appears _debugWindow is inaccessible
+			return false;
+
+		}
 	}
 	return true;
 };
