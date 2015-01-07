@@ -695,7 +695,7 @@ function(htmlElement, point, getFromStyle) {
 
 
 /**
- * Gets the outer size -- that is, the size including margins -- of an
+ * Gets the outer size -- that is, the size including margins, padding, and borders -- of an
  * HTML element.
  *
  * @param {HTMLElement} htmlElement		the HTML element
@@ -714,8 +714,9 @@ function(htmlElement, point) {
 
     if (p && Dwt.getVisible(htmlElement)) {
         var margins = Dwt.getMargins(htmlElement);
-        p.x += margins.left + margins.right;
-        p.y += margins.top + margins.bottom;
+		var insets = Dwt.getInsets(htmlElement);
+        p.x += margins.left + margins.right + insets.left + insets.right;
+        p.y += margins.top + margins.bottom + insets.top + insets.bottom;
     }
 
     return p;

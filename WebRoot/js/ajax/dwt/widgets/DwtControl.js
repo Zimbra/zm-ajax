@@ -1754,6 +1754,19 @@ function(getFromStyle) {
 };
 
 /**
+ * Gets the outer size -- that is, the size including margins, padding, and borders -- of an
+ * HTML element.
+ *
+ * @return {DwtPoint}	the elements size, margins, padding, and borders included
+ */
+DwtControl.prototype.getOuterSize =
+function() {
+	if (!this._checkState()) { return; }
+
+	return Dwt.getOuterSize(this.getHtmlElement(), null);
+};
+
+/**
  * Sets the size of the control
  *
  * @param {number|string} width	the width of the control (for example: 100, "100px", "75%", Dwt.DEFAULT)
