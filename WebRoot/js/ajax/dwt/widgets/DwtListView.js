@@ -406,19 +406,22 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 };
 
 DwtListView.prototype._createHeaderCssStyle =
-function(headerCol, width) {
-	if (!headerCol._cssClass || !headerCol._resizeable) {
-		return;
+	function(headerCol, width) {
+		if (headerCol._cssClass && headerCol._resizeable) {
+			if (headerCol._cssRuleIndex) {
+				DwtCssStyle.removeRule(document.styleSheets[0], headerCol._cssRuleIndex);
+			}
+			//add a dynamic stylesheet for this header
+			var selector = '';
+			if (this.parent && this.parent._className) {
+				//add the parent class name to selector so that styles for all types of view can co-exist
+				selector += "." + this.parent._className;
+			}
+			selector += " ." + headerCol._cssClass;
+			var declaration = "width:" + width + ($.isNumeric(width)?"px":"") + ";";
+			headerCol._cssRuleIndex = DwtCssStyle.addRule(document.styleSheets[0], selector, declaration,headerCol._cssRuleIndex);
+		}
 	}
-	if (headerCol._cssRuleIndex) {
-		DwtCssStyle.removeRule(document.styleSheets[0], headerCol._cssRuleIndex);
-	}
-	//add a dynamic stylesheet for this header
-	var selector = "#" + this.parent._htmlElId;
-	selector += " ." + headerCol._cssClass;
-	var declaration = "width:" + width + ($.isNumeric(width) ? "px;" : ";");
-	headerCol._cssRuleIndex = DwtCssStyle.addRule(document.styleSheets[0], selector, declaration, headerCol._cssRuleIndex);
-};
 /**
  * Gets the index of the given item.
  *
@@ -2700,8 +2703,9 @@ function(ev) {
 		col._width = "auto";
 	}
 
+	//recalculate the css styles after the width changes
+	this.recalculateCssStyle();
 	this._relayout();
-	//recalculate the css styles after the width changes (_restColWidth calls recalculateCssStyle)
 	this._resetColWidth();
 
 	return true;
@@ -2711,7 +2715,9 @@ DwtListView.prototype.recalculateCssStyle =
 function() {
 	for (var i = 0; i < this._headerList.length; i++) {
 		var headerCol = this._headerList[i];
-		this._createHeaderCssStyle(headerCol, this._calcRelativeWidth(i));
+		if (headerCol._cssClass && headerCol._resizeable) {
+			this._createHeaderCssStyle(headerCol, this._calcRelativeWidth(i));
+		}
 	}
 };
 
@@ -2746,13 +2752,11 @@ function() {
 
 			if (headerWidth != rowWidth) {
 				lastCell.style.width = div.style.width = (lastCol._width != null && lastCol._width != "auto")
-					? (lastCol._width + scrollbarPad  + "px")
-					: (lastCell.clientWidth + scrollbarPad + "px");
+					? (lastCol._width + scrollbarPad)
+					: (lastCell.clientWidth + scrollbarPad);
+			} else {
+				lastCell.style.width = div.style.width = (lastCol._width || "");
 			}
-			else {
-				lastCell.style.width = div.style.width = lastCol._width +  $.isNumeric(lastCol._width) ? "px" : "";
-			}
-			this.recalculateCssStyle(); //make sure to call this AFTER modifying the last col width.
 		}
     }
 };
