@@ -955,8 +955,10 @@ AjxUtil.convertToEntities = function (source){
     if (!source || !(length = source.length)) return source;
     
 	for (var i = 0; i < length; i++) {
-		if (source.charCodeAt(i) > 127) {
-			var temp = source.charCodeAt(i).toString(10);
+		var charCode = source.charCodeAt(i);
+		// Encode non-ascii or double quotes
+		if ((charCode > 127) || (charCode == 34)) {
+			var temp = charCode.toString(10);
 			while (temp.length < 4) {
 				temp = '0' + temp;
 			}
