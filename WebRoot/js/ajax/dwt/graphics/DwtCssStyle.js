@@ -219,16 +219,15 @@ DwtCssStyle.__DIMENSION_RE = /^(-?[0-9]+(?:\.[0-9]*)?)([a-z]*|%)$/;
 DwtCssStyle.__NUMBER_RE = /^(-?[0-9]+(?:\.[0-9]*)?)+$/
 
 /**
- * Obtain the font size of the root element. We assume and verify that
- * it's specified in pixels.
+ * Obtain the font size of the root element in pixels.
  */
-DwtCssStyle.__getRootFontSize =
-function() {
-	var fontsize =
-		DwtCssStyle.getProperty(document.documentElement, 'font-size');
+DwtCssStyle.__getRootFontSize = function() {
+
+	var fontsize = DwtCssStyle.getProperty(document.documentElement, 'font-size');
 
 	if (!DwtCssStyle.__PIXEL_RE.test(fontsize)) {
-		throw new Error('font size of root element is not in pixels!');
+		DBG.println(AjxDebug.DBG1, 'font size of root element is not in pixels!');
+		return -1;
 	}
 
 	return parseInt(fontsize);
@@ -236,9 +235,18 @@ function() {
 
 /**
  * Convert a CSS value to a pixel count; unhandled units raise an error.
+ *
+ * @param   {String}    val     a font size value in some form
+ *
+ * @return  {Number}    the size in pixels, or -1 if there is an error
  */
-DwtCssStyle.asPixelCount =
-function(val) {
+DwtCssStyle.asPixelCount = function(val) {
+
+	if (!val) {
+		DBG.println(AjxDebug.DBG1, 'DwtCssStyle.asPixelCount: missing argument');
+		return -1;
+	}
+
 	var dimension, unit, match;
 
 	// assume pixels if no unit is specified
@@ -249,12 +257,14 @@ function(val) {
 		dimension = Number(match[1]);
 		unit = match[2];
 	} else {
-		throw new Error('unsupported argument: ' + val);
+		DBG.println(AjxDebug.DBG1, 'DwtCssStyle.asPixelCount: unsupported argument: ' + val);
+		return -1;
 	}
 
 	switch (unit) {
 		case 'rem': {
-			return dimension * DwtCssStyle.__getRootFontSize();
+			var rootFontSize = DwtCssStyle.__getRootFontSize();
+			return rootFontSize !== -1 ? dimension * rootFontSize : -1;
 		}
 
 		// see http://www.w3.org/TR/css3-values/#absolute-lengths
@@ -285,12 +295,13 @@ function(val) {
 		case 'ch':
 		case 'em':
 		case 'ex': {
-			throw new Error('cannot convert context-dependent CSS unit ' +
-							unit);
+			DBG.println(AjxDebug.DBG1, 'DwtCssStyle.asPixelCount: cannot convert context-dependent CSS unit ' + unit);
+			return -1;
 		}
 
 		default: {
-			throw new Error('unrecognized CSS unit ' + unit);
+			DBG.println(AjxDebug.DBG1, 'DwtCssStyle.asPixelCount: unrecognized CSS unit ' + unit);
+			return -1;
 		}
 	}
 };
