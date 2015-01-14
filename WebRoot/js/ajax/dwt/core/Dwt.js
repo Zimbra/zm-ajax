@@ -857,9 +857,27 @@ function(htmlElement, opacity) {
 	}
 };
 
+
+/**
+ * Get the z-index of an element.
+ *
+ * @param {boolean} getFromStyle    get the value from the style attribute of
+ *                                  this element, or a parent
+ *
+ * @return	{number}	the z-index value
+ */
 Dwt.getZIndex =
-function(htmlElement) {
+function(htmlElement, getFromStyle) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
+
+	if (getFromStyle) {
+		while (htmlElement.style.zIndex === "" && htmlElement.parentNode) {
+			htmlElement = htmlElement.parentNode;
+		}
+
+		return htmlElement.style.zIndex;
+	}
+
 	return DwtCssStyle.getProperty(htmlElement, "z-index");
 };
 

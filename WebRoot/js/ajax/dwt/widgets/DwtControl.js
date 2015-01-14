@@ -1911,13 +1911,16 @@ function() {
 /**
  * Gets the control z-index value.
  *
+ * @param {boolean} getFromStyle    get the value from the style attribute of
+ *                                  the control element, or a parent
+ *
  * @return	{number}	the z-index value
  */
 DwtControl.prototype.getZIndex =
-function() {
+function(getFromStyle) {
 	if (!this._checkState()) { return; }
 
-	return Dwt.getZIndex(this.getHtmlElement());
+	return Dwt.getZIndex(this.getHtmlElement(), getFromStyle);
 };
 
 /**
