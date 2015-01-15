@@ -44,6 +44,8 @@ DwtTabGroup = function(name) {
 	this.__evtMgr = new AjxEventMgr();
 };
 
+DwtTabGroup.prototype.isDwtTabGroup = true;
+
 /** 
  * Exception string that is thrown when an operation is attempted
  * on a non-root tab group.
@@ -116,7 +118,7 @@ function(member, index) {
 		this.__members.add(members[i], index);
 
 		// If adding a tab group, register me as its parent
-		if (members[i] instanceof DwtTabGroup) {
+		if (members[i].isDwtTabGroup) {
 			members[i].newParent(this);
 		}
 	}
@@ -197,10 +199,10 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
 	if (focusItem) {
 		newFocusMember = focusItem;
 	} else if (root.__currFocusMember == oldMember ||
-		((oldMember instanceof DwtTabGroup) && oldMember.contains(root.__currFocusMember))) {
+		(oldMember && oldMember.isDwtTabGroup && oldMember.contains(root.__currFocusMember))) {
 
 		if (newMember) {
-			newFocusMember = (newMember instanceof DwtTabGroup) ? newMember.getFirstMember() : newMember;
+			newFocusMember = (newMember.isDwtTabGroup) ? newMember.getFirstMember() : newMember;
 		} else {
 			newFocusMember = this.__getPrevMember(oldMember, checkEnabled);
 			if (!newFocusMember) {
@@ -216,7 +218,7 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
 		}
 	}
 
-	if (newMember instanceof DwtTabGroup) {
+	if (newMember && newMember.isDwtTabGroup) {
 		newMember.newParent(this);
 	}
 		
@@ -266,7 +268,7 @@ DwtTabGroup.prototype.getTabGroupMemberByName = function(name) {
 	var members = this.__members.getArray();
 	for (var i = 0; i < members.length; i++) {
 		var member = members[i];
-		if (member instanceof DwtTabGroup && member.getName() == name) {
+		if (member.isDwtTabGroup && member.getName() == name) {
 			return member;
 		}
 	}
@@ -422,7 +424,7 @@ function(member, checkEnabled) {
 		var prevMember = a[i];
 		/* if sibling is not a tab group, then it is the previous child. If the
 		 * sibling is a tab group, get its rightmost member.*/
-		if (!(prevMember instanceof DwtTabGroup)) {
+		if (!(prevMember.isDwtTabGroup)) {
 			if (this.__checkEnabled(prevMember, checkEnabled)) {
 				return prevMember;
 			}
@@ -456,7 +458,7 @@ function(member, checkEnabled) {
 		return false;
 	}
 
-	if (member instanceof DwtControl) {
+	if (member.isDwtControl) {
 		member = member.getHtmlElement();
 	}
 
@@ -512,7 +514,7 @@ function(member, checkEnabled) {
 		var nextMember = a[i];
 		/* if sibling is not a tab group, then it is the next child. If the
 		 * sibling is a tab group, get its leftmost member.*/
-		if (!(nextMember instanceof DwtTabGroup)) {
+		if (!(nextMember.isDwtTabGroup)) {
 			if (this.__checkEnabled(nextMember, checkEnabled)) {
 				return nextMember;
 			}
@@ -545,7 +547,7 @@ function(checkEnabled) {
 	 * rightmost element. */
 	for (var i = this.__members.size() - 1; i >= 0; i--) {
 		member = a[i]
-		if (!(member instanceof DwtTabGroup)) {
+		if (!(member.isDwtTabGroup)) {
 			if (this.__checkEnabled(member, checkEnabled)) break;
 		} else {
 			member = member.__getRightMostMember(checkEnabled);
@@ -572,7 +574,7 @@ function(checkEnabled) {
 	 * rightmost element */
 	for (var i = 0; i < sz; i++) {
 		member = a[i]
-		if (!(member instanceof DwtTabGroup)) {
+		if (!(member.isDwtTabGroup)) {
 			if  (this.__checkEnabled(member, checkEnabled)) break;
 		} else {
 			member = member.__getLeftMostMember(checkEnabled);
@@ -634,7 +636,7 @@ function(tg, debugLevel, level) {
 	var sz = tg.__members.size();
 	var a = tg.__members.getArray();
 	for (var i = 0; i < sz; i++) {
-		if (a[i] instanceof DwtTabGroup) {
+		if (a[i].isDwtTabGroup) {
 			tg.__dump(a[i], debugLevel, level + 1);
 		} else {
 			var desc = a[i].nodeName ?
@@ -705,7 +707,7 @@ function(member) {
 		if (m == member || (DwtTabGroup.__memberKeyFunc(member) ==
 		                    DwtTabGroup.__memberKeyFunc(m))) {
 			return this;
-		} else if (m instanceof DwtTabGroup && (m = m.__getTabGroupForMember(member))) {
+		} else if (m.isDwtTabGroup && (m = m.__getTabGroupForMember(member))) {
 			return m;
 		}
 	}
