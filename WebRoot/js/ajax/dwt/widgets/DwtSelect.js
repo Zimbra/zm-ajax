@@ -85,10 +85,10 @@ DwtSelect.PARAMS = ["parent", "options", "style", "className", "layout"];
 DwtSelect.prototype = new DwtButton;
 DwtSelect.prototype.constructor = DwtSelect;
 
-DwtSelect.prototype.toString = 
-function() {
-    return "DwtSelect";
-};
+DwtSelect.prototype.isDwtSelect = true;
+DwtSelect.prototype.toString = function() { return "DwtSelect"; };
+
+DwtSelect.prototype.role = 'combobox';
 
 //
 // Constants
