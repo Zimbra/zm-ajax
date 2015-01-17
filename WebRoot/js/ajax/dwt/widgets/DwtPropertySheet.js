@@ -85,27 +85,38 @@ DwtPropertySheet.prototype.addProperty = function(label, value, required) {
 	var row = this._tableEl.insertRow(index);
 	row.vAlign = this._vAlign ? this._vAlign : "top";
 
-	var nextId = Dwt.getNextId();
+	var labelId = Dwt.getNextId(),
+		valueId = Dwt.getNextId();
+
 	if (this._labelSide == DwtPropertySheet.LEFT) {
-		this._insertLabel(row, label, required, nextId);
-		this._insertValue(row, value, required, nextId);
+		this._insertLabel(row, label, required, labelId, valueId);
+		this._insertValue(row, value, required, labelId, valueId);
 	}
 	else {
-		this._insertValue(row, value, required, nextId);
-		this._insertLabel(row, label, required, nextId);
+		this._insertValue(row, value, required, labelId, valueId);
+		this._insertLabel(row, label, required, labelId, valueId);
 	}
 
 	var id = this._propertyIdCount++;
-	var property = { id: id, index: index, row: row, visible: true };
+	var property = {
+		id:         id,
+		index:      index,
+		row:        row,
+		visible:    true,
+		labelId:    labelId,
+		valueId:    valueId
+	};
 	this._propertyList.push(property);
 	this._propertyMap[id] = property;
 	return id;
 };
 
-DwtPropertySheet.prototype._insertLabel = function(row, label, required, id) {
+DwtPropertySheet.prototype._insertLabel = function(row, label, required, labelId, valueId) {
+
 	var labelCell = row.insertCell(-1);
 	labelCell.className = this._labelCssClass;
-	labelCell.setAttribute("for", id);
+	labelCell.id = labelId;
+	labelCell.setAttribute("for", valueId);
 	if (this._labelSide != DwtPropertySheet.LEFT) {
 		labelCell.width = "100%";
 		labelCell.style.textAlign = "left";
@@ -118,16 +129,21 @@ DwtPropertySheet.prototype._insertLabel = function(row, label, required, id) {
 	}
 };
 
-DwtPropertySheet.prototype._insertValue = function(row, value, required, id) {
+DwtPropertySheet.prototype._insertValue = function(row, value, required, labelId, valueId) {
+
 	var valueCell = row.insertCell(-1);
 	valueCell.className = this._valueCssClass;
-	valueCell.id = id;
+	valueCell.id = valueId;
 
 	if (!value) {
 		valueCell.innerHTML = "&nbsp;";
-	} else if (value instanceof DwtControl) {
+	} else if (value.isDwtControl) {
 		valueCell.appendChild(value.getHtmlElement());
 		this._tabGroup.addMember(value);
+		var input = value.getInputElement && value.getInputElement();
+		if (input) {
+			input.setAttribute('aria-labelledby', labelId);
+		}
 	}
 	/**** NOTE: IE says Element is undefined
 	else if (value instanceof Element) {
@@ -136,9 +152,11 @@ DwtPropertySheet.prototype._insertValue = function(row, value, required, id) {
 	/***/
 		valueCell.appendChild(value);
 		this._addTabGroupMemberEl(valueCell);
+		value.setAttribute('aria-labelledby', labelId);
 	} else {
 		valueCell.innerHTML = String(value);
 		this._addTabGroupMemberEl(valueCell);
+		valueCell.setAttribute('aria-labelledby', labelId);
 	}
 };
 
@@ -169,6 +187,10 @@ DwtPropertySheet.prototype._addTabGroupMemberEl = function(element){
 
 DwtPropertySheet.prototype.getTabGroupMember = function() {
 	return this._tabGroup;
+};
+
+DwtPropertySheet.prototype.getProperty = function(id) {
+	return this._propertyMap[id];
 };
 
 DwtPropertySheet.prototype.removeProperty = function(id) {
