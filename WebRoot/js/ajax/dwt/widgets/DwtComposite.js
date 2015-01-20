@@ -333,6 +333,15 @@ DwtComposite.prototype._mouseDownListener =
 function(ev) {
 	if (ev.button == DwtMouseEvent.LEFT) {
 		// reset mouse event to propagate event to browser (allows text selection)
+		//todo - look into changing this, it's currently very confusing and inconsistent.
+		//bug 23462 change it to stop propagation, so supposedly it should NOT allow selection.
+		// (so the above comment is wrong). But it's more complicated than this, since ev._dontCallPreventDefault is more
+		// important, and is not set here, so a listener could set it to TRUE thus making it allow selection, despite
+		// _stopPropagation being set to true here. (not sure what the meaning is).
+		// Note for example the inconsistency with the DwtComposite.prototype._contextMenuListener method below
+		// As one cool way to allow selection look at ZmConvView2Header constructor, the line:
+		// this.setEventPropagation(true, [DwtEvent.ONMOUSEDOWN, DwtEvent.ONSELECTSTART, DwtEvent.ONMOUSEUP, DwtEvent.ONMOUSEMOVE]);
+		// which causes _dontCallPreventDefault to be set to true, not being overriden here, thus selection works.
 		ev._stopPropagation = true;
 		ev._returnValue = true;
 	}
