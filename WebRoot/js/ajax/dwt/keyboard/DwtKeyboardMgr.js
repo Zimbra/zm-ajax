@@ -165,7 +165,7 @@ function(tabGroup) {
 		var len = a.length;
 		for (var i = len - 1; i >= 0; i--) {
 			if (tabGroup == a[i]) {
-				a[i].dump();
+				a[i].dump(AjxDebug.DBG1);
 				break;
 			}
 		}
@@ -725,6 +725,10 @@ DwtKeyboardMgr.prototype.__warnFocus = function() {
 		AjxMessageFormat.format('KBFF focused for {0} ({1})', [desc, id]);
 
 	DBG.println(AjxDebug.FOCUS, '<b>' + msg + '</b>');
+
+	if (window.console && console.log) {
+		console.log(msg);
+	}
 };
 
 /**
