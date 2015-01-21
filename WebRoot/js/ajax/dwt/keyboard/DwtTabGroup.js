@@ -449,10 +449,15 @@ function(member, checkEnabled) {
  * 
  * @private
  */
-DwtTabGroup.prototype.__checkEnabled =
-function(member, checkEnabled) {
-	if (!checkEnabled) return true;
-	if (!member || member.noTab) return false;
+DwtTabGroup.prototype.__checkEnabled = function(member, checkEnabled) {
+
+	if (!checkEnabled) {
+		return true;
+	}
+
+	if (!member || member.noTab) {
+		return false;
+	}
 
 	if (member.isDwtControl ? !member.getEnabled() : member.disabled) {
 		return false;
@@ -463,9 +468,12 @@ function(member, checkEnabled) {
 	}
 
 	var loc = Dwt.getLocation(member);
+	if (loc.x === null || loc.x === Dwt.LOC_NOWHERE || loc.y === Dwt.LOC_NOWHERE || loc.y === null) {
+		return false;
+	}
 
-	if (loc.x === null || loc.x === Dwt.LOC_NOWHERE ||
-	    loc.y === Dwt.LOC_NOWHERE || loc.y === null) {
+	var size = Dwt.getSize(member);
+	if (!size || size.x === 0 || size.y === 0) {
 		return false;
 	}
 
