@@ -144,7 +144,7 @@ DwtPropertySheet.prototype._insertValue = function(row, value, required, labelId
 	else if (value.isDwtControl) {
 		valueCell.appendChild(value.getHtmlElement());
 		this._tabGroup.addMember(value);
-		this._makeFocusable(value);
+		value._makeFocusable();
 		var input = value.getInputElement && value.getInputElement();
 		if (input) {
 			input.setAttribute('aria-labelledby', labelId);
