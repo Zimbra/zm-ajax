@@ -517,6 +517,7 @@ function() {
 DwtTabViewPage.prototype.showMe =
 function() {
 	this.setZIndex(DwtTabView.Z_ACTIVE_TAB);
+	this.setAttribute('aria-selected', true);
 	if (this.parent.getHtmlElement().offsetHeight > 80) { 						// if parent visible, use offsetHeight
 		this._contentEl.style.height=this.parent.getHtmlElement().offsetHeight-80;
 	} else {
@@ -536,6 +537,7 @@ function() {
 DwtTabViewPage.prototype.hideMe = 
 function() {
 	this.setZIndex(DwtTabView.Z_HIDDEN_TAB);
+	this.setAttribute('aria-selected', false);
 };
 
 /**

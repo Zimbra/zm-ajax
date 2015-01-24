@@ -1214,17 +1214,12 @@ function(actionCode, ev) {
 	return true;
 };
 
-DwtListView.prototype.setMultiSelect =
-function (enabled) {
-	this.getHtmlElement().setAttribute('aria-multiselectable',
-	                                   Boolean(enabled));
+DwtListView.prototype.setMultiSelect = function (enabled) {
+	this.setAttribute('aria-multiselectable', Boolean(enabled));
 };
 
-DwtListView.prototype.isMultiSelectEnabled =
-function () {
-	var r = this.getHtmlElement().getAttribute('aria-multiselectable');
-
-	return r === "true";
+DwtListView.prototype.isMultiSelectEnabled = function () {
+	return this.getAttribute('aria-multiselectable') === "true";
 };
 
 // DO NOT REMOVE - used by xforms

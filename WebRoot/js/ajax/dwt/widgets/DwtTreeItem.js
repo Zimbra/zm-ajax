@@ -590,19 +590,17 @@ function(index, realizeDeferred, forceNode) {
 	this._textCell = document.getElementById(data.id + "_textCell");
 	this._extraCell = document.getElementById(data.id + "_extraCell");
 
-	var el = this.getHtmlElement();
-
 	/* assign the ARIA level */
-	el.setAttribute("aria-level", this.getNestingLevel());
+	this.setAttribute("aria-level", this.getNestingLevel());
 
 	/* add a label for screenreaders, so that they don't read the entire
 	   element */
 	if (this._textCell) {
-		el.setAttribute("aria-labelledby", this._textCell.id);
+		this.setAttribute("aria-labelledby", this._textCell.id);
 	}
 
 	// we start as collapsed
-	this.getHtmlElement().setAttribute('aria-expanded', false);
+	this.setAttribute('aria-expanded', false);
 
 	if (this._dynamicWidth){
 		var tableNode = document.getElementById(data.id + "_table");
