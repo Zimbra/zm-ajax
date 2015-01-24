@@ -111,7 +111,7 @@ DwtButton = function(params) {
 	this._menuPopupStyle = DwtButton.MENU_POPUP_STYLE_BELOW;
 
 	// Accessibility
-	this.getHtmlElement().setAttribute("aria-haspopup", false);
+	this.setAttribute("aria-haspopup", false);
 };
 
 DwtButton.prototype = new DwtLabel;
@@ -347,12 +347,6 @@ function(imageInfo, direction) {
  */
 DwtButton.prototype.setText =
 function(text) {
-	// assign the ARIA label directly; we want it to override the tooltip, if any
-	if (text) {
-		this.getHtmlElement().setAttribute('aria-label', text);
-	} else {
-		this.getHtmlElement().removeAttribute('aria-label');
-	}
 
 	//see explanation in setImage
 	if (this.whatToShow && !this.whatToShow.showText) {
@@ -449,6 +443,8 @@ function(params) {
 		Dwt.delClass(this.getHtmlElement(), "ZHasDropDown");
         this._dropDownEl.innerHTML = "";
     }
+
+	this.setAttribute("aria-haspopup", true);
 };
 DwtButton.setMenuParams = ["menu", "shouldToggle", "followIconStyle", "popupAbove", "popupRight"];
 
@@ -481,7 +477,7 @@ function(dontCreate) {
 		}
 	}
     if (this._menu) {
-        this.getHtmlElement().setAttribute("menuId", this._menu._htmlElId);
+        this.setAttribute("menuId", this._menu._htmlElId);
     }
     return this._menu;
 };

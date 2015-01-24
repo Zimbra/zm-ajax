@@ -30,6 +30,7 @@ DwtGrouper = function(parent, className, posStyle) {
 	DwtComposite.call(this, {parent:parent, posStyle:posStyle});
 
 	this._labelEl = document.createElement("LEGEND");
+	this._labelEl.id = Dwt.getNextId();
 	this._insetEl = document.createElement("DIV");
 	this._borderEl = document.createElement("FIELDSET");
 	this._borderEl.appendChild(this._labelEl);
