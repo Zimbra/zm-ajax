@@ -2179,10 +2179,7 @@ AjxStringUtil._checkNodeContent = function(node) {
  * @param {array}	untrustedAttrs	list of attributes to not allow in non-iframe.
  */
 AjxStringUtil.checkForCleanHtml =
-function(html, okTags, untrustedAttrs) {
-
-    //Bug: 83708 - strip hashed anchor links from email msg
-    html = html.replace(new RegExp("href\s*=\s*(['\"])\s*#((?!\\1).)*\\1", "g"), '');
+function(html, okTags, untrustedAttrs) {                                N
 
 	var htmlNode = AjxStringUtil._writeToTestIframeDoc(html);
 	var ctxt = {
