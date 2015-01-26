@@ -2179,7 +2179,7 @@ AjxStringUtil._checkNodeContent = function(node) {
  * @param {array}	untrustedAttrs	list of attributes to not allow in non-iframe.
  */
 AjxStringUtil.checkForCleanHtml =
-function(html, okTags, untrustedAttrs) {                                N
+function(html, okTags, untrustedAttrs) {
 
 	var htmlNode = AjxStringUtil._writeToTestIframeDoc(html);
 	var ctxt = {
