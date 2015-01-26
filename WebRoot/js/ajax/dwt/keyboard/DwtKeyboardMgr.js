@@ -441,6 +441,7 @@ function() {
 	Dwt.setLocation(kbff, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
 	kbff.onblur = DwtKeyboardMgr.__onBlurHdlr;
 	kbff.onfocus = DwtKeyboardMgr.__onFocusHdlr;
+	kbff.setAttribute('aria-hidden', true);
 	document.body.appendChild(kbff);
 	
 	this.__killKeySeqTimedAction = new AjxTimedAction(this, this.__killKeySequenceAction);

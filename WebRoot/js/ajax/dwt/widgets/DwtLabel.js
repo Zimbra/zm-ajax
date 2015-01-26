@@ -281,12 +281,7 @@ DwtLabel.prototype.setText = function(text) {
         this._textEl.innerHTML = text;
     }
 
-	// assign the ARIA label directly; we want it to override the tooltip, if any
-	if (text) {
-		this.setAttribute('aria-label', text);
-	} else {
-		this.removeAttribute('aria-label');
-	}
+	this._textSet(text);
 };
 
 /**
@@ -399,6 +394,19 @@ function(imageInfo, direction) {
 			Dwt.addClass(this.getHtmlElement(), elementClass);
 		} else {
 			iconEl.innerHTML = "";
+		}
+	}
+};
+
+// Accessibility
+DwtLabel.prototype._textSet = function(text) {
+
+	// assign the ARIA label directly; we want it to override the tooltip, if any
+	if (!this.hasAttribute('aria-labelledby')) {
+		if (text) {
+			this.setAttribute('aria-label', text);
+		} else {
+			this.removeAttribute('aria-label');
 		}
 	}
 };
