@@ -393,11 +393,28 @@ function(checkEnabled, skipNotify) {
 };
 
 /**
- * Pretty-prints the contents of the tab group to the debug window.
+ * Pretty-prints the contents of the tab group to the browser console or the
+ * debug window.
+ *
+ * @param {number} [debugLevel]     if specified, dump to the debug window
+ *                                  at the given level.
  */
 DwtTabGroup.prototype.dump = function(debugLevel) {
-	if (window.AjxDebug && window.DBG) {
-		this.__dump(this, debugLevel);
+	if (debugLevel) {
+		if (!window.AjxDebug || !window.DBG) {
+			return;
+		}
+
+		var logger = function(s) {
+			var s = AjxStringUtil.convertToHtml(s);
+			DBG.println(debugLevel, s);
+		}
+
+		DwtTabGroup.__dump(this, logger, 0);
+	} else if (window.console && window.console.log) {
+		var r = [];
+		DwtTabGroup.__dump(this, r.push.bind(r), 0);
+		console.log(r.join('\n'));
 	}
 };
 
@@ -623,30 +640,30 @@ function() {
 	return root;
 }
 
+DwtTabGroup.DUMP_INDENT = '|\t';
+
 /**
  * @private
  */
-DwtTabGroup.prototype.__dump =
-function(tg, debugLevel, level) {
-	level = level || 0;
-	var levelIndent = "";
-	for (var i = 0; i < level; i++) {
-		levelIndent += "&nbsp;&nbsp;&nbsp;&nbsp;";
-	}
-	
-	debugLevel = debugLevel || AjxDebug.DBG1;
-	DBG.println(debugLevel, levelIndent + " TABGROUP: " + tg.__name);
-	levelIndent += "&nbsp;&nbsp;&nbsp;&nbsp;";
-	
+DwtTabGroup.__dump =
+function(tg, logger, level) {
+	var myIndent = AjxStringUtil.repeat(DwtTabGroup.DUMP_INDENT, level);
+
+	logger(myIndent + "TABGROUP: " + tg.__name);
+
+	myIndent += DwtTabGroup.DUMP_INDENT;
+
 	var sz = tg.__members.size();
 	var a = tg.__members.getArray();
 	for (var i = 0; i < sz; i++) {
 		if (a[i].isDwtTabGroup) {
-			tg.__dump(a[i], debugLevel, level + 1);
-		} else if (a[i].toString) {
-			DBG.println(debugLevel, levelIndent + "   " + a[i].toString());
+			DwtTabGroup.__dump(a[i], logger, level + 1);
 		} else {
-			DBG.println(debugLevel, levelIndent + "   " + a[i].tagName);
+			var desc = a[i].nodeName ?
+				(a[i].nodeName + ' ' + a[i].outerHTML) :
+				(String(a[i]) + ' ' + a[i]._htmlElId);
+
+			logger(myIndent + desc);
 		}
 	}
 };
