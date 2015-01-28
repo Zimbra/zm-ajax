@@ -451,13 +451,23 @@ DwtTabGroup.prototype.__checkEnabled =
 function(member, checkEnabled) {
 	if (!checkEnabled) return true;
 	if (!member || member.noTab) return false;
-	if (member instanceof DwtControl) {
-		return member.getEnabled() &&
-			(member.getVisible() || member.getZIndex() > Dwt.Z_HIDDEN);
-	} else {
-		return !member.disabled &&
-			(Dwt.getVisible(member) || Dwt.getZIndex(member) > Dwt.Z_HIDDEN);
+
+	if (member.isDwtControl ? !member.getEnabled() : member.disabled) {
+		return false;
 	}
+
+	if (member instanceof DwtControl) {
+		member = member.getHtmlElement();
+	}
+
+	var loc = Dwt.getLocation(member);
+
+	if (loc.x === null || loc.x === Dwt.LOC_NOWHERE ||
+	    loc.y === Dwt.LOC_NOWHERE || loc.y === null) {
+		return false;
+	}
+
+	return Dwt.getZIndex(member, true) > Dwt.Z_HIDDEN && Dwt.getVisible(member);
 };
 
 /**
