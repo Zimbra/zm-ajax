@@ -1077,9 +1077,9 @@ function(state) {
 
     AjxUtil.foreach(DwtControl._ARIA_STATES, (function(attribute, state) {
         if (DwtControl._RE_STATE[state].test(this._displayState)) {
-            this.getHtmlElement().setAttribute(attribute, true);
+            this.setAttribute(attribute, true);
         } else {
-            this.getHtmlElement().removeAttribute(attribute);
+            this.removeAttribute(attribute);
         }
     }).bind(this));
 };
@@ -3785,3 +3785,15 @@ function(child) {
 	return AjxUtil.reduce(Dwt.getAncestors(child, this.getHtmlElement(), true),
 	                      fn, bounds);
 };
+
+// Convenience methods for manipulating attributes of this control's DIV
+DwtControl.prototype.getAttribute = function(attr) {
+	return this.getHtmlElement().getAttribute(attr);
+};
+DwtControl.prototype.setAttribute = function(attr, value) {
+	this.getHtmlElement().setAttribute(attr, value);
+};
+DwtControl.prototype.removeAttribute = function(attr) {
+	this.getHtmlElement().removeAttribute(attr);
+};
+

@@ -480,15 +480,11 @@ DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
     this._titleEl = document.getElementById(data.id+"_title");
     this._contentEl = document.getElementById(data.id+"_content");
 
-    this.getHtmlElement().setAttribute('aria-labelledby', this._titleEl.id);
-    this.getHtmlElement().setAttribute('aria-describedby', this._contentEl.id);
-	this._contentEl.setAttribute('role', 'document');
-
-    this.getHtmlElement().setAttribute('aria-describedby', this._contentEl.id);
+    this.setAttribute('aria-describedby', this._contentEl.id);
 	this._contentEl.setAttribute('role', 'document');
 	if (this._titleEl) {
-		this.getHtmlElement().setAttribute('aria-labelledby', this._titleEl.id);
-		this._titleEl.setAttribute('role', 'header');
+		this.setAttribute('aria-labelledby', this._titleEl.id);
+		this._titleEl.setAttribute('role', 'heading');
 		this._titleEl.setAttribute('aria-level', '2');
 	}
 

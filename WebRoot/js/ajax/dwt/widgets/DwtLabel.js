@@ -266,9 +266,11 @@ function() {
 *
 * @param {string}	text	the new label text
 */
-DwtLabel.prototype.setText =
-function(text) {
-    if (!this._textEl) return;
+DwtLabel.prototype.setText = function(text) {
+
+    if (!this._textEl) {
+	    return;
+    }
 
     if (text == null || text == "") {
         this.__text = null;
@@ -278,7 +280,14 @@ function(text) {
 		this.__text = text;
         this._textEl.innerHTML = text;
     }
-}
+
+	// assign the ARIA label directly; we want it to override the tooltip, if any
+	if (text) {
+		this.setAttribute('aria-label', text);
+	} else {
+		this.removeAttribute('aria-label');
+	}
+};
 
 /**
  * Sets the text background.
