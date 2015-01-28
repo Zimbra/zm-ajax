@@ -102,6 +102,8 @@ DwtChooser = function(params) {
 
 DwtChooser.prototype = new DwtComposite;
 DwtChooser.prototype.constructor = DwtChooser;
+DwtChooser.prototype.isFocusable = true;
+DwtChooser.prototype.role = 'listbox';
 
 // Consts
 
@@ -633,6 +635,25 @@ function() {
 		this.sourceListView.setMultiSelect(false);
 		this.targetListView.setMultiSelect(false);
 	}
+};
+
+DwtChooser.prototype.getTabGroupMember =
+function() {
+	var tg = new DwtTabGroup(this.toString());
+	tg.addMember(this.sourceListView._listDiv);
+	for (var i = 0; i < this._buttonInfo.length; i++) {
+		tg.addMember(this._button[this._buttonInfo[i].id]);
+	}
+	tg.addMember(this._removeButton);
+	if (this._addAllButton) {
+		tg.addMember(this._addAllButton);
+		tg.addMember(this._removeAllButton);
+	}
+	if (this._hasTextField) {
+		tg.addMember(this._textField);
+	}
+	tg.addMember(this.targetListView._listDiv);
+	return tg;
 };
 
 /**
