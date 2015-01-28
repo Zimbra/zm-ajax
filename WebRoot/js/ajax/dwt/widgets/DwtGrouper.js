@@ -56,6 +56,10 @@ DwtGrouper.prototype.setLabel = function(htmlContent) {
 DwtGrouper.prototype.setContent = function(htmlContent) {
 	var element = this._insetEl;
 	element.innerHTML = htmlContent;
+	var inputElements = element.getElementsByTagName('input');
+	for (var i=0; i < inputElements.length; i++) {
+		this._tabGroup.addMember(inputElements[i]);
+	}
 };
 
 DwtGrouper.prototype.setElement = function(htmlElement) {
