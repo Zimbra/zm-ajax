@@ -66,9 +66,11 @@
  * @param	{string}	className		the CSS class
  * @param	{constant}	posStyle		the positioning style (absolute, static, or relative). Defaults to {@link DwtControl.STATIC_STYLE}.
  * @param	{boolean}	deferred		if <code>true</code>, postpone initialization until needed
- * @param	{string}	id			an explicit ID to use for the control's HTML element. If not provided, defaults to an auto-generated ID.
- * @param	{string|HTMLElement}	parentElement the parent element
- * @param	{number}	index 		the index at which to add this control among parent's children
+ * @param	{string}	id			    an explicit ID to use for the control's HTML element. If not provided, defaults to an auto-generated ID.
+ * @param	{string|HTMLElement}	parentElement   the parent element
+ * @param	{number}	index 		    the index at which to add this control among parent's children
+ * @param   {boolean}   isFocusable     if true, this control can take keyboard focus
+ * @param   {string}    role            ARIA role for this control
  *
  */
 DwtControl = function(params) {
@@ -143,6 +145,14 @@ DwtControl = function(params) {
 	 */
 	if (params.id) {
 		this._htmlElId = params.id;
+	}
+
+	if (params.isFocusable != null) {
+		this.isFocusable = params.isFocusable;
+	}
+
+	if (params.role != null) {
+		this.role = params.role;
 	}
 
 	/**

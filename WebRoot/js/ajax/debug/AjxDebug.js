@@ -111,6 +111,7 @@ AjxDebug.MSG_DISPLAY	= "msgDisplay";	// bugs 68599, 69616
 AjxDebug.ZIMLET			= "zimlet";		// bugs 83009
 AjxDebug.KEYBOARD		= "kbnav";		// keyboard manager debugging
 AjxDebug.FOCUS			= "focus";		// focus
+AjxDebug.FOCUS1			= "focus1";		// focus - minimal logging
 AjxDebug.ACCESSIBILITY	= "a11y";		// accessibility logging
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
