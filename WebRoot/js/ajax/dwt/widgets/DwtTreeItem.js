@@ -528,7 +528,7 @@ function(actionCode, ev) {
 			break;
 		}
 
-		case DwtKeyMap.ACTION: {
+		case DwtKeyMap.SUBMENU: {
 			var target = this.getHtmlElement();
 			var p = Dwt.toWindow(target, 0, 0);
 			var s = this.getSize();

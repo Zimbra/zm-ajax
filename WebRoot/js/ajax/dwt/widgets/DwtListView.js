@@ -1194,7 +1194,7 @@ function(actionCode, ev) {
 			}
 			break;
 
-		case DwtKeyMap.ACTION:
+		case DwtKeyMap.SUBMENU:
 			if (this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
 				var p = Dwt.toWindow(this._kbAnchor, 0, 0);
 				var s = Dwt.getSize(this._kbAnchor);
