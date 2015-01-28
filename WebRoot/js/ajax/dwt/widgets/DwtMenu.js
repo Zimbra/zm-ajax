@@ -124,7 +124,7 @@ DwtMenu = function(params) {
     }
 
 	if (params.style != DwtMenu.BAR_STYLE) {
-		this.setZIndex(Dwt.Z_HIDDEN);
+		this.setVisible(false);
  		this._isPoppedUp = false;
 	} else {
 		DwtMenu._activeMenuIds.add(htmlElement.id, null, true);
@@ -1108,6 +1108,11 @@ function(val) {
 DwtMenu.prototype._doPopup =
 function(x, y, kbGenerated) {
 
+	// bump z-index if we're inside a dialog
+	var zIndex = DwtBaseDialog.getActiveDialog() ? Dwt.Z_DIALOG_MENU : Dwt.Z_MENU;
+	this.setZIndex(zIndex);
+	this.setVisible(true);
+
 	this.render(x, y);
 
 	var isScroll = this._layoutStyle == DwtMenu.LAYOUT_SCROLL;
@@ -1126,9 +1131,6 @@ function(x, y, kbGenerated) {
 		tooltip.popdown();
 	}
 
-	// bump z-index if we're inside a dialog
-	var zIndex = DwtBaseDialog.getActiveDialog() ? Dwt.Z_DIALOG_MENU : Dwt.Z_MENU;
-	this.setZIndex(zIndex);
 	this._popupActionId = -1;
 	this._isPoppedUp = true;
 
@@ -1181,8 +1183,7 @@ function(ev) {
 			a[i]._popdownMenu();
 		}
 	}
-	this.setZIndex(Dwt.Z_HIDDEN);
-	this.setLocation(Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
+	this.setVisible(false);
 	this._ev = ev;
 
 	this.notifyListeners(DwtEvent.POPDOWN, this);
