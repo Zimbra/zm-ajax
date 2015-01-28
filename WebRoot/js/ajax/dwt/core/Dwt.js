@@ -1384,24 +1384,25 @@ function(objOrClassName, className) {
  * and returned. Otherwise, the argument list is exploded into a params
  * hash with the given param names.
  * 
- * @param {hash}	args			a hash of arguments
+ * @param {Object}	args			Array-like structure of arguments
  * @param {array}	paramNames		an ordered list of param names
  * @param {boolean}	force			if true, a single arg is not a params hash
  */
 Dwt.getParams =
 function(args, paramNames, force) {
-	if (!(args && args.length)) { return {}; }
-	
-	// Check for arg-list style of passing params. There will almost always
-	// be more than one arg, and the first one is the parent DwtControl.
-	if (args.length > 1 || (args[0] && args[0]._eventMgr) || force) {
+	if (!AjxUtil.isArrayLike(args)) { return {}; }
+
+	// Check for arg-list style of passing params, which usually involves
+	// either passing multiple arguments, or having a non-trivial object as the
+	// single argument.
+	if (args.length > 1 || !AjxUtil.isHash(args[0]) || force) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
 			params[paramNames[i]] = args[i];
 		}
 		return params;
 	}
-	if (args.length == 1) {
+	if (args.length === 1) {
 		return args[0];
 	}
 	return {};

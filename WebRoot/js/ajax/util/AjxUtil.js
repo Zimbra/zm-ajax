@@ -39,13 +39,13 @@ AjxUtil.INT_RE = /^\-?(0|[1-9]\d*)$/;
 AjxUtil.isSpecified 		= function(aThing) { return ((aThing !== void 0) && (aThing !== null)); };
 AjxUtil.isUndefined 		= function(aThing) { return (aThing === void 0); };
 AjxUtil.isNull 				= function(aThing) { return (aThing === null); };
-AjxUtil.isBoolean 			= function(aThing) { return (typeof(aThing) == 'boolean'); };
-AjxUtil.isString 			= function(aThing) { return (typeof(aThing) == 'string'); };
-AjxUtil.isNumber 			= function(aThing) { return (typeof(aThing) == 'number'); };
-AjxUtil.isObject 			= function(aThing) { return ((typeof(aThing) == 'object') && (aThing !== null)); };
+AjxUtil.isBoolean 			= function(aThing) { return (typeof(aThing) === 'boolean'); };
+AjxUtil.isString 			= function(aThing) { return (typeof(aThing) === 'string'); };
+AjxUtil.isNumber 			= function(aThing) { return (typeof(aThing) === 'number'); };
+AjxUtil.isObject 			= function(aThing) { return ((typeof(aThing) === 'object') && (aThing !== null)); };
 AjxUtil.isArray 			= function(aThing) { return AjxUtil.isInstance(aThing, Array); };
 AjxUtil.isArrayLike			= function(aThing) { return typeof aThing !== 'string' && typeof aThing.length === 'number'; };
-AjxUtil.isFunction 			= function(aThing) { return (typeof(aThing) == 'function'); };
+AjxUtil.isFunction 			= function(aThing) { return (typeof(aThing) === 'function'); };
 AjxUtil.isDate 				= function(aThing) { return AjxUtil.isInstance(aThing, Date); };
 AjxUtil.isLifeTime 			= function(aThing) { return AjxUtil.LIFETIME_FIELD.test(aThing); };
 AjxUtil.isNumeric 			= function(aThing) { return (!isNaN(parseFloat(aThing)) && AjxUtil.FLOAT_RE.test(aThing) && !AjxUtil.NOTFLOAT_RE.test(aThing)); };
@@ -91,6 +91,18 @@ function(s, nameOnly) {
 AjxUtil.isValidEmailNonReg = 
 function(s) {
 	return ((s.indexOf ("@") > 0) && (s.lastIndexOf ("@") == s.indexOf ("@")) && (s.indexOf (".@") < 0));
+};
+
+/**
+ * Return true if the given object is a plain hash, i.e. its immediate
+ * prototype is Object.
+ *
+ * @param aThing	The object for testing.
+ */
+AjxUtil.isHash =
+function(aThing) {
+	return AjxUtil.isObject(aThing) &&
+		Object.getPrototypeOf(aThing) === Object.prototype;
 };
 
 AjxUtil.SIZE_GIGABYTES = "GB";

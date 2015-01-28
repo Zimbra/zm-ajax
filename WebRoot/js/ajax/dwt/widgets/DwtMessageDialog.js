@@ -121,12 +121,14 @@ function(msgStr, style, title) {
 	this.setTitle(title || DwtMessageDialog.TITLE[this._style]);
 
 	if (msgStr) {
-		var attrstr = "id='" +  this._msgCellId + "_Image''";
-		var altstr = DwtMessageDialog.TITLE[this._style];
         var html = [];
 		var i = 0;
 		html[i++] = "<table role='presentation' cellspacing=0 cellpadding=0 border=0 width=100% height=100%><tr><td valign='top'>";
-		html[i++] =  AjxImg.getImageHtml(DwtMessageDialog.ICON[this._style], null, attrstr, false, false, null, altstr);
+		html[i++] = AjxImg.getImageHtml({
+			imageName: DwtMessageDialog.ICON[this._style],
+			attrStr: "id='" +  this._msgCellId + "_Image''",
+			altText: DwtMessageDialog.TITLE[this._style]
+		});
 		html[i++] = "</td><td role='document' class='DwtMsgArea' id='" +  this._msgCellId +"_Msg'>";
 		html[i++] = msgStr;
 		html[i++] = "</td></tr></table>";

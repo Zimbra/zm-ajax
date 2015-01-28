@@ -557,3 +557,21 @@ if (!Function.prototype.bind) {
 Function.prototype.run = function() {
 	return this.apply(this, arguments);
 };
+
+/**
+ * Polyfill for Object.getPrototypeOf -- currently only required by IE8.
+ *
+ * Written by John Resig: http://ejohn.org/blog/objectgetprototypeof/
+ */
+if (typeof Object.getPrototypeOf !== "function") {
+	if (typeof "test".__proto__ === "object") {
+		Object.getPrototypeOf = function(object) {
+			return object.__proto__;
+		};
+	} else {
+		Object.getPrototypeOf = function(object) {
+			// May break if the constructor has been tampered with
+			return object.constructor.prototype;
+		};
+	}
+}
