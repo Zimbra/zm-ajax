@@ -88,6 +88,10 @@ DwtBaseDialog = function(params) {
 	// reset tab index
     this.setZIndex(Dwt.Z_HIDDEN); // not displayed until popup() called
 	this._position(DwtBaseDialog.__nowhereLoc);
+
+	// Make sure mouse clicks propagate to the DwtDraggable handler (document.onMouseMove and onMouseUp)
+	this._propagateEvent[DwtEvent.ONMOUSEUP] = true;
+
 }
 
 /**
