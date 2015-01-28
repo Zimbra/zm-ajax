@@ -146,8 +146,9 @@ DwtListView.prototype.constructor = DwtListView;
 
 DwtListView.prototype.isDwtListView = true;
 DwtListView.prototype.toString = function() { return "DwtListView"; };
-DwtListView.prototype.role = 'tree';
-DwtListView.prototype.itemRole = 'treeitem';
+
+DwtListView.prototype.role = 'list';
+DwtListView.prototype.itemRole = 'listitem';
 
 // Consts
 
