@@ -1938,8 +1938,36 @@ function(value) {
 };
 
 /**
+ * Sets the opacity of the control HTML element.
+ *
+ * @param {Number} opacity		opacity, as a percentage between 0 and 100
+ *
+ * @see Dwt#setOpacity
+ */
+DwtControl.prototype.setOpacity =
+function(opacity) {
+	if (!this._checkState()) { return; }
+
+	Dwt.setOpacity(this.getHtmlElement(), opacity);
+};
+
+/**
+ * Gets the opacity of the control HTML element.
+ *
+ * @return {Number}	opacity, as a percentage between 0 and 100
+ *
+ * @see Dwt#getOpacity
+ */
+DwtControl.prototype.getOpacity =
+function() {
+	if (!this._checkState()) { return; }
+
+	return Dwt.getOpacity(this.getHtmlElement());
+};
+
+/**
  * Prevents selection on the specified element.
- * 
+ *
  * @param	{Element}	targetEl	the element
  */
 DwtControl.prototype.preventSelection =
