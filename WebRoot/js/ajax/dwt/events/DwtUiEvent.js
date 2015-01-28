@@ -127,6 +127,25 @@ function(ev, prop, useRelatedTarget, value)  {
 }
 
 /**
+ * Returns the first element with the given class name, working its way up the element chain.
+ *
+ * @param ev				[Event]		DHTML event
+ * @param className			[string]	the requested class name
+ * @param useRelatedTarget	[boolean]*	if true, return element that was related to this event;
+ */
+DwtUiEvent.getTargetWithClass =
+function(ev, className, useRelatedTarget)  {
+	var htmlEl = DwtUiEvent.getTarget(ev, useRelatedTarget);
+	while (htmlEl && htmlEl.nodeType === 1) {
+		if (Dwt.hasClass(htmlEl, className)) {
+			return htmlEl;
+		}
+		htmlEl = htmlEl.parentNode;
+	}
+	return null;
+}
+
+/**
  * Returns the first element with values for all of the given properties, working its way up the element chain.
  *
  * @param ev				[Event]		DHTML event
