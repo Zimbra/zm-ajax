@@ -62,6 +62,7 @@ DwtMenuItem = function(params) {
 	if (isSeparator) {
 		params.className = "ZMenuItemSeparator";
 		this.isFocusable = false;
+		this.role = null;
 	}
 	params.listeners = DwtMenuItem._listeners;
 	DwtButton.call(this, params);

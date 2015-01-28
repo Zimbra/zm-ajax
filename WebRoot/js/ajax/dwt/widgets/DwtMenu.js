@@ -151,10 +151,8 @@ DwtMenu = function(params) {
     this._itemSelectionListener = new AjxListener(this, this._propagateItemSelection);
 
 	// Accessibility
-	if (parent.isDwtButton) {
-		var parentEl = parent.getHtmlElement();
-		parentEl.setAttribute("aria-haspopup", true);
-		parentEl.setAttribute("aria-controls", this._htmlElId);
+	if (parent._menuAdded) {
+		parent._menuAdded(this);
 	}
 };
 
@@ -930,6 +928,10 @@ function(which, preventFocus) {
 	this.scrollToItem(currItem, true);
 	if (!preventFocus) {
 		currItem.focus();
+	}
+
+	if (this.parent && this.parent._menuItemSelected) {
+		this.parent._menuItemSelected(currItem);
 	}
 };
 

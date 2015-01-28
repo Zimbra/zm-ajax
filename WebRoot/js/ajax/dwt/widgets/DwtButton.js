@@ -109,9 +109,6 @@ DwtButton = function(params) {
 	this._actionTiming = params.actionTiming || DwtButton.ACTION_MOUSEUP;
 	this.__preventMenuFocus = null;
 	this._menuPopupStyle = DwtButton.MENU_POPUP_STYLE_BELOW;
-
-	// Accessibility
-	this.setAttribute("aria-haspopup", false);
 };
 
 DwtButton.prototype = new DwtLabel;
@@ -415,6 +412,7 @@ function(params) {
 			else {
 				this._menuPopupStyle = params.menuPopupStyle || DwtButton.MENU_POPUP_STYLE_BELOW;
 			}
+			this._menuAdded(this._menu);
 		}
 		else {
 			this._savedMenuParams = params;
@@ -443,8 +441,6 @@ function(params) {
 		Dwt.delClass(this.getHtmlElement(), "ZHasDropDown");
         this._dropDownEl.innerHTML = "";
     }
-
-	this.setAttribute("aria-haspopup", true);
 };
 DwtButton.setMenuParams = ["menu", "shouldToggle", "followIconStyle", "popupAbove", "popupRight"];
 
@@ -878,6 +874,15 @@ DwtButton.prototype._createHtmlFromTemplate = function(templateId, data) {
     DwtLabel.prototype._createHtmlFromTemplate.call(this, templateId, data);
     this._dropDownEl = document.getElementById(data.id+"_dropdown");
 };
+
+// Accessibility
+DwtButton.prototype._menuAdded = function(menu) {
+	this.setAttribute("aria-haspopup", true);
+	this.setAttribute("aria-controls", menu._htmlElId);
+};
+
+// Accessibility
+DwtButton.prototype._menuItemSelected = function(menuItem) {};
 
 /**
  * Pops up the dropdown menu.

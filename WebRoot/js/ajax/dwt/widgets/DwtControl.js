@@ -3787,6 +3787,9 @@ function(child) {
 };
 
 // Convenience methods for manipulating attributes of this control's DIV
+DwtControl.prototype.hasAttribute = function(attr) {
+	return this.getHtmlElement().hasAttribute(attr);
+};
 DwtControl.prototype.getAttribute = function(attr) {
 	return this.getHtmlElement().getAttribute(attr);
 };
