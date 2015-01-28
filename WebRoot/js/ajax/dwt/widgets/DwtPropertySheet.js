@@ -80,21 +80,23 @@ DwtPropertySheet.prototype._valueCssClass = "Field";
  *				   required. This is denoted by an asterisk next to the label.
  */
 DwtPropertySheet.prototype.addProperty = function(label, value, required) {
+
 	var index = this._tableEl.rows.length;
 
-	var row = this._tableEl.insertRow(index);
+	var row = this._tableEl.insertRow(-1);
 	row.vAlign = this._vAlign ? this._vAlign : "top";
 
 	var labelId = Dwt.getNextId(),
-		valueId = Dwt.getNextId();
+		valueId = Dwt.getNextId(),
+		tabValue;   // element or control that can be a tab group member
 
 	if (this._labelSide == DwtPropertySheet.LEFT) {
 		this._insertLabel(row, label, required, labelId, valueId);
-		this._insertValue(row, value, required, labelId, valueId);
+		tabValue = this._insertValue(row, value, required, labelId, valueId);
 	}
 	else {
 		this._insertValue(row, value, required, labelId, valueId);
-		this._insertLabel(row, label, required, labelId, valueId);
+		tabValue = this._insertLabel(row, label, required, labelId, valueId);
 	}
 
 	var id = this._propertyIdCount++;
@@ -104,7 +106,8 @@ DwtPropertySheet.prototype.addProperty = function(label, value, required) {
 		row:        row,
 		visible:    true,
 		labelId:    labelId,
-		valueId:    valueId
+		valueId:    valueId,
+		tabValue:   tabValue
 	};
 	this._propertyList.push(property);
 	this._propertyMap[id] = property;
@@ -137,27 +140,29 @@ DwtPropertySheet.prototype._insertValue = function(row, value, required, labelId
 
 	if (!value) {
 		valueCell.innerHTML = "&nbsp;";
-	} else if (value.isDwtControl) {
+	}
+	else if (value.isDwtControl) {
 		valueCell.appendChild(value.getHtmlElement());
 		this._tabGroup.addMember(value);
+		this._makeFocusable(value);
 		var input = value.getInputElement && value.getInputElement();
 		if (input) {
 			input.setAttribute('aria-labelledby', labelId);
 		}
 	}
-	/**** NOTE: IE says Element is undefined
-	else if (value instanceof Element) {
-	/***/
 	else if (value.nodeType == AjxUtil.ELEMENT_NODE) {
-	/***/
 		valueCell.appendChild(value);
 		this._addTabGroupMemberEl(valueCell);
 		value.setAttribute('aria-labelledby', labelId);
-	} else {
+	}
+	else {
 		valueCell.innerHTML = String(value);
 		this._addTabGroupMemberEl(valueCell);
 		valueCell.setAttribute('aria-labelledby', labelId);
+		value = valueCell;
 	}
+
+	return value;
 };
 
 /**
@@ -165,24 +170,30 @@ DwtPropertySheet.prototype._insertValue = function(row, value, required, labelId
  *
  * @param element HTML element.
  */
-DwtPropertySheet.prototype._addTabGroupMemberEl = function(element){
+DwtPropertySheet.prototype._addTabGroupMemberEl = function(element, isTabStop) {
+
 	var obj = this;
 
-	// recursive funtion to add HTML leafs
-	function addChildren(el){
-		if(el.children.length > 0){
+	// recursive function to add leaf nodes
+	function addChildren(el) {
+		if (el.children.length > 0) {
 			AjxUtil.foreach(el.children, function(child){
 				addChildren(child);
 			});
 		}
-		else{
-			// add leaf to tabgroup
-			obj._makeFocusable(el);
-			obj._tabGroup.addMember(el);
+		else {
+			if (AjxUtil.isBoolean(isTabStop)) {
+				obj.noTab = !isTabStop;
+			}
+			else {
+				// add leaf to tabgroup
+				obj._makeFocusable(el);
+				obj._tabGroup.addMember(el);
+			}
 		}
 	}
 
-	addChildren(element);
+	addChildren(element, isTabStop);
 };
 
 DwtPropertySheet.prototype.getTabGroupMember = function() {
@@ -212,41 +223,17 @@ DwtPropertySheet.prototype.removeProperty = function(id) {
 };
 
 DwtPropertySheet.prototype.setPropertyVisible = function(id, visible) {
+
 	var prop = this._propertyMap[id];
-	if (prop && prop.visible != visible) {
+	if (prop && prop.visible !== visible) {
 		prop.visible = visible;
-		var propIndex = prop.index;
-		if (visible) {
-			var tableIndex = this.__getTableIndex(propIndex);
-			var row = this._tableEl.insertRow(tableIndex);
-			DwtPropertySheet.__moveChildNodes(prop.row, row);
-			prop.row = row;
+		Dwt.setVisible(this._tableEl.rows[prop.index], visible);
+		var tabValue = prop.tabValue;
+		if (tabValue.isDwtControl) {
+			tabValue.noTab = !visible;
 		}
 		else {
-			var row = prop.row;
-			if (row && row.parentNode) {
-				row.parentNode.removeChild(row);
-			}
+			this._addTabGroupMemberEl(tabValue, !visible)
 		}
-	}
-};
-
-DwtPropertySheet.prototype.__getTableIndex = function(propIndex) {
-	var tableIndex = 0;
-	for (var i = 0; i < propIndex; i++) {
-		var prop = this._propertyList[i];
-		if (prop.visible) {
-			tableIndex++;
-		}
-	}
-	return tableIndex;
-};
-
-DwtPropertySheet.__moveChildNodes = function(srcParent, destParent) {
-	if (srcParent === destParent) return;
-	var srcChild = srcParent.firstChild;
-	while (srcChild != null) {
-		destParent.appendChild(srcChild);
-		srcChild = srcParent.firstChild;
 	}
 };
