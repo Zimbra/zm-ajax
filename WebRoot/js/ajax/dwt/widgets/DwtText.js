@@ -41,6 +41,9 @@ DwtText = function(params) {
 	params = Dwt.getParams(arguments, DwtText.PARAMS);
 	params.className = params.className || "DwtText";
 	DwtControl.call(this, params);
+
+	// we start out empty, so suppress focus
+	this.noTab = true;
 };
 
 DwtText.PARAMS = ["parent", "className", "posStyle"];
@@ -66,6 +69,9 @@ DwtText.prototype.getTabGroupMember = function() {
  */
 DwtText.prototype.setText =
 function(text) {
+	// only appear in tab order when we have text
+	this.noTab = !text;
+
 	if (!this._textNode) {
 		 this._textNode = document.createTextNode(text);
 		 this.getHtmlElement().appendChild(this._textNode);
