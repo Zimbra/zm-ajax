@@ -28,13 +28,15 @@ DwtGrouper = function(parent, className, posStyle) {
 	className = className || "DwtGrouper";
 	posStyle = posStyle || DwtControl.STATIC_STYLE;
 	DwtComposite.call(this, {parent:parent, posStyle:posStyle});
-	
+
 	this._labelEl = document.createElement("LEGEND");
 	this._insetEl = document.createElement("DIV");
 	this._borderEl = document.createElement("FIELDSET");
 	this._borderEl.appendChild(this._labelEl);
 	this._borderEl.appendChild(this._insetEl);
-	
+
+	this._tabGroup = new DwtTabGroup(this.toString());
+
 	var element = this.getHtmlElement();
 	element.appendChild(this._borderEl);
 }
@@ -68,4 +70,8 @@ DwtGrouper.prototype.setView = function(control) {
 
 DwtGrouper.prototype.getInsetHtmlElement = function() {
 	return this._insetEl;
+};
+
+DwtGrouper.prototype.getTabGroupMember = function(){
+	return this._tabGroup;
 };
