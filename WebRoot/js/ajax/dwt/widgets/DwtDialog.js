@@ -476,7 +476,7 @@ function(templateId, data) {
  */
 DwtDialog.prototype._getButtonsContainerStartTemplate =
 function () {
-	return "<table width='100%'><tr>";
+	return "<table role='presentation' width='100%'><tr>";
 };
 
 /**
@@ -484,7 +484,7 @@ function () {
  */
 DwtDialog.prototype._getButtonsAlignStartTemplate =
 function () {
-	return "<td align=\"{0}\"><table><tr>";
+	return "<td align=\"{0}\"><table role='presentation'><tr>";
 };
 
 /**

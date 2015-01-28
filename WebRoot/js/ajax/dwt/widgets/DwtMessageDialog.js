@@ -68,6 +68,7 @@ DwtMessageDialog.PARAMS = ["parent", "className", "buttons", "extraButtons", "id
 
 DwtMessageDialog.prototype = new DwtDialog;
 DwtMessageDialog.prototype.constructor = DwtMessageDialog;
+DwtMessageDialog.prototype.role = 'alertdialog';
 
 /**
  * Defines the "critical" style.
@@ -114,15 +115,19 @@ function() {
 */
 DwtMessageDialog.prototype.setMessage =
 function(msgStr, style, title) {
-	style = style || DwtMessageDialog.INFO_STYLE;
-	title = title || DwtMessageDialog.TITLE[style];
-	this.setTitle(title);
+	this._message = msgStr || "";
+	this._style = style || DwtMessageDialog.INFO_STYLE;
+
+	this.setTitle(title || DwtMessageDialog.TITLE[this._style]);
+
 	if (msgStr) {
+		var attrstr = "id='" +  this._msgCellId + "_Image''";
+		var altstr = DwtMessageDialog.TITLE[this._style];
         var html = [];
 		var i = 0;
-		html[i++] = "<table cellspacing=0 cellpadding=0 border=0 width=100% height=100%><tr><td valign='top'>";
-		html[i++] =  AjxImg.getImageHtml(DwtMessageDialog.ICON[style], null, "id='" +  this._msgCellId + "_Image'");
-		html[i++] = "</td><td class='DwtMsgArea' id='" +  this._msgCellId +"_Msg'>";
+		html[i++] = "<table role='presentation' cellspacing=0 cellpadding=0 border=0 width=100% height=100%><tr><td valign='top'>";
+		html[i++] =  AjxImg.getImageHtml(DwtMessageDialog.ICON[this._style], null, attrstr, false, false, null, altstr);
+		html[i++] = "</td><td role='document' class='DwtMsgArea' id='" +  this._msgCellId +"_Msg'>";
 		html[i++] = msgStr;
 		html[i++] = "</td></tr></table>";
 		this._msgCell.innerHTML = html.join("");
