@@ -1122,7 +1122,7 @@ function() {
 };
 
 DwtListView.prototype.getEnabled = function() {
-	return DwtControl.prototype.getEnabled.call(this) && this.size() > 0;
+	return DwtComposite.prototype.getEnabled.call(this) && this.size() > 0;
 };
 
 DwtListView.prototype.getInputElement =

@@ -892,8 +892,9 @@ function(expand, ev, skipNotify) {
 			this._tree._itemExpanded(this, ev, skipNotify);
 		}	
 
-		this.getHtmlElement().setAttribute('aria-expanded', expand);
+		this.setAttribute('aria-expanded', expand);
 		this._childDiv.setAttribute('aria-expanded', expand);
+		this._childDiv.setAttribute('aria-hidden', !expand);
 	}
 };
 
