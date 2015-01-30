@@ -1124,6 +1124,10 @@ function() {
 	return this._tabGroup;
 };
 
+DwtListView.prototype.getEnabled = function() {
+	return DwtControl.prototype.getEnabled.call(this) && this.size() > 0;
+};
+
 DwtListView.prototype.getInputElement =
 function() {
 	if (!this._kbAnchor) {
