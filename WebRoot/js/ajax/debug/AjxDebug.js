@@ -111,6 +111,7 @@ AjxDebug.MSG_DISPLAY	= "msgDisplay";	// bugs 68599, 69616
 AjxDebug.ZIMLET			= "zimlet";		// bugs 83009
 AjxDebug.KEYBOARD		= "kbnav";		// keyboard manager debugging
 AjxDebug.FOCUS			= "focus";		// focus
+AjxDebug.FOCUS1			= "focus1";		// focus - minimal logging
 AjxDebug.ACCESSIBILITY	= "a11y";		// accessibility logging
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
@@ -528,7 +529,7 @@ function(args) {
 AjxDebug.prototype._openDebugWindow =
 function(force) {
 	var name = AjxEnv.isIE ? "_blank" : this._dbgName;
-	this._debugWindow = window.open("", name, "width=600,height=400,resizable=yes,scrollbars=yes");
+	this._debugWindow = window.open("about:blank", name, "width=600,height=400,resizable=yes,scrollbars=yes");
 
 	if (this._debugWindow == null) {
 		this._enabled = false;
