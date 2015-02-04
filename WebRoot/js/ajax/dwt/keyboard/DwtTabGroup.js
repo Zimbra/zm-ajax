@@ -682,7 +682,7 @@ function(next, checkEnabled, skipNotify) {
 	
 	var tabGroup = this.__getTabGroupForMember(this.__currFocusMember);
 	if (!tabGroup) {
-		DBG.println(AjxDebug.DBG1, "tab group not found for focus member");
+		DBG.println(AjxDebug.DBG1, "tab group not found for focus member: " + this.__currFocusMember);
 		return null;
 	}
 	var m = (next) ? tabGroup.__getNextMember(this.__currFocusMember, checkEnabled) 
