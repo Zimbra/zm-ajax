@@ -321,7 +321,7 @@ function(node) {
  */
 AjxSoapDoc.prototype.getXml =
 function() {
-	return AjxEnv.isSafari || AjxEnv.isOpera || AjxEnv.isIE9up || AjxEnv.isIE12
+	return AjxEnv.isSafari || AjxEnv.isOpera || AjxEnv.isIE9up
 		? (AjxXmlDoc.getXml(this._xmlDoc.getDoc()))
 		: AjxXmlDoc.replaceInvalidChars(this._xmlDoc.getDoc().xml);
 };

@@ -1021,18 +1021,6 @@ function(el, text, idx, listType, listLevel, bulletNum, ctxt, convertor, onlyOne
 		}
 	} else if (nodeName == "p") {
 		text[idx++] = onlyOneNewLinePerP ? "\n" : "\n\n";
-	} else if (nodeName === "a") {
-		if (el.href) {
-			//format as [ href | text ] (if no text, format as [ href ]
-			text[idx++] = "[ ";
-			text[idx++] = el.href;
-			if (el.textContent) {
-				text[idx++] = " | ";
-				text[idx++] = el.textContent;
-			}
-			text[idx++] = " ] ";
-			return idx; // returning since we take care of all the child nodes via the "textContent" above. No need to parse further.
-		}
 	} else if (listType == AjxStringUtil._NO_LIST && (nodeName == "br" || nodeName == "hr")) {
 		text[idx++] = "\n";
 	} else if (nodeName == "ol" || nodeName == "ul") {
@@ -2031,8 +2019,8 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
 		AjxStringUtil._prune(sepNode, true);
 	}
 
-	// convert back to text, restoring html, head, and body nodes; if there is nothing left, return original text
-	var result = done && htmlNode.textContent ? "<html>" + htmlNode.innerHTML + "</html>" : text;
+	// convert back to text, restoring html, head, and body nodes
+	var result = done ? "<html>" + htmlNode.innerHTML + "</html>" : text;
 
 	AjxStringUtil._removeTestIframeDoc();
 	return result;
@@ -2048,16 +2036,15 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
  */
 AjxStringUtil._flatten = function(node, list) {
 
-	var nodeName = node && node.nodeName.toLowerCase();
-	if (AjxStringUtil.IGNORE_NODE[nodeName]) {
-		return;
-	}
-
 	list.push(node);
 
 	var children = node.childNodes || [];
 	for (var i = 0; i < children.length; i++) {
-		this._flatten(children[i], list);
+		var el = children[i],
+			nodeName = el.nodeName.toLowerCase();
+		if (nodeName !== 'blockquote' && !AjxStringUtil.IGNORE_NODE[nodeName]) {
+			this._flatten(el, list);
+		}
 	}
 };
 
@@ -2153,13 +2140,13 @@ AjxStringUtil._checkNode = function(el) {
 };
 
 /**
- * Checks textContent to see if it's a separator.
+ * Checks innerText to see if it's a separator.
  * @param {Element} node
  * @return {String}
  * @private
  */
 AjxStringUtil._checkNodeContent = function(node) {
-	var content = node.textContent || '';
+	var content = node.innerText || '';
 	if (!AjxStringUtil._NON_WHITESPACE.test(content) || content.length > 200) {
 		return null;
 	}
@@ -2180,6 +2167,9 @@ AjxStringUtil._checkNodeContent = function(node) {
  */
 AjxStringUtil.checkForCleanHtml =
 function(html, okTags, untrustedAttrs) {
+
+    //Bug: 83708 - strip hashed anchor links from email msg
+    html = html.replace(new RegExp("href\s*=\s*(['\"])\s*#((?!\\1).)*\\1", "g"), '');
 
 	var htmlNode = AjxStringUtil._writeToTestIframeDoc(html);
 	var ctxt = {

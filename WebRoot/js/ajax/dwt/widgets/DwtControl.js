@@ -1754,19 +1754,6 @@ function(getFromStyle) {
 };
 
 /**
- * Gets the outer size -- that is, the size including margins, padding, and borders -- of an
- * HTML element.
- *
- * @return {DwtPoint}	the elements size, margins, padding, and borders included
- */
-DwtControl.prototype.getOuterSize =
-function() {
-	if (!this._checkState()) { return; }
-
-	return Dwt.getOuterSize(this.getHtmlElement(), null);
-};
-
-/**
  * Sets the size of the control
  *
  * @param {number|string} width	the width of the control (for example: 100, "100px", "75%", Dwt.DEFAULT)
@@ -2897,10 +2884,6 @@ function(ev) {
  */
 DwtControl.__clickHdlr =
 function(ev) {
-	var obj = DwtControl.getTargetControl(ev);
-	if (obj._clickPending) {
-		return;
-	}
 
 	try {
 
@@ -3457,9 +3440,6 @@ function(ev, eventType, obj, mouseEv) {
 	// the use of setEventPropagation(). A listener may also change the event props when called.
 	var tn = mouseEv.target.tagName && mouseEv.target.tagName.toLowerCase();
 	var propagate = obj._propagateEvent[eventType] || (tn === "input" || tn === "textarea" || tn === "a");
-	//todo - not sure if _stopPropagation and _dontCallPreventDefault should not the the SAME. Since if you stop propagation and dontCallPreventDefault,
-	//it DOES allow selection (or context menu, etc, any default browser stuff). But if you allow to propagate, this might be overriden by a DOM element
-	//higher up, which might not be what we want. Very confusing.
 	mouseEv._stopPropagation = !propagate;
 	mouseEv._dontCallPreventDefault = propagate;
 	mouseEv._returnValue = propagate;
