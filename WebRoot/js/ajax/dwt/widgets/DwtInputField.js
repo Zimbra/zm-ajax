@@ -151,6 +151,10 @@ DwtInputField = function(params) {
 		oinput.parentNode.replaceChild(ninput, oinput);
 	}
 
+	if (params.label) {
+		this._inputField.setAttribute('aria-label', params.label);
+	}
+
     this.setValidatorFunction(params.validatorCtxtObj, params.validator);
 	this._setMouseEventHdlrs(false);
 	this._setKeyPressEventHdlr(false);
