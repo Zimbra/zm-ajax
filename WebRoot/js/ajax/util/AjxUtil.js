@@ -102,7 +102,7 @@ AjxUtil.isHash =
 function(aThing) {
 	// Note: can't just look at prototype since that fails cross-window.
 	// See http://stackoverflow.com/questions/10741618/how-to-check-if-argument-is-an-object-and-not-an-array, esp the part with isPlainObject()
-	var str = aThing.toString ? aThing.toString() : Object.prototype.toString.call(aThing);
+	var str = aThing && aThing.toString ? aThing.toString() : Object.prototype.toString.call(aThing);
 	return AjxUtil.isObject(aThing) && str === '[object Object]';
 };
 
