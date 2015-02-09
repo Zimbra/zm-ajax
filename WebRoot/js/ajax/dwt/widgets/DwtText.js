@@ -101,3 +101,11 @@ DwtText.prototype.getTextNode =
 function() {
 	return this._textNode;
 };
+
+DwtText.prototype._focus = function() {
+	this.setDisplayState(DwtControl.FOCUSED);
+};
+
+DwtText.prototype._blur = function() {
+	this.setDisplayState(DwtControl.NORMAL);
+};

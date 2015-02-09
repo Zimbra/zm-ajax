@@ -490,11 +490,12 @@ AjxUtil.foreach = function(obj, func) {
         }
     } else {
         // don't rely on the value in the object itself
-        hasown = Object.prototype.hasOwnProperty.bind(obj);
+        var hasown = Object.prototype.hasOwnProperty.bind(obj);
 
         for (var k in obj) {
-            if (hasown(k))
+            if (hasown(k)) {
                 func(obj[k], k)
+            }
         }
     }
 };
@@ -582,6 +583,36 @@ AjxUtil.complement = function(array1, array2) {
 		}
 	}
 	return AjxUtil.keys(object2);
+};
+
+/**
+ * Returns an array with all the members of the given array for which the filtering function returns true.
+ *
+ * @param {Array}       array       source array
+ * @param {Function}    func        filtering function
+ * @param {Object}      context     scope for filtering function
+ *
+ * @returns {Array} array of members for which the filtering function returns true
+ */
+AjxUtil.filter = function(array, func, context) {
+
+	var results = [];
+	if (array == null) {
+		return results;
+	}
+
+	var nativeFilter = Array.prototype.filter;
+	if (nativeFilter && array.filter === nativeFilter) {
+		return array.filter(func, context);
+	}
+
+	AjxUtil.foreach(array, function(value, index) {
+		if (func.call(context, value, index)) {
+			results.push(value);
+		}
+	});
+
+	return results;
 };
 
 AjxUtil.getFirstElement = function(parent, ename, aname, avalue) {
@@ -956,8 +987,10 @@ AjxUtil.convertToEntities = function (source){
     if (!source || !(length = source.length)) return source;
     
 	for (var i = 0; i < length; i++) {
-		if (source.charCodeAt(i) > 127) {
-			var temp = source.charCodeAt(i).toString(10);
+		var charCode = source.charCodeAt(i);
+		// Encode non-ascii or double quotes
+		if ((charCode > 127) || (charCode == 34)) {
+			var temp = charCode.toString(10);
 			while (temp.length < 4) {
 				temp = '0' + temp;
 			}

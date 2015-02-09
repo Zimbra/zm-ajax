@@ -311,7 +311,8 @@ function(item, index) {
 	if (index == null || index > numChildren) {
 		thisHtmlElement.appendChild(item.getHtmlElement());
 	} else {
-		thisHtmlElement.insertBefore(item.getHtmlElement(), thisHtmlElement.childNodes[index]);	
+		//IE Considers undefined as an illegal value for second argument in the insertBefore method
+		thisHtmlElement.insertBefore(item.getHtmlElement(), thisHtmlElement.childNodes[index] || null);
 	}
 };
 

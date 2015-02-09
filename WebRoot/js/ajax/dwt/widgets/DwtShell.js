@@ -537,15 +537,29 @@ function() {
                 var insets = Dwt.getInsets(table);
                 width -= insets.left + insets.right;
                 var margins = Dwt.getMargins(row);
-                width -= margins.left + margins.left;
+                width -= margins.left + margins.right;
 
                 AjxUtil.foreach(row.children, function(othercell) {
                     var margins = Dwt.getMargins(othercell);
-                    width -= margins.left + margins.left;
+                    width -= margins.left + margins.right;
 
                     if (Dwt.hasClass(othercell, 'skin_layout_filler')) {
                         nfillers += 1;
                     } else {
+
+						if (cell.id === "skin_td_main" && othercell.id === "skin_td_tree_app_sash" &&
+							AjxEnv.isChrome && !AjxUtil.isInt(window.devicePixelRatio)) {
+							// See bug #96808.
+							// Chrome seems to change the hardcoded pixel value.
+							// Depending on the zoom level it fluctuates +/- 1. This messes up elements' width calculation.
+							// The problematic element is #skin_td_tree_app_sash when calculating width for #skin_td_main.
+							// The value of sash's width is set in skins.
+							// Decreasing the width by 3 works on all zoom levels.
+							// Only do this on non-integer devicePixelRatio
+							// (e.g. skip 100% zoom on retina and non-retina displays where devicePixelRatio is 2 and 1).
+							width -= 3;
+						}
+
                         width -= Dwt.getSize(othercell).x;
                     }
                 });

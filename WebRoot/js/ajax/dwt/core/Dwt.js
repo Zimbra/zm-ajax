@@ -695,7 +695,7 @@ function(htmlElement, point, getFromStyle) {
 
 
 /**
- * Gets the outer size -- that is, the size including margins -- of an
+ * Gets the outer size -- that is, the size including margins, padding, and borders -- of an
  * HTML element.
  *
  * @param {HTMLElement} htmlElement		the HTML element
@@ -714,8 +714,9 @@ function(htmlElement, point) {
 
     if (p && Dwt.getVisible(htmlElement)) {
         var margins = Dwt.getMargins(htmlElement);
-        p.x += margins.left + margins.right;
-        p.y += margins.top + margins.bottom;
+		var insets = Dwt.getInsets(htmlElement);
+        p.x += margins.left + margins.right + insets.left + insets.right;
+        p.y += margins.top + margins.bottom + insets.top + insets.bottom;
     }
 
     return p;
@@ -1404,16 +1405,19 @@ function(objOrClassName, className) {
  * 
  * @param {Object}	args			Array-like structure of arguments
  * @param {array}	paramNames		an ordered list of param names
- * @param {boolean}	force			if true, a single arg is not a params hash
  */
-Dwt.getParams =
-function(args, paramNames, force) {
-	if (!AjxUtil.isArrayLike(args)) { return {}; }
+Dwt.getParams = function(args, paramNames) {
 
-	// Check for arg-list style of passing params, which usually involves
-	// either passing multiple arguments, or having a non-trivial object as the
-	// single argument.
-	if (args.length > 1 || !AjxUtil.isHash(args[0]) || force) {
+	if (!args || args.length === 0 || (args.length === 1 && !args[0])) {
+		return {};
+	}
+
+	// Check for arg-list style of passing params. There will almost always
+	// be more than one arg, and the first one may be the parent DwtControl.
+	// Conversion is not done if there is a single argument that is a simple
+	// hash, or a proxy for a simple hash (see AjxUtil.createProxy).
+
+	if (args.length > 1 || !AjxUtil.isHash(args[0]._object_ || args[0])) {
 		var params = {};
 		for (var i = 0; i < args.length; i++) {
 			params[paramNames[i]] = args[i];

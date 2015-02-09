@@ -205,7 +205,7 @@ DwtDialog.ALL_BUTTONS 		= [DwtDialog.CANCEL_BUTTON, DwtDialog.OK_BUTTON,
 DwtDialog.MSG_KEY = {};
 DwtDialog.MSG_KEY[DwtDialog.CANCEL_BUTTON] 	= "cancel";
 DwtDialog.MSG_KEY[DwtDialog.OK_BUTTON] 		= "ok";
-DwtDialog.MSG_KEY[DwtDialog.DISMISS_BUTTON] = "dismiss";
+DwtDialog.MSG_KEY[DwtDialog.DISMISS_BUTTON] = "close";
 DwtDialog.MSG_KEY[DwtDialog.NO_BUTTON] 		= "no";
 DwtDialog.MSG_KEY[DwtDialog.YES_BUTTON] 	= "yes";
 
