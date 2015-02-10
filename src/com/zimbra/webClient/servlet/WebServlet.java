@@ -16,6 +16,9 @@
  */
 package com.zimbra.webClient.servlet;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
@@ -32,6 +35,7 @@ import com.zimbra.cs.consul.ServiceLocator;
 @SuppressWarnings("serial")
 public class WebServlet extends HttpServlet {
     protected ServiceLocator serviceLocator;
+    protected String httpServiceID, httpsServiceID;
 
     public WebServlet() {
         super ();
@@ -51,33 +55,51 @@ public class WebServlet extends HttpServlet {
         super.destroy();
     }
 
-    protected CatalogRegistration.Service getServiceLocatorService() {
-        String name = "zimbra:web";
-        int port = 7070; // TODO read from java:comp/env in production (see ZCServlet static init)
-        String id = name + ":" + port;
-        CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, port);
-        // TODO tag service with http/https read from java:comp/env in production (see ZCServlet static init)
-
-        String scheme = "http";
-        String url = scheme + "://localhost:" + port + "/zimbra/";
-        CatalogRegistration.Check check = new CatalogRegistration.Check(id + ":health", name);
-        check.script = "/opt/zimbra/libexec/zmhealthcheck-web " + url;
-        check.interval = "1m";
-
-        service.check = check;
-
-        return service;
-    }
-
     /**
      * Register with service locator.
      *
      * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_register
      */
-    protected CatalogRegistration.Service registerWithServiceLocator() {
-        CatalogRegistration.Service serviceLocatorService = getServiceLocatorService();
-        serviceLocator.registerSilent(serviceLocatorService);
-        return serviceLocatorService;
+    protected void registerWithServiceLocator() throws ServletException {
+
+        // Read protocol and port configuration
+        int httpPort = 0, httpsPort = 0;
+        String protocolMode;
+        try {
+            Context initCtx = new InitialContext();
+            Context envCtx = (Context) initCtx.lookup("java:comp/env");
+            protocolMode = (String) envCtx.lookup("protocolMode");
+
+            String str = (String) envCtx.lookup("httpPort");
+            httpPort = new Integer(str != null ? str : ZCServlet.DEFAULT_HTTP_PORT);
+
+            str = (String) envCtx.lookup("httpsPort");
+            httpsPort = new Integer(str != null ? str : ZCServlet.DEFAULT_HTTPS_PORT);
+        } catch (NamingException e) {
+            throw new ServletException(e.getLocalizedMessage(), e);
+        }
+
+        // Register http endpoint
+        if (ZCServlet.PROTO_HTTP.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
+            httpServiceID = registerWithServiceLocator("zimbra:web", httpPort, "http");
+        }
+
+        // Register https endpoint
+        if (ZCServlet.PROTO_HTTPS.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
+            httpsServiceID = registerWithServiceLocator("zimbra:webssl", httpsPort, "https");
+        }
+    }
+
+    protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
+        String serviceID = serviceName + ":" + port;
+        CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        String url = checkScheme + "://localhost:" + port + "/";
+        CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
+        check.script = "/opt/zimbra/libexec/zmhealthcheck-web " + url;
+        check.interval = "1m";
+        service.check = check;
+        serviceLocator.registerSilent(service);
+        return serviceID;
     }
 
     /**
@@ -86,6 +108,13 @@ public class WebServlet extends HttpServlet {
      * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_deregister
      */
     protected void deregisterWithServiceLocator() {
-        serviceLocator.deregisterSilent(getServiceLocatorService().id);
+        if (httpServiceID != null) {
+            serviceLocator.deregisterSilent(httpServiceID);
+            httpServiceID = null;
+        }
+        if (httpsServiceID != null) {
+            serviceLocator.deregisterSilent(httpsServiceID);
+            httpsServiceID = null;
+        }
     }
 }
