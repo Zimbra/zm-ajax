@@ -796,7 +796,9 @@ public class SkinResources
               .append("skin=").append(skinStr)
 			  .append("&locale=" + localeStr);
 
-			sb.append("\n").append(appContextPath).append("/css/msgview.css?v=").append(cacheBusterVersion);
+			sb.append("\n").append(appContextPath).append("/css/msgview.css?v=").append(cacheBusterVersion)
+				.append("&skin=").append(skinStr)
+				.append("&locale=").append(localeStr);
             //Tinymce dynamically loads this minified css and font files. Don't append cacheBusterVersion.
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/skin.min.css");
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/content.min.css");
