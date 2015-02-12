@@ -480,8 +480,6 @@ DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
     this._titleEl = document.getElementById(data.id+"_title");
     this._contentEl = document.getElementById(data.id+"_content");
 
-    this.setAttribute('aria-describedby', this._contentEl.id);
-	this._contentEl.setAttribute('role', 'document');
 	if (this._titleEl) {
 		this.setAttribute('aria-labelledby', this._titleEl.id);
 		this._titleEl.setAttribute('role', 'heading');

@@ -646,7 +646,7 @@ function(templateId, data) {
         el.style.overflow = "hidden";
     }
 	if (this._legendId) {
-		this.setAttribute('aria-labelledby', this._legendId);
+		this.setAttribute('aria-labelledby', [ this._legendId, this._textEl.id ].join(' '));
 	}
 };
 
@@ -682,12 +682,10 @@ DwtSelect.prototype._createMenu = function() {
 	var select = this;
 	menu.addPopupListener(function() {
 		select.setAttribute('aria-expanded', true);
-		select.setAttribute('aria-hidden', false);
 	});
 	menu.addPopdownListener(function() {
 		select.setAttribute('aria-expanded', false);
 		select.removeAttribute('aria-activedescendant');
-		select.setAttribute('aria-hidden', true);
 	});
 
 	return menu;
