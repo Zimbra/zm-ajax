@@ -156,6 +156,19 @@ function(width, height) {
 	}
 };
 
+DwtMessageDialog.prototype.focus = function() {
+
+	DwtDialog.prototype.focus.apply(this, arguments);
+
+	// Accessibility - set aria-describedby on button which gets initial focus
+	var firstFocus = this._tabGroup.getFirstMember();
+	if (firstFocus && firstFocus.isDwtButton && !firstFocus.hasAttribute('aria-describedby')) {
+		firstFocus.setAttribute('aria-describedby', this._msgCellId + '_Msg');
+	}
+};
+
+
+
 /**
  * Resets the message dialog. This should be performed to "reuse" the dialog.
  * 
