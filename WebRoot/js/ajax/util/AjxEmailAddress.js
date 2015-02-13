@@ -485,6 +485,14 @@ function() {
 	return this.dispName;
 };
 
+/*
+ * We use this for displaying the actual text in the cell (or group when grouping by "from")
+ */
+AjxEmailAddress.prototype.getText =
+function() {
+	return this.getName() || this.getDispName() || this.getAddress();
+};
+
 /**
  * Clones this email address.
  * 
