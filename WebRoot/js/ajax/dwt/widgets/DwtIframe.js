@@ -240,7 +240,7 @@ DwtIframe.prototype._createFrame = function(html) {
 			tmp[i++] = " style='visibility:hidden'";
 		}
 		if (self._title) {
-			tmp[i++] = " title='" + self._title + "'";
+			tmp[i++] = " title='" + AjxStringUtil.encodeQuotes(AjxStringUtil.htmlEncode(self._title)) + "'";
 		}
 		tmp[i++] = " frameborder='0' width='100%' id='";
 		tmp[i++] = self._iframeID;
