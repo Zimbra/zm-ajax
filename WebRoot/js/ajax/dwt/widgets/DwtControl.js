@@ -3456,7 +3456,7 @@ function(ev, eventType, obj, mouseEv) {
 	// By default, we halt event processing. The default can be overridden here through
 	// the use of setEventPropagation(). A listener may also change the event props when called.
 	var tn = mouseEv.target.tagName && mouseEv.target.tagName.toLowerCase();
-	var propagate = obj._propagateEvent[eventType] || (tn === "input" || tn === "textarea" || tn === "a");
+	var propagate = obj._propagateEvent[eventType] || (tn === "input" || tn === "textarea" || tn === "a" || tn === "label");
 	//todo - not sure if _stopPropagation and _dontCallPreventDefault should not the the SAME. Since if you stop propagation and dontCallPreventDefault,
 	//it DOES allow selection (or context menu, etc, any default browser stuff). But if you allow to propagate, this might be overriden by a DOM element
 	//higher up, which might not be what we want. Very confusing.
