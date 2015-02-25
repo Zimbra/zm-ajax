@@ -704,10 +704,7 @@ function() {
  */
 DwtButton.prototype._focusByMouseUpEvent =
 function()  {
-	// don't steal focus if on a toolbar that's not part of focus ring
-	if (!(this.parent && (this.parent instanceof DwtToolBar) && this.parent.noFocus)) {
-		DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getTabGroupMember());
-	}
+	//do nothing, override parents so that we do not focus on button using mouseUp. Makes no sense to focus.
 };
 
 /**
