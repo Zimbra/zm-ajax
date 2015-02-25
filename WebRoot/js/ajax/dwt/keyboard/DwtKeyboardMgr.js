@@ -488,6 +488,7 @@ function(focusObj) {
 			this.__oldFocusObj = this.__focusObj;
 		}
 		this.__focusObj = focusObj;
+		this.__dwtCtrlHasFocus = false;
 		this.__inputElement = inputElement;
 		// IE throws JS error if you try to focus a disabled or invisible input
 		if ((!AjxEnv.isIE && inputElement.focus) ||
