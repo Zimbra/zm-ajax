@@ -19,6 +19,9 @@ package com.zimbra.webClient.servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.consul.ConsulServiceLocator;
@@ -32,6 +35,7 @@ import com.zimbra.cs.consul.ServiceLocator;
 @SuppressWarnings("serial")
 public class WebAdminServlet extends HttpServlet {
     protected ServiceLocator serviceLocator;
+    protected String serviceID;
 
     public WebAdminServlet() {
         super ();
@@ -51,30 +55,38 @@ public class WebAdminServlet extends HttpServlet {
         super.destroy();
     }
 
-    protected CatalogRegistration.Service getServiceLocatorService() {
-        String name = "zimbra:webAdmin";
-        int port = 7071; // TODO read from java:comp/env in production (see ZCServlet static init)
-        String id = name + ":" + port;
-        CatalogRegistration.Service service = new CatalogRegistration.Service(id, name, port);
-        // TODO tag service with http/https read from java:comp/env in production (see ZCServlet static init)
-
-        String url = "https://localhost:" + port + "/zimbraAdmin/";
-        CatalogRegistration.Check check = new CatalogRegistration.Check(id + ":health", name);
-        check.script = "/opt/zimbra/libexec/zmhealthcheck-webadmin " + url;
-        check.interval = "1m";
-
-        return service;
-    }
-
     /**
      * Register with service locator.
      *
      * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_register
      */
-    protected CatalogRegistration.Service registerWithServiceLocator() {
-        CatalogRegistration.Service serviceLocatorService = getServiceLocatorService();
-        serviceLocator.registerSilent(serviceLocatorService);
-        return serviceLocatorService;
+    protected void registerWithServiceLocator() throws ServletException {
+
+        try {
+            // Read protocol and port configuration
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            String schemePrefix = localServer.getAdminServiceScheme();
+            int httpsPort = localServer.getAdminPort();
+
+            // Register https endpoint
+            if ("https://".equals(schemePrefix)) {
+                serviceID = registerWithServiceLocator("zimbra:webadminssl", httpsPort, "https");
+            }
+        } catch (ServiceException e) {
+            throw new ServletException("Failed reading provisioning config before registering with service locator", e);
+        }
+    }
+
+    protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
+        String serviceID = serviceName + ":" + port;
+        CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        String url = checkScheme + "://localhost:" + port + "/zimbraAdmin/";
+        CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
+        check.script = "/opt/zimbra/libexec/zmhealthcheck-webadmin " + url;
+        check.interval = "1m";
+        service.check = check;
+        serviceLocator.registerSilent(service);
+        return serviceID;
     }
 
     /**
@@ -83,6 +95,9 @@ public class WebAdminServlet extends HttpServlet {
      * @see https://www.consul.io/docs/agent/http.html#_v1_catalog_deregister
      */
     protected void deregisterWithServiceLocator() {
-        serviceLocator.deregisterSilent(getServiceLocatorService().id);
+        if (serviceID != null) {
+            serviceLocator.deregisterSilent(serviceID);
+            serviceID = null;
+        }
     }
 }
