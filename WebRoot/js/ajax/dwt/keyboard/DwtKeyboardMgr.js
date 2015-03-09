@@ -489,6 +489,10 @@ function(focusObj) {
 		}
 		this.__focusObj = focusObj;
 		this.__dwtCtrlHasFocus = false;
+		if (this.__inputElement && this.__inputElement.blur) {
+			// Blur the old input element, in case the new focus does not have a html focusable element
+			this.__inputElement.blur();
+		}
 		this.__inputElement = inputElement;
 		// IE throws JS error if you try to focus a disabled or invisible input
 		if ((!AjxEnv.isIE && inputElement.focus) ||
