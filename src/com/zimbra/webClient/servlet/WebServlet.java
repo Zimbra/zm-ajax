@@ -81,18 +81,21 @@ public class WebServlet extends HttpServlet {
 
         // Register http endpoint
         if (ZCServlet.PROTO_HTTP.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
-            httpServiceID = registerWithServiceLocator("zimbra:web", httpPort, "http");
+            httpServiceID = registerWithServiceLocator("zimbra-web", httpPort, "http");
         }
 
         // Register https endpoint
         if (ZCServlet.PROTO_HTTPS.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
-            httpsServiceID = registerWithServiceLocator("zimbra:webssl", httpsPort, "https");
+            httpsServiceID = registerWithServiceLocator("zimbra-web", httpsPort, "https");
         }
     }
 
     protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        if ("https".equals(checkScheme)) {
+            service.tags.add("ssl");
+        }
         String url = checkScheme + "://localhost:" + port + "/";
         CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
         check.script = "/opt/zimbra/libexec/zmhealthcheck-web " + url;

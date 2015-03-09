@@ -70,7 +70,7 @@ public class WebAdminServlet extends HttpServlet {
 
             // Register https endpoint
             if ("https://".equals(schemePrefix)) {
-                serviceID = registerWithServiceLocator("zimbra:webadminssl", httpsPort, "https");
+                serviceID = registerWithServiceLocator("zimbra-webadmin", httpsPort, "https");
             }
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning config before registering with service locator", e);
@@ -80,6 +80,9 @@ public class WebAdminServlet extends HttpServlet {
     protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        if ("https".equals(checkScheme)) {
+            service.tags.add("ssl");
+        }
         String url = checkScheme + "://localhost:" + port + "/zimbraAdmin/";
         CatalogRegistration.Check check = new CatalogRegistration.Check(serviceID + ":health", serviceName);
         check.script = "/opt/zimbra/libexec/zmhealthcheck-webadmin " + url;
