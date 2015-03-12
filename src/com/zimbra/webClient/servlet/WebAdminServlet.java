@@ -26,6 +26,7 @@ import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.consul.ConsulServiceLocator;
 import com.zimbra.cs.consul.ServiceLocator;
+import com.zimbra.cs.consul.ZimbraServiceNames;
 
 
 /**
@@ -70,7 +71,7 @@ public class WebAdminServlet extends HttpServlet {
 
             // Register https endpoint
             if ("https://".equals(schemePrefix)) {
-                serviceID = registerWithServiceLocator("zimbra-webadmin", httpsPort, "https");
+                serviceID = registerWithServiceLocator(ZimbraServiceNames.WEBADMIN, httpsPort, "https");
             }
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning config before registering with service locator", e);

@@ -26,6 +26,7 @@ import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.consul.ConsulClient;
 import com.zimbra.cs.consul.ConsulServiceLocator;
 import com.zimbra.cs.consul.ServiceLocator;
+import com.zimbra.cs.consul.ZimbraServiceNames;
 
 
 /**
@@ -81,12 +82,12 @@ public class WebServlet extends HttpServlet {
 
         // Register http endpoint
         if (ZCServlet.PROTO_HTTP.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
-            httpServiceID = registerWithServiceLocator("zimbra-web", httpPort, "http");
+            httpServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpPort, "http");
         }
 
         // Register https endpoint
         if (ZCServlet.PROTO_HTTPS.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
-            httpsServiceID = registerWithServiceLocator("zimbra-web", httpsPort, "https");
+            httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpsPort, "https");
         }
     }
 
