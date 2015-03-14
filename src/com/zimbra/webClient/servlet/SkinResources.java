@@ -70,8 +70,6 @@ import org.w3c.dom.Node;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -552,14 +550,7 @@ public class SkinResources
 
 		try {
 			SoapProvisioning provisioning = new SoapProvisioning();
-			String soapUri =
-				Provisioning.getInstance().getLocalServer().getAdminServiceScheme()   +
-				LC.zimbra_zmprov_default_soap_server.value() +
-				':' +
-				LC.zimbra_admin_service_port.intValue() +
-				AdminConstants.ADMIN_SERVICE_URI
-			;
-			provisioning.soapSetURI(soapUri);
+			provisioning.soapSetURI(provisioning.lookupAdminServiceURI());
 			String serverName = getServerName(req);
 			Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
 			if (info == null) {
