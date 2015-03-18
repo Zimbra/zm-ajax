@@ -640,7 +640,7 @@ function() {
 DwtChooser.prototype.getTabGroupMember =
 function() {
 	var tg = new DwtTabGroup(this.toString());
-	tg.addMember(this.sourceListView._listDiv);
+	tg.addMember(this.sourceListView);
 	for (var i = 0; i < this._buttonInfo.length; i++) {
 		tg.addMember(this._button[this._buttonInfo[i].id]);
 	}
@@ -652,7 +652,7 @@ function() {
 	if (this._hasTextField) {
 		tg.addMember(this._textField);
 	}
-	tg.addMember(this.targetListView._listDiv);
+	tg.addMember(this.targetListView);
 	return tg;
 };
 
