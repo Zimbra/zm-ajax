@@ -78,6 +78,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.kabuki.util.Colors;
@@ -550,7 +551,7 @@ public class SkinResources
 
 		try {
 			SoapProvisioning provisioning = new SoapProvisioning();
-			provisioning.soapSetURI(provisioning.lookupAdminServiceURI());
+			provisioning.soapSetURI(URLUtil.getAdminURL());
 			String serverName = getServerName(req);
 			Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
 			if (info == null) {

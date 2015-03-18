@@ -45,8 +45,7 @@ public class WebServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        ConsulClient consulClient = new ConsulClient();
-        serviceLocator = new ConsulServiceLocator(consulClient);
+        serviceLocator = new ConsulServiceLocator(new ConsulClient());
         registerWithServiceLocator();
     }
 
