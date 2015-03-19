@@ -2407,11 +2407,17 @@ AjxStringUtil.defangHtmlContent = function(html) {
 	if (images && images.length) {
 		var imgEl;
 		var dfSrcContent;
+		var pnSrcContent;
 		for (var i = 0; i < images.length; i++) {
 			imgEl = images[i];
 			dfSrcContent = imgEl.getAttribute("dfsrc");
 			if (dfSrcContent && (dfSrcContent !== "#")) {
 				imgEl.setAttribute("src", dfSrcContent);
+			} else {
+				pnSrcContent = imgEl.getAttribute("pnsrc");
+				if (pnSrcContent && (pnSrcContent !== "#")) {
+					imgEl.setAttribute("src", pnSrcContent);
+				}
 			}
 			imgEl.removeAttribute("dfsrc");
 		}
