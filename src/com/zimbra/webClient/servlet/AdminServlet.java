@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2007, 2008, 2009, 2010, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -16,23 +16,20 @@
  */
 package com.zimbra.webClient.servlet;
 
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.service.FileUploadServlet;
-import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import java.io.*;
-import java.lang.reflect.Method;
-import java.util.Hashtable;
-import java.util.Enumeration;
-
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 
 public class AdminServlet extends ZimbraServlet {
@@ -51,8 +48,8 @@ public class AdminServlet extends ZimbraServlet {
 
     /**
      * action:
-     *  - getCSR - return the commerical CSR
-     *  - getBP - return the bulk privisioin results
+     *  - getCSR - return the commercial CSR
+     *  - getBP - return the bulk provision results
      *       * it also needs a required parameter "aid" - uploaded file attachment id
      *       * the status information is from the in-memory copy of the uploaded file contents
      */
@@ -95,8 +92,7 @@ public class AdminServlet extends ZimbraServlet {
 
     private static void getCSRFile(String adminHomeDir, OutputStream out)
             throws FileNotFoundException, IOException {
-        String csrFileName =  adminHomeDir + "/tmp/current.csr" ;
-        //System.out.println("csr file = " + csrFileName) ;
+        String csrFileName = adminHomeDir + "/tmp/current.csr" ;
         InputStream in = null;
         try {
             in = new BufferedInputStream(new FileInputStream(csrFileName));
