@@ -1521,25 +1521,15 @@ function(className, ancestor) {
         ancestor = document;
 	}
 
-    if (ancestor.getElementsByClassName) {
-        return AjxUtil.toArray(ancestor.getElementsByClassName(className));
+	var nodes;
 
-    } else {
-        /* fall back for IE 8 and earlier */
-        var pattern = new RegExp("\\b"+className+"\\b");
-        var byClass = function(element, accumulator)
-        {
-            if (element.className && element.className.match(pattern))
-                accumulator.push(element);
+	if (ancestor.getElementsByClassName) {
+		nodes = ancestor.getElementsByClassName(className);
+	} else {
+		nodes = ancestor.querySelectorAll('.' + className);
+	}
 
-            for (var i = 0; i < element.childNodes.length; i++)
-                byClass(element.childNodes[i], accumulator);
-
-            return accumulator;
-	    };
-
-	    return byClass(ancestor, []);
-    }
+	return AjxUtil.toArray(nodes);
 };
 
 Dwt.show =
@@ -1976,6 +1966,38 @@ function(htmlElement, id) {
     }
     return descendant;
 };
+
+Dwt.getPreviousElementSibling =
+function(element) {
+	var sibling = element.previousElementSibling;
+
+	if (sibling !== undefined) {
+		return sibling;
+	}
+
+	// workaround for missing previousElementSibling in MSIE 8
+	for (sibling = element.previousSibling;
+		 sibling && sibling.nodeType !== 1;
+		 sibling = sibling.previousSibling);
+
+	return sibling;
+}
+
+Dwt.getNextElementSibling =
+function(element) {
+	var sibling = element.nextElementSibling;
+
+	if (sibling !== undefined) {
+		return sibling;
+	}
+
+	// workaround for missing nextElementSibling in MSIE 8
+	for (sibling = element.nextSibling;
+		 sibling && sibling.nodeType !== 1;
+		 sibling = sibling.nextSibling);
+
+	return sibling;
+}
 
 Dwt.getScrollbarSizes = function(node) {
     var insets = Dwt.getInsets(node);
