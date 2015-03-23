@@ -67,6 +67,7 @@ DwtIframe = function(params) {
 		Dwt.setHandler(doc, DwtEvent.ONKEYDOWN, DwtKeyboardMgr.__keyDownHdlr);
 		Dwt.setHandler(doc, DwtEvent.ONKEYUP, DwtKeyboardMgr.__keyUpHdlr);
 		Dwt.setHandler(doc, DwtEvent.ONKEYPRESS, DwtKeyboardMgr.__keyPressHdlr);
+		Dwt.setHandler(doc, DwtEvent.ONFOCUS, DwtKeyboardMgr._clearFocusObj);
 	}
 };
 

@@ -465,7 +465,7 @@ function() {
 	return true;
 };
 
-/** 
+/**
  * Sets keyboard focus to the given object.
  *
  * @private
@@ -735,6 +735,12 @@ DwtKeyboardMgr.prototype.__warnFocus = function() {
 	if (window.console && console.log) {
 		console.log(msg);
 	}
+};
+
+DwtKeyboardMgr._clearFocusObj =
+function() {
+	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
+	kbMgr.__focusObj = null;
 };
 
 /**
