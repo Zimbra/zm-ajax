@@ -24,9 +24,9 @@ import javax.servlet.http.HttpServlet;
 
 import com.zimbra.cs.consul.CatalogRegistration;
 import com.zimbra.cs.consul.ConsulClient;
-import com.zimbra.cs.consul.ConsulServiceLocator;
-import com.zimbra.cs.consul.ServiceLocator;
-import com.zimbra.cs.consul.ZimbraServiceNames;
+import com.zimbra.cs.servicelocator.ConsulServiceLocator;
+import com.zimbra.cs.servicelocator.ServiceLocator;
+import com.zimbra.cs.servicelocator.ZimbraServiceNames;
 
 
 /**
