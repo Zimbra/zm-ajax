@@ -22,11 +22,11 @@ import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
-import com.zimbra.cs.consul.CatalogRegistration;
-import com.zimbra.cs.consul.ConsulClient;
-import com.zimbra.cs.servicelocator.ConsulServiceLocator;
-import com.zimbra.cs.servicelocator.ServiceLocator;
-import com.zimbra.cs.servicelocator.ZimbraServiceNames;
+import com.zimbra.common.consul.CatalogRegistration;
+import com.zimbra.common.consul.ConsulClient;
+import com.zimbra.common.consul.ConsulServiceLocator;
+import com.zimbra.common.servicelocator.ServiceLocator;
+import com.zimbra.common.servicelocator.ZimbraServiceNames;
 
 
 /**
