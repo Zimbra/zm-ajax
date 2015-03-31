@@ -663,6 +663,10 @@ function(tg, logger, level) {
 				(a[i].nodeName + ' ' + a[i].outerHTML) :
 				(String(a[i]) + ' ' + a[i]._htmlElId);
 
+			if (a[i].noTab) {
+				desc += ' - no tab!';
+			}
+
 			logger(myIndent + desc);
 		}
 	}
