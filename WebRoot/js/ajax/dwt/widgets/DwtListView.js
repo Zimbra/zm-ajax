@@ -2237,46 +2237,34 @@ function(clickedEl, ev) {
 			var numEls = els.length;
 			var el;
 			var state = 0;
+			this._rightSelItem = null;
+
+			this._selectedItems.removeAll();
 			for (var i = 0; i < numEls; i++) {
 				el = els[i];
 				var item = this.getItemFromElement(el);
 				if (item === null) {
 					continue; //ignore separators
 				}
-				if (el == this._rightSelItem) {
-					this._rightSelItem = null;
-				}
 
-				if (el == clickedEl) {
+				var selStyleClass = this._selectedClass;
+				var include = (state === 1);
+				if (el === clickedEl || el === this._selAnchor || el.id === clickedEl.id || el.id === this._selAnchor.id) {
 					/* Increment the state.
 					 * 0 - means we havent started
 					 * 1 - means we are in selection range
 					 * 2 - means we are out of selection range */
 					state++;
+					include = true; //the borders (clickedEl and _selAnchor) are both included in the selection.
 				}
-				var selStyleClass = this._selectedClass;
-				if (el == this._selAnchor) {
-					state++;
-					if (el.className.indexOf(selStyleClass) == -1) {
-						this._selectedItems.add(el);
-						el.setAttribute('aria-selected', true);
-					}
-					Dwt.delClass(el, this._styleRe, selStyleClass);
-					continue;
-				}
-
-				// If state == 0 or 2 (i.e. we are out of the selection range,
-				// we have to deselect the node. Else we select it
-				if (state != 1 && el.className.indexOf(selStyleClass) != -1 && el != clickedEl) {
-					Dwt.delClass(el, this._styleRe);		// , this._normalClass	MOW
-					this._selectedItems.remove(el);
-					el.removeAttribute('aria-selected');
-				} else if (state == 1 || el == clickedEl) {
-					if (el.className.indexOf(selStyleClass) == -1) {
-						this._selectedItems.add(el);
-					}
+				if (include) {
+					this._selectedItems.add(el);
 					el.setAttribute('aria-selected', true);
 					Dwt.delClass(el, this._styleRe, selStyleClass);
+				}
+				else if (el.className.indexOf(selStyleClass) !== -1) {
+					Dwt.delClass(el, this._styleRe);		// , this._normalClass	MOW
+					el.removeAttribute('aria-selected');
 				}
 			}
 
