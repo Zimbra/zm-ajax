@@ -52,6 +52,12 @@ DwtKeyMap = function(subclassInit) {
 DwtKeyMap.prototype.isDwtKeyMap = true;
 DwtKeyMap.prototype.toString = function() { return "DwtKeyMap"; };
 
+// This is how modifiers need to appear in *.keycode values
+DwtKeyMap.ALT   = 'Alt';
+DwtKeyMap.CTRL  = 'Ctrl';
+DwtKeyMap.META  = 'Meta';
+DwtKeyMap.SHIFT = 'Shift';
+
 DwtKeyMap.deserialize =
 function(keymap) {
 	alert("DwtKeyMap.deserialize: NOT IMPLEMENTED");
@@ -167,18 +173,26 @@ function() {
 DwtKeyMap.prototype._load =
 function(map, keys) {
 
-	// preprocess for platform-specific bindings
+	// preprocess for platform-specific bindings, and sanitize for misuse of {modifier} in keycode
 	var curPlatform = AjxEnv.platform.toLowerCase();
 	for (var propName in keys) {
 		var parts = propName.split(".");
 		var last = parts[parts.length - 1];
-		if (last == "win" || last == "mac" || last == "linux") {
-			if (last == curPlatform) {
+        // if we find the right platform-specific binding, promote it to be the main one
+		if (last === "win" || last === "mac" || last === "linux") {
+			if (last === curPlatform) {
 				var baseKey = parts.slice(0, parts.length - 1).join(".");
 				keys[baseKey] = keys[propName];
 			}
 			keys[propName] = null;
 		}
+        // clean up in case someone put something like {ctrl} in keycode rather than display
+        var propValue = AjxStringUtil.trim(keys[propName]);
+        if (parts[2] && parts[2] === 'keycode' && propValue && propValue.indexOf('{') !== -1) {
+            keys[propName] = propValue.replace(/\{(\w)(\w+)\}/g, function(m, first, rest) {
+                return first.toUpperCase() + rest;
+            });
+        }
 	}
 	
 	for (var propName in keys) {
@@ -258,9 +272,7 @@ function(mapName, action) {
 DwtKeyMap.prototype._processKeyDef = 
 function(key, field, value) {
 	if (!key || !field || !value) { return; }
-	if (field == "display") {
-		DwtKeyMap[key.toUpperCase()] = value;
-	} else if (field == "keycode") {
+	if (field == "keycode") {
 		DwtKeyMap.IS_MODIFIER[value] = true;
 	}
 };
