@@ -2140,13 +2140,13 @@ AjxStringUtil._checkNode = function(el) {
 };
 
 /**
- * Checks innerText to see if it's a separator.
+ * Checks textContent to see if it's a separator.
  * @param {Element} node
  * @return {String}
  * @private
  */
 AjxStringUtil._checkNodeContent = function(node) {
-	var content = node.innerText || '';
+	var content = node.textContent || '';
 	if (!AjxStringUtil._NON_WHITESPACE.test(content) || content.length > 200) {
 		return null;
 	}
