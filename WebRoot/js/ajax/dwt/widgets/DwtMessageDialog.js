@@ -46,7 +46,6 @@ DwtMessageDialog = function(params) {
 	params = Dwt.getParams(arguments, DwtMessageDialog.PARAMS);
 	this._msgCellId = Dwt.getNextId("MessageDialog_");
 	params.standardButtons = params.buttons || [DwtDialog.OK_BUTTON];
-	params.isFocusable = false;
 
 	if (params.helpText) {
 		var helpButton = new DwtDialog_ButtonDescriptor(DwtMessageDialog.HELP_BUTTON, params.helpText, DwtDialog.ALIGN_LEFT);
