@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -70,19 +70,18 @@ import org.w3c.dom.Node;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.kabuki.util.Colors;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Account;
 
 /**
  * TODO: Clean up this code!
@@ -552,14 +551,7 @@ public class SkinResources
 
 		try {
 			SoapProvisioning provisioning = new SoapProvisioning();
-			String soapUri =
-				LC.zimbra_admin_service_scheme.value() +
-				LC.zimbra_zmprov_default_soap_server.value() +
-				':' +
-				LC.zimbra_admin_service_port.intValue() +
-				AdminConstants.ADMIN_SERVICE_URI
-			;
-			provisioning.soapSetURI(soapUri);
+			provisioning.soapSetURI(URLUtil.getAdminURL());
 			String serverName = getServerName(req);
 			Entry info = provisioning.getDomainInfo(Key.DomainBy.virtualHostname, serverName);
 			if (info == null) {
@@ -911,7 +903,7 @@ public class SkinResources
                 sb.append("\n").append(appContextPath).append("/js/Alert_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n");
 			}
-			
+
 			sb.append("\n#sound files\n");
 			// Append the alert sound file
 			sb.append("\n").append(appContextPath).append("/public/sounds/im/alert.wav");
@@ -929,7 +921,7 @@ public class SkinResources
 					sb.append("?dev=1");
 				}
 			}
-		
+
 			return sb.toString();
 		}
 		return cout.toString();
