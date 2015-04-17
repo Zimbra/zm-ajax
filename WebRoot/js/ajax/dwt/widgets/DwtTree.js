@@ -232,7 +232,9 @@ function(treeItem, kbNavEvent) {
 
 DwtTree.prototype.setSelection =
 function(treeItem, skipNotify, kbNavEvent, noFocus) {
-	if (!treeItem) { return; }
+	if (!treeItem || !treeItem.isSelectionEnabled()) {
+		return;
+	}
 
 	// Remove currently selected items from the selection list. if <treeItem> is in that list, then note it and return
 	// after we are done processing the selected list
