@@ -268,9 +268,6 @@ DwtSelect.prototype.popup =
 function() {
 	var menu = this.getMenu();
 	if (!menu) { return; }
-	if (this._currentSelectedOption) {
-		menu.setSelectedItem(this._currentSelectedOption.getItem());
-	}
 
 	var selectElement = this._selectEl;
 	var selectBounds = Dwt.getBounds(selectElement);
@@ -284,6 +281,9 @@ function() {
     var x = selectLocation.x + verticalBorder;
     var y = selectLocation.y + selectBounds.height + horizontalBorder;
     menu.popup(0, x, y);
+    if (this._currentSelectedOption) {
+        menu.setSelectedItem(this._currentSelectedOption.getItem());
+    }
 };
 
 /**
