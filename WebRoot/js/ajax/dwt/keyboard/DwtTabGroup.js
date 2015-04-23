@@ -429,6 +429,20 @@ function() {
 };
 
 /**
+ * Focus this tab group; either retaining the current focus member or focusing
+ * the first focusable member.
+ *
+ * Since tab group members are either tab groups themselves, DwtControls or DOM
+ * elements, this allows a focus() call on any member to Do The Right
+ * Thing(tm).
+ */
+DwtTabGroup.prototype.focus =
+function() {
+	var control = this.getFocusMember() || this.resetFocusMember(true);
+	control.focus();
+};
+
+/**
  * Returns the previous member in the tag group.
  * 
  * @private

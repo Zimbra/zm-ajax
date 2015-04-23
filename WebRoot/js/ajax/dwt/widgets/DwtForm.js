@@ -180,8 +180,9 @@ DwtForm.prototype.setLabel = function(id, label) {
  *
  * @param	{string}	id 		the id
  * @param	{string}	image 	the image
+ * @param	{string}	altText	alternate text for non-visual users
  */
-DwtForm.prototype.setImage = function(id, image) {
+DwtForm.prototype.setImage = function(id, image, altText) {
 	var item = this._items[id];
 	if (!item) {
 		return;
@@ -190,7 +191,7 @@ DwtForm.prototype.setImage = function(id, image) {
 	if (!control) {
 		return;
 	}
-	control.setImage(image);
+	control.setImage(image, null, altText);
 };
 
 
@@ -917,7 +918,7 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 	// init button, menu item
 	else if (control instanceof DwtButton || control instanceof DwtMenuItem) {
 		if (itemDef.label) { control.setText(itemDef.label); }
-		if (itemDef.image) { control.setImage(itemDef.image); }
+		if (itemDef.image) { control.setImage(itemDef.image, null, itemDef.imageAltText); }
 		if (itemDef.menu) {
 			var isMenu = Dwt.instanceOf(itemDef.menu.type || "DwtMenu", "DwtMenu");
 			var menu;
@@ -962,7 +963,9 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 		    control.setHandler(DwtEvent.ONBLUR, onblur);
         }
 
+		itemDef.tooltip = itemDef.tooltip || itemDef.hint;
 		control.setHint(itemDef.hint);
+		control.setLabel(itemDef.label || itemDef.tooltip);
 	}
 
 	// init list
@@ -997,7 +1000,7 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 	else if (control instanceof DwtTabViewPage && parent instanceof DwtTabView) {
 		var key = parent.addTab(itemDef.label, control);
 		if (itemDef.image) {
-			parent.getTabButton(key).setImage(itemDef.image);
+			parent.getTabButton(key).setImage(itemDef.image, null, itemDef.imageAltText);
 		}
 		if (itemDef.items) {
 			this._registerControls(itemDef.items, itemDef, tabIndexes, null, control);
@@ -1050,6 +1053,10 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
             control.setSize(itemDef.width, itemDef.height);
         }
     }
+
+	if (itemDef.tooltip) {
+		control.setToolTipContent(itemDef.tooltip);
+	}
 
 	// return control
 	return control;
@@ -1387,7 +1394,9 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 		return;
 	}
 	itemDef = itemDef || (this._rowDef && AjxUtil.createProxy(this._rowDef));
-	if (!itemDef) return;
+	if (!itemDef) {
+		return;
+	}
 
 	if (index == null) index = this._rowCount;
 
@@ -1419,9 +1428,9 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 
 	// create controls
 	var tabIndexes = [];
-	var control = this._registerControl(itemDef, null, tabIndexes);
+	var rowControl = this._registerControl(itemDef, null, tabIndexes);
 
-	var addDef = this._itemDef.additem ? AjxUtil.createProxy(this._itemDef.additem) : { image: "Add" };
+	var addDef = this._itemDef.additem ? AjxUtil.createProxy(this._itemDef.additem) : { image: "Add", tooltip: ZmMsg.addRow };
 	addDef.id = addDef.id || itemDef.id+"_add";
 	addDef.visible = "this.getRowCount() < this.getMaxRows()";
 	addDef.ignore = true;
@@ -1430,7 +1439,7 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 		addButton.addSelectionListener(new AjxListener(this, this._handleAddRow, [itemDef.id]));
 	}
 
-	var removeDef = this._itemDef.removeitem ? AjxUtil.createProxy(this._itemDef.removeitem) : { image: "Remove" };
+	var removeDef = this._itemDef.removeitem ? AjxUtil.createProxy(this._itemDef.removeitem) : { image: "Remove", tooltip: ZmMsg.removeRow };
 	removeDef.id = removeDef.id || itemDef.id+"_remove";
 	removeDef.visible = "this.getRowCount() > this.getMinRows()";
 	removeDef.ignore = true;
@@ -1472,7 +1481,7 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 		this._call(this._onaddrow, [index]);
 	}
 
-	return control;
+	return rowControl;
 };
 
 DwtFormRows.prototype.removeRow = function(indexOrId) {
@@ -1480,8 +1489,13 @@ DwtFormRows.prototype.removeRow = function(indexOrId) {
 		return;
 	}
 
-	// delete item at specified index
 	var item = this._items[indexOrId];
+
+	// this only recognizes if a properly accessible widgets (i.e. those that
+	// receive browser focus) had focus
+	var hadFocus = Dwt.isAncestor(item._rowEl, document.activeElement);
+
+	// delete item at specified index
 	if (item.control instanceof DwtControl) {
 		this.removeChild(item.control);
 	}
@@ -1523,11 +1537,15 @@ DwtFormRows.prototype.removeRow = function(indexOrId) {
 
 	// update display and notify handler
 	this.update();
+
+	if (hadFocus) {
+		var otherItem = this._items[item.aka] || this._items[this._rowCount - 1];
+		otherItem.control.getTabGroupMember().focus();
+	}
+
 	if (this._onremoverow) {
 		this._call(this._onremoverow, [Number(item.aka)]);
 	}
-
-	// TODO: move focus to previous/next row/control???
 };
 
 DwtFormRows.prototype.getMinRows = function() {

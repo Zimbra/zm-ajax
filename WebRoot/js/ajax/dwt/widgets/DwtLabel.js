@@ -215,13 +215,14 @@ function(direction) {
  *
  * @param	{string}	imageInfo		the image
  * @param	{string}	direction		position of the image
+ * @param	{string}	altText			alternate text for non-visual users
  */
 DwtLabel.prototype.setImage =
-function(imageInfo, direction) {
+function(imageInfo, direction, altText) {
 	direction = direction || (this._style & DwtLabel.IMAGE_RIGHT ? DwtLabel.RIGHT : DwtLabel.LEFT);
 	this.__imageInfo = this.__imageInfo || {};
 	this.__imageInfo[direction] = imageInfo;
-	this.__setImage(imageInfo, direction);
+	this.__setImage(imageInfo, direction, altText);
 }
 
 /**
@@ -335,6 +336,13 @@ DwtLabel.prototype.isStyle = function(style) {
     return this._style & style;
 };
 
+DwtLabel.prototype.getTabGroupMember =
+function() {
+	// DwtLabel descends from DwtComposite, as some buttons contain nested
+	// members; it's a widget, however, and should be directly focusable
+	return DwtControl.prototype.getTabGroupMember.apply(this, arguments);
+}
+
 //
 // Protected methods
 //
@@ -380,14 +388,16 @@ DwtLabel.prototype._getIconEl = function(direction) {
  *
  * @param	{string}	imageInfo		the image
  * @param	{string}	direction		position of the image
+ * @param	{string}	altText			alternate text for non-visual users
  */
 DwtLabel.prototype.__setImage =
-function(imageInfo, direction) {
+function(imageInfo, direction, altText) {
+	this.__altText = altText || this.__altText;
 
 	var iconEl = this._getIconEl(direction);
 	if (iconEl) {
 		if (imageInfo) {
-			AjxImg.setImage(iconEl, imageInfo, null, !this._enabled);
+			AjxImg.setImage(iconEl, imageInfo, null, !this._enabled, null, this.__altText);
 
 			// set a ZHasRightIcon or ZHasLeftIcon on the outer element, depending on which we set
 			var elementClass = (this._style & DwtLabel.IMAGE_RIGHT ? "ZHasRightIcon" : "ZHasLeftIcon");

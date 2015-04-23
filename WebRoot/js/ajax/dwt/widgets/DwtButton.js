@@ -333,7 +333,7 @@ function(imageInfo, direction) {
 	if (this.whatToShow && !this.whatToShow.showImage) {
 		return;
 	}
-	DwtLabel.prototype.setImage.call(this, imageInfo, direction);
+	DwtLabel.prototype.setImage.apply(this, arguments);
 	this._setMinWidth();
 };
 

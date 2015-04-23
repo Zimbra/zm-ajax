@@ -80,6 +80,7 @@ DwtInputField = function(params) {
 	this._hasError = false;
 	this._hintIsVisible = false;
 	this._hint = params.hint;
+	this._label = params.label;
 	
 	var inputFieldId = params.inputId || Dwt.getNextId();
 	var errorIconId = Dwt.getNextId();
@@ -149,10 +150,6 @@ DwtInputField = function(params) {
 			oinput.parentNode.style.overflow = "hidden";
 		}
 		oinput.parentNode.replaceChild(ninput, oinput);
-	}
-
-	if (params.label) {
-		this._inputField.setAttribute('aria-label', params.label);
 	}
 
     this.setValidatorFunction(params.validatorCtxtObj, params.validator);
@@ -422,6 +419,22 @@ function(hint) {
 	}
 	else if (inputElement.value === '') {
 		this._showHint();
+	}
+};
+
+/**
+ * Sets the ARIA label for the input field.
+ *
+ * @param {string}	label 	the label
+ */
+DwtInputField.prototype.setLabel =
+function(label) {
+	this._label = label;
+	var inputElement = this.getInputElement();
+	if (label) {
+		inputElement.setAttribute('aria-label', label);
+	} else {
+		inputElement.removeAttribute('aria-label', label);
 	}
 };
 
@@ -959,6 +972,10 @@ function(params) {
 
 	if (AjxEnv.supportsPlaceholder && this._hint) {
 		ninput.placeholder = this._hint;
+	}
+
+	if (this._label) {
+		ninput.setAttribute('aria-label', this._label);
 	}
 
 	// add event handlers

@@ -632,11 +632,7 @@ function() {
  * @return	{DwtControl}	by default, returns this object
  */
 DwtControl.prototype.getTabGroupMember = function() {
-	if (this.isFocusable) {
-		return this.getInputElement();
-	} else {
-		return this;
-	}
+	return this;
 };
 
 /**

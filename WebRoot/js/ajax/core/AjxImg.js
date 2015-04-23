@@ -51,9 +51,10 @@ AjxImg.RE_COLOR = /^(.*?),color=(.*)$/;
  * @param _disabled		if <code>true</code>, will append " ZDisabledImage" to the CSS class for the image,
  * @param {array}       classes             array of class names to be applied to this image
  *							which will make the image partly transparent
+ * @param {string}		altText			alternative text for non-visual users
  */
 AjxImg.setImage =
-function(parentEl, imageName, useParentEl, _disabled, classes) {
+function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
 	
 	if (!parentEl) { return; }
 	
@@ -81,6 +82,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes) {
 		parentEl.innerHTML = AjxImg.getImageHtml({
 			imageName: origImageName,
 			attrStr: id ? "id='"+id+"'" : null,
+			altText: altText,
 			disabled: _disabled
 		});
 		return;
@@ -98,7 +100,13 @@ function(parentEl, imageName, useParentEl, _disabled, classes) {
 			classes.push(className);
 		}
 		html[i++] = AjxUtil.getClassAttr(classes);
-		html[i++] = "></div>";
+		html[i++] = ">";
+		if (altText) {
+			html[i++] = "<div class='ScreenReaderOnly'>";
+			html[i++] = AjxStringUtil.htmlEncode(altText);
+			html[i++] = "</div>";
+		}
+		html[i++] = "</div>";
 		parentEl.innerHTML = html.join("");
 		return;
 	} else if (AjxEnv.isIE && !AjxEnv.isIE9up) {
