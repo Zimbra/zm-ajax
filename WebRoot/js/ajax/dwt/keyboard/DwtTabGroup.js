@@ -436,11 +436,13 @@ function() {
  * elements, this allows a focus() call on any member to Do The Right
  * Thing(tm).
  */
+/*
 DwtTabGroup.prototype.focus =
 function() {
 	var control = this.getFocusMember() || this.resetFocusMember(true);
 	control.focus();
 };
+*/
 
 /**
  * Returns the previous member in the tag group.
