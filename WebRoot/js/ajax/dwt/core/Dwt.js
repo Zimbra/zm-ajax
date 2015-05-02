@@ -1314,7 +1314,7 @@ function(input) {
 /**
  * Retrieves the end of the selection.
  *
- * @param {input|iframe} input 	the input for which to find the selection start point. This
+ * @param {input|iframe} input 	the input for which to find the selection end point. This
  * 		may be a text input field or an iframe in design mode
  *
  * @return {number}	the starting position of the selection
@@ -1345,7 +1345,7 @@ function(input) {
 /**
  * Sets the selection text
  *
- * @param {input|iframe} input	the input for which to find the selection start point. This
+ * @param {input|iframe} input	the input for which to set the selection text. This
  * 		may be a text input field or an iframe in design mode
  * @param {string} text 	the text to set as the selection
  *
@@ -1376,7 +1376,7 @@ function(input, text) {
 /**
  * Move cursor to the end of an input.
  *
- * @param {input} input	the text input for which to find the selection start point
+ * @param {input} input	    text input
  *
  * @see #getSelectionStart
  * @see #getSelectionEnd
@@ -1706,6 +1706,37 @@ function() {
 	else if (window.getSelection) {
 		window.getSelection().removeAllRanges();
 	}
+};
+
+/**
+ * Inserts some text into an input at the caret.
+ *
+ * @param {Element}     input       INPUT or TEXTAREA
+ * @param {String}      text        text to insert
+ */
+Dwt.insertText = function(input, text) {
+
+    if (!input || !text) {
+        return;
+    }
+
+    if (document.selection) {
+        // IE
+        input.focus();
+        var sel = document.selection.createRange();
+        sel.text = text;
+        input.focus();
+    }
+    else if (AjxUtil.isSpecified(input.selectionStart)) {
+        var start = input.selectionStart,
+            end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + text + input.value.substring(end, input.value.length);
+        input.selectionStart = start + text.length;
+        input.selectionEnd = end + text.length;
+    }
+    else {
+        input.value += text;
+    }
 };
 
 /**
