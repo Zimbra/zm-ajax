@@ -27,6 +27,7 @@ import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.servicelocator.ZimbraServiceNames;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.BuildInfo;
 
 
 /**
@@ -80,6 +81,8 @@ public class WebAdminServlet extends HttpServlet {
     protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
+        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
+        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
         if ("https".equals(checkScheme)) {
             service.tags.add("ssl");
         }
