@@ -46,7 +46,11 @@ public class WebAdminServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        serviceLocator = new ConsulServiceLocator(new ConsulClient());
+        try {
+            serviceLocator = new ConsulServiceLocator(new ConsulClient(Provisioning.getInstance().getLocalServer().getConsulURL()));
+        } catch (ServiceException e) {
+            throw new ServletException("Failed instantiating Consul service locator", e);
+        }
         registerWithServiceLocator();
     }
 

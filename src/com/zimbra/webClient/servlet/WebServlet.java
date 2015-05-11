@@ -25,8 +25,10 @@ import javax.servlet.http.HttpServlet;
 import com.zimbra.common.consul.CatalogRegistration;
 import com.zimbra.common.consul.ConsulClient;
 import com.zimbra.common.consul.ConsulServiceLocator;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.servicelocator.ZimbraServiceNames;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.util.BuildInfo;
 
 
@@ -46,7 +48,11 @@ public class WebServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        serviceLocator = new ConsulServiceLocator(new ConsulClient());
+        try {
+            serviceLocator = new ConsulServiceLocator(new ConsulClient(Provisioning.getInstance().getLocalServer().getConsulURL()));
+        } catch (ServiceException e) {
+            throw new ServletException("Failed instantiating Consul service locator", e);
+        }
         registerWithServiceLocator();
     }
 
