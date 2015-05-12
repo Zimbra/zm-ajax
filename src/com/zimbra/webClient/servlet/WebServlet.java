@@ -16,12 +16,10 @@
  */
 package com.zimbra.webClient.servlet;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.consul.CatalogRegistration;
 import com.zimbra.common.consul.ConsulClient;
 import com.zimbra.common.consul.ConsulServiceLocator;
@@ -29,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.servicelocator.ZimbraServiceNames;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.BuildInfo;
 
 
@@ -69,31 +68,24 @@ public class WebServlet extends HttpServlet {
      */
     protected void registerWithServiceLocator() throws ServletException {
 
-        // Read protocol and port configuration
-        int httpPort = 0, httpsPort = 0;
-        String protocolMode;
         try {
-            Context initCtx = new InitialContext();
-            Context envCtx = (Context) initCtx.lookup("java:comp/env");
-            protocolMode = (String) envCtx.lookup("protocolMode");
+            // Read protocol and port configuration
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            ZAttrProvisioning.MailMode mailMode = localServer.getMailMode();
+            int httpPort = localServer.getMailPort();
+            int httpsPort = localServer.getMailSSLPort();
 
-            String str = (String) envCtx.lookup("httpPort");
-            httpPort = new Integer(str != null ? str : ZCServlet.DEFAULT_HTTP_PORT);
+            // Register http endpoint
+            if (mailMode.isHttp() || mailMode.isBoth()) {
+                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpPort, "http");
+            }
 
-            str = (String) envCtx.lookup("httpsPort");
-            httpsPort = new Integer(str != null ? str : ZCServlet.DEFAULT_HTTPS_PORT);
-        } catch (NamingException e) {
-            throw new ServletException(e.getLocalizedMessage(), e);
-        }
-
-        // Register http endpoint
-        if (ZCServlet.PROTO_HTTP.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
-            httpServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpPort, "http");
-        }
-
-        // Register https endpoint
-        if (ZCServlet.PROTO_HTTPS.equals(protocolMode) || ZCServlet.PROTO_MIXED.equals(protocolMode)) {
-            httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpsPort, "https");
+            // Register https endpoint
+            if (mailMode.isHttps() || mailMode.isBoth()) {
+                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpsPort, "https");
+            }
+        } catch (ServiceException e) {
+            throw new ServletException("Failed reading provisioning config before registering with service locator", e);
         }
     }
 
