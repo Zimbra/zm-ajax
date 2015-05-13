@@ -64,6 +64,7 @@ DwtInputField = function(params) {
 	this._errorClassName = this._origClassName + "-Error";
 	this._hintClassName = this._origClassName + "-hint";
 	this._disabledClassName = this._origClassName + "-disabled";
+	this._focusedClassName = this._origClassName + "-focused";
 	this._errorHintClassName = this._origClassName + "-errorhint";
 	DwtComposite.call(this, params);
 
@@ -531,7 +532,6 @@ function(enabled) {
 DwtInputField.prototype.focus = 
 function() {
 	if (this.getEnabled()) {
-		this._hasFocus = true;
 		this.getInputElement().focus();
         DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getTabGroupMember());
 	}
@@ -774,6 +774,7 @@ function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
 	if (obj) {
 		obj._hasFocus = false;
+		obj._updateClassName();
 		if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
 			var val = obj._validateInput(obj.getValue());
 			if (val != null) {
@@ -791,6 +792,8 @@ DwtInputField._focusHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
 	if (obj) {
+		obj._hasFocus = true;
+		obj._updateClassName();
 		var kbMgr = DwtShell.getShell(window).getKeyboardMgr().inputGotFocus(obj);
 		if (obj._hintIsVisible) {
 			obj._hideHint('');
@@ -835,21 +838,23 @@ function() {
 
 DwtInputField.prototype._updateClassName = 
 function() {
-	var className;
+	var classList = [];
+	if (this._hasFocus) {
+		classList.push(this._focusedClassName);
+	}
 	if (!this.getEnabled()) {
-		className = this._disabledClassName;
+		classList.push(this._disabledClassName);
 	} else if (this._hasError) {
 		if (this._hintIsVisible && !this._hasFocus) {
-			className = this._errorHintClassName;
+			classList.push(this._errorHintClassName);
 		} else {
-			className = this._errorClassName;
+			classList.push(this._errorClassName);
 		}
 	} else if (this._hintIsVisible && !this._hasFocus) {
-		className = this._hintClassName;
-	} else {
-		className = this._origClassName;
+		classList.push(this._hintClassName);
 	}
-	this.getHtmlElement().className = className;
+	classList.push(this._origClassName);
+	this.getHtmlElement().className = classList.join(' ');
 };
 
 DwtInputField.prototype._validateInput =
