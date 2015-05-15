@@ -516,7 +516,7 @@ DwtPropertyEditor.prototype._createInputField = function(prop, target) {
 	if (type == DwtInputField.STRING || type == DwtInputField.PASSWORD)
 		field.setValidStringLengths(prop.minLength, prop.maxLength);
 	if (prop.required)
-		field.setRequired(true);
+		field.setRequired();
 	this._currentFieldCell = null;
 	prop._inputField = field;
 	field.setValue(prop.value);
