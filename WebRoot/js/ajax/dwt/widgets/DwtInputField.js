@@ -61,7 +61,7 @@ DwtInputField = function(params) {
 	if (arguments.length == 0) return;
 	params.className = params.className  || "DwtInputField";
 	this._origClassName = params.className;
-	this._errorClassName = this._origClassName + "-Error";
+	this._errorClassName = this._origClassName + "-error";
 	this._hintClassName = this._origClassName + "-hint";
 	this._disabledClassName = this._origClassName + "-disabled";
 	this._focusedClassName = this._origClassName + "-focused";
@@ -491,17 +491,26 @@ function(readonly) {
 };
 
 /**
+ * Gets the required flag.
+ * 
+ * @return	{boolean}	<code>true</code> if the field is required
+ */
+DwtInputField.prototype.getRequired =
+function() {
+	var val = this.getInputElement().getAttribute('aria-required');
+
+	return Boolean(val);
+};
+
+/**
  * Sets the required flag.
  * 
  * @param	{boolean}	required		if <code>true</code>, make field required
  */
 DwtInputField.prototype.setRequired =
 function(required) {
-	var nrequired = required == null ? true : required;
-	if (this._required != nrequired) {
-		this._required = nrequired;
-		this.validate();
-	}
+	this.getInputElement().setAttribute('aria-required', Boolean(required));
+	this.validate();
 };
 
 /**
@@ -509,7 +518,7 @@ function(required) {
  * 
  * @return	{boolean}	<code>true</code> if the field is disabled
  */
-DwtInputField.prototype.getEnabled = 
+DwtInputField.prototype.getEnabled =
 function() {
 	return !this.getInputElement().disabled;
 };
@@ -648,8 +657,6 @@ function(value) {
  */
 DwtInputField.validateFloat =
 function(value) {
-	if (this._required && value == "")
-		throw AjxMsg.valueIsRequired;
 	var n = new Number(value);
 	if (isNaN(n))
 		throw AjxMsg.notANumber;
@@ -680,8 +687,6 @@ function(value) {
  */
 DwtInputField.validateString =
 function(value) {
-	if (this._required && value == "")
-		throw AjxMsg.valueIsRequired;
 	if (this._minLen != null && value.length < this._minLen)
 		throw AjxMessageFormat.format(AjxMsg.stringTooShort, this._minLen);
 	if (this._maxLen != null && value.length > this._maxLen)
@@ -697,9 +702,6 @@ function(value) {
  */
 DwtInputField.validateDate = 
 function(value) {
-	if (this._required && value == "")
-		throw AjxMsg.valueIsRequired;
-	
 	if (AjxDateUtil.simpleParseDateStr(value) == null) {
 		throw AjxMsg.invalidDatetimeString;
 	}
@@ -714,8 +716,6 @@ function(value) {
  * @return	{boolean}	<code>true</code> if valid
  */
 DwtInputField.validateEmail = function(value) {
-	if (this._required && value == "")
-		throw AjxMsg.valueIsRequired;
 	if (!AjxEmailAddress.isValid(value))
 		throw AjxMsg.invalidEmailAddr;
 	return value;
@@ -723,8 +723,6 @@ DwtInputField.validateEmail = function(value) {
 
 DwtInputField.validateAny =
 function(value) {
-	if (this._required && value == "")
-		throw AjxMsg.valueIsRequired;
 	// note that null will always be regarded as invalid. :-) I guess this
 	// is OK.  An input field never has a null value.
 	return value;
@@ -736,8 +734,6 @@ function(value) {
 
 DwtInputField.prototype._validateRegExp =
 function(value) {
-	if (this._required && value == "")
-		throw AjxMsg.valueIsRequired;
 	if (this._regExp && !this._regExp.test(value)) {
 		throw this._errorString;
 	}
@@ -865,6 +861,8 @@ function(value) {
 
 	if (!this.getEnabled()) {
 		retVal = this.getValue();
+	} else if (this.getRequired() && value == "") {
+		this._validationError = AjxMsg.valueIsRequired;
 	} else {
 		try {
 			if (typeof this._validator == "function") {
