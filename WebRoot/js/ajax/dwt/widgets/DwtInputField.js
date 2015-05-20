@@ -160,6 +160,10 @@ DwtInputField = function(params) {
     if (params.required != null) {
         this.setRequired(params.required);
     }
+
+    if (params.hint != null) {
+        this.setHint(params.hint);
+    }
 };
 
 DwtInputField.prototype = new DwtComposite;

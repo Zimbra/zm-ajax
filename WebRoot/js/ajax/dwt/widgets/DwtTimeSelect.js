@@ -744,6 +744,11 @@ function() {
     return this._timeSelectInput;
 };
 
+DwtTimeInput.prototype.getTabGroupMember =
+function() {
+    return this._tabGroup;
+};
+
 DwtTimeInput.prototype.putTimeIndex =
 function(text, value) {
     this._timeIndex[text.replace(/\:\d\d/, ":00").replace(/\s/,"").toLowerCase()] = value;
@@ -758,6 +763,10 @@ function(text) {
 
 DwtTimeInput.prototype._createSelects =
 function() {
+	var label = (this.id === DwtTimeSelect.START ? ZmMsg.startTime :
+	             this.id === DwtTimeSelect.END ? ZmMsg.endTime :
+	             ZmMsg.time);
+
 	// get the time formatter for the user's locale
 
 	this.getHtmlElement().innerHTML = AjxTemplate.expand("calendar.Appointment#ApptTimeInput", {id: this._htmlElId});
@@ -774,6 +783,7 @@ function() {
         parent: this,
         parentElement: (this._htmlElId + "_timeSelectInput"),
         type: DwtInputField.STRING,
+        label: label,
         errorIconStyle: DwtInputField.ERROR_ICON_NONE,
         validationStyle: DwtInputField.CONTINUAL_VALIDATION,
         inputId: inputId,
@@ -793,6 +803,7 @@ function() {
 
     timeSelectButton.setData(Dwt.KEY_ID, buttonId);
     timeSelectButton.setSize("20");
+    timeSelectButton.setAttribute('aria-label', label);
     
     this._timeIndex = {};
     // create menu for button
@@ -800,4 +811,8 @@ function() {
     timeSelectButton.setMenu(this._hoursSelectMenu, true, false, false, true);
     this._menuItemsAdded = false;
     timeSelectButton.reparentHtmlElement(buttonId);
+
+    this._tabGroup = new DwtTabGroup(this.getHTMLElId());
+    this._tabGroup.addMember(this._timeSelectInput);
+    this._tabGroup.addMember(timeSelectButton);
 };
