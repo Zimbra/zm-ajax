@@ -40,6 +40,11 @@ DwtText = function(params) {
 	if (arguments.length == 0) return;
 	params = Dwt.getParams(arguments, DwtText.PARAMS);
 	params.className = params.className || "DwtText";
+
+	if (Dwt.hasClass(params, 'FakeAnchor')) {
+		this.role = 'link';
+	}
+
 	DwtControl.call(this, params);
 
 	// we start out empty, so suppress focus
