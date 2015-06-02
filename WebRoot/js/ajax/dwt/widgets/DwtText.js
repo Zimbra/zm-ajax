@@ -58,6 +58,7 @@ DwtText.prototype.constructor = DwtText;
 
 DwtText.prototype.isFocusable = true;
 
+DwtText.prototype.isDwtText = true;
 DwtText.prototype.toString =
 function() {
 	return "DwtText";
@@ -85,6 +86,10 @@ function(text) {
 			this._textNode.data = text;
 		} catch (e) {}
 	}
+
+	// this is largely redundant, but helps ensure screen readers read aloud
+	// text in toolbars
+	this.setAttribute('aria-label', text);
 };
 
 /**

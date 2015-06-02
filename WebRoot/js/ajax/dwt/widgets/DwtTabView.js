@@ -915,29 +915,6 @@ function(tabKey, tabTitle, id) {
 	return b;
 };
 
-DwtTabBarFloat.prototype.addChild =
-function(child, index) {
-	DwtComposite.prototype.addChild.apply(this, arguments);
-
-	this._addItem(DwtToolBar.ELEMENT, child, index);
-};
-
-DwtTabBarFloat.prototype._addItem =
-function(type, element, index) {
-
-	// get the reference element for insertion
-	var placeEl = this._items[index] || this._suffixEl;
-
-	// insert item
-	var spliceIndex = index || (typeof index == "number") ? index : this._items.length;
-	this._items.splice(spliceIndex, 0, element);
-
-	this._itemsEl.insertBefore(element.getHtmlElement(), placeEl);
-
-	// append spacer
-	// TODO!
-};
-
 DwtTabButtonFloat = function(parent, id) {
 	DwtTabButton.call(this, parent,id, undefined, "ZTab");
 };

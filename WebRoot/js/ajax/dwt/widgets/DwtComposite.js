@@ -108,7 +108,7 @@ function() {
 }
 
 /**
- * Gets the children of this composite.
+ * Get a list of children of this composite.
  * 
  * @return	{array}		an array of {@link DwtControl} objects
  */
@@ -116,6 +116,18 @@ DwtComposite.prototype.getChildren =
 function() {
 	return this._children.getArray().slice(0);
 }
+
+/**
+ * Get the Nth child of this composite.
+ * 
+ * @param {number}	index 		the index of the child.
+ *
+ * @return	{DwtControl}		the child.
+ */
+DwtComposite.prototype.getChild =
+function(idx) {
+	return this._children.get(idx);
+};
 
 /**
  * collapses consecutive separators into one. Gets rid of head or tail separators as well .
