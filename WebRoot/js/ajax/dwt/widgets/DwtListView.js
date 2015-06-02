@@ -2331,7 +2331,7 @@ function(clickedCol, ev) {
 	if (!size && !customQuery) { return; }
 
 	// reset order by sorting preference
-	this._bSortAsc = (hdr._id == this._currentColId) ? !this._bSortAsc : this._getDefaultSortbyForCol(hdr);
+	this._bSortAsc = (hdr._id === this._currentColId) ? !this._bSortAsc : this._isDefaultSortAscending(hdr);
 
 	// reset arrows as necessary
 	this._setSortedColStyle(hdr._id);
@@ -2359,7 +2359,7 @@ function() {
 	return null;
 };
 
-DwtListView.prototype._getDefaultSortbyForCol = 
+DwtListView.prototype._isDefaultSortAscending =
 function(colHeader) {
 	// by default, always return ascending
 	return true;
