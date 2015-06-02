@@ -65,7 +65,6 @@ DwtToolBar = function(params) {
 	}
 
 	this._style = params.style || DwtToolBar.HORIZ_STYLE;
-    this._items = [];
     this._createHtml();
 
     this._numFillers = 0;
@@ -95,11 +94,6 @@ DwtToolBar.HORIZ_STYLE	= 1;
  * Defines the "vertical" style.
  */
 DwtToolBar.VERT_STYLE	= 2;
-
-DwtToolBar.ELEMENT		= 1;
-DwtToolBar.SPACER		= 2;
-DwtToolBar.SEPARATOR	= 3;
-DwtToolBar.FILLER		= 4;
 
 DwtToolBar.FIRST_ITEM    = "ZFirstItem";
 DwtToolBar.LAST_ITEM     = "ZLastItem";
@@ -177,22 +171,21 @@ function() {
 /**
  * Adds a spacer.
  * 
- * @param	{number}	size		the space size
+ * @param	{string}	className	the spacer CSS class name
  * @param	{number}	index		the index for the spacer
  * @return	{Object}	the newly added element
  */
 DwtToolBar.prototype.addSpacer =
-function(size, index) {
-    var el = this._createSpacerElement();
-	this._addItem(DwtToolBar.SPACER, el, index);
-
-	// ensure that every operation has a corresponding child
-	new DwtToolBarSpacer({
-		parent: this, parentElement: el, index: index,
+function(className, index) {
+	var spacer = new DwtToolBarSpacer({
+		parent: this,
+		index: index,
+		className: className,
+		toolbarItemTemplate: this.SPACER_TEMPLATE,
 		id: this._htmlElId + '_spacer' + DwtToolBar.__itemCount
 	});
 
-	return el;
+	return spacer;
 };
 
 /**
@@ -204,27 +197,15 @@ function(size, index) {
  */
 DwtToolBar.prototype.addSeparator =
 function(className, index) {
-	var el = this._createSeparatorElement();
-	this._addItem(DwtToolBar.SEPARATOR, el, index);
-
-	// ensure that every operation has a corresponding child
-	new DwtToolBarSeparator({
-		parent: this, parentElement: el, index: index,
+	var sep = new DwtToolBarSpacer({
+		parent: this,
+		index: index,
+		className: className,
+		toolbarItemTemplate: this.SEPARATOR_TEMPLATE,
 		id: this._htmlElId + '_separator' + DwtToolBar.__itemCount
 	});
 
-	return el;
-};
-
-/**
- * Removes a separator.
- * 
- * @param	{Object}	el		the element
- */
-DwtToolBar.prototype.removeSeparator =
-function(el) {
-	this.removeChild(DwtControl.fromElement(el.firstChild));
-	this._removeItem(el);
+	return sep;
 };
 
 /**
@@ -236,16 +217,15 @@ function(el) {
  */
 DwtToolBar.prototype.addFiller =
 function(className, index) {
-	var el = this._createFillerElement();
-	this._addItem(DwtToolBar.FILLER, el, index);
-
-	// ensure that every operation has a corresponding child
-	new DwtToolBarSpacer({
-		parent: this, parentElement: el, index: index,
+	var filler = new DwtToolBarSpacer({
+		parent: this,
+		index: index,
+		className: className,
+		toolbarItemTemplate: this.FILLER_TEMPLATE,
 		id: this._htmlElId + '_filler' + DwtToolBar.__itemCount
 	});
 
-	return el;
+	return filler;
 };
 
 // DwtComposite methods
@@ -258,12 +238,29 @@ function(className, index) {
  */
 DwtToolBar.prototype.addChild =
 function(child, index) {
-    var itemEl = this._createItemElement();
-    this._addItem(DwtToolBar.ELEMENT, itemEl, index);
+	// get the reference element for insertion
+	var placeControl = this.getChild(index);
+	var placeEl = placeControl ?
+		placeControl.getHtmlElement().parentNode : this._suffixEl;
 
-    DwtComposite.prototype.addChild.apply(this, arguments);
+	// actually add the child
+	DwtComposite.prototype.addChild.apply(this, arguments);
 
-    child.reparentHtmlElement(itemEl);
+	// create and insert the item element
+	var itemEl = this._createItemElement(child.toolbarItemTemplate);
+	this._itemsEl.insertBefore(itemEl, placeEl);
+
+	// finally, move the child to the item
+	child.reparentHtmlElement(itemEl);
+};
+
+DwtToolBar.prototype.removeChild =
+function(child) {
+	var item = child.getHtmlElement().parentNode;
+
+	DwtComposite.prototype.removeChild.apply(this, arguments);
+
+	this._itemsEl.removeChild(item);
 };
 
 // keyboard nav
@@ -284,7 +281,7 @@ function(actionCode, ev) {
 	var item = this.getItem(this._curFocusIndex);
 	var numItems = this.getItemCount();
 	if (numItems < 2) {
-		return true;
+		return false;
 	}
 
 	switch (actionCode) {
@@ -292,12 +289,14 @@ function(actionCode, ev) {
 		case DwtKeyMap.PREV:
 			if (this._curFocusIndex > 0) {
 				this._moveFocus(true);
+				return true;
 			}
 			break;
 
 		case DwtKeyMap.NEXT:
 			if (this._curFocusIndex < (numItems - 1)) {
 				this._moveFocus();
+				return true;
 			}
 			break;
 
@@ -307,7 +306,6 @@ function(actionCode, ev) {
 				return item.handleKeyAction(actionCode, ev);
 			}
 	}
-	return true;
 };
 
 //
@@ -356,64 +354,6 @@ function(templateId) {
         var cont = AjxStringUtil.calcDIV();
         cont.innerHTML = html;
         return cont.firstChild.rows[0].cells[0]; // DIV->TABLE->TR->TD
-};
-
-/**
- * @private
- */
-DwtToolBar.prototype._createSpacerElement =
-function(templateId) {
-    return this._createItemElement(templateId || this.SPACER_TEMPLATE);
-};
-
-/**
- * @private
- */
-DwtToolBar.prototype._createSeparatorElement =
-function(templateId) {
-    return this._createItemElement(templateId || this.SEPARATOR_TEMPLATE);
-};
-
-/**
- * @private
- */
-DwtToolBar.prototype._createFillerElement =
-function(templateId) {
-    return this._createItemElement(templateId || this.FILLER_TEMPLATE);
-};
-
-// item management
-
-/**
- * @private
- */
-DwtToolBar.prototype._addItem =
-function(type, element, index) {
-
-    // get the reference element for insertion
-    var placeEl = this._items[index] || this._suffixEl;
-
-    // insert item
-	var spliceIndex = index || (typeof index == "number") ? index : this._items.length;
-	this._items.splice(spliceIndex, 0, element);
-    this._itemsEl.insertBefore(element, placeEl);
-
-    // append spacer
-    // TODO!
-};
-
-/**
- * @private
- */
-DwtToolBar.prototype._removeItem =
-function(item) {
-	for (var i = 0; i < this._items.length; i++) {
-		if (this._items[i] == item) {
-			this._items.splice(i,1);
-			this._itemsEl.removeChild(item);
-			break;
-		}
-	}
 };
 
 /**
@@ -478,11 +418,11 @@ function(item) {
 DwtToolBar.prototype._getFocusItem =
 function(index) {
 	var item = this.getItem(index);
-	if (!item || (item instanceof DwtToolBar))	{ return null; }
+	if (!item)									{ return null; }
 	if (item._noFocus)							{ return null; }
 	if (item.getEnabled && !item.getEnabled())	{ return null; }
 	if (item.getVisible && !item.getVisible())	{ return null; }
-	if (item instanceof DwtText && !item.getText())	{ return null; }
+	if (item.isDwtText && !item.getText())		{ return null; }
 	return item;
 };
 
@@ -515,8 +455,8 @@ function(back) {
 DwtToolBar.prototype.__markPrevNext =
 function(id, opened) {
     var index = this.__getButtonIndex(id);
-    var prev = this.__getButtonAt(index - 1);
-    var next = this.__getButtonAt(index + 1);
+    var prev = this.getChild(index - 1);
+    var next = this.getChild(index + 1);
     if (opened) {
         if (prev) Dwt.delClass(prev.getHtmlElement(), DwtToolBar._NEXT_PREV_RE, DwtToolBar.SELECTED_PREV);
         if (next) Dwt.delClass(next.getHtmlElement(), DwtToolBar._NEXT_PREV_RE, DwtToolBar.SELECTED_NEXT);
@@ -529,10 +469,10 @@ function(id, opened) {
     // hack: mark the first and last items so we can style them specially
     //	MOW note: this should really not be here, as it only needs to be done once,
     //				but I'm not sure where to put it otherwise
-    var first = this.__getButtonAt(0);
+    var first = this.getChild(0);
     if (first) Dwt.addClass(first.getHtmlElement(), DwtToolBar.FIRST_ITEM);
 
-    var last = this.__getButtonAt(this.getItemCount()-1);
+    var last = this.getChild(this.getItemCount()-1);
     if (last) Dwt.addClass(last.getHtmlElement(), DwtToolBar.LAST_ITEM);
 };
 
@@ -553,39 +493,6 @@ function(id) {
     if (toolBarButtons && toolBarButtons.length && button)
         return AjxUtil.indexOf(toolBarButtons, button);
     return -1;
-};
-
-/**
- * Find a toolbar button by id.
- *
- * Works only if descendent classes implement the _buttons property as a
- * native Array.
- * @param index {number} The integer index of the button to retrieve.
- * @return {DwtButton} The DWT button at the current index, or null if the
- * buton does not exist.
- * @private
- */
-DwtToolBar.prototype.__getButtonAt =
-function(index) {
-    var i = 0;
-    // NOTE: _buttons seems to always be implemented as an Array.
-    // This code should not be needed because:
-    // * If we're working with Objects-as-associative-arrays, we don't want
-    //   numeric indexes.
-    // * If we're working with arrays, id will ALWAYS be i if found, or
-    //   undefined if not found. This function could be done via a simple
-    //   return this._buttons && this._buttons[index];
-    //   or something close to that if falsey values might be valid.
-    for (var name in this._buttons) {
-        // NOTE: Protect from native Array.prototype extensions
-        if (this._buttons.hasOwnProperty(name)) {
-            if (i == index) {
-                return this._buttons[name];
-            }
-            i++;
-        }
-    }
-    return null;
 };
 
 //
@@ -627,26 +534,14 @@ DwtToolBarButton.prototype.toString = function() { return "DwtToolBarButton"; };
 // Data
 DwtToolBarButton.prototype.TEMPLATE = "dwt.Widgets#ZToolbarButton";
 
-// Spacer
-DwtToolBarSpacer = function() {
-	DwtControl.apply(this, arguments);
-	this._noFocus = true;
+DwtToolBarSpacer = function(params) {
+	if (arguments.length == 0) { return; }
+	this.toolbarItemTemplate = params.toolbarItemTemplate;
+	DwtControl.call(this, params);
 };
 
 DwtToolBarSpacer.prototype = new DwtControl;
+
 DwtToolBarSpacer.prototype.constructor = DwtToolBarSpacer;
-
-DwtToolBarSpacer.prototype.isDwtToolBarSpacer = true;
-DwtToolBarSpacer.prototype.toString = function() { return "DwtToolBarSpacer"; };
-
-// Separator
-DwtToolBarSeparator = function() { };
-
-DwtToolBarSeparator.prototype = new DwtToolBarSpacer;
-DwtToolBarSeparator.prototype.constructor = DwtToolBarSeparator;
-
-DwtToolBarSeparator.prototype.isDwtToolBarSeparator = true;
-DwtToolBarSeparator.prototype.toString = function() { return "DwtToolBarSeparator"; };
-
-DwtToolBarSeparator.prototype.isFocusable = true;
-DwtToolBarSeparator.prototype.role = 'separator';
+DwtToolBarSpacer.prototype.toString = function() { return 'DwtToolBarSpacer'; };
+DwtToolBarSpacer.prototype.role = 'separator';
