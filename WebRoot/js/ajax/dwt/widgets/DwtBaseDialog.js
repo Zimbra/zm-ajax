@@ -58,6 +58,8 @@ DwtBaseDialog = function(params) {
 	}
 	params.className = params.className || "DwtBaseDialog";
 	params.posStyle = DwtControl.ABSOLUTE_STYLE;
+	params.isFocusable = false;
+
 	this._title = params.title || "";
 
 	DwtComposite.call(this, params);
