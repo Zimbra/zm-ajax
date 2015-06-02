@@ -494,6 +494,9 @@ DwtTabGroup.prototype.__checkEnabled = function(member, checkEnabled) {
 		return false;
 	}
 
+	if (member.nodeName === "BODY") {
+		return true;
+	}
 	return Dwt.getZIndex(member, true) > Dwt.Z_HIDDEN && Dwt.getVisible(member);
 };
 
