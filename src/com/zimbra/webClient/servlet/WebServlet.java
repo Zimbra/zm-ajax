@@ -92,8 +92,8 @@ public class WebServlet extends HttpServlet {
     protected String registerWithServiceLocator(String serviceName, int port, String checkScheme) {
         String serviceID = serviceName + ":" + port;
         CatalogRegistration.Service service = new CatalogRegistration.Service(serviceID, serviceName, port);
-        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + ".x");
-        service.tags.add(BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION);
+        service.tags.add(BuildInfo.MAJORVERSION + "-" + BuildInfo.MINORVERSION + "-x");
+        service.tags.add(BuildInfo.MAJORVERSION + "-" + BuildInfo.MINORVERSION + "-" + BuildInfo.MICROVERSION);
         if ("https".equals(checkScheme)) {
             service.tags.add("ssl");
         }
