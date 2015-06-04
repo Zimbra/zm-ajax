@@ -114,8 +114,17 @@ function(member, index) {
 	if (!member) {return;}
 	var members = (member instanceof Array) ? member : [member];
 
+	if (AjxUtil.isUndefined(index)) {
+		index = this.__members.size();
+	}
+
 	for (var i = 0, len = members.length; i < len; i++) {
-		this.__members.add(members[i], index);
+		if (!members[i]) {
+            index -= 1;
+            continue;
+        }
+
+		this.__members.add(members[i], index + i);
 
 		// If adding a tab group, register me as its parent
 		if (members[i].isDwtTabGroup) {
