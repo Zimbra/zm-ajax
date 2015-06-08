@@ -26,8 +26,10 @@ import com.zimbra.common.consul.ConsulServiceLocator;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.servicelocator.ZimbraServiceNames;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 
 
@@ -77,12 +79,20 @@ public class WebServlet extends HttpServlet {
 
             // Register http endpoint
             if (mailMode.isHttp() || mailMode.isBoth()) {
-                httpServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpPort, "http");
+                if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(httpPort)) {
+                    httpServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpPort, "http");
+                } else {
+                    ZimbraLog.webclient.debug("Not registering WEB service due to disallowed port %d", httpPort);
+                }
             }
 
             // Register https endpoint
             if (mailMode.isHttps() || mailMode.isBoth()) {
-                httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpsPort, "https");
+                if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(httpsPort)) {
+                    httpsServiceID = registerWithServiceLocator(ZimbraServiceNames.WEB, httpsPort, "https");
+                } else {
+                    ZimbraLog.webclient.debug("Not registering WEB service due to disallowed port %d", httpsPort);
+                }
             }
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning config before registering with service locator", e);

@@ -25,8 +25,10 @@ import com.zimbra.common.consul.ConsulServiceLocator;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.servicelocator.ServiceLocator;
 import com.zimbra.common.servicelocator.ZimbraServiceNames;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 
 
@@ -75,7 +77,11 @@ public class WebAdminServlet extends HttpServlet {
 
             // Register https endpoint
             if ("https://".equals(schemePrefix)) {
-                serviceID = registerWithServiceLocator(ZimbraServiceNames.WEBADMIN, httpsPort, "https");
+                if (ZimbraServlet.parseAllowedPortsSilent(getInitParameter(ZimbraServlet.PARAM_ALLOWED_PORTS)).contains(httpsPort)) {
+                    serviceID = registerWithServiceLocator(ZimbraServiceNames.WEBADMIN, httpsPort, "https");
+                } else {
+                    ZimbraLog.webclient.debug("Not registering WEBADMIN service due to disallowed port %d", httpsPort);
+                }
             }
         } catch (ServiceException e) {
             throw new ServletException("Failed reading provisioning config before registering with service locator", e);
