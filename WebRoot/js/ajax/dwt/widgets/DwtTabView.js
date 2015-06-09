@@ -50,7 +50,7 @@ DwtTabView = function(params) {
 	this._tabIx = 1;
 	this._createHtml();
 
-	var tabGroupId = [this.toString(), this._htmlElId].join("-");
+	var tabGroupId = [this.toString(), this._htmlElId].join(" ");
 	this._tabGroup = new DwtTabGroup(tabGroupId);
 	this._tabGroup.addMember(this._tabBar);
 };
