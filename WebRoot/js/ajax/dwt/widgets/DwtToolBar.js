@@ -130,10 +130,10 @@ DwtToolBar.__itemCount = 0;
 
 DwtToolBar.prototype.dispose =
 function() {
+	DwtComposite.prototype.dispose.call(this);
 	this._itemsEl = null;
 	this._prefixEl = null;
 	this._suffixEl = null;
-	DwtComposite.prototype.dispose.call(this);
 };
 
 /**
