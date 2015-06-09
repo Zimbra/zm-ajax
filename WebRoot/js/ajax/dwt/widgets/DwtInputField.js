@@ -772,33 +772,37 @@ function(ev) {
 DwtInputField._blurHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
-	if (obj) {
-		obj._hasFocus = false;
-		obj._updateClassName();
-		if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
-			var val = obj._validateInput(obj.getValue());
-			if (val != null) {
-				obj.setValue(val);
-			}
-		}
-		if (!obj._hintIsVisible && obj._hint) {
-			obj._showHint();
+
+	if (obj.isDisposed()) {
+		return;
+	}
+
+	obj._hasFocus = false;
+	obj._updateClassName();
+	if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
+		var val = obj._validateInput(obj.getValue());
+		if (val != null) {
+			obj.setValue(val);
 		}
 	}
+	if (!obj._hintIsVisible && obj._hint) {
+		obj._showHint();
+	}
+
 	obj.notifyListeners(DwtEvent.ONBLUR, ev)
 };
 
 DwtInputField._focusHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
-	if (obj) {
-		obj._hasFocus = true;
-		obj._updateClassName();
-		var kbMgr = DwtShell.getShell(window).getKeyboardMgr().inputGotFocus(obj);
-		if (obj._hintIsVisible) {
-			obj._hideHint('');
-		}
+
+	obj._hasFocus = true;
+	obj._updateClassName();
+	var kbMgr = DwtShell.getShell(window).getKeyboardMgr().inputGotFocus(obj);
+	if (obj._hintIsVisible) {
+		obj._hideHint('');
 	}
+
 	obj.notifyListeners(DwtEvent.ONFOCUS, ev)
 };
 
