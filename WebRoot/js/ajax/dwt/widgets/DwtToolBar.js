@@ -268,9 +268,9 @@ DwtToolBar.prototype.removeChild = function(child) {
 
 	DwtComposite.prototype.removeChild.apply(this, arguments);
 
-    if (this._itemsEl) {
-    	this._itemsEl.removeChild(item);
-    }
+	if (item && item.parentNode) {
+		item.parentNode.removeChild(item);
+	}
 };
 
 // keyboard nav
