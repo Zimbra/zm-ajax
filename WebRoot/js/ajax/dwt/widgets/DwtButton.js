@@ -38,7 +38,7 @@
  * <li><i>Push</i> - This is the standard push button</li>
  * <li><i>Toggle</i> - This is a button that exhibits selectable behaviour when clicked
  * 		e.g. on/off. To make a button selectable style "or" {@link DwtButton.SELECT_STYLE}
- * 		to the constructor's style parameter</li>
+ * 		to the consturctor's style parameter</li>
  * <li><i>Menu</i> - By setting a mene via the {@link #setMenu} method a button will become
  * 		a drop down or menu button.</li>
  * </ul>

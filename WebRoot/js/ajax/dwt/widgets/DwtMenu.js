@@ -766,8 +766,8 @@ function(index, justMakeVisible) {
 	}
 };
 
-DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
-
+DwtMenu.prototype.handleKeyAction =
+function(actionCode, ev) {
 	// For now don't deal with anything but BAR, POPUP, and DROPDOWN style menus
 	switch (this._style) {
 		case DwtMenu.BAR_STYLE:
@@ -786,21 +786,16 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 		case DwtKeyMap.PAGE_DOWN:
 			var item = this.__currentItem || this._children.get(0);
 			var index = this.getItemIndex(item);
-			if (this._maxRows && index !== -1) {
-				this.setSelectedItem(index + ((actionCode === DwtKeyMap.PAGE_UP) ? -this._maxRows : this._maxRows));
-			}
-            else {
-				this.setSelectedItem(actionCode === DwtKeyMap.PAGE_DOWN);
+			if (this._maxRows && index!=-1) {
+				this.setSelectedItem(index + ((actionCode == DwtKeyMap.PAGE_UP) ? -this._maxRows : this._maxRows));
+			} else {
+				this.setSelectedItem(actionCode == DwtKeyMap.PAGE_DOWN);
 			}
 			break;
 
-        case DwtKeyMap.SELECT_PREV:
-//            if (this.getItemIndex(this.__currentItem) === 0) {
-//                this.popdown();
-//                break;
-//            }
 		case DwtKeyMap.SELECT_NEXT:
-			this.setSelectedItem(actionCode === DwtKeyMap.SELECT_NEXT);
+		case DwtKeyMap.SELECT_PREV: 
+			this.setSelectedItem(actionCode == DwtKeyMap.SELECT_NEXT);
 			break;
 
 		case DwtKeyMap.SELECT:
@@ -816,8 +811,8 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 			break;
 			
 		case DwtKeyMap.PARENTMENU:
-			if (this.parent.isDwtMenuItem) {
-				this.popdown();
+			if (this.parent instanceof DwtMenuItem) {
+				this.popdown(0);
 			}
 
 			this.parent.focus();
@@ -825,7 +820,7 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 			break;
 			
 		case DwtKeyMap.CANCEL:
-			this.popdown();
+			this.popdown(0);
 			break;		
 			
 		default:

@@ -67,6 +67,7 @@ DwtIframe = function(params) {
 		Dwt.setHandler(doc, DwtEvent.ONKEYDOWN, DwtKeyboardMgr.__keyDownHdlr);
 		Dwt.setHandler(doc, DwtEvent.ONKEYUP, DwtKeyboardMgr.__keyUpHdlr);
 		Dwt.setHandler(doc, DwtEvent.ONKEYPRESS, DwtKeyboardMgr.__keyPressHdlr);
+		Dwt.setHandler(doc, DwtEvent.ONFOCUS, DwtKeyboardMgr._clearFocusObj);
 	}
 };
 
@@ -98,13 +99,8 @@ DwtIframe.prototype.getDocument = function() {
 	return this.getIframe().contentWindow.document;
 };
 
-/**
- * Notifies the parent widget's listeners. The event is not directly propagated to the parent's raw event handler.
- *
- * @private
- */
+/// Forwards events to the parent widget
 DwtIframe.prototype._rawEventHandler = function(ev) {
-
 	var iframe = this.getIframe();
 	var win = iframe.contentWindow;
 	if (AjxEnv.isIE) {
@@ -160,15 +156,9 @@ DwtIframe.prototype._rawEventHandler = function(ev) {
 	var capture = DwtMouseEventCapture.getCaptureObj();
 	capture = capture && dw.button != DwtMouseEvent.RIGHT; // ignore capture if it's right-click
 	if (AjxEnv.isIE || !capture) {
-        // TODO: handle all events generically by calling handlers instead of listeners
-        if (type === DwtEvent.ONFOCUS || type === DwtEvent.ONBLUR) {
-            DwtControl.__HANDLER[type].call(null, dw, type, this.parent);
-        }
-        else {
-            // notify listeners
-            DwtEventManager.notifyListeners(type, dw);
-            this.parent.notifyListeners(type, dw);
-        }
+		// go for Dwt events
+		DwtEventManager.notifyListeners(type, dw);
+		this.parent.notifyListeners(type, dw);
 	} else {
 		// Satisfy object that holds the mouse capture.
 

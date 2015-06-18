@@ -896,6 +896,9 @@ function(item, selected) {
 		}
 		this._selectedItems.add(el);
 		el.setAttribute('aria-selected', true);
+
+		this.getTabGroupMember().removeAllMembers();
+		this.getTabGroupMember().addMember(el);
 	}
 };
 
@@ -1109,14 +1112,23 @@ function() {
 	return this._list;
 };
 
+DwtListView.prototype.getTabGroupMember =
+function() {
+	if (!this._tabGroup) {
+		this._tabGroup = new DwtTabGroup(this.getHTMLElId());
+	}
+
+	return this._tabGroup;
+};
+
 DwtListView.prototype.getEnabled = function() {
 	return DwtComposite.prototype.getEnabled.call(this) && this.size() > 0;
 };
 
-DwtListView.prototype.getFocusElement = function() {
-
+DwtListView.prototype.getInputElement =
+function() {
 	if (!this._kbAnchor) {
-		this._setKbFocusElement(null, true);
+		this._setKbFocusElement();
 	}
 
 	return this._kbAnchor;
@@ -1258,6 +1270,7 @@ function(row, index) {
 	}
 	this._fixAlternation((index != null) ? index : len);
 
+	this._makeFocusable(row);
 	row.setAttribute('role', this.itemRole);
 };
 
@@ -2112,31 +2125,25 @@ function(params) {
  * @param {boolean|Element}		next	row to make anchor, or if true, move anchor
  * 										to next row
  */
-DwtListView.prototype._setKbFocusElement = function(next, noSetFocus) {
-
+DwtListView.prototype._setKbFocusElement =
+function(next) {
 	// If there are no elements in the list, then bail
-	if (!this._list) {
-        return;
-    }
+	if (!this._list) { return; }
 
-	if (this._kbAnchor) {
-        this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, this._kbAnchor);
+	var orig = this._kbAnchor;
+	if (orig) {
 		this._unmarkKbAnchorElement();
 	}
 
 	if (next && next !== true) {
 		this._kbAnchor = next;
-	}
-    else if (this._kbAnchor) {
+	} else if (this._kbAnchor) {
 		this._kbAnchor = this._getSiblingElement(this._kbAnchor, next);
-	}
-    else {
+	} else {
 		this._kbAnchor = this._parentEl.firstChild;
 	}
 
-    this.setFocusElement(this._kbAnchor);
-
-    if (this._kbAnchor && !noSetFocus) {
+	if (this._kbAnchor) {
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 
 		if (!this._duringFocusByMouseDown) {

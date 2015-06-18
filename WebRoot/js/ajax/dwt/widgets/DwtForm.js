@@ -1471,7 +1471,8 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 	}
 	else {
 		var indexItemDef = this._items[String(index+1)];
-		this._rowsTabGroup.addMemberBefore(tabGroup, DwtTabGroup.getByName(indexItemDef.id));
+		var indexTabGroup = this._rowsTabGroup.getTabGroupMemberByName(indexItemDef.id);
+		this._rowsTabGroup.addMemberBefore(tabGroup, indexTabGroup);
 	}
 
 	// update display and notify handler
@@ -1531,7 +1532,7 @@ DwtFormRows.prototype.removeRow = function(indexOrId) {
 	delete item._rowEl;
 
 	// remove from tab group
-	var tabGroup = DwtTabGroup.getByName(item.id);
+	var tabGroup = this._rowsTabGroup.getTabGroupMemberByName(item.id);
 	this._rowsTabGroup.removeMember(tabGroup);
 
 	// update display and notify handler

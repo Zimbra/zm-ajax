@@ -67,9 +67,6 @@ DwtTree = function(params) {
 	this._selByClickEv.clicked = true;
 	this._selByEnterEv = new DwtSelectionEvent(true);
 	this._selByEnterEv.enter = true;
-
-    // Let tree be a single tab stop, then manage focus among items using arrow keys
-    this.tabGroupMember = this;
 };
 
 DwtTree.PARAMS = ["parent", "style", "className", "posStyle"];
@@ -279,14 +276,10 @@ function() {
 };
 
 DwtTree.prototype.addChild = function(child) {
-
     // HACK: Tree items are added via _addItem. But we need to keep
     // HACK: the original addChild behavior for other controls that
     // HACK: may be added to the tree view.
-    if (child.isDwtTreeItem) {
-        return;
-    }
-
+    if (child instanceof DwtTreeItem) return;
     DwtComposite.prototype.addChild.apply(this, arguments);
 };
 
@@ -312,8 +305,8 @@ function(item) {
 	}
 };
 
-DwtTree.prototype._addItem = function(item, index) {
-
+DwtTree.prototype._addItem =
+function(item, index) {
 	this._children.add(item, index);
 	var thisHtmlElement = this._getContainerElement();
 	var numChildren = thisHtmlElement.childNodes.length;
@@ -323,8 +316,6 @@ DwtTree.prototype._addItem = function(item, index) {
 		//IE Considers undefined as an illegal value for second argument in the insertBefore method
 		thisHtmlElement.insertBefore(item.getHtmlElement(), thisHtmlElement.childNodes[index] || null);
 	}
-
-    this._delegateFocus(item);
 };
 
 DwtTree.prototype._getContainerElement = DwtTree.prototype.getHtmlElement;

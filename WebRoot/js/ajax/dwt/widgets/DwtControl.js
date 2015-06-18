@@ -69,7 +69,7 @@
  * @param	{string}	id			    an explicit ID to use for the control's HTML element. If not provided, defaults to an auto-generated ID.
  * @param	{string|HTMLElement}	parentElement   the parent element
  * @param	{number}	index 		    the index at which to add this control among parent's children
- * @param   {boolean}   isFocusable     if false, this control does not take browser focus (its element will not have a tabindex); defaults to true
+ * @param   {boolean}   isFocusable     if true, this control can take keyboard focus
  * @param   {string}    role            ARIA role for this control
  *
  */
@@ -147,7 +147,9 @@ DwtControl = function(params) {
 		this._htmlElId = params.id;
 	}
 
-	this.isFocusable = (params.isFocusable !== false);
+	if (params.isFocusable != null) {
+		this.isFocusable = params.isFocusable;
+	}
 
 	if (params.role != null) {
 		this.role = params.role;
@@ -630,8 +632,7 @@ function() {
  * @return	{DwtControl}	by default, returns this object
  */
 DwtControl.prototype.getTabGroupMember = function() {
-
-    return this.tabGroupMember || this;
+	return this;
 };
 
 /**
@@ -686,33 +687,17 @@ function() {
 };
 
 /**
- * Sets browser and keyboard focus to this control.
-  */
-DwtControl.prototype.focus = function() {
-
-    DBG.println(AjxDebug.FOCUS, "DwtControl FOCUS: " + [this, this._htmlElId].join(' / '));
-    if (!this._checkState()) {
-        return;
-    }
-    var el = this.getFocusElement();
-    if (el && el.focus) {
-        el.focus();
-    }
+ * This method is called to explicitly set keyboard focus to this component.
+ * 
+ */
+DwtControl.prototype.focus =
+function() {
+	DwtShell.getShell(window).getKeyboardMgr().grabFocus(this);
+    this.__doFocus();
 };
 
-/**
- * Takes browser and keyboard focus away from this control.
- */
 DwtControl.prototype.blur = function() {
-
-    DBG.println(AjxDebug.FOCUS, "DwtControl BLUR: " + [this, this._htmlElId].join(' / '));
-    if (!this._checkState()) {
-        return;
-    }
-    var el = this.getFocusElement();
-    if (el && el.blur) {
-        el.blur();
-    }
+    this.__doBlur();
 };
 
 /**
@@ -1323,43 +1308,14 @@ function() {
 	return this._elRef = htmlEl;
 };
 
-/**
- * Returns the element that should get browser focus when this control is focused.
- *
- * @returns {HTMLElement}
- */
-DwtControl.prototype.getFocusElement = function() {
-
-    return this.isFocusable ? this._focusElement : null;
-};
-
-/**
- * Sets the "focus element" if this control is focusable. Adds focus/blur event handlers and a tabIndex to the focus element.
- * If no element is provided, defaults to the control's input element or its container (DIV).
- *
- * @param {HTMLElement} el      (optional) new focus element
- */
-DwtControl.prototype.setFocusElement = function(el) {
-
-    if (!this.isFocusable) {
-        return;
-    }
-
-    var hadFocus = (document.activeElement === this._focusElement);
-
-    if (this._focusElement && this._focusElement !== el) {
-        this._makeFocusable(this._focusElement, false);
-    }
-
-    var focusEl = this._focusElement = el || (this.getInputElement && this.getInputElement()) || this.getHtmlElement();
-
-    if (focusEl) {
-        this._makeFocusable(this._focusElement, true);
-        if (hadFocus) {
-            focusEl.focus();
-        }
-    }
-};
+DwtControl.prototype.getInputElement =
+function() {
+	if (this.isFocusable) {
+		return this.getHtmlElement();
+	} else {
+		return null;
+	}
+}
 
 /**
  * Returns the control associated with the given element, if any.
@@ -2195,7 +2151,6 @@ function() {
  */
 DwtControl.prototype._focusByMouseUpEvent =
 function(ev)  {
-    DBG.println(AjxDebug.FOCUS, "DwtControl FOCUSONMOUSEUP: " + [this, this._htmlElId].join(' / '));
  	if (this.getEnabled()) {
  		this.focus();
  	}
@@ -2211,7 +2166,6 @@ function(ev)  {
  */
 DwtControl.prototype._focusByMouseDownEvent =
 function(ev) {
-    DBG.println(AjxDebug.FOCUS, "DwtControl FOCUSONMOUSEDOWN: " + [this, this._htmlElId].join(' / '));
 	this._duringFocusByMouseDown = true;
 	this._focusByMouseUpEvent(ev);
 	this._duringFocusByMouseDown = false;
@@ -2508,29 +2462,24 @@ function(ev) {
 };
 
 /**
-  * Makes an element focusable or unfocusable by the browser. It manages the "tabIndex" attribute,
-  * and sets or unsets the element's onfocus and onblur handlers.
+  * Use this protected method for making a child element focusable.
   *
-  * @param {HTMLElement}    element	    element to make (not) focusable
-  * @param {boolean}        focusable   if true (default), make element focusable by the browser
+  * @param {HTMLElement} element	a child element (optional)
   *
   * @private
   */
-DwtControl.prototype._makeFocusable = function(element, focusable) {
+DwtControl.prototype._makeFocusable =
+function(element) {
+	if (!element) {
+		element = this.getHtmlElement();
+	}
 
-    focusable = (focusable !== false);
-    DBG.println(AjxDebug.FOCUS, "MAKE " + (focusable ? '' : 'NOT ') + "FOCUSABLE: " + this + ', ' + (element || ''));
+	element.tabIndex = 0;
 
+	// clear the event handlers first, just in case
+	this._setEventHdlrs(AjxUtil.keys(DwtControl.__HANDLER), true, element);
 
-    if (focusable) {
-        this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, element);	// clear the event handlers first, just in case
-        this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], false, element);
-        element.tabIndex = 0;
-    }
-    else {
-        this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, element);
-        element.removeAttribute('tabIndex');
-    }
+	this._setEventHdlrs(AjxUtil.keys(DwtControl.__HANDLER), false, element);
 };
 
 /**
@@ -2841,34 +2790,32 @@ DwtControl.__keyUpHdlr = function(ev) {
  * @private
  */
 DwtControl.__keyDownHdlr = function(ev) {
-
 	return DwtKeyboardMgr.__keyDownHdlr.apply(this, arguments);
+
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
+
+	/* TODO */
 };
 
 /**
  * @private
  */
-DwtControl.__focusHdlr = function(ev, evType, obj) {
+DwtControl.__focusHdlr = function(ev) {
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
 
-	obj = obj || DwtControl.getTargetControl(ev);
-	if (!obj) {
-        return false;
-    }
-
-	return obj.__doFocus(ev);
+	obj.__doFocus(ev);
 };
 
 /**
  * @private
  */
-DwtControl.__blurHdlr = function(ev, evType, obj) {
+DwtControl.__blurHdlr = function(ev) {
+	var obj = obj ? obj : DwtControl.getTargetControl(ev);
+	if (!obj) return false;
 
-    obj = obj || DwtControl.getTargetControl(ev);
-    if (!obj) {
-        return false;
-    }
-
-	return obj.__doBlur(ev);
+	obj.__doBlur(ev);
 };
 
 /**
@@ -2891,13 +2838,11 @@ function() {
  *
  * @private
  */
-DwtControl.prototype.__doBlur = function(ev) {
-
+DwtControl.prototype.__doBlur =
+function(ev) {
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
 
-	if (!this._checkState()) {
-        return false;
-    }
+	if (!this._checkState()) { return; }
 
 	this._hasFocus = false;
 	if (this.isListenerRegistered(DwtEvent.ONBLUR)) {
@@ -2910,8 +2855,6 @@ DwtControl.prototype.__doBlur = function(ev) {
 		this.notifyListeners(DwtEvent.ONBLUR, ev);
 	}
 	this._blur();
-
-    return true;
 };
 
 /**
@@ -2921,20 +2864,17 @@ DwtControl.prototype.__doBlur = function(ev) {
  *
  * @private
  */
-DwtControl.prototype.__doFocus = function(ev) {
-
+DwtControl.prototype.__doFocus =
+function(ev) {
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
 
-	if (!this._checkState()) {
-        return false;
-    }
+	if (!this._checkState()) { return; }
 
 	this._hasFocus = true;
 
-    var kbMgr = appCtxt.getKeyboardMgr();
-    if (kbMgr) {
-        kbMgr.updateFocus(this);
-    }
+	if (this.isFocusable) {
+		this.getHtmlElement().focus();
+	}
 
 	if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
 		if (!ev) {
@@ -2946,9 +2886,6 @@ DwtControl.prototype.__doFocus = function(ev) {
 		this.notifyListeners(DwtEvent.ONFOCUS, ev);
 	}
 	this._focus();
-    DBG.println(AjxDebug.FOCUS, "DwtControl DOFOCUS: " + [this, this._htmlElId].join(' / ') + ' [' + document.activeElement + ']' + ' [' + appCtxt.getKeyboardMgr().__focusObj + ' / ' + appCtxt.getRootTabGroup().getFocusMember() + ']');
-
-    return true;
 };
 
 /**
@@ -3642,7 +3579,9 @@ function() {
 	this._dragging = DwtControl._NO_DRAG;
 	this.__ctrlInited = true;
 
-    this.setFocusElement();
+	if (this.isFocusable) {
+		this._makeFocusable(htmlElement);
+	}
 
 	// Make sure this is the last thing we do
 	this.parent.addChild(this, this.__index);

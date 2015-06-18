@@ -49,12 +49,13 @@ DwtKeyMapMgr = function(keyMap) {
 	DBG.dumpObj(AjxDebug.DBG3, this._fsas);
 };
 
-DwtKeyMapMgr.prototype.toString = function() { return "DwtKeyMapMgr"; };
-DwtKeyMapMgr.prototype.isDwtKeyMapMgr = true;
-
 DwtKeyMapMgr.NOT_A_TERMINAL = -999;
-DwtKeyMapMgr.TAB_KEYCODE = DwtKeyEvent.KEY_TAB;
+DwtKeyMapMgr.TAB_KEYCODE = 9;
 
+DwtKeyMapMgr.prototype.toString =
+function() {
+	return "DwtKeyMapMgr";
+};
 
 /**
  * This method will attempt to look up the action code for a given key sequence in
