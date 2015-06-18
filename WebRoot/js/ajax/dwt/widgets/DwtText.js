@@ -56,17 +56,9 @@ DwtText.PARAMS = ["parent", "className", "posStyle"];
 DwtText.prototype = new DwtControl;
 DwtText.prototype.constructor = DwtText;
 
-DwtText.prototype.isFocusable = true;
-
 DwtText.prototype.isDwtText = true;
-DwtText.prototype.toString =
-function() {
-	return "DwtText";
-};
+DwtText.prototype.toString = function() { return "DwtText"; };
 
-DwtText.prototype.getTabGroupMember = function() {
-	return null;
-};
 
 /**
  * Sets the text.

@@ -1085,7 +1085,7 @@ function(ev) {
 	var obj = DwtControl.findControl(el);	// DwtInputField
 	var chooser = obj._chooser;
 	var key = DwtKeyEvent.getCharCode(ev);
-	if (key == 3 || key == 13) {
+	if (DwtKeyEvent.IS_RETURN[key]) {
 		var email = chooser._getEmailFromText();
 		if (email) {
 			chooser.transfer([email], chooser._activeButtonId);

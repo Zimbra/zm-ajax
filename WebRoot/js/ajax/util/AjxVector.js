@@ -218,62 +218,56 @@ function(obj, newObj) {
 /**
  * Returns the index of the obj given w/in vector
  *
- * @param {Object}	obj			the object being looked for
+ * @param {Object}	    obj			the object being looked for
+ * @param {function}	func	    (optional) a function for transforming objects
+ *
  * @return	{number}	the index or -1 if not found
  */
-AjxVector.prototype.indexOf =
-function(obj) {
+AjxVector.prototype.indexOf = function(obj, func) {
+
 	if (obj == null) {
 		return -1;
 	}
+    obj = func ? func.call(obj) : obj;
 
 	for (var i = 0; i < this._array.length; i++) {
-		if (this._array[i] == obj) {
+        var member = this._array[i],
+            test = func ? func.call(member) : member;
+		if (test === obj) {
 			return i;
 		}
 	}
 	return -1;
 };
 
-/**
- * Returns the index of the obj given w/in vector
- *
- * @param {Object}	obj			the object being looked for
- * @param {function}	keyFunc	a function for transforming objects
- * @return	{number}	the index or -1 if not found
- */
-AjxVector.prototype.indexOfLike =
-function(obj, keyFunc) {
-	var value = keyFunc.call(obj);
-
-	for (var i = 0; i < this._array.length; i++) {
-		var test = keyFunc.call(this._array[i]);
-		if (test == value) {
-			return i;
-		}
-	}
-	return -1;
-};
+AjxVector.prototype.indexOfLike = AjxVector.prototype.indexOf;
 
 /**
  * Returns the last index of the obj given w/in vector
  *
- * @param {Object}	obj			the object being looked for
+ * @param {Object}	    obj			the object being looked for
+ * @param {function}	func	    (optional) a function for transforming objects
+ *
  * @return	{number}	the index or -1 if not found
  */
-AjxVector.prototype.lastIndexOf =
-function(obj) {
+AjxVector.prototype.lastIndexOf = function(obj, func) {
+
 	if (obj == null) {
 		return -1;
 	}
+    obj = func ? func.call(obj) : obj;
 
 	for (var i = this._array.length - 1; i >= 0; i--) {
-		if (this._array[i] == obj) {
+        var member = this._array[i],
+            test = func ? func.call(member) : member;
+		if (member === obj) {
 			return i;
 		}
 	}
 	return -1;
 };
+
+AjxVector.prototype.lastIndexOfLike = AjxVector.prototype.lastIndexOf;
 
 /**
  * Returns the last index of the obj given w/in vector

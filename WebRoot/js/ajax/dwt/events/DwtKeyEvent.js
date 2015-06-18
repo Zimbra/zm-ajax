@@ -26,14 +26,32 @@
 DwtKeyEvent = function() {
 	DwtUiEvent.call(this, true);
 	this.reset(true);
-}
+};
 
+DwtKeyEvent.prototype.toString = function() { return "DwtKeyEvent"; }
+DwtKeyEvent.prototype.isDwtKeyEvent = true;
 
-DwtKeyEvent.KEY_END_OF_TEXT =  0x03;
-DwtKeyEvent.KEY_TAB = 0x09;
-DwtKeyEvent.KEY_RETURN = 0x0D;
-DwtKeyEvent.KEY_ENTER = 0x0D;
-DwtKeyEvent.KEY_ESCAPE = 0x1B;
+// Constants for key codes
+DwtKeyEvent.KEY_END_OF_TEXT     = 3;      // Enter key on Mac
+DwtKeyEvent.KEY_BACKSPACE       = 8;
+DwtKeyEvent.KEY_TAB             = 9;
+DwtKeyEvent.KEY_RETURN          = 13;
+DwtKeyEvent.KEY_ESCAPE          = 27;
+DwtKeyEvent.KEY_SPACE           = 32;
+DwtKeyEvent.KEY_ARROW_LEFT      = 37;
+DwtKeyEvent.KEY_ARROW_UP        = 38;
+DwtKeyEvent.KEY_ARROW_RIGHT     = 39;
+DwtKeyEvent.KEY_ARROW_DOWN      = 40;
+DwtKeyEvent.KEY_DELETE          = 46;
+DwtKeyEvent.KEY_SEMICOLON       = 59;
+DwtKeyEvent.KEY_SEMICOLON_1     = 186;
+DwtKeyEvent.KEY_COMMA           = 188;
+DwtKeyEvent.KEY_COMMAND         = 224;  // Mac FF
+
+// Easy way to check for 3 or 13
+DwtKeyEvent.IS_RETURN = {};
+DwtKeyEvent.IS_RETURN[ DwtKeyEvent.KEY_END_OF_TEXT ]    = true;
+DwtKeyEvent.IS_RETURN[ DwtKeyEvent.KEY_RETURN ]         = true;
 
 // FF on Mac reports keyCode of 0 for many shifted keys
 DwtKeyEvent.MAC_FF_CODE = {};
@@ -60,10 +78,6 @@ DwtKeyEvent.MAC_FF_CODE["?"] = 191;
 DwtKeyEvent.prototype = new DwtUiEvent;
 DwtKeyEvent.prototype.constructor = DwtKeyEvent;
 
-DwtKeyEvent.prototype.toString =
-function() {
-	return "DwtKeyEvent";
-}
 
 DwtKeyEvent.isKeyEvent =
 function(ev) {

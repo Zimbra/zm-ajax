@@ -42,9 +42,14 @@ DwtTabGroup = function(name) {
 	this.__name = name;
 	this.__currFocusMember = null;
 	this.__evtMgr = new AjxEventMgr();
+
+    DwtTabGroup.BY_NAME[name] = this;
 };
 
 DwtTabGroup.prototype.isDwtTabGroup = true;
+DwtTabGroup.prototype.toString = function() { return "DwtTabGroup"; };
+
+
 
 /** 
  * Exception string that is thrown when an operation is attempted
@@ -54,15 +59,11 @@ DwtTabGroup.NOT_ROOT_TABGROUP = "NOT ROOT TAB GROUP";
 
 DwtTabGroup.__changeEvt = new DwtTabGroupEvent();
 
-/**
- * Returns a string representation of the object.
- * 
- * @return		{string}		a string representation of the object
- */
-DwtTabGroup.prototype.toString = 
-function() {
-	return "DwtTabGroup";
+// Allow static access to any tab group by its name
+DwtTabGroup.getByName = function(name) {
+    return DwtTabGroup.BY_NAME[name];
 };
+DwtTabGroup.BY_NAME = {};
 
 /**
  * Gets the name of this tab group.
@@ -83,8 +84,8 @@ DwtTabGroup.prototype.getName = function() {
  * 
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.addFocusChangeListener =
-function(listener) {
+DwtTabGroup.prototype.addFocusChangeListener = function(listener) {
+
 	this.__checkRoot();		
 	this.__evtMgr.addListener(DwtEvent.STATE_CHANGE, listener);
 };
@@ -96,8 +97,8 @@ function(listener) {
  * 
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.removeFocusChangeListener =
-function(listener) {
+DwtTabGroup.prototype.removeFocusChangeListener = function(listener) {
+
 	this.__checkRoot();		
 	this.__evtMgr.removeListener(DwtEvent.STATE_CHANGE, listener);
 };
@@ -109,27 +110,18 @@ function(listener) {
  * @param {number} [index] 		the index at which to add the member. If omitted, the member
  * 		will be added to the end of the tab group
  */
-DwtTabGroup.prototype.addMember =
-function(member, index) {
-	if (!member) {return;}
-	var members = (member instanceof Array) ? member : [member];
+DwtTabGroup.prototype.addMember = function(member, index) {
 
-	if (AjxUtil.isUndefined(index)) {
-		index = this.__members.size();
-	}
+    index = (index != null) ? index : this.__members.size();
+    var members = AjxUtil.collapseList(AjxUtil.toArray(member));
 
 	for (var i = 0, len = members.length; i < len; i++) {
-		if (!members[i]) {
-            index -= 1;
-            continue;
+        var member = members[i];
+        this.__members.add(member, index + i);
+        // If adding a tab group, register me as its parent
+        if (member.isDwtTabGroup) {
+            member.newParent(this);
         }
-
-		this.__members.add(members[i], index + i);
-
-		// If adding a tab group, register me as its parent
-		if (members[i].isDwtTabGroup) {
-			members[i].newParent(this);
-		}
 	}
 };
 
@@ -139,8 +131,8 @@ function(member, index) {
  * @param {DwtControl|DwtTabGroup|HTMLElement} member 		the member to be added
  * @param {DwtControl|DwtTabGroup|HTMLElement} afterMember 	the member after which to add <code>member</code>
  */
-DwtTabGroup.prototype.addMemberAfter =
-function(newMember, afterMember) {
+DwtTabGroup.prototype.addMemberAfter = function(newMember, afterMember) {
+
 	this.addMember(newMember, this.__indexOfMember(afterMember) + 1);
 };
 
@@ -150,8 +142,8 @@ function(newMember, afterMember) {
  * @param {DwtControl|DwtTabGroup|HTMLElement} member 		the member to be added
  * @param {DwtControl|DwtTabGroup|HTMLElement} beforeMember 	the member before which to add <code>member</code>
  */
-DwtTabGroup.prototype.addMemberBefore =
-function(newMember, beforeMember) {
+DwtTabGroup.prototype.addMemberBefore = function(newMember, beforeMember) {
+
 	this.addMember(newMember, this.__indexOfMember(beforeMember));
 };
 
@@ -165,8 +157,8 @@ function(newMember, beforeMember) {
  * @param {boolean} [skipNotify] 		if <code>true</code>, notification is not fired. This flag typically set by Dwt tab management framework when it is calling into this method
  * @return {DwtControl|DwtTabGroup|HTMLElement}	the removed member or <code>null</code> if <code>oldMember</code> is not in the tab groups hierarchy
  */
-DwtTabGroup.prototype.removeMember =
-function(member, checkEnabled, skipNotify) {
+DwtTabGroup.prototype.removeMember = function(member, checkEnabled, skipNotify) {
+
 	return this.replaceMember(member, null, checkEnabled, skipNotify);
 };
 
@@ -175,6 +167,7 @@ function(member, checkEnabled, skipNotify) {
  * 
  */
 DwtTabGroup.prototype.removeAllMembers = function() {
+
 	this.__members.removeAll();
 };
 
@@ -192,8 +185,8 @@ DwtTabGroup.prototype.removeAllMembers = function() {
  * 		typically set by the tab management framework when it is calling into this method
  * @return {DwtControl|DwtTabGroup|HTMLElement}	replaced member or <code>null></code> if <code>oldMember</code> is not in the tab group
  */
-DwtTabGroup.prototype.replaceMember =
-function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
+DwtTabGroup.prototype.replaceMember = function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
+
 	var tg = this.__getTabGroupForMember(oldMember);
 	if (!tg) {
 		this.addMember(newMember);
@@ -207,18 +200,19 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
 	var newFocusMember;
 	if (focusItem) {
 		newFocusMember = focusItem;
-	} else if (root.__currFocusMember == oldMember ||
-		(oldMember && oldMember.isDwtTabGroup && oldMember.contains(root.__currFocusMember))) {
-
+	}
+    else if (root.__currFocusMember === oldMember || (oldMember && oldMember.isDwtTabGroup && oldMember.contains(root.__currFocusMember))) {
 		if (newMember) {
 			newFocusMember = (newMember.isDwtTabGroup) ? newMember.getFirstMember() : newMember;
-		} else {
+		}
+        else {
 			newFocusMember = this.__getPrevMember(oldMember, checkEnabled);
 			if (!newFocusMember) {
 				newFocusMember =  this.__getNextMember(oldMember, checkEnabled);
 			}
 		}
 	}
+
 	if (newFocusMember && !noFocus) {
 		root.__currFocusMember = newFocusMember;
 		this.__showFocusedItem(this.__currFocusMember, "replaceMember");
@@ -241,9 +235,9 @@ function(oldMember, newMember, checkEnabled, skipNotify, focusItem, noFocus) {
  * 
  * @return {boolean}	<code>true</code> if the tab group contains member
  */
-DwtTabGroup.prototype.contains =
-function(member) {	
-	return (Boolean(this.__getTabGroupForMember(member)));
+DwtTabGroup.prototype.contains = function(member) {
+
+	return !!this.__getTabGroupForMember(member);
 };
 
 /**
@@ -251,8 +245,8 @@ function(member) {
  * 
  * @param {DwtTabGroup} newParent 	the new parent. If the parent is <code>null</code>, then this tabGroup is the root tab group.
  */
-DwtTabGroup.prototype.newParent =
-function(newParent) {
+DwtTabGroup.prototype.newParent = function(newParent) {
+
 	this.__parent = newParent;
 };
 
@@ -263,26 +257,11 @@ function(newParent) {
  *
  * @return {DwtControl|HTMLElement}	the first member of the tab group
  */
-DwtTabGroup.prototype.getFirstMember =
-function(checkEnabled) {
+DwtTabGroup.prototype.getFirstMember = function(checkEnabled) {
+
 	return this.__getLeftMostMember(checkEnabled);
 };
 
-/**
- * Gets the child tab group member by its name.
- *
- * @param {string}	name		the name of the child tab group
- */
-DwtTabGroup.prototype.getTabGroupMemberByName = function(name) {
-	var members = this.__members.getArray();
-	for (var i = 0; i < members.length; i++) {
-		var member = members[i];
-		if (member.isDwtTabGroup && member.getName() == name) {
-			return member;
-		}
-	}
-};
- 
 /**
  * Gets the last member of the tab group.
  * 
@@ -290,8 +269,8 @@ DwtTabGroup.prototype.getTabGroupMemberByName = function(name) {
  *
  * @return {DwtControl|HTMLElement}	the last member of the tab group
  */
-DwtTabGroup.prototype.getLastMember =
-function(checkEnabled) {
+DwtTabGroup.prototype.getLastMember = function(checkEnabled) {
+
 	return this.__getRightMostMember(checkEnabled);
 };
  
@@ -302,8 +281,8 @@ function(checkEnabled) {
  * 
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.getFocusMember =
-function(){
+DwtTabGroup.prototype.getFocusMember = function(){
+
 	this.__checkRoot();
 	return this.__currFocusMember;
 };
@@ -320,15 +299,23 @@ function(){
  *
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.setFocusMember =
-function(member, checkEnabled, skipNotify) {
+DwtTabGroup.prototype.setFocusMember = function(member, checkEnabled, skipNotify) {
+
+    if (!member) {
+        return false;
+    }
+
+    if (member.isDwtTabGroup) {
+        DBG.println(AjxDebug.FOCUS, "DwtTabGroup SETFOCUSMEMBER to a DwtTabGroup: " + member + " / " + member.getName());
+        member = member.getFocusMember() || member.getFirstMember();
+    }
 	this.__checkRoot();	
 	if (!this.__checkEnabled(member, checkEnabled)) {
 		return false;
 	}
 
-	var tg = this.__getTabGroupForMember(member);
-	if (tg) {
+	if (this.contains(member)) {
+        DBG.println(AjxDebug.FOCUS, "DwtTabGroup SETFOCUSMEMBER: " + member);
 		this.__currFocusMember = member;
 		this.__showFocusedItem(this.__currFocusMember, "setFocusMember");
 		if (!skipNotify) {
@@ -336,6 +323,7 @@ function(member, checkEnabled, skipNotify) {
 		}
 		return true;	
 	}
+
 	return false;
 };
 
@@ -352,8 +340,8 @@ function(member, checkEnabled, skipNotify) {
  *
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.getNextFocusMember =
-function(checkEnabled, skipNotify) {
+DwtTabGroup.prototype.getNextFocusMember = function(checkEnabled, skipNotify) {
+
 	this.__checkRoot();		
 	return this.__setFocusMember(true, checkEnabled, skipNotify);
 };
@@ -371,8 +359,8 @@ function(checkEnabled, skipNotify) {
  *
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.getPrevFocusMember =
-function(checkEnabled, skipNotify) {
+DwtTabGroup.prototype.getPrevFocusMember = function(checkEnabled, skipNotify) {
+
 	this.__checkRoot();		
 	return this.__setFocusMember(false, checkEnabled, skipNotify);
 };
@@ -388,14 +376,15 @@ function(checkEnabled, skipNotify) {
  *
  * @throws DwtTabGroup.NOT_ROOT_TABGROUP
  */
-DwtTabGroup.prototype.resetFocusMember =
-function(checkEnabled, skipNotify) {
+DwtTabGroup.prototype.resetFocusMember = function(checkEnabled, skipNotify) {
+
 	this.__checkRoot();
 	var focusMember = this.__getLeftMostMember(checkEnabled);
 	if ((focusMember != this.__currFocusMember) && !skipNotify) {
 		this.__notifyListeners(this.__currFocusMember);
 	}
 	this.__showFocusedItem(this.__currFocusMember, "resetFocusMember");
+    DBG.println(AjxDebug.FOCUS, "DwtTabGroup RESETFOCUSMEMBER: " + focusMember);
 	this.__currFocusMember = focusMember;
 	
 	return this.__currFocusMember;
@@ -409,6 +398,7 @@ function(checkEnabled, skipNotify) {
  *                                  at the given level.
  */
 DwtTabGroup.prototype.dump = function(debugLevel) {
+
 	if (debugLevel) {
 		if (!window.AjxDebug || !window.DBG) {
 			return;
@@ -432,51 +422,37 @@ DwtTabGroup.prototype.dump = function(debugLevel) {
  * 
  * @return	{number}	the size
  */
-DwtTabGroup.prototype.size =
-function() {
+DwtTabGroup.prototype.size = function() {
+
 	return this.__members.size();
 };
-
-/**
- * Focus this tab group; either retaining the current focus member or focusing
- * the first focusable member.
- *
- * Since tab group members are either tab groups themselves, DwtControls or DOM
- * elements, this allows a focus() call on any member to Do The Right
- * Thing(tm).
- */
-/*
-DwtTabGroup.prototype.focus =
-function() {
-	var control = this.getFocusMember() || this.resetFocusMember(true);
-	control.focus();
-};
-*/
 
 /**
  * Returns the previous member in the tag group.
  * 
  * @private
  */
-DwtTabGroup.prototype.__getPrevMember =
-function(member, checkEnabled) {
+DwtTabGroup.prototype.__getPrevMember = function(member, checkEnabled) {
+
 	var a = this.__members.getArray();
+
 	// Start working from the member to the immediate left, then keep going left
 	for (var i = this.__lastIndexOfMember(member) - 1; i > -1; i--) {
 		var prevMember = a[i];
 		/* if sibling is not a tab group, then it is the previous child. If the
 		 * sibling is a tab group, get its rightmost member.*/
-		if (!(prevMember.isDwtTabGroup)) {
+		if (!prevMember.isDwtTabGroup) {
 			if (this.__checkEnabled(prevMember, checkEnabled)) {
 				return prevMember;
 			}
 		} else {
 			prevMember = prevMember.__getRightMostMember(checkEnabled);
-			if (prevMember && this.__checkEnabled(prevMember, checkEnabled)) {
+			if (this.__checkEnabled(prevMember, checkEnabled)) {
 				return prevMember;
 			}
 		}
 	}
+
 	/* If we have fallen through to here it is because the tab group only has 
 	 * one member. So we roll up to the parent, unless we are at the root in 
 	 * which case we return null. */
@@ -510,7 +486,7 @@ DwtTabGroup.prototype.__checkEnabled = function(member, checkEnabled) {
 	}
 
 	var loc = Dwt.getLocation(member);
-	if (loc.x === null || loc.x === Dwt.LOC_NOWHERE || loc.y === Dwt.LOC_NOWHERE || loc.y === null) {
+	if (loc.x === null || loc.y === null || loc.x === Dwt.LOC_NOWHERE || loc.y === Dwt.LOC_NOWHERE) {
 		return false;
 	}
 
@@ -519,38 +495,21 @@ DwtTabGroup.prototype.__checkEnabled = function(member, checkEnabled) {
 		return false;
 	}
 
-	if (member.nodeName === "BODY") {
+	if (member.nodeName && member.nodeName.toLowerCase() === "body") {
 		return true;
 	}
 	return (Dwt.getZIndex(member, true) > Dwt.Z_HIDDEN &&
 	        Dwt.getVisible(member) && Dwt.getVisibility(member));
 };
 
-/**
- * Key function for comparing members. The argument can also be passed as
- * 'this', making it suitable for AjxVector.indexOfLike.
- */
-DwtTabGroup.__memberKeyFunc =
-function(member) {
-	member = member || this;
+DwtTabGroup.prototype.__indexOfMember = function(member) {
 
-	if (member.getInputElement) {
-		return member.getInputElement() || member;
-	} else {
-		return member;
-	}
+    return this.__members.indexOf(member);
 };
 
-DwtTabGroup.prototype.__indexOfMember =
-function(member) {
-	var keyfunc = DwtTabGroup.__memberKeyFunc;
-	return this.__members.indexOfLike(member, keyfunc);
-};
+DwtTabGroup.prototype.__lastIndexOfMember = function(member) {
 
-DwtTabGroup.prototype.__lastIndexOfMember =
-function(member) {
-	var keyfunc = DwtTabGroup.__memberKeyFunc;
-	return this.__members.lastIndexOfLike(member, keyfunc);
+    return this.__members.lastIndexOf(member);
 };
 
 /**
@@ -558,23 +517,24 @@ function(member) {
  * 
  * @private
  */
-DwtTabGroup.prototype.__getNextMember =
-function(member, checkEnabled) {
+DwtTabGroup.prototype.__getNextMember = function(member, checkEnabled) {
+
 	var a = this.__members.getArray();
 	var sz = this.__members.size();
 
-	// Start working from the member to the immediate left of <member> rightwards
+	// Start working from the member rightwards
 	for (var i = this.__indexOfMember(member) + 1; i < sz; i++) {
 		var nextMember = a[i];
 		/* if sibling is not a tab group, then it is the next child. If the
 		 * sibling is a tab group, get its leftmost member.*/
-		if (!(nextMember.isDwtTabGroup)) {
+		if (!nextMember.isDwtTabGroup) {
 			if (this.__checkEnabled(nextMember, checkEnabled)) {
 				return nextMember;
 			}
-		} else {
+		}
+        else {
 			nextMember = nextMember.__getLeftMostMember(checkEnabled);
-			if (nextMember && this.__checkEnabled(nextMember, checkEnabled)) {
+			if (this.__checkEnabled(nextMember, checkEnabled)) {
 				return nextMember;
 			}
 		}
@@ -591,8 +551,8 @@ function(member, checkEnabled) {
  * into contained tab groups if necessary.
  * @private
  */
-DwtTabGroup.prototype.__getRightMostMember =
-function(checkEnabled) {
+DwtTabGroup.prototype.__getRightMostMember = function(checkEnabled) {
+
 	var a = this.__members.getArray();
 	var member = null;
 	
@@ -601,24 +561,29 @@ function(checkEnabled) {
 	 * rightmost element. */
 	for (var i = this.__members.size() - 1; i >= 0; i--) {
 		member = a[i]
-		if (!(member.isDwtTabGroup)) {
-			if (this.__checkEnabled(member, checkEnabled)) break;
-		} else {
+		if (!member.isDwtTabGroup) {
+			if (this.__checkEnabled(member, checkEnabled)) {
+                break;
+            }
+		}
+        else {
 			member = member.__getRightMostMember(checkEnabled);
-			if (member && this.__checkEnabled(member, checkEnabled)) break;
+			if (this.__checkEnabled(member, checkEnabled)) {
+                break;
+            }
 		}
 	}
 
-	return (member && this.__checkEnabled(member, checkEnabled)) ? member : null;
+	return this.__checkEnabled(member, checkEnabled) ? member : null;
 };
 
 /**
- *  Finds the rightmost member of the tab group. Will recurse down
+ *  Finds the leftmost member of the tab group. Will recurse down
  * into contained tab groups if necessary.
  * @private
  */
-DwtTabGroup.prototype.__getLeftMostMember =
-function(checkEnabled) {
+DwtTabGroup.prototype.__getLeftMostMember = function(checkEnabled) {
+
 	var sz = this.__members.size();
 	var a = this.__members.getArray();
 	var member = null;
@@ -628,23 +593,28 @@ function(checkEnabled) {
 	 * rightmost element */
 	for (var i = 0; i < sz; i++) {
 		member = a[i]
-		if (!(member.isDwtTabGroup)) {
-			if  (this.__checkEnabled(member, checkEnabled)) break;
-		} else {
+		if (!member.isDwtTabGroup) {
+			if  (this.__checkEnabled(member, checkEnabled)) {
+                break;
+            }
+		}
+        else {
 			member = member.__getLeftMostMember(checkEnabled);
-			if (member && this.__checkEnabled(member, checkEnabled)) break;
+			if (this.__checkEnabled(member, checkEnabled)) {
+                break;
+            }
 		}
 	}
 
-	return (member && this.__checkEnabled(member, checkEnabled)) ? member : null;
+	return this.__checkEnabled(member, checkEnabled) ? member : null;
 };
 
 /**
  * Notifies focus change listeners.
  * @private
  */
-DwtTabGroup.prototype.__notifyListeners =
-function(newFocusMember) {
+DwtTabGroup.prototype.__notifyListeners = function(newFocusMember) {
+
 	// Only the root tab group will issue notifications
 	var rootTg = this.__getRootTabGroup();
 	if (rootTg.__evtMgr) {
@@ -659,8 +629,8 @@ function(newFocusMember) {
 /**
  * @private
  */
-DwtTabGroup.prototype.__getRootTabGroup =
-function() {
+DwtTabGroup.prototype.__getRootTabGroup = function() {
+
 	var root = this;
 	while (root.__parent) {
 		root = root.__parent;
@@ -674,8 +644,8 @@ DwtTabGroup.DUMP_INDENT = '|\t';
 /**
  * @private
  */
-DwtTabGroup.__dump =
-function(tg, logger, level) {
+DwtTabGroup.__dump = function(tg, logger, level) {
+
 	var myIndent = AjxStringUtil.repeat(DwtTabGroup.DUMP_INDENT, level);
 
 	logger(myIndent + "TABGROUP: " + tg.__name);
@@ -685,17 +655,15 @@ function(tg, logger, level) {
 	var sz = tg.__members.size();
 	var a = tg.__members.getArray();
 	for (var i = 0; i < sz; i++) {
-		if (a[i].isDwtTabGroup) {
-			DwtTabGroup.__dump(a[i], logger, level + 1);
-		} else {
-			var desc = a[i].nodeName ?
-				(a[i].nodeName + ' ' + a[i].outerHTML) :
-				(String(a[i]) + ' ' + a[i]._htmlElId);
-
-			if (a[i].noTab) {
+        var m = a[i];
+		if (m.isDwtTabGroup) {
+			DwtTabGroup.__dump(m, logger, level + 1);
+		}
+        else {
+			var desc = m.nodeName ? [ m.nodeName, m.id, m.className ].join(' ') : [ String(m), m._htmlElId ].join(' ');
+			if (m.noTab) {
 				desc += ' - no tab!';
 			}
-
 			logger(myIndent + desc);
 		}
 	}
@@ -705,10 +673,9 @@ function(tg, logger, level) {
  * Sets the next or previous focus member.
  * @private
  */
-DwtTabGroup.prototype.__setFocusMember =
-function(next, checkEnabled, skipNotify) {
-	// If there is currently no focus member, then reset to the first member
-	// and return
+DwtTabGroup.prototype.__setFocusMember = function(next, checkEnabled, skipNotify) {
+
+	// If there is currently no focus member, then reset to the first member and return
 	if (!this.__currFocusMember) {
 		return this.resetFocusMember(checkEnabled, skipNotify);
 	}
@@ -718,12 +685,13 @@ function(next, checkEnabled, skipNotify) {
 		DBG.println(AjxDebug.DBG1, "tab group not found for focus member: " + this.__currFocusMember);
 		return null;
 	}
-	var m = (next) ? tabGroup.__getNextMember(this.__currFocusMember, checkEnabled) 
-				   : tabGroup.__getPrevMember(this.__currFocusMember, checkEnabled);
+	var m = next ? tabGroup.__getNextMember(this.__currFocusMember, checkEnabled)
+				 : tabGroup.__getPrevMember(this.__currFocusMember, checkEnabled);
 
 	if (!m) {
-		m = (next) ? this.__getLeftMostMember(checkEnabled)
-				   : this.__getRightMostMember(checkEnabled);
+        // wrap around
+		m = next ? this.__getLeftMostMember(checkEnabled)
+				 : this.__getRightMostMember(checkEnabled);
 
 		// Test for the case where there is only one member in the tabgroup
 		if (m == this.__currFocusMember) {
@@ -731,6 +699,7 @@ function(next, checkEnabled, skipNotify) {
 		}
 	}
 
+    DBG.println(AjxDebug.FOCUS, "DwtTabGroup __setFocusMember: " + m);
 	this.__currFocusMember = m;
 	
 	this.__showFocusedItem(this.__currFocusMember, "_setFocusMember");
@@ -742,20 +711,25 @@ function(next, checkEnabled, skipNotify) {
 };
 
 /**
+ * Returns the tab group from within this tab group's hierarchy that contains the given member. Traverses the tree top-down.
+ *
  * @private
  */
-DwtTabGroup.prototype.__getTabGroupForMember =
-function(member) {
-	if (!member) return null;
-	var sz = this.__members.size();
-	var a = this.__members.getArray();
-	var m;
-	for (var i = 0; i < sz; i++) {
+DwtTabGroup.prototype.__getTabGroupForMember = function(member) {
+
+	if (!member) {
+        return null;
+    }
+
+    var a = this.__members.getArray(),
+        ln = a.length, i, m;
+
+	for (i = 0; i < ln; i++) {
 		m = a[i];
-		if (m == member || (DwtTabGroup.__memberKeyFunc(member) ==
-		                    DwtTabGroup.__memberKeyFunc(m))) {
+		if (m === member) {
 			return this;
-		} else if (m.isDwtTabGroup && (m = m.__getTabGroupForMember(member))) {
+		}
+        else if (m.isDwtTabGroup && (m = m.__getTabGroupForMember(member))) {
 			return m;
 		}
 	}
@@ -767,10 +741,11 @@ function(member) {
  * 
  * @private
  */
-DwtTabGroup.prototype.__checkRoot =
-function() {
+DwtTabGroup.prototype.__checkRoot = function() {
+
 	if (this.__parent) {
-		throw DwtTabGroup.NOT_ROOT_TABGROUP;
+        DBG.println(AjxDebug.DBG1, "DwtTabGroup NOT_ROOT_TABGROUP: " + this.getName());
+//		throw DwtTabGroup.NOT_ROOT_TABGROUP;
 	}
 };
 

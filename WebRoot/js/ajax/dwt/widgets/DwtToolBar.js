@@ -70,7 +70,10 @@ DwtToolBar = function(params) {
     this._numFillers = 0;
 	this._curFocusIndex = 0;
 
-	this._keyMapName = (this._style == DwtToolBar.HORIZ_STYLE) ? DwtKeyMap.MAP_TOOLBAR_HORIZ : DwtKeyMap.MAP_TOOLBAR_VERT;
+    // Let toolbar be a single tab stop, then manage focus among items using arrow keys
+    this.tabGroupMember = this;
+
+    this._keyMapName = (this._style == DwtToolBar.HORIZ_STYLE) ? DwtKeyMap.MAP_TOOLBAR_HORIZ : DwtKeyMap.MAP_TOOLBAR_VERT;
 };
 
 DwtToolBar.PARAMS = ["parent", "className", "posStyle", "style", "index", "id"];
@@ -236,8 +239,8 @@ function(className, index) {
  * @param	{Object}	child	the child item
  * @param	{number}	index		the index for the child
  */
-DwtToolBar.prototype.addChild =
-function(child, index) {
+DwtToolBar.prototype.addChild = function(child, index) {
+
 	// get the reference element for insertion
 	var placeControl = this.getChild(index);
 	var placeEl = placeControl ?
@@ -246,21 +249,28 @@ function(child, index) {
 	// actually add the child
 	DwtComposite.prototype.addChild.apply(this, arguments);
 
+    // we treat the toolbar itself as a tab stop
+    this._delegateFocus(child);
+
 	// create and insert the item element
-	var itemEl = this._createItemElement(child.toolbarItemTemplate);
-	this._itemsEl.insertBefore(itemEl, placeEl);
+    if (this._itemsEl) {
+        var itemEl = this._createItemElement(child.toolbarItemTemplate);
+        this._itemsEl.insertBefore(itemEl, placeEl);
+    }
 
 	// finally, move the child to the item
 	child.reparentHtmlElement(itemEl);
 };
 
-DwtToolBar.prototype.removeChild =
-function(child) {
+DwtToolBar.prototype.removeChild = function(child) {
+
 	var item = child.getHtmlElement().parentNode;
 
 	DwtComposite.prototype.removeChild.apply(this, arguments);
 
-	this._itemsEl.removeChild(item);
+    if (this._itemsEl) {
+    	this._itemsEl.removeChild(item);
+    }
 };
 
 // keyboard nav
@@ -278,34 +288,40 @@ function() {
 DwtToolBar.prototype.handleKeyAction =
 function(actionCode, ev) {
 
-	var item = this.getItem(this._curFocusIndex);
-	var numItems = this.getItemCount();
+	var curFocusIndex = this._curFocusIndex,
+	    numItems = this.getItemCount();
+
 	if (numItems < 2) {
 		return false;
 	}
 
+    DBG.println(AjxDebug.FOCUS, 'DwtToolBar HANDLEKEYACTION: cur focus index = ' + curFocusIndex);
+
 	switch (actionCode) {
 
 		case DwtKeyMap.PREV:
-			if (this._curFocusIndex > 0) {
+			if (curFocusIndex > 0) {
 				this._moveFocus(true);
 				return true;
 			}
 			break;
 
 		case DwtKeyMap.NEXT:
-			if (this._curFocusIndex < (numItems - 1)) {
-				this._moveFocus();
+			if (curFocusIndex < numItems - 1) {
+				this._moveFocus(false);
 				return true;
 			}
 			break;
 
 		default:
 			// pass everything else to currently focused item
+            var item = this._getCurrentFocusItem();
 			if (item) {
 				return item.handleKeyAction(actionCode, ev);
 			}
 	}
+
+	return true;
 };
 
 //
@@ -329,13 +345,13 @@ function(id) {
 /**
  * @private
  */
-DwtToolBar.prototype._createHtml =
-function() {
+DwtToolBar.prototype._createHtml = function() {
+
     var data = { id: this._htmlElId };
     this._createHtmlFromTemplate(this.TEMPLATE, data);
-    this._itemsEl = document.getElementById(data.id+"_items");
-    this._prefixEl = document.getElementById(data.id+"_prefix");
-    this._suffixEl = document.getElementById(data.id+"_suffix");
+    this._itemsEl = document.getElementById(data.id + "_items");
+    this._prefixEl = document.getElementById(data.id + "_prefix");
+    this._suffixEl = document.getElementById(data.id + "_suffix");
 };
 
 /**
@@ -357,50 +373,39 @@ function(templateId) {
 };
 
 /**
- * transfer focus to the current item
- * @private
+ * Focuses the current item.
+ *
+ * @param {DwtControl}  item    (optional) specific toolbar item to focus
  */
-DwtToolBar.prototype._focus =
-function(item) {
-	DBG.println(AjxDebug.DBG3, "DwtToolBar: FOCUS");
-	// make sure the key for expanding a button submenu matches our style
-	if (!this._submenuKeySet) {
-		var kbm = this.shell.getKeyboardMgr();
-		if (kbm.isEnabled()) {
-			var kmm = kbm.__keyMapMgr;
-			if (kmm) {
-				if (this._style == DwtToolBar.HORIZ_STYLE) {
-					kmm.removeMapping(DwtKeyMap.MAP_BUTTON, "ArrowRight");
-					kmm.setMapping(DwtKeyMap.MAP_BUTTON, "ArrowDown", DwtKeyMap.SUBMENU);
-				} else {
-					kmm.removeMapping(DwtKeyMap.MAP_BUTTON, "ArrowDown");
-					kmm.setMapping(DwtKeyMap.MAP_BUTTON, "ArrowRight", DwtKeyMap.SUBMENU);
-				}
-				kmm.reloadMap(DwtKeyMap.MAP_BUTTON);
-			}
-		}
-		this._submenuKeySet = true;
-	}
+DwtToolBar.prototype.focus = function(item) {
 
-	item = item ? item : this._getFocusItem(this._curFocusIndex);
-	if (item) {
+    DBG.println(AjxDebug.FOCUS, "DwtToolBar: FOCUS " + [this, this._htmlElId].join(' / '));
+
+    this._setMenuKey();
+
+	item = item || this._getCurrentFocusItem();
+	if (item && this._canFocusItem(item)) {
+        this._curFocusIndex = this.__getButtonIndex(item);
 		item.focus();
-	} else {
+	}
+    else {
 		// if current item isn't focusable, find first one that is
-		this._moveFocus();
+		this._moveFocus(false);
 	}
 };
 
 /**
- * blur the current item.
- * 
+ * Blurs the current item.
+ *
+ * @param {DwtControl}  item    (optional) specific toolbar item to blur
+ *
  * @private
  */
-DwtToolBar.prototype._blur =
-function(item) {
-	DBG.println(AjxDebug.DBG3, "DwtToolBar: BLUR");
-	item = item ? item : this._getFocusItem(this._curFocusIndex);
-	if (item) {
+DwtToolBar.prototype.blur = function(item) {
+
+    DBG.println(AjxDebug.FOCUS, "DwtToolBar: BLUR");
+	item = item || this._getCurrentFocusItem();
+	if (item && item.blur) {
 		item.blur();
 	}
 };
@@ -410,20 +415,26 @@ function(item) {
  * For now, we only move focus to simple components like buttons. Also,
  * the item must be enabled and visible.
  *
- * @param {number}	index		the index of item within toolbar
- * @return	{Object}	the item
+ * @param {DwtControl}	item		an item within toolbar
+ * @return	{boolean}	true if the item can be focused
  * 
  * @private
  */
-DwtToolBar.prototype._getFocusItem =
-function(index) {
-	var item = this.getItem(index);
-	if (!item)									{ return null; }
-	if (item._noFocus)							{ return null; }
-	if (item.getEnabled && !item.getEnabled())	{ return null; }
-	if (item.getVisible && !item.getVisible())	{ return null; }
-	if (item.isDwtText && !item.getText())		{ return null; }
-	return item;
+DwtToolBar.prototype._canFocusItem = function(item) {
+
+	if (!item)									{ return false; }
+	if (!item.focus)							{ return false; }
+	if (item.isDwtToolBarSpacer)				{ return false; }
+	if (item.getEnabled && !item.getEnabled())	{ return false; }
+	if (item.getVisible && !item.getVisible())	{ return false; }
+	if (item.isDwtText && !item.getText())		{ return false; }
+
+	return true;
+};
+
+DwtToolBar.prototype._getCurrentFocusItem = function() {
+
+    return this.getItem(this._curFocusIndex);
 };
 
 /**
@@ -433,65 +444,116 @@ function(index) {
  * 
  * @private
  */
-DwtToolBar.prototype._moveFocus =
-function(back) {
-	var index = this._curFocusIndex;
-	var maxIndex = this.getItemCount() - 1;
-	var item = null;
-	while (!item && index >= 0 && index <= maxIndex) {
-		index = back ? index - 1 : index + 1;
-		item = this._getFocusItem(index);
+DwtToolBar.prototype._moveFocus = function(back) {
+
+	var index = this._curFocusIndex,
+	    maxIndex = this.getItemCount() - 1,
+	    item = null,
+        found = false;
+
+    index = back ? index - 1 : index + 1;
+    while (!found && index >= 0 && index <= maxIndex) {
+        item = this.getItem(index);
+        if (this._canFocusItem(item)) {
+            found = true;
+        }
+        index = back ? index - 1 : index + 1;
 	}
+
 	if (item) {
-		this._blur();
-		this._curFocusIndex = index;
-		this._focus(item);
+		this.blur();
+		this.focus(item);
 	}
+};
+
+// make sure the key for expanding a button submenu matches our style
+DwtToolBar.prototype._setMenuKey = function() {
+
+    if (!this._submenuKeySet) {
+        var kbm = this.shell.getKeyboardMgr();
+        if (kbm.isEnabled()) {
+            var kmm = kbm.__keyMapMgr;
+            if (kmm) {
+                if (this._style == DwtToolBar.HORIZ_STYLE) {
+                    kmm.removeMapping(DwtKeyMap.MAP_BUTTON, "ArrowRight");
+                    kmm.setMapping(DwtKeyMap.MAP_BUTTON, "ArrowDown", DwtKeyMap.SUBMENU);
+                } else {
+                    kmm.removeMapping(DwtKeyMap.MAP_BUTTON, "ArrowDown");
+                    kmm.setMapping(DwtKeyMap.MAP_BUTTON, "ArrowRight", DwtKeyMap.SUBMENU);
+                }
+                kmm.reloadMap(DwtKeyMap.MAP_BUTTON);
+            }
+        }
+        this._submenuKeySet = true;
+    }
+};
+
+// Updates internal index when a child gets focus
+DwtToolBar.prototype._childFocusListener = function(ev) {
+
+    DBG.println(AjxDebug.FOCUS, "DwtToolBar CHILDFOCUSLISTENER: " + [ ev.dwtObj, ev.dwtObj._htmlElId ].join(' / '));
+    this._curFocusIndex = this.__getButtonIndex(ev.dwtObj);
+    DwtComposite.prototype._childFocusListener.apply(this, arguments);
 };
 
 /**
  * @private
  */
-DwtToolBar.prototype.__markPrevNext =
-function(id, opened) {
+DwtToolBar.prototype.__markPrevNext = function(id, opened) {
+
     var index = this.__getButtonIndex(id);
     var prev = this.getChild(index - 1);
     var next = this.getChild(index + 1);
+
     if (opened) {
-        if (prev) Dwt.delClass(prev.getHtmlElement(), DwtToolBar._NEXT_PREV_RE, DwtToolBar.SELECTED_PREV);
-        if (next) Dwt.delClass(next.getHtmlElement(), DwtToolBar._NEXT_PREV_RE, DwtToolBar.SELECTED_NEXT);
+        if (prev) {
+            Dwt.delClass(prev.getHtmlElement(), DwtToolBar._NEXT_PREV_RE, DwtToolBar.SELECTED_PREV);
+        }
+        if (next) {
+            Dwt.delClass(next.getHtmlElement(), DwtToolBar._NEXT_PREV_RE, DwtToolBar.SELECTED_NEXT);
+        }
     }
     else {
-        if (prev) Dwt.delClass(prev.getHtmlElement(), DwtToolBar._NEXT_PREV_RE);
-        if (next) Dwt.delClass(next.getHtmlElement(), DwtToolBar._NEXT_PREV_RE);
+        if (prev) {
+            Dwt.delClass(prev.getHtmlElement(), DwtToolBar._NEXT_PREV_RE);
+        }
+        if (next) {
+            Dwt.delClass(next.getHtmlElement(), DwtToolBar._NEXT_PREV_RE);
+        }
     }
 
     // hack: mark the first and last items so we can style them specially
     //	MOW note: this should really not be here, as it only needs to be done once,
     //				but I'm not sure where to put it otherwise
     var first = this.getChild(0);
-    if (first) Dwt.addClass(first.getHtmlElement(), DwtToolBar.FIRST_ITEM);
+    if (first) {
+        Dwt.addClass(first.getHtmlElement(), DwtToolBar.FIRST_ITEM);
+    }
 
     var last = this.getChild(this.getItemCount()-1);
-    if (last) Dwt.addClass(last.getHtmlElement(), DwtToolBar.LAST_ITEM);
+    if (last) {
+        Dwt.addClass(last.getHtmlElement(), DwtToolBar.LAST_ITEM);
+    }
 };
 
 /**
- * Find the array index of a toolbar button by id.
+ * Find the array index of a toolbar button.
  *
- * Works only if descendent classes implement the _buttons property as a
- * native Array.
- * @param id {number} Index to check and see if exists in the array.
- * @return {number} Index of the id in the array, or -1 if the id does not
- * exist.
+ * @param id {String|DwtControl}    item ID, or item
+ *
+ * @return {number} Index of the id in the array, or -1 if the id does not exist.
  * @private
  */
-DwtToolBar.prototype.__getButtonIndex =
-function(id) {
-    var toolBarButtons = this.getChildren();
-    var button = this._buttons[id];
-    if (toolBarButtons && toolBarButtons.length && button)
-        return AjxUtil.indexOf(toolBarButtons, button);
+DwtToolBar.prototype.__getButtonIndex = function(id) {
+
+    var item = AjxUtil.isString(id) ? DwtControl.fromElementId(id) : id;
+
+    for (var i = 0; i <= this.getItemCount() - 1; i++) {
+        if (item === this.getItem(i)) {
+            return i;
+        }
+    }
+
     return -1;
 };
 
@@ -534,6 +596,7 @@ DwtToolBarButton.prototype.toString = function() { return "DwtToolBarButton"; };
 // Data
 DwtToolBarButton.prototype.TEMPLATE = "dwt.Widgets#ZToolbarButton";
 
+// Spacing controls (spacer, separator, filler)
 DwtToolBarSpacer = function(params) {
 	if (arguments.length == 0) { return; }
 	this.toolbarItemTemplate = params.toolbarItemTemplate;
@@ -543,5 +606,8 @@ DwtToolBarSpacer = function(params) {
 DwtToolBarSpacer.prototype = new DwtControl;
 
 DwtToolBarSpacer.prototype.constructor = DwtToolBarSpacer;
+
+DwtToolBarSpacer.prototype.isDwtToolBarSpacer = true;
 DwtToolBarSpacer.prototype.toString = function() { return 'DwtToolBarSpacer'; };
+
 DwtToolBarSpacer.prototype.role = 'separator';
