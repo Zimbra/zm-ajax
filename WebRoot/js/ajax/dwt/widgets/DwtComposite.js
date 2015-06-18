@@ -263,9 +263,15 @@ function(child) {
 	}
 }
 
-DwtComposite.prototype.getTabGroupMember =
-function() {
-	return this._compositeTabGroup;
+/**
+ * Return this.tabGroupMember if present (it always overrides any other contender), otherwise if this composite has
+ * children return the composite tab group, otherwise just return this control (instead of a group with one member).
+ *
+ * @returns {DwtComposite|DwtTabGroup}
+ */
+DwtComposite.prototype.getTabGroupMember = function() {
+
+	return this.tabGroupMember || (this.getNumChildren() > 0 ? this._compositeTabGroup : this);
 };
 
 /**
@@ -370,4 +376,39 @@ function(ev) {
 	// reset mouse event to propagate event to browser (allows context menu)
 	ev._stopPropagation = false;
 	ev._returnValue = true;
+};
+
+/**
+ * This function allows this control to delegate focus to its child items. The child will report
+ * this composite as its tab group member, and we will be notified when the child is focused or blurred.
+ * Examples of composites that delegate focus are a toolbar and a tree. Those will be a single tab stop, and
+ * focus can be moved among their items using arrow keys.
+ *
+ * @param {DwtControl}  child       child item
+ *
+ * @private
+ */
+DwtComposite.prototype._delegateFocus = function(child) {
+
+    if (child.isDwtComposite) {
+        child.getTabGroupMember = this.getTabGroupMember;
+    }
+    else {
+        child.tabGroupMember = this;
+    }
+
+    child.addListener(DwtEvent.ONFOCUS, this._childFocusListener.bind(this));
+    child.addListener(DwtEvent.ONBLUR, this._childBlurListener.bind(this));
+};
+
+DwtComposite.prototype._childFocusListener = function(ev) {
+
+    ev.dwtObj = this;
+    this.notifyListeners(DwtEvent.ONFOCUS, ev);
+};
+
+DwtComposite.prototype._childBlurListener = function(ev) {
+
+    ev.dwtObj = this;
+    this.notifyListeners(DwtEvent.ONBLUR, ev);
 };

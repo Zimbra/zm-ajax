@@ -125,7 +125,6 @@ DwtInputField = function(params) {
 		}
 	}
 
-	this._tabGroup = new DwtTabGroup(this._htmlElId);
 	if (params.forceMultiRow || this._rows > 1) {
         this._inputField = document.getElementById(inputFieldId);
         this._inputField.onkeyup = DwtInputField._keyUpHdlr;
@@ -141,7 +140,6 @@ DwtInputField = function(params) {
         //MOW:  this.setCursor("default");
 
         this._inputField.value = params.initialValue || "";
-		this._tabGroup.addMember(this._inputField);
 	}
     else {
         var oinput = document.getElementById(inputFieldId);
@@ -153,6 +151,7 @@ DwtInputField = function(params) {
 		oinput.parentNode.replaceChild(ninput, oinput);
 	}
 
+    this.setFocusElement(); // now that INPUT has been created
     this.setValidatorFunction(params.validatorCtxtObj, params.validator);
 	this._setMouseEventHdlrs(false);
 	this._setKeyPressEventHdlr(false);
@@ -245,11 +244,6 @@ function() {
 	DwtComposite.prototype.dispose.call(this);
 };
 
-DwtInputField.prototype.getTabGroupMember =
-function() {
-	return this._tabGroup;
-};
-
 DwtInputField.prototype.setHandler =
 function(eventType, hdlrFunc) {
 	if (!this._checkState()) return;
@@ -263,6 +257,7 @@ function(eventType, hdlrFunc) {
  * @param	{constant}	type		the input type
  */
 DwtInputField.prototype.setInputType = function(type) {
+
     if (type != this._type && this._rows == 1) {
         this._type = type;
         if (AjxEnv.isIE) {
@@ -274,7 +269,7 @@ DwtInputField.prototype.setInputType = function(type) {
             this._inputField.type = this._type != DwtInputField.PASSWORD ? "text" : "password";
         }
     }
-}
+};
 
 /**
  * Applies a regular expression to the contents of this input field, retaining
@@ -540,22 +535,6 @@ function(enabled) {
 };
 
 /**
- * Focuses on this field.
- */
-DwtInputField.prototype.focus = 
-function() {
-	if (this.getEnabled()) {
-		this.getInputElement().focus();
-        DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getTabGroupMember());
-	}
-};
-
-DwtInputField.prototype.blur = 
-function() {
-	this.getInputElement().blur();
-};
-
-/**
  * Sets the visibility flag.
  * 
  * @param	{boolean}	visible		if <code>true</code>, the field is visible
@@ -769,41 +748,41 @@ function(ev) {
 	return true;
 };
 
-DwtInputField._blurHdlr =
-function(ev) {
-	var obj = DwtControl.getTargetControl(ev);
+DwtInputField._blurHdlr = function(ev) {
 
-	if (obj.isDisposed()) {
-		return;
-	}
+    DBG.println(AjxDebug.FOCUS, "DwtInputField ONBLUR: " + this);
+    var obj = DwtControl.getTargetControl(ev);
+    if (obj) {
+        if (obj.isDisposed()) {
+            return;
+        }
+        obj._updateClassName();
+        if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
+            var val = obj._validateInput(obj.getValue());
+            if (val != null) {
+                obj.setValue(val);
+            }
+        }
+        if (!obj._hintIsVisible && obj._hint) {
+            obj._showHint();
+        }
+    }
 
-	obj._hasFocus = false;
-	obj._updateClassName();
-	if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
-		var val = obj._validateInput(obj.getValue());
-		if (val != null) {
-			obj.setValue(val);
-		}
-	}
-	if (!obj._hintIsVisible && obj._hint) {
-		obj._showHint();
-	}
-
-	obj.notifyListeners(DwtEvent.ONBLUR, ev)
+    DwtControl.__blurHdlr(ev, obj);
 };
 
-DwtInputField._focusHdlr =
-function(ev) {
-	var obj = DwtControl.getTargetControl(ev);
+DwtInputField._focusHdlr = function(ev) {
 
-	obj._hasFocus = true;
-	obj._updateClassName();
-	var kbMgr = DwtShell.getShell(window).getKeyboardMgr().inputGotFocus(obj);
-	if (obj._hintIsVisible) {
-		obj._hideHint('');
+    DBG.println(AjxDebug.FOCUS, "DwtInputField ONFOCUS: " + this);
+	var obj = DwtControl.getTargetControl(ev);
+	if (obj) {
+		obj._updateClassName();
+		if (obj._hintIsVisible) {
+			obj._hideHint('');
+		}
 	}
 
-	obj.notifyListeners(DwtEvent.ONFOCUS, ev)
+    DwtControl.__focusHdlr(ev, obj);
 };
 
 DwtInputField._keyDownHdlr =
@@ -998,8 +977,6 @@ function(params) {
 		ninput[eventType] = this._inputEventHandlers[eventType];
 	}
 
-	this._tabGroup.removeAllMembers();
-	this._tabGroup.addMember(ninput);
 	return ninput;
 };
 

@@ -20,12 +20,11 @@
  */
 
 /**
- * Creates an empty keyboard manager. Tab groups must be added for it to do
- * anything.
+ * Creates an empty keyboard manager. Intended for use as a singleton.
  * @constructor
  * @class
- * This class is responsible for managing keyboard events. That includes dispatching
- * keyboard events, as well as managing focus and tab groups. It is at the heart of the
+ * This class is responsible for managing focus and shortcuts via the keyboard. That includes dispatching
+ * keyboard events (shortcuts), as well as managing tab groups. It is at the heart of the
  * Dwt keyboard navigation framework.
  * <p>
  * {@link DwtKeyboardMgr} intercepts key strokes and translates
@@ -35,7 +34,7 @@
  * A {@link DwtShell} instantiates its own <i>DwtKeyboardMgr</i> at construction.
  * The keyboard manager may then be retrieved via the shell's <code>getKeyboardMgr()</code>
  * function. Once a handle to the shell's keyboard manager is retrieved, then the user is free
- * to add tab groups and register keymaps and handlers with the keyboard manager.
+ * to add tab groups, and to register keymaps and handlers with the keyboard manager.
  * </p><p>
  * Focus is managed among a stack of tab groups. The TAB button will move the focus within the
  * current tab group. When a non-TAB is received, we first check if the control can handle it.
@@ -52,7 +51,7 @@
  * <ul>
  * <li><i>getKeyMapName()</i> -- returns the name of the map that defines shortcuts for this handler</li>
  * <li><i>handleKeyAction()</i> -- performs the action associated with a shortcut</li>
- * <li><i>handleKeyEvent()</i>	-- override; handler solely responsible for handling event</li>
+ * <li><i>handleKeyEvent()</i>	-- optional override; handler solely responsible for handling event</li>
  * </ul>
  * </p>
  *
@@ -67,28 +66,35 @@
  * @private
  */
 DwtKeyboardMgr = function(shell) {
+
 	DwtKeyboardMgr.__shell = shell;
-	this.__tabGrpStack = [];
+
+    this.__kbEventStatus = DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
+    this.__keyTimeout = DwtKeyboardMgr.SHORTCUT_TIMEOUT;
+
+    // focus
+    this.__tabGrpStack = [];
+    this.__currTabGroup = null;
+    this.__tabGroupChangeListenerObj = this.__tabGrpChangeListener.bind(this);
+
+    // shortcuts
+    this.__shortcutsEnabled = false;
 	this.__defaultHandlerStack = [];
-	this.__tabGroupChangeListenerObj = new AjxListener(this, this.__tabGrpChangeListener);
-	this.__kbEventStatus = DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
-	this.__keyTimeout = 750;
-	this.__currTabGroup = null;
 	this.__currDefaultHandler = null;
-	this._evtMgr = new AjxEventMgr();
+    this.__killKeySeqTimedAction = new AjxTimedAction(this, this.__killKeySequenceAction);
+    this.__killKeySeqTimedActionId = -1;
+    this.__keySequence = [];
+    this._evtMgr = new AjxEventMgr();
 };
 
 DwtKeyboardMgr.prototype.isDwtKeyboardMgr = true;
 DwtKeyboardMgr.prototype.toString = function() { return "DwtKeyboardMgr"; };
 
-/**@private*/
-DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED	= 1;
-/**@private*/
-DwtKeyboardMgr.__KEYSEQ_HANDLED		= 2;
-/**@private*/
-DwtKeyboardMgr.__KEYSEQ_PENDING		= 3;
+DwtKeyboardMgr.SHORTCUT_TIMEOUT = 750;
 
-DwtKeyboardMgr.FOCUS_FIELD_ID = "kbff";
+DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED	= "NOT HANDLED";
+DwtKeyboardMgr.__KEYSEQ_HANDLED		= "HANDLED";
+DwtKeyboardMgr.__KEYSEQ_PENDING		= "PENDING";
 
 /**
  * Checks if the event may be a shortcut from within an input (text input or
@@ -102,11 +108,24 @@ DwtKeyboardMgr.FOCUS_FIELD_ID = "kbff";
  * @param {DwtKeyEvent}	ev	the key event
  * @return	{boolean}	<code>true</code> if the event may be a shortcut
  */
-DwtKeyboardMgr.isPossibleInputShortcut =
-function(ev) {
+
+// Enter and all four arrows can be used as shortcuts in an INPUT
+DwtKeyboardMgr.IS_INPUT_SHORTCUT_KEY = AjxUtil.arrayAsHash([
+    DwtKeyEvent.KEY_END_OF_TEXT,
+    DwtKeyEvent.KEY_RETURN,
+    DwtKeyEvent.KEY_ARROW_LEFT,
+    DwtKeyEvent.KEY_ARROW_UP,
+    DwtKeyEvent.KEY_ARROW_RIGHT,
+    DwtKeyEvent.KEY_ARROW_DOWN
+]);
+
+// Returns true if the key event has a keycode that could be used in an input (INPUT or TEXTAREA) as a shortcut. That
+// excludes printable characters.
+DwtKeyboardMgr.isPossibleInputShortcut = function(ev) {
+
 	var target = DwtUiEvent.getTarget(ev);
     return (!DwtKeyMap.IS_MODIFIER[ev.keyCode] && (ev.keyCode == 27 || DwtKeyMapMgr.hasModifier(ev)) ||
-			(target && target.nodeName.toUpperCase() == "INPUT" && (ev.keyCode == 13 || ev.keyCode == 3)));
+			(target && target.nodeName.toUpperCase() == "INPUT" && DwtKeyboardMgr.IS_INPUT_SHORTCUT_KEY[ev.keyCode]));
 };
 
 /**
@@ -116,10 +135,12 @@ function(ev) {
  * 
  * @see		#popTabGroup
  */
-DwtKeyboardMgr.prototype.pushTabGroup =
-function(tabGroup, preventFocus) {
-	DBG.println(AjxDebug.FOCUS, "PUSH tab group " + tabGroup.__name);
-	if (!this.__keyboardHandlingInited || !tabGroup) { return; }
+DwtKeyboardMgr.prototype.pushTabGroup = function(tabGroup, preventFocus) {
+
+	DBG.println(AjxDebug.FOCUS, "PUSH tab group " + tabGroup.getName());
+	if (!tabGroup) {
+        return;
+    }
 		
 	this.__tabGrpStack.push(tabGroup);
 	this.__currTabGroup = tabGroup;
@@ -147,19 +168,20 @@ function(tabGroup, preventFocus) {
  * 
  * @return {DwtTabGroup}	the popped tab group or <code>null</code> if there is one or less tab groups
  */
-DwtKeyboardMgr.prototype.popTabGroup =
-function(tabGroup) {
-	if (!this.__keyboardHandlingInited) { return; }
-	if (!tabGroup) return;
-	DBG.println(AjxDebug.FOCUS, "POP tab group " + tabGroup.__name);
+DwtKeyboardMgr.prototype.popTabGroup = function(tabGroup) {
+
+	if (!tabGroup) {
+        return null;
+    }
+	DBG.println(AjxDebug.FOCUS, "POP tab group " + tabGroup.getName());
 	
 	// we never want an empty stack
 	if (this.__tabGrpStack.length <= 1) {
 		return null;
 	}
 	
-	/* If we are popping a tab group that is not on the top of the stack then 
-	 * we need to find it and remove it. */
+	// If we are popping a tab group that is not on the top of the stack then
+	// we need to find it and remove it.
 	if (tabGroup && this.__tabGrpStack[this.__tabGrpStack.length - 1] != tabGroup) {
 		var a = this.__tabGrpStack;
 		var len = a.length;
@@ -208,39 +230,52 @@ function(tabGroup) {
  * @param {DwtTabGroup} tabGroup 	the tab group to use
  * @return {DwtTabGroup}	the old tab group
  */
-DwtKeyboardMgr.prototype.setTabGroup =
-function(tabGroup) {
-//	if (!this.__enabled || !this.__keyboardHandlingInited) { return; }
-	
+DwtKeyboardMgr.prototype.setTabGroup = function(tabGroup) {
+
 	var otg = this.popTabGroup();
 	this.pushTabGroup(tabGroup);
+
 	return otg;
 };
 
 /**
- * Gets current tab group
+ * Gets the current tab group
  *
  * @return {DwtTabGroup}	current tab group
  */
-DwtKeyboardMgr.prototype.getCurrentTabGroup =
-function() {
+DwtKeyboardMgr.prototype.getCurrentTabGroup = function() {
+
     return this.__currTabGroup;
 };
 
-DwtKeyboardMgr.prototype.pushDefaultHandler =
-function(handler) {
-	if (!this.__enabled || !this.__keyboardHandlingInited || !handler) { return; }
+/**
+ * Adds a default handler to the stack. A handler should define a 'handleKeyAction' method.
+ *
+ * @param {Object}  handler     default handler
+ */
+DwtKeyboardMgr.prototype.pushDefaultHandler = function(handler) {
+
+	if (!this.isEnabled() || !handler) {
+        return;
+    }
 	DBG.println(AjxDebug.FOCUS, "PUSH default handler: " + handler);
 		
 	this.__defaultHandlerStack.push(handler);
 	this.__currDefaultHandler = handler;
 };
 
-DwtKeyboardMgr.prototype.popDefaultHandler =
-function() {
+/**
+ * Removes a default handler from the stack.
+ *
+ * @return {Object}  handler     a default handler
+ */
+DwtKeyboardMgr.prototype.popDefaultHandler = function() {
+
 	DBG.println(AjxDebug.FOCUS, "POP default handler");
 	// we never want an empty stack
-	if (!this.__keyboardHandlingInited || (this.__defaultHandlerStack.length <= 1)) { return; }
+	if (this.__defaultHandlerStack.length <= 1) {
+        return null;
+    }
 
 	DBG.println(AjxDebug.FOCUS, "Default handler stack length: " + this.__defaultHandlerStack.length);
 	var handler = this.__defaultHandlerStack.pop();
@@ -255,18 +290,20 @@ function() {
  * 
  * @param {HTMLInputElement|DwtControl|string} focusObj		the object to which to set focus, or its ID
  */ 
-DwtKeyboardMgr.prototype.grabFocus =
-function(focusObj) {
-//	if (!this.__enabled) { return; }
-//	if (!this.__keyboardHandlingInited) {
-//		return;
-//	}
-	if (typeof focusObj == "string") {
+DwtKeyboardMgr.prototype.grabFocus = function(focusObj) {
+
+	if (typeof focusObj === "string") {
 		focusObj = document.getElementById(focusObj);
 	}
-	if (!focusObj) return;
+    else if (focusObj && focusObj.isDwtTabGroup) {
+        focusObj = focusObj.getFocusMember() || focusObj.getFirstMember();
+    }
 
-	/* We may not be using tab groups, so be prepared for that case */
+    if (!focusObj) {
+        return;
+    }
+
+	// Make sure tab group knows what's currently focused
 	if (this.__currTabGroup) {
 		this.__currTabGroup.setFocusMember(focusObj, false, true);
 	}
@@ -274,14 +311,19 @@ function(focusObj) {
 	this.__doGrabFocus(focusObj);
 };
 
-DwtKeyboardMgr.prototype.inputGotFocus =
-function(inputCtrl) {
+/**
+ * Tells the keyboard manager that the given control now has focus.
+ *
+ * @param {DwtControl}  focusObj    control that has focus
+ */
+DwtKeyboardMgr.prototype.updateFocus = function(focusObj) {
 
-	this.__focusObj = inputCtrl;
-	this.__inputElement = true;
-	this.__dwtCtrlHasFocus = false;
-	if (this.__currTabGroup) {
-		this.__currTabGroup.setFocusMember(inputCtrl.getTabGroupMember(), false, true);
+	this.__focusObj = focusObj;
+    var tgm = focusObj.getTabGroupMember && focusObj.getTabGroupMember();
+    DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS: " + focusObj + ", TGM: " + tgm);
+	if (this.__currTabGroup && tgm) {
+        // TODO: getTabGroupMember() can return a tab group - is that okay?
+		this.__currTabGroup.setFocusMember(tgm, false, true);
 	}
 };
 
@@ -290,28 +332,12 @@ function(inputCtrl) {
  *
  * @return {HTMLInputElement|DwtControl} focusObj		the object with focus
  */
-DwtKeyboardMgr.prototype.getFocusObj =
-function(focusObj) {
+DwtKeyboardMgr.prototype.getFocusObj = function(focusObj) {
+
 	return this.__focusObj;
 };
 
 /**
- * Checks if the specified component currently has keyboard focus.
- *
- * @param {DwtControl} control		the object for which to check focus
- * @return {boolean}	<code>true</code> if the control has keyboard focus; otherwise <code>false</code>
- */
-DwtKeyboardMgr.prototype.dwtControlHasFocus =
-function(control) {
-//	if (!this.__enabled) { return false; }
-//	if (!this.__keyboardHandlingInited) {
-//		return false;
-//	}
-		
-	return (this.__dwtCtrlHasFocus && this.__focusObj == control);
-};
-
-/** 
  * This method is used to register an application key handler. If registered, this
  * handler must support the following methods:
  * <ul>
@@ -330,10 +356,11 @@ function(control) {
  * 
  * @see DwtKeyEvent
  */
-DwtKeyboardMgr.prototype.registerDefaultKeyActionHandler =
-function(hdlr) {
-	if (!this.__enabled) { return; }
-	this.__defaultKeyActionHdlr = hdlr;
+DwtKeyboardMgr.prototype.registerDefaultKeyActionHandler = function(hdlr) {
+
+	if (this.isEnabled()) {
+        this.__defaultKeyActionHdlr = hdlr;
+    }
 };
 
 /**
@@ -344,10 +371,11 @@ function(hdlr) {
  * @param {DwtKeyMap} keyMap		the key map to register
  * 
  */
-DwtKeyboardMgr.prototype.registerKeyMap =
-function(keyMap) {
-	if (!this.__checkStatus()) { return; }
-	this.__keyMapMgr = new DwtKeyMapMgr(keyMap);
+DwtKeyboardMgr.prototype.registerKeyMap = function(keyMap) {
+
+	if (this.isEnabled()) {
+	    this.__keyMapMgr = new DwtKeyMapMgr(keyMap);
+    }
 };
 
 /**
@@ -355,8 +383,7 @@ function(keyMap) {
  * 
  * @param 	{number}	timeout		the timeout (in milliseconds)
  */
-DwtKeyboardMgr.prototype.setKeyTimeout =
-function(timeout) {
+DwtKeyboardMgr.prototype.setKeyTimeout = function(timeout) {
 	this.__keyTimeout = timeout;
 };
 
@@ -364,8 +391,8 @@ function(timeout) {
  * Clears the key sequence. The next key event will begin a new one.
  * 
  */
-DwtKeyboardMgr.prototype.clearKeySeq =
-function() {
+DwtKeyboardMgr.prototype.clearKeySeq = function() {
+
 	this.__killKeySeqTimedActionId = -1;
 	this.__keySequence = [];
 };
@@ -375,12 +402,11 @@ function() {
  * 
  * @param 	{boolean}	enabled		if <code>true</code>, enable keyboard nav
  */
-DwtKeyboardMgr.prototype.enable =
-function(enabled) {
-	DBG.println(AjxDebug.DBG2, "keyboard nav enabled: " + enabled);
-	this.__enabled = enabled;
+DwtKeyboardMgr.prototype.enable = function(enabled) {
+
+	DBG.println(AjxDebug.DBG2, "keyboard shortcuts enabled: " + enabled);
+	this.__shortcutsEnabled = enabled;
 	if (enabled){
-		this.__checkStatus();	// make sure we're initialized
 		Dwt.setHandler(document, DwtEvent.ONKEYDOWN, DwtKeyboardMgr.__keyDownHdlr);
 		Dwt.setHandler(document, DwtEvent.ONKEYUP, DwtKeyboardMgr.__keyUpHdlr);
 		Dwt.setHandler(document, DwtEvent.ONKEYPRESS, DwtKeyboardMgr.__keyPressHdlr);
@@ -391,9 +417,8 @@ function(enabled) {
 	}
 };
 
-DwtKeyboardMgr.prototype.isEnabled =
-function() {
-	return this.__enabled;
+DwtKeyboardMgr.prototype.isEnabled = function() {
+	return this.__shortcutsEnabled;
 };
 
 /**
@@ -402,8 +427,7 @@ function() {
  * @param {constant}	ev			key event type
  * @param {AjxListener}	listener	listener to notify
  */
-DwtKeyboardMgr.prototype.addListener =
-function(ev, listener) {
+DwtKeyboardMgr.prototype.addListener = function(ev, listener) {
 	this._evtMgr.addListener(ev, listener);
 };
 
@@ -413,177 +437,33 @@ function(ev, listener) {
  * @param {constant}	ev			key event type
  * @param {AjxListener}	listener	listener to remove
  */
-DwtKeyboardMgr.prototype.removeListener =
-function(ev, listener) {
+DwtKeyboardMgr.prototype.removeListener = function(ev, listener) {
 	this._evtMgr.removeListener(ev, listener);
 };
 
-/**
- * @private
- */
-DwtKeyboardMgr.prototype.__initKeyboardHandling =
-function() {
-	DBG.println(AjxDebug.DBG3, "Initializing Keyboard Handling");
+DwtKeyboardMgr.prototype.__doGrabFocus = function(focusObj) {
 
-	/* Create our keyboard focus field. This is a dummy input field
-	 * that will take text input for keyboard shortcuts.
-	 *
-	 * This field is actively hostile to accessibility, as
-	 * screenreaders heavily rely on browser focus. Eventually, the
-	 * individual controls will achieve focus instead, and any
-	 * remaining instances where this field obtains focus will be
-	 * bugs.
-	 */
-	var kbff = this._kbFocusField = document.createElement("textarea");
-	kbff.id = DwtKeyboardMgr.FOCUS_FIELD_ID;
-	kbff.title = AjxMsg.kbffTitle;
-	Dwt.setPosition(kbff, Dwt.ABSOLUTE_STYLE);
-	Dwt.setLocation(kbff, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE);
-	kbff.onblur = DwtKeyboardMgr.__onBlurHdlr;
-	kbff.onfocus = DwtKeyboardMgr.__onFocusHdlr;
-	kbff.setAttribute('aria-hidden', true);
-	document.body.appendChild(kbff);
-	
-	this.__killKeySeqTimedAction = new AjxTimedAction(this, this.__killKeySequenceAction);
-	this.__killKeySeqTimedActionId = -1;
-	this.__keySequence = [];
+	if (!focusObj) {
+        return;
+    }
 
-	this.__keyboardHandlingInited = true;
+    var curFocusObj = this.getFocusObj();
+    if (curFocusObj && curFocusObj.blur) {
+        DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr DOGRABFOCUS cur focus obj: " + [curFocusObj, curFocusObj._htmlElId || curFocusObj.id].join(' / '));
+        curFocusObj.blur();
+    }
+
+    DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr DOGRABFOCUS new focus obj: " + [focusObj, focusObj._htmlElId || focusObj.id].join(' / '));
+    if (focusObj.focus) {
+        focusObj.focus();
+    }
 };
 
 /**
  * @private
  */
-DwtKeyboardMgr.prototype.__checkStatus =
-function() {
-	if (!this.__enabled) {
-		return false;
-	}
-	if (!this.__keyboardHandlingInited) {
-		this.__initKeyboardHandling();
-	}
-	return true;
-};
+DwtKeyboardMgr.__keyUpHdlr = function(ev) {
 
-/**
- * Sets keyboard focus to the given object.
- *
- * @private
- */
-DwtKeyboardMgr.prototype.__doGrabFocus =
-function(focusObj) {
-
-	if (!focusObj) { return; }
-
-	var inputElement = focusObj instanceof DwtControl ?
-		focusObj.getInputElement() : focusObj;
-
-	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr._doGrabFocus: " + focusObj);
-	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr._doGrabFocus: " + focusObj);
-	if (inputElement) {
-		DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr._doGrabFocus: input or non-control");
-		// dealing with an input field
-		if (this.__focusObj instanceof DwtControl && !this.__inputElement) {
-			// ctrl -> input
-			this.__oldFocusObj = this.__focusObj;
-		}
-		this.__focusObj = focusObj;
-		this.__dwtCtrlHasFocus = false;
-		//if (this.__inputElement && this.__inputElement.blur) {
-		//	// Blur the old input element, in case the new focus does not have a html focusable element
-		//	this.__inputElement.blur();
-		//}
-		this.__inputElement = inputElement;
-		// IE throws JS error if you try to focus a disabled or invisible input
-		if ((!AjxEnv.isIE && inputElement.focus) ||
-			(AjxEnv.isIE && inputElement.focus && !inputElement.disabled &&
-			 Dwt.getVisible(inputElement))) {
-			inputElement.focus();
-		}
-	} else {
-		DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr._doGrabFocus: control");
-		/* If the current focus of obj and the one grabbing focus are both DwtControls
-		 * then we need to simulate a blur on the control losing focus */
-		if (this.__dwtCtrlHasFocus && (this.__focusObj instanceof DwtControl)) {
-			// ctrl -> ctrl: blur old ctrl
-			DwtKeyboardMgr.__onBlurHdlr();
-			this.__dwtCtrlHasFocus = true;	// reset
-		}
-			
-		this.__focusObj = focusObj;
-		this.__inputElement = false;
-		
-		/* If a DwtControl already has focus, then we need to manually call
-		 * DwtKeyboardMgr.__onFocusHdlr to simulate focus since calling the focus()
-		 * method on the input field does nothing. */
-		if (this.__dwtCtrlHasFocus) {
-			// ctrl -> ctrl: tell newly focused ctrl it got focus
-			DwtKeyboardMgr.__onFocusHdlr();
-		} else {
-			DwtKeyboardMgr.__onFocusHdlr();
-			// input -> ctrl: set browser focus to keyboard input field
-			if (this.__enabled) {
-				this.__warnFocus();
-				this._kbFocusField.focus();
-			}
-		}
-	}
-};
-
-/**
- * Focus handler for keyboard focus input field.
- * 
- * @private
- */
-DwtKeyboardMgr.__onFocusHdlr =
-function(ev) {
-	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr.__onFocusHdlr");
-
-	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
-	kbMgr.__dwtCtrlHasFocus = true;
-	var focusObj = (ev && DwtControl.findControl(ev.target)) || kbMgr.__focusObj;
-	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr: ONFOCUS - " + focusObj);
-	if (focusObj && focusObj.__doFocus) {
-		focusObj.__doFocus();
-	}
-};
-
-/**
- * Blur handler for keyboard focus input field.
- * 
- * @private
- */
-DwtKeyboardMgr.__onBlurHdlr =
-function(ev) {
-	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr.__onBlurHdlr");
-
-	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
-
-	// Got to play the trick with HTML elements which get focus before blur is
-	// called on the old focus object. (see _grabFocus)
-	var focusObj = kbMgr.__oldFocusObj || kbMgr.__focusObj;
-	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr: ONBLUR - " + focusObj);
-	if (focusObj && focusObj.__doBlur) {
-		focusObj.__doBlur();
-	}
-		
-	/* FIXME The code below that is commented out fixes a bug that surfaces if you tab in
-	 * the address bar or search field in FF. The bug is that depending on where
-	 * you had focus, you could get a visual artifact (temporary). However, the code
-	 * broke the fact that when focus leaves the browser window, then returns, then
-	 * if a DwtControl had focus it will not get the appropriate highlight.
-	 */	
-//	kbMgr.__oldFocusObj = kbMgr.__focusObj = null;
-	kbMgr.__oldFocusObj = null;
-	kbMgr.__dwtCtrlHasFocus = false;	
-};
-
-
-/**
- * @private
- */
-DwtKeyboardMgr.__keyUpHdlr =
-function(ev) {
 	ev = DwtUiEvent.getEvent(ev);
 	DBG.println(AjxDebug.KEYBOARD, "keyup: " + ev.keyCode);
 
@@ -593,9 +473,10 @@ function(ev) {
 	}
 
 	// clear saved Gecko key
-	if (AjxEnv.isMac && AjxEnv.isGeckoBased && ev.keyCode == 0) {
+	if (AjxEnv.isMac && AjxEnv.isGeckoBased && ev.keyCode === 0) {
 		return DwtKeyboardMgr.__keyDownHdlr(ev);
-	} else {
+	}
+    else {
 		return DwtKeyboardMgr.__handleKeyEvent(ev);
 	}
 };
@@ -603,8 +484,8 @@ function(ev) {
 /**
  * @private
  */
-DwtKeyboardMgr.__keyPressHdlr =
-function(ev) {
+DwtKeyboardMgr.__keyPressHdlr = function(ev) {
+
 	ev = DwtUiEvent.getEvent(ev);
 	DBG.println(AjxDebug.KEYBOARD, "keypress: " + (ev.keyCode || ev.charCode));
 
@@ -624,7 +505,9 @@ function(ev) {
 DwtKeyboardMgr.__handleKeyEvent =
 function(ev) {
 
-	if (DwtKeyboardMgr.__shell._blockInput) { return false; }
+	if (DwtKeyboardMgr.__shell._blockInput) {
+        return false;
+    }
 
 	ev = DwtUiEvent.getEvent(ev, this);
 	DBG.println(AjxDebug.KEYBOARD, [ev.type, ev.keyCode, ev.charCode, ev.which].join(" / "));
@@ -637,117 +520,10 @@ function(ev) {
 	}
 };
 
-/*
- * There are a number of focus cases that we must handle because of the way
- * tabbing works in the browser, and because of user actions:
- * 
- * Case 1
- * ------
- * User tabs in from address bar. w/FF we get no indication of this. Focus will
- * go to the next input field as seen by the browser
- * 
- * Solution: Make our hidden input field the first tab item. On focus get the last
- * element that had focus from the tab group and set focus to that
- * 
- * Case 2
- * ------
- * User clicks in an input that is part of the tab group hierarchy. 
- * 
- * Solution: When the user types into such a field we will detect the key event and
- * set the tab groups current focus member appropriately
- * 
- * Case 3
- * ------
- * User clicks in an input that is not part of the tab group hierarchy
- * 
- * Solution: Not much we can do here except ignore events. This is really not a good
- * thing as all visible elements should be part of the tabbing hierarchy
- * 
- * Case 4
- * ------
- * User clicks in an external input field (e.g. the browser address bar)
- * 
- * Solution: we actually don't have to do anything here as case 1 should adress
- * the situation when the user clicks/tabs back into elements we control
- */
-
-/**
- * This method does a focus check. If a DwtControl does not have focus, then we
- * are dealing with an input element. If this element is not the current focus object
- * then try and set it to the current focus object (case 2). If the object is not in the
- * tab group hierarchy return false indicating that we should leave all events
- * related to it alone (case 3).
- * 
- * @private
- */
-DwtKeyboardMgr.__syncFocus =
-function(kbMgr, obj) {
-	DBG.println(AjxDebug.FOCUS, "sync focus ----- obj: " + obj + ", __focusObj: " + kbMgr.__focusObj + ", __dwtCtrlHasFocus: "
-			+ kbMgr.__dwtCtrlHasFocus + ", __inputElement: " + kbMgr.__inputElement + ", __oldFocusObj: " + kbMgr.__oldFocusObj);
-	/* (BUG 8588) If obj is not the hidden input field (it's some other input field), and if
-	 * a control has focus, then we have a focus mismatch and we need to blur the
-	 * control that thinks it has focus. That can happen due to the way focus
-	 * can be set in input fields. */ 
-	if ((obj != kbMgr._kbFocusField) && kbMgr.__dwtCtrlHasFocus) {
-		DBG.println(AjxDebug.FOCUS, "FOCUS MISMATCH! focus obj: " + kbMgr.__focusObj + ", obj: " + obj);
-//		DwtKeyboardMgr.__onBlurHdlr();
-		kbMgr.__warnFocus();
-		kbMgr._kbFocusField.focus();
-	}
-	
-	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr.__syncFocus: focus obj: " + kbMgr.__focusObj + " - obj: " + obj);
-	if (!kbMgr.__dwtCtrlHasFocus) {
-		// DwtInputField
-		if ((obj != kbMgr.__focusObj) && !kbMgr.__inputElement) {
-			DBG.println(AjxDebug.FOCUS, "Focus out of sync, resetting");
-			if (kbMgr.__currTabGroup && kbMgr.__currTabGroup.setFocusMember(obj)) {
-				kbMgr.__focusObj = obj;
-				kbMgr.__oldFocusObj = null;
-			} else {
-				return false;
-			}
-		}
-	}
-	return true;
-};
-
-DwtKeyboardMgr.prototype.__warnFocus = function() {
-	var id, desc;
-
-	if (!this.__focusObj) {
-		DBG.println(AjxDebug.FOCUS, '<b>KBFF focus object is null</b>');
-		return;
-	}
-
-	if (this.__focusObj.isDwtControl) {
-		id = this.__focusObj.getHTMLElId();
-		desc = this.__focusObj.toString()
-	} else {
-		id = this.__focusObj.id;
-		desc = String(this.__focusObj);
-	}
-
-	var msg =
-		AjxMessageFormat.format('KBFF focused for {0} ({1})', [desc, id]);
-
-	DBG.println(AjxDebug.FOCUS, '<b>' + msg + '</b>');
-
-	if (window.console && console.log) {
-		console.log(msg);
-	}
-};
-
-DwtKeyboardMgr._clearFocusObj =
-function() {
-	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
-	kbMgr.__focusObj = null;
-};
-
 /**
  * @private
  */
-DwtKeyboardMgr.__keyDownHdlr =
-function(ev) {
+DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 
 	try {
 
@@ -756,12 +532,16 @@ function(ev) {
 	ev.focusObj = null;
 	if (kbMgr._evtMgr.notifyListeners(DwtEvent.ONKEYDOWN, ev) === false) {
 		return false;
-	};
+	}
 
-	if (DwtKeyboardMgr.__shell._blockInput) { return false; }
+	if (DwtKeyboardMgr.__shell._blockInput) {
+        return false;
+    }
 	DBG.println(AjxDebug.KEYBOARD, [ev.type, ev.keyCode, ev.charCode, ev.which].join(" / "));
-	if (kbMgr && !kbMgr.isEnabled()) { return true; }  // Allow key events to propagate when keyboard manager is disabled (to avoid taking over browser shortcuts). Bugzilla #45469.
-	if (!kbMgr || !kbMgr.__checkStatus()) { return false; }
+
+	if (!kbMgr || !kbMgr.isEnabled()) {
+        return false;
+    }
 	var kev = DwtShell.keyEvent;
 	kev.setFromDhtmlEvent(ev);
 	var keyCode = DwtKeyEvent.getCharCode(ev);
@@ -769,14 +549,9 @@ function(ev) {
 
 	// Popdown any tooltip
 	DwtKeyboardMgr.__shell.getToolTip().popdown();
-	
-	// Sync up focus if needed
-	var focusInTGMember = DwtKeyboardMgr.__syncFocus(kbMgr, kev.target);
-	
-	if (!focusInTGMember) {
-		DBG.println(AjxDebug.KEYBOARD, "Object is not in tab hierarchy");
-	}
-			
+
+    /********* FOCUS MANAGEMENT *********/
+
 	/* The first thing we care about is the tab key since we want to manage
 	 * focus based on the tab groups. 
 	 * 
@@ -791,12 +566,12 @@ function(ev) {
 	 * If the tab happens in an object not under the tab group hierarchy, then set
 	 * focus to the current focus object in the tab hierarchy i.e. grab back control
 	 */
-	 if (keyCode == DwtKeyMapMgr.TAB_KEYCODE) {
+	 if (keyCode == DwtKeyEvent.KEY_TAB) {
 	 	if (kbMgr.__currTabGroup && !DwtKeyMapMgr.hasModifier(kev)) {
 			DBG.println(AjxDebug.FOCUS, "Tab");
 			// If the tab hit is in an element or if the current tab group has
 			// a focus member
-			if (focusInTGMember || kbMgr.__currTabGroup.getFocusMember()) {
+			if (kbMgr.__currTabGroup.getFocusMember()) {
 				if (!kev.shiftKey) {
 				 	kbMgr.__currTabGroup.dump(AjxDebug.FOCUS);
 				 	kbMgr.__currTabGroup.getNextFocusMember(true);
@@ -813,7 +588,7 @@ function(ev) {
 	 		// No tab groups registered, or Alt or Ctrl was down. Let the browser handle it.
 		 	return kbMgr.__processKeyEvent(ev, kev, true, DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
 	 	}
-	 } else if (kbMgr.__currTabGroup && !focusInTGMember && AjxEnv.isGecko && kev.target instanceof HTMLHtmlElement) {
+	 } else if (kbMgr.__currTabGroup && AjxEnv.isGecko && kev.target instanceof HTMLHtmlElement) {
 	 	/* With FF we focus get set to the <html> element when tabbing in
 	 	 * from the address or search fields. What we want to do is capture
 	 	 * this here and reset the focus to the first element in the tabgroup
@@ -823,14 +598,18 @@ function(ev) {
 		kbMgr.__currTabGroup.resetFocusMember(true);
 	 }
 	 
-	// If the focus object is a DwtControl, then clear the keyboard focus field
-	if (kbMgr.__dwtCtrlHasFocus) {
-		kbMgr._kbFocusField.value = "";
-	}
-	 
+    // Allow key events to propagate when keyboard manager is disabled (to avoid taking over browser shortcuts). Bugzilla #45469.
+    if (kbMgr && !kbMgr.isEnabled()) {
+        return true;
+    }
+
+
+    /********* SHORTCUTS *********/
+
+
 	// Filter out modifier keys. If we're in an input field, filter out legitimate input.
 	// (A shortcut from an input field must use a modifier key.)
-	if (DwtKeyMap.IS_MODIFIER[keyCode] || (!kbMgr.__dwtCtrlHasFocus && (kbMgr.__killKeySeqTimedActionId == -1) &&
+	if (DwtKeyMap.IS_MODIFIER[keyCode] || (kbMgr.__killKeySeqTimedActionId === -1 &&
 		kev.target && DwtKeyMapMgr.isInputElement(kev.target) && !kev.target["data-hidden"] && !DwtKeyboardMgr.isPossibleInputShortcut(kev))) {
 
 	 	return kbMgr.__processKeyEvent(ev, kev, true, DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
@@ -856,8 +635,12 @@ function(ev) {
 
 	// First see if the control that currently has focus can handle the key event
 	var obj = ev.focusObj || kbMgr.__focusObj;
+	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr::__keyDownHdlr - ev.focusObj: " + ev.focusObj + " / kbMgr.__focusObj: " + kbMgr.__focusObj);
 	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr::__keyDownHdlr - focus object: " + obj);
-	if (obj && (obj.handleKeyAction) && (kbMgr.__dwtCtrlHasFocus || kbMgr.__inputElement || (obj.hasFocus && obj.hasFocus()))) {
+//    var tgm = obj && obj.getTabGroupMember && obj.getTabGroupMember();
+//    var hasFocus = (obj && obj.hasFocus && obj.hasFocus()) || (tgm && tgm.hasFocus && tgm.hasFocus());
+    var hasFocus = obj && obj.hasFocus && obj.hasFocus();
+	if (hasFocus && obj.handleKeyAction) {
 		DBG.println(AjxDebug.KEYBOARD, obj + " has focus: " + obj.hasFocus());
 		handled = kbMgr.__dispatchKeyEvent(obj, kev);
 		while ((handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && obj.parent && obj.parent.getKeyMapName) {
@@ -898,20 +681,21 @@ function(ev) {
  * 
  * @private
  */
-DwtKeyboardMgr.prototype.__dispatchKeyEvent = 
-function(hdlr, ev, forceActionCode) {
+DwtKeyboardMgr.prototype.__dispatchKeyEvent = function(hdlr, ev, forceActionCode) {
 
 	if (hdlr && hdlr.handleKeyEvent) {
 		var handled = hdlr.handleKeyEvent(ev);
 		return handled ? DwtKeyboardMgr.__KEYSEQ_HANDLED : DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
 	}
+
 	var mapName = (hdlr && hdlr.getKeyMapName) ? hdlr.getKeyMapName() : null;
 	if (!mapName) {
 		return DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
 	}
+
 	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr.__dispatchKeyEvent: handler " + hdlr.toString() + " handling " + this.__keySequence + " for map: " + mapName);
 	var actionCode = this.__keyMapMgr.getActionCode(this.__keySequence, mapName, forceActionCode);
-	if (actionCode == DwtKeyMapMgr.NOT_A_TERMINAL) {
+	if (actionCode === DwtKeyMapMgr.NOT_A_TERMINAL) {
 		DBG.println(AjxDebug.KEYBOARD, "scheduling action to kill key sequence");
 		/* setup a timed action to redispatch/kill the key sequence in the event
 		 * the user does not press another key in the allotted time */
@@ -920,7 +704,8 @@ function(hdlr, ev, forceActionCode) {
 		this.__ev = ev;
 		this.__killKeySeqTimedActionId = AjxTimedAction.scheduleAction(this.__killKeySeqTimedAction, this.__keyTimeout);
 		return DwtKeyboardMgr.__KEYSEQ_PENDING;	
-	} else if (actionCode != null) {
+	}
+    else if (actionCode != null) {
 		/* It is possible that the component may not handle a valid action
 		 * particulary actions defined in the default map */
 		DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr.__dispatchKeyEvent: handling action: " + actionCode);
@@ -929,7 +714,8 @@ function(hdlr, ev, forceActionCode) {
 		}
 		var result = hdlr.handleKeyAction(actionCode, ev);
 		return result ? DwtKeyboardMgr.__KEYSEQ_HANDLED : DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
-	} else {	
+	}
+    else {
 		DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr.__dispatchKeyEvent: no action code for " + this.__keySequence);
 		return DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED;
 	}
@@ -941,8 +727,8 @@ function(hdlr, ev, forceActionCode) {
  * 
  * @private
  */
-DwtKeyboardMgr.prototype.__killKeySequenceAction =
-function() {
+DwtKeyboardMgr.prototype.__killKeySequenceAction = function() {
+
 	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr.__killKeySequenceAction: " + this.__mapName);
 	this.__dispatchKeyEvent(this.__hdlr, this.__ev, true);
 	this.clearKeySeq();
@@ -951,16 +737,15 @@ function() {
 /**
  * @private
  */
-DwtKeyboardMgr.prototype.__tabGrpChangeListener =
-function(ev) {
+DwtKeyboardMgr.prototype.__tabGrpChangeListener = function(ev) {
 	this.__doGrabFocus(ev.newFocusMember);
 };
 
 /**
  * @private
  */
-DwtKeyboardMgr.prototype.__processKeyEvent =
-function(ev, kev, propagate, status) {
+DwtKeyboardMgr.prototype.__processKeyEvent = function(ev, kev, propagate, status) {
+
 	if (status) {
 		this.__kbEventStatus = status;
 	}
