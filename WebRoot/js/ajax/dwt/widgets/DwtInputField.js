@@ -230,7 +230,7 @@ DwtInputField.PASSWORD	= 5;
  */
 DwtInputField.DATE 		= 6;
 
-DwtInputField._ERROR_ICON_HTML = AjxImg.getImageHtml("ClearSearch");
+DwtInputField._ERROR_ICON_HTML = AjxImg.getImageHtml("Critical");
 DwtInputField._NOERROR_ICON_HTML = AjxImg.getImageHtml("Blank_9");
 
 //
@@ -498,7 +498,8 @@ DwtInputField.prototype.getRequired =
 function() {
 	var val = this.getInputElement().getAttribute('aria-required');
 
-	return Boolean(val);
+	//the attribute is always a String, and returns "true" or "false"
+	return val && val.toLowerCase() === "true";
 };
 
 /**
@@ -508,8 +509,8 @@ function() {
  */
 DwtInputField.prototype.setRequired =
 function(required) {
-	this.getInputElement().setAttribute('aria-required', Boolean(required));
-	this.validate();
+	//must set String as setAttribute only sets Strings... (no point in trying to set a boolean)
+	this.getInputElement().setAttribute('aria-required', required ? "true" : "false");
 };
 
 /**
