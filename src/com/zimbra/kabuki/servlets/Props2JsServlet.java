@@ -49,8 +49,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.Props2Js;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * This class looks for the resource bundle for the requested file (e.g.
@@ -171,7 +169,7 @@ public class Props2JsServlet extends HttpServlet {
                 gzos.close();
                 buffer = bos.toByteArray();
             }
-            if (!ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraMailboxResourceBundleMinimizeResources, false)) {
+            if (!LC.zimbra_minimize_resources.booleanValue()) {
                 localeBuffers.put(uri, buffer);
             }
         }
