@@ -2931,7 +2931,7 @@ DwtControl.prototype.__doFocus = function(ev) {
 
 	this._hasFocus = true;
 
-    var kbMgr = appCtxt.getKeyboardMgr();
+	var kbMgr = this.shell.getKeyboardMgr();
     if (kbMgr) {
         kbMgr.updateFocus(this);
     }
@@ -2946,7 +2946,7 @@ DwtControl.prototype.__doFocus = function(ev) {
 		this.notifyListeners(DwtEvent.ONFOCUS, ev);
 	}
 	this._focus();
-    DBG.println(AjxDebug.FOCUS, "DwtControl DOFOCUS: " + [this, this._htmlElId].join(' / ') + ' [' + document.activeElement + ']' + ' [' + appCtxt.getKeyboardMgr().__focusObj + ' / ' + appCtxt.getRootTabGroup().getFocusMember() + ']');
+    DBG.println(AjxDebug.FOCUS, "DwtControl DOFOCUS: " + [this, this._htmlElId].join(' / ') + ' [' + document.activeElement + ']' + ' [' + kbMgr.__focusObj + ' / ' + (this.getTabGroupMember().getFocusMember && this.getTabGroupMember().getFocusMember()) + ']');
 
     return true;
 };
