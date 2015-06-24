@@ -533,6 +533,19 @@ AjxVector.prototype.map = function(f, obj) {
 };
 
 /**
+ * Returns an AjxVector with all the members of the given array for which the
+ * filtering function returns true.
+ *
+ * @param {Function}    func        filtering function
+ * @param {Object}      context     scope for filtering function
+ *
+ * @returns {Array} array of members for which the filtering function returns true
+ */
+AjxVector.prototype.filter = function(func, context) {
+	return AjxVector.fromArray(AjxUtil.filter(this._array, func, context));
+};
+
+/**
  * Joins the vector.
  * 
  * @param	{string}	sep		the string separator
