@@ -85,6 +85,10 @@ DwtKeyboardMgr = function(shell) {
     this.__killKeySeqTimedActionId = -1;
     this.__keySequence = [];
     this._evtMgr = new AjxEventMgr();
+
+    Dwt.setHandler(document, DwtEvent.ONKEYDOWN, DwtKeyboardMgr.__keyDownHdlr);
+    Dwt.setHandler(document, DwtEvent.ONKEYUP, DwtKeyboardMgr.__keyUpHdlr);
+    Dwt.setHandler(document, DwtEvent.ONKEYPRESS, DwtKeyboardMgr.__keyPressHdlr);
 };
 
 DwtKeyboardMgr.prototype.isDwtKeyboardMgr = true;
@@ -398,7 +402,7 @@ DwtKeyboardMgr.prototype.clearKeySeq = function() {
 };
 
 /**
- * Enables/disables keyboard nav.
+ * Enables/disables keyboard nav (shortcuts).
  * 
  * @param 	{boolean}	enabled		if <code>true</code>, enable keyboard nav
  */
@@ -406,15 +410,6 @@ DwtKeyboardMgr.prototype.enable = function(enabled) {
 
 	DBG.println(AjxDebug.DBG2, "keyboard shortcuts enabled: " + enabled);
 	this.__shortcutsEnabled = enabled;
-	if (enabled){
-		Dwt.setHandler(document, DwtEvent.ONKEYDOWN, DwtKeyboardMgr.__keyDownHdlr);
-		Dwt.setHandler(document, DwtEvent.ONKEYUP, DwtKeyboardMgr.__keyUpHdlr);
-		Dwt.setHandler(document, DwtEvent.ONKEYPRESS, DwtKeyboardMgr.__keyPressHdlr);
-	} else {
-		Dwt.clearHandler(document, DwtEvent.ONKEYDOWN);
-		Dwt.clearHandler(document, DwtEvent.ONKEYUP);
-		Dwt.clearHandler(document, DwtEvent.ONKEYPRESS);
-	}
 };
 
 DwtKeyboardMgr.prototype.isEnabled = function() {
@@ -529,6 +524,9 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 
 	ev = DwtUiEvent.getEvent(ev, this);
 	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
+    if (!kbMgr) {
+        return false;
+    }
 	ev.focusObj = null;
 	if (kbMgr._evtMgr.notifyListeners(DwtEvent.ONKEYDOWN, ev) === false) {
 		return false;
@@ -539,9 +537,6 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
     }
 	DBG.println(AjxDebug.KEYBOARD, [ev.type, ev.keyCode, ev.charCode, ev.which].join(" / "));
 
-	if (!kbMgr || !kbMgr.isEnabled()) {
-        return false;
-    }
 	var kev = DwtShell.keyEvent;
 	kev.setFromDhtmlEvent(ev);
 	var keyCode = DwtKeyEvent.getCharCode(ev);
@@ -606,6 +601,9 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 
     /********* SHORTCUTS *********/
 
+    if (!kbMgr.isEnabled()) {
+        return false;
+    }
 
 	// Filter out modifier keys. If we're in an input field, filter out legitimate input.
 	// (A shortcut from an input field must use a modifier key.)
