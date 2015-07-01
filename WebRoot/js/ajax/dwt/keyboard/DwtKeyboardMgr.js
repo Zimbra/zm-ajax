@@ -128,8 +128,8 @@ DwtKeyboardMgr.IS_INPUT_SHORTCUT_KEY = AjxUtil.arrayAsHash([
 DwtKeyboardMgr.isPossibleInputShortcut = function(ev) {
 
 	var target = DwtUiEvent.getTarget(ev);
-    return (!DwtKeyMap.IS_MODIFIER[ev.keyCode] && (ev.keyCode == 27 || DwtKeyMapMgr.hasModifier(ev)) ||
-			(target && target.nodeName.toUpperCase() == "INPUT" && DwtKeyboardMgr.IS_INPUT_SHORTCUT_KEY[ev.keyCode]));
+    return !DwtKeyMap.IS_MODIFIER[ev.keyCode] && (ev.keyCode === DwtKeyEvent.KEY_ESCAPE || DwtKeyMapMgr.hasModifier(ev) ||
+			(target && target.nodeName.toLowerCase() == "input" && DwtKeyboardMgr.IS_INPUT_SHORTCUT_KEY[ev.keyCode]));
 };
 
 /**
