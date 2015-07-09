@@ -125,12 +125,13 @@ DwtIdleTimer._initEvents =
 function() {
 	// execute only once per session
 	if (!DwtIdleTimer._initialized) {
-		if (!AjxEnv.isIE) {
+		if (window.addEventListener) {
 			window.addEventListener("keydown", DwtIdleTimer.resetIdle, true);
 			window.addEventListener("mousemove", DwtIdleTimer.resetIdle, true);
 			window.addEventListener("mousedown", DwtIdleTimer.resetIdle, true);
 			window.addEventListener("focus", DwtIdleTimer.resetIdle, true);
-		} else {
+		}
+        else if (window.attachEvent) {
 			document.body.attachEvent("onkeydown", DwtIdleTimer.resetIdle);
 			document.body.attachEvent("onkeyup", DwtIdleTimer.resetIdle);
 			document.body.attachEvent("onmousedown", DwtIdleTimer.resetIdle);

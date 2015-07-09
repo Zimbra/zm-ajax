@@ -639,7 +639,7 @@ function() {
 	// window, to attach the onunload handler. In general reattach all handlers
 	// for IE
 	var unloadHandler = AjxCallback.simpleClosure(this._unloadHandler, this);
-	if (AjxEnv.isIE) {
+	if (this._debugWindow.attachEvent) {
 		this._unloadHandler = unloadHandler;
 		this._debugWindow.attachEvent('onunload', unloadHandler);
 	}
@@ -973,7 +973,7 @@ function() {
 	if (!this._debugWindow) { return; } // is there anything to do?
 
 	// detach event handlers
-	if (AjxEnv.isIE) {
+	if (this._debugWindow.detachEvent) {
 		this._debugWindow.detachEvent('onunload', this._unloadHandler);
 	} else {
 		this._debugWindow.onunload = null;

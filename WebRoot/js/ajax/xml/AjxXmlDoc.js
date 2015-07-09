@@ -122,11 +122,20 @@ AjxXmlDoc.replaceInvalidChars = function(s) {
 	return s.replace(AjxXmlDoc.INVALID_CHARS_RE, "?");
 };
 
-AjxXmlDoc.getXml =
-function(node) {
-	var ser = new XMLSerializer();
-	return AjxXmlDoc.replaceInvalidChars(ser.serializeToString(node));
-}
+AjxXmlDoc.getXml = function(node) {
+
+    if (!node) {
+        return '';
+    }
+
+    var xml = node.xml;
+    if (!xml) {
+        var ser = new XMLSerializer();
+        xml = ser.serializeToString(node);
+    }
+
+    return AjxXmlDoc.replaceInvalidChars(xml);
+};
 
 /**
  * Gets the document.
@@ -340,13 +349,10 @@ function(name, value, element) {
    return p;
 };
 
-AjxXmlDoc.prototype.getDocXml =
-function() {
-   if (AjxEnv.isSafari)
-      return AjxXmlDoc.getXml(this.getDoc());
-   else
-      return AjxXmlDoc.replaceInvalidChars(this.getDoc().xml);
+AjxXmlDoc.prototype.getXml = function() {
+    return AjxXmlDoc.getXml(this.getDoc());
 };
+AjxXmlDoc.prototype.getDocXml = AjxXmlDoc.prototype.getXml;     // back-compatibility with old name
 
 /**
  * Creates an XML document with a root element.
