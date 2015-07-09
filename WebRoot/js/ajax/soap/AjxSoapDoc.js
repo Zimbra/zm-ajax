@@ -319,11 +319,8 @@ function(node) {
  * 
  * @return	{string}	the XML
  */
-AjxSoapDoc.prototype.getXml =
-function() {
-	return AjxEnv.isSafari || AjxEnv.isOpera || AjxEnv.isIE9up || AjxEnv.isIE12
-		? (AjxXmlDoc.getXml(this._xmlDoc.getDoc()))
-		: AjxXmlDoc.replaceInvalidChars(this._xmlDoc.getDoc().xml);
+AjxSoapDoc.prototype.getXml = function() {
+    return this._xmlDoc.getXml();
 };
 
 // Very simple checking of soap doc. Should be made more comprehensive

@@ -58,12 +58,9 @@ AjxInclude = function(includes, baseurl, callback, proxy) {
 			// http://www.bazon.net/mishoo/home.epl?NEWS_ID=1281 )
 			script[AjxInclude.eventName] = null;
 		}
-		var scripts = AjxInclude.dwhack_scripts.length > 0
-			? AjxInclude.dwhack_scripts
-			: includes;
 		window.status = "";
-		if (scripts.length > 0) {
-            var object = scripts.shift();
+		if (includes.length > 0) {
+            var object = includes.shift();
 			var fullurl = typeof object == "string" ? object : object.src;
 			var orig = fullurl;
 			if (!/^((https?|ftps?):\x2f\x2f|\x2f)/.test(fullurl)) {
@@ -77,10 +74,11 @@ AjxInclude = function(includes, baseurl, callback, proxy) {
 			}
 			var script = document.createElement("script");
 			var handler = AjxCallback.simpleClosure(loadNextScript, null, script);
-			if (AjxEnv.isIE) {
+			if (script.attachEvent) {
 				script.attachEvent("onreadystatechange", handler);
 				script.attachEvent("onerror", handler);
-			} else {
+			}
+            else if (script.addEventListener) {
 				script.addEventListener("load", handler, true);
 				script.addEventListener("error", handler, true);
 			}
@@ -109,36 +107,3 @@ AjxInclude = function(includes, baseurl, callback, proxy) {
 
 	loadNextScript(null);
 };
-
-// The document.write hack.  If files are present in this array, they will be
-// favored by AjxInclude (see inner function loadNextScript).  I originally
-// tried to make the function below an inner function too, but this doesn't
-// work because the whole mess is asynchronous (think multiple Zimlets loading
-// external files that call document.write).
-AjxInclude.dwhack_scripts = [];
-document.write = document.writeln = function() {
-	// let's assume there may be more arguments
-	var a = [];
-	for (var i = 0; i < arguments.length; ++i)
-		a[i] = arguments[i];
-	var str = a.join("");
-	if (/<script[^>]+src=([\x22\x27])(.*?)\1/i.test(str)) {
-		// we have a <script>, let's add it to our includes list. :-)
-		AjxInclude.dwhack_scripts.push(RegExp.$2);
-	}
-	// If it's not a script, we can't do anything...  The idea is that the
-	// original document.write would mess all our HTML anyway, so we can't
-	// call it.  If scripts rely on it to insert elements, well, that's too
-	// bad--they won't work.  For this reason we don't even care to save
-	// the original functions.
-};
-
-
-// XXX: DO NOT REMOVE - PREVENTS MEM LEAK IN IE
-if (AjxEnv.isIE) {
-	AjxInclude._removeWriteln = function() {
-		document.write = document.writeln = null;
-		window.detachEvent("onunload", AjxInclude._removeWriteln);
-	};
-	window.attachEvent("onunload", AjxInclude._removeWriteln);
-}
