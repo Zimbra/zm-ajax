@@ -187,9 +187,9 @@ DwtButtonColorPicker.prototype._setMinWidth = function() {}
 /// Protected function that is called when a color is chosen from the popup
 /// DwtColorPicker.  Sets the current color to the chosen one and calls the
 /// DwtButton's selection handlers if any.
-DwtButtonColorPicker.prototype._colorPicked =
-function(ev) {
-	var color = ev.detail;
+DwtButtonColorPicker.prototype._colorPicked = function(ev) {
+
+	var color = ev.detail || '#000000';
 	this.__color = this.__detail = color;
     var colorEl = this._colorEl;
     if (colorEl) {
