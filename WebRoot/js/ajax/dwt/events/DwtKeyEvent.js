@@ -36,6 +36,7 @@ DwtKeyEvent.KEY_END_OF_TEXT     = 3;      // Enter key on Mac
 DwtKeyEvent.KEY_BACKSPACE       = 8;
 DwtKeyEvent.KEY_TAB             = 9;
 DwtKeyEvent.KEY_RETURN          = 13;
+DwtKeyEvent.KEY_ENTER           = DwtKeyEvent.KEY_RETURN;
 DwtKeyEvent.KEY_ESCAPE          = 27;
 DwtKeyEvent.KEY_SPACE           = 32;
 DwtKeyEvent.KEY_ARROW_LEFT      = 37;
