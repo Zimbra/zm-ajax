@@ -460,7 +460,7 @@ DwtToolBar.prototype._moveFocus = function(back) {
         index = back ? index - 1 : index + 1;
 	}
 
-	if (item) {
+	if (item && found) {
 		this.blur();
 		this.focus(item);
 	}
