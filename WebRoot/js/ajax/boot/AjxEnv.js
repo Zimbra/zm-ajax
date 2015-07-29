@@ -637,3 +637,13 @@ if (typeof Object.keys !== "function") {
 		};
 	}());
 }
+
+/**
+ * Polyfill for String.startsWith -- currently required by Safari, Opera, and IE.
+ */
+if (typeof String.prototype.startsWith != 'function') {
+	String.prototype.startsWith = function(searchString, position) {
+		position = position || 0;
+		return this.indexOf(searchString, position) === position;
+	};
+}
