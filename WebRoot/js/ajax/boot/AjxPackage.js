@@ -346,11 +346,11 @@ AjxPackage.__doScriptTag = function(data) {
     script.src = data.path;
 
     // attach handler
-    if (AjxEnv.isIE) {
+    if (script.attachEvent) {
         var handler = AjxCallback.simpleClosure(AjxPackage.__onAsyncLoadIE, null, script);
         script.attachEvent("onreadystatechange", handler);
     }
-    else {
+    else if (script.addEventListener) {
         var handler = AjxCallback.simpleClosure(AjxPackage.__onAsyncLoad, null, data.name);
         script.addEventListener("load", handler, true);
     }

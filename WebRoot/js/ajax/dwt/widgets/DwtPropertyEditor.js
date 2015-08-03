@@ -380,16 +380,18 @@ DwtPropertyEditor.prototype.addChild = function(child) {
 };
 
 DwtPropertyEditor.prototype._createCheckbox = function(prop, target) {
+
 	var checkbox = document.createElement("input");
 	checkbox._prop = prop;
 	checkbox.id = prop.name;
 	checkbox.type = 'checkbox';
 	
-		if(AjxEnv.isIE){
+	if (checkbox.attachEvent) {
 		checkbox.attachEvent("onclick",prop._onCheckboxChange);
-		}else{
+	}
+    else if (checkbox.addEventListener) {
 		checkbox.addEventListener("click", prop._onCheckboxChange, false);			
-		}
+	}
 	
 	this._children.add(checkbox);
 	target.appendChild(checkbox);
@@ -448,10 +450,11 @@ DwtPropertyEditor.prototype._createCheckboxForGroup = function(parent_prop,prop,
 	checkbox.type = 'checkbox';
 	if (prop.value == 'true')
 		checkbox.checked = prop.value;
-		if(AjxEnv.isIE){
-		checkbox.attachEvent("onclick", parent_prop._onCheckboxGroupChange);	
-		}else{
-		checkbox.addEventListener("click", parent_prop._onCheckboxGroupChange, false);
+		if (checkbox.attachEvent) {
+		    checkbox.attachEvent("onclick", parent_prop._onCheckboxGroupChange);
+		}
+        else if (checkbox.addEventListener) {
+		    checkbox.addEventListener("click", parent_prop._onCheckboxGroupChange, false);
 		}
 	this._children.add(checkbox);
 	target.appendChild(checkbox);
