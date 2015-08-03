@@ -237,6 +237,8 @@ function() {
 	AjxEnv.isIE9up = false;
 	AjxEnv.isIE10  = false;
 	AjxEnv.isModernIE  = false;
+	AjxEnv.isIE12  = false;
+	AjxEnv.isIEEdge = false;
 	AjxEnv.isNormalResolution = false;
 	AjxEnv.ieScaleFactor = 1;
 	AjxEnv.isFirefox = false;
@@ -328,6 +330,9 @@ function() {
 			} else if ((index = token.indexOf('trident/')) != -1) {
 				AjxEnv.isTrident = true;
 				AjxEnv.tridentVersion = parseFloat(token.substr(index + 8));
+			} else if ((index = token.indexOf('edge/')) != -1) {
+				AjxEnv.isIEEdge = true;
+				browserVersion = parseFloat(token.substr(index + 5));
 			} else if ((index = token.indexOf('gecko/')) != -1) {
 				AjxEnv.isGeckoBased = true;
 				AjxEnv.geckoDate = parseFloat(token.substr(index + 6));
@@ -398,7 +403,17 @@ function() {
 		AjxEnv.isIE9			= (AjxEnv.isIE && browserVersion >= 9.0 && browserVersion < 10.0);
 		AjxEnv.isIE9up			= (AjxEnv.isIE && browserVersion >= 9.0);
 		AjxEnv.isIE10			= (AjxEnv.isIE && browserVersion >= 10.0 && browserVersion < 11.0);
+		// IE11
 		AjxEnv.isModernIE	   = (!AjxEnv.isIE && AjxEnv.mozVersion >= 11.0 && AjxEnv.tridentVersion >= 7.0);
+		// IE12
+		AjxEnv.isModernIE	   = AjxEnv.isModernIE || (!AjxEnv.isIE && AjxEnv.isIEEdge && browserVersion >= 12.0);
+		if (AjxEnv.isModernIE) {
+			AjxEnv.isSafari = false;
+			AjxEnv.isChrome = false;
+			AjxEnv.isIE12 = (browserVersion >= 12.0);
+		}
+
+
 		AjxEnv.isMozilla		= ((AjxEnv.isNav && AjxEnv.mozVersion && AjxEnv.isGeckoBased && (AjxEnv.geckoDate != 0)));
 		AjxEnv.isMozilla1_4up	= (AjxEnv.isMozilla && (AjxEnv.mozVersion >= 1.4));
 		AjxEnv.isFirefox 		= ((AjxEnv.isMozilla && AjxEnv.isFirefox));
