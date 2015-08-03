@@ -2885,7 +2885,7 @@ function(ev) {
 DwtControl.__clickHdlr =
 function(ev) {
 	var obj = DwtControl.getTargetControl(ev);
-	if (obj._clickPending) {
+	if (obj && obj._clickPending) {
 		return;
 	}
 
