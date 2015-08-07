@@ -87,12 +87,7 @@ function(str) {
 AjxXslt.prototype.createProcessor =
 function() {
 	var doc = this._doc.getDoc();
-	if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
-		this._processor = new XSLTProcessor();
-		if(this._processor) {
-			this._processor.importStylesheet(doc);
-		}
-	} else if (AjxEnv.isIE) {
+	if (AjxEnv.isIE) {
 		var err = doc.parseError;
 	    if (err.errorCode != 0) {
 			DBG.println(AjxDebug.DBG1, "Parse error (" + err.reason + ") at line " + err.line + ", character " + err.linepos + "\n" + err.srcText);
@@ -114,6 +109,11 @@ function() {
         this._processor = proc;
 		if(this._processor) {
 			this._processor.stylesheet = doc;
+		}
+	} else {
+		this._processor = new XSLTProcessor();
+		if(this._processor) {
+			this._processor.importStylesheet(doc);
 		}
 	}
 };
@@ -146,11 +146,8 @@ function(dom) {
 	var ret;
 	if (AjxEnv.isIE) {
 		ret = this.transformIE(dom);
-	} else if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
-		return this.transformNav(dom);  // already in dom
 	} else {
-		DBG.println(AjxDebug.DBG1, "No XSL transformation due to browser incompatibility.");
-		return dom;
+		return this.transformNav(dom);  // already in dom
 	}
 	var doc = AjxXmlDoc.createFromXml(ret);
 	return doc.getDoc();
