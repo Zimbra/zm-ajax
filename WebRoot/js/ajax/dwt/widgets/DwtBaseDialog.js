@@ -89,6 +89,7 @@ DwtBaseDialog = function(params) {
 
 	// reset tab index
     this.setZIndex(Dwt.Z_HIDDEN); // not displayed until popup() called
+	this.setVisible(false);
 	this._position(DwtBaseDialog.__nowhereLoc);
 
 	// Make sure mouse clicks propagate to the DwtDraggable handler (document.onMouseMove and onMouseUp)
@@ -221,6 +222,7 @@ function(loc) {
 	}
 
 	this._shell._veilOverlay.activeDialogs.push(this);
+	this.setVisible(true);
 	
 	// use whichever has a value, local has precedence
 	if (loc) {
@@ -292,6 +294,7 @@ function() {
 		//var myZIndex = this.getZIndex();
 	    var myZIndex = this._zIndex;
 		this.setZIndex(Dwt.Z_HIDDEN);
+		this.setVisible(false);
 		//TODO we should not create an object everytime we popdown a dialog (ditto w/popup)
 		this._position(DwtBaseDialog.__nowhereLoc);
 		if (this._mode == DwtBaseDialog.MODAL) {

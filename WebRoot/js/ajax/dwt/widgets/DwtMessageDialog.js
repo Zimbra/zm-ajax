@@ -63,13 +63,25 @@ DwtMessageDialog = function(params) {
 	this._msgCell = document.getElementById(this._msgCellId);
 	this.addEnterListener(new AjxListener(this, this._enterListener));
 	this._setAllowSelection();
+
+	if (AjxEnv.isSafari) {
+		this.setAttribute('aria-labelledby',
+		                  this._titleEl.id + ' ' + this._msgCellId);
+	} else {
+		this.setAttribute('aria-describedby', this._msgCellId);
+	}
 };
 
 DwtMessageDialog.PARAMS = ["parent", "className", "buttons", "extraButtons", "id"];
 
 DwtMessageDialog.prototype = new DwtDialog;
 DwtMessageDialog.prototype.constructor = DwtMessageDialog;
+DwtMessageDialog.prototype.isDwtMessageDialog = true;
 DwtMessageDialog.prototype.role = 'alertdialog';
+
+DwtMessageDialog.prototype.toString = function() {
+	return "DwtMessageDialog";
+};
 
 /**
  * Defines the "critical" style.
@@ -83,11 +95,16 @@ DwtMessageDialog.INFO_STYLE = 2;
  * Defines the "warning" style.
  */
 DwtMessageDialog.WARNING_STYLE = 3;
+/**
+ * Defines a style with no icon.
+ */
+DwtMessageDialog.PLAIN_STYLE = 4;
 
 DwtMessageDialog.TITLE = {};
 DwtMessageDialog.TITLE[DwtMessageDialog.CRITICAL_STYLE] = AjxMsg.criticalMsg;
 DwtMessageDialog.TITLE[DwtMessageDialog.INFO_STYLE] = AjxMsg.infoMsg;
 DwtMessageDialog.TITLE[DwtMessageDialog.WARNING_STYLE] = AjxMsg.warningMsg;
+DwtMessageDialog.TITLE[DwtMessageDialog.PLAIN_STYLE] = AjxMsg.infoMsg;
 
 DwtMessageDialog.ICON = {};
 DwtMessageDialog.ICON[DwtMessageDialog.CRITICAL_STYLE] = "Critical_32";
@@ -117,20 +134,24 @@ function() {
 DwtMessageDialog.prototype.setMessage =
 function(msgStr, style, title) {
 	this._message = msgStr || "";
-	this._style = style || DwtMessageDialog.INFO_STYLE;
+	this._style = style || this._getDefaultStyle();
 
 	this.setTitle(title || DwtMessageDialog.TITLE[this._style]);
 
 	if (msgStr) {
         var html = [];
 		var i = 0;
-		html[i++] = "<table role='presentation' cellspacing=0 cellpadding=0 border=0 width=100% height=100%><tr><td valign='top'>";
-		html[i++] = AjxImg.getImageHtml({
-			imageName: DwtMessageDialog.ICON[this._style],
-			attrStr: "id='" +  this._msgCellId + "_Image''",
-			altText: DwtMessageDialog.TITLE[this._style]
-		});
-		html[i++] = "</td><td role='document' class='DwtMsgArea' id='" +  this._msgCellId +"_Msg'>";
+		html[i++] = "<table role='presentation' cellspacing=0 cellpadding=0 border=0 width=100% height=100%><tr>";
+		if (DwtMessageDialog.ICON[this._style]) {
+			html[i++] = "<td valign='top'>"
+			html[i++] = AjxImg.getImageHtml({
+				imageName: DwtMessageDialog.ICON[this._style],
+				attrStr: "id='" +  this._msgCellId + "_Image''",
+				altText: DwtMessageDialog.TITLE[this._style]
+			});
+			html[i++] = "</td>";
+		}
+		html[i++] = "<td class='DwtMsgArea' id='" +  this._msgCellId +"_Msg'>";
 		html[i++] = msgStr;
 		html[i++] = "</td></tr></table>";
 		this._msgCell.innerHTML = html.join("");
@@ -157,19 +178,9 @@ function(width, height) {
 	}
 };
 
-
-DwtMessageDialog.prototype.focus = function() {
-
-	DwtDialog.prototype.focus.apply(this, arguments);
-
-	// Accessibility - set aria-describedby on button which gets initial focus
-	var firstFocus = this._tabGroup.getFirstMember();
-	if (firstFocus && firstFocus.isDwtButton && !firstFocus.hasAttribute('aria-describedby')) {
-		firstFocus.setAttribute('aria-describedby', this._msgCellId + '_Msg');
-	}
-};
-
-
+DwtMessageDialog.prototype._getDefaultStyle = function() {
+	return DwtMessageDialog.INFO_STYLE;
+}
 
 /**
  * Resets the message dialog. This should be performed to "reuse" the dialog.
