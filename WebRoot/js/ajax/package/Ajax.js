@@ -106,6 +106,7 @@ AjxPackage.require("ajax.dwt.widgets.DwtBorderlessButton");
 AjxPackage.require("ajax.dwt.widgets.DwtMenuItem");
 AjxPackage.require("ajax.dwt.widgets.DwtMenu");
 AjxPackage.require("ajax.dwt.widgets.DwtMessageDialog");
+AjxPackage.require("ajax.dwt.widgets.DwtOptionDialog");
 AjxPackage.require("ajax.dwt.widgets.DwtInputField");
 AjxPackage.require("ajax.dwt.widgets.DwtPasswordField");
 AjxPackage.require("ajax.dwt.widgets.DwtSash");
