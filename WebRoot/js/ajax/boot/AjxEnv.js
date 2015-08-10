@@ -63,7 +63,7 @@ AjxEnv.isNav;
 AjxEnv.isNav4;
 /** "legacy" Internet Explorer -- i.e. version 10 and earlier */
 AjxEnv.isIE;
-/** "modern" Internet Explorer -- i.e. version 11 onwards. */
+/** "modern" Internet Explorer -- i.e. version 11 and Edge */
 AjxEnv.isModernIE;
 
 
@@ -237,8 +237,7 @@ function() {
 	AjxEnv.isIE9up = false;
 	AjxEnv.isIE10  = false;
 	AjxEnv.isModernIE  = false;
-	AjxEnv.isIE12  = false;
-	AjxEnv.isIEEdge = false;
+	AjxEnv.isMSEdge = false;
 	AjxEnv.isNormalResolution = false;
 	AjxEnv.ieScaleFactor = 1;
 	AjxEnv.isFirefox = false;
@@ -331,8 +330,11 @@ function() {
 				AjxEnv.isTrident = true;
 				AjxEnv.tridentVersion = parseFloat(token.substr(index + 8));
 			} else if ((index = token.indexOf('edge/')) != -1) {
-				AjxEnv.isIEEdge = true;
+				AjxEnv.isMSEdge = true;
 				browserVersion = parseFloat(token.substr(index + 5));
+				AjxEnv.isSafari = false;
+				AjxEnv.isChrome = false;
+				AjxEnv.isWebKitBased = false;
 			} else if ((index = token.indexOf('gecko/')) != -1) {
 				AjxEnv.isGeckoBased = true;
 				AjxEnv.geckoDate = parseFloat(token.substr(index + 6));
@@ -406,7 +408,7 @@ function() {
 		// IE11
 		AjxEnv.isModernIE	   = (!AjxEnv.isIE && AjxEnv.mozVersion >= 11.0 && AjxEnv.tridentVersion >= 7.0);
 		// IE12
-		AjxEnv.isModernIE	   = AjxEnv.isModernIE || (!AjxEnv.isIE && AjxEnv.isIEEdge && browserVersion >= 12.0);
+		AjxEnv.isModernIE	   = AjxEnv.isModernIE || (!AjxEnv.isIE && AjxEnv.isMSEdge && browserVersion >= 12.0);
 		if (AjxEnv.isModernIE) {
 			AjxEnv.isSafari = false;
 			AjxEnv.isChrome = false;
