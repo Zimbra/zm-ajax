@@ -49,8 +49,9 @@ DwtCheckbox = function(params) {
 	this._textPosition = DwtCheckbox.DEFAULT_POSITION;
 	this._initName = params.name;
     this._initValue = params.value;
-	this._initChecked = params.checked;
 	this._createHtml();
+
+	this.setSelected(params.checked);
 };
 
 DwtCheckbox.prototype = new DwtControl;
@@ -92,10 +93,12 @@ DwtCheckbox.DEFAULT_POSITION	= DwtCheckbox.TEXT_RIGHT;
 //
 DwtCheckbox.prototype.TEMPLATE = "dwt.Widgets#DwtCheckbox";
 
+DwtCheckbox.prototype.INPUT_TYPE = 'checkbox';
+
 //
 // Public methods
 //
-DwtCheckbox.prototype.getTabGroupMember =
+DwtCheckbox.prototype.getInputElement =
 function() {
 	return this._inputEl;
 };
@@ -104,7 +107,7 @@ DwtCheckbox.prototype.focus =
 function() {
 	if (this._inputEl) {
 		this._inputEl.focus();
-		DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getTabGroupMember());
+		DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getInputElement());
 	}
 };
 
@@ -315,14 +318,15 @@ function(templateId, data) {
 	//       the init values from the constructor.
 	data.name = this._initName || this._htmlElId;
     data.value = this._initValue;
-	data.checked = Boolean(this._initChecked) ? "checked" : "";
+	data.type = this.INPUT_TYPE;
 	DwtControl.prototype._createHtmlFromTemplate.call(this, templateId, data);
 	this._inputEl = document.getElementById(data.id+"_input");
 	if (this._inputEl) {
 		var keyboardMgr = DwtShell.getShell(window).getKeyboardMgr();
-		var handleFocus = AjxCallback.simpleClosure(keyboardMgr.grabFocus, keyboardMgr, this.getTabGroupMember());
+		var handleFocus = AjxCallback.simpleClosure(keyboardMgr.grabFocus, keyboardMgr, this.getInputElement());
 		Dwt.setHandler(this._inputEl, DwtEvent.ONFOCUS, handleFocus);
 		Dwt.setHandler(this._inputEl, DwtEvent.ONCLICK, DwtCheckbox.__handleClick);
+		this.setFocusElement();
 	}
 	this._textElLeft = document.getElementById(data.id+"_text_left");
 	this._textElRight = document.getElementById(data.id+"_text_right");

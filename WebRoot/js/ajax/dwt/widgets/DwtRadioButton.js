@@ -65,4 +65,4 @@ DwtRadioButton.prototype.toString = function() { return "DwtRadioButton"; };
 // Data
 //
 
-DwtRadioButton.prototype.TEMPLATE = "dwt.Widgets#DwtRadioButton";
+DwtRadioButton.prototype.INPUT_TYPE = 'radio';
