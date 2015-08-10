@@ -241,6 +241,8 @@ function(loc) {
 	kbMgr.pushTabGroup(this._tabGroup);
 	kbMgr.pushDefaultHandler(this);
 
+	appCtxt.getShell().addListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
+
 	this.notifyListeners(DwtEvent.POPUP, this);
 };
 
@@ -308,7 +310,9 @@ function() {
 		var kbMgr = this._shell.getKeyboardMgr();
 		kbMgr.popTabGroup(this._tabGroup);
 		kbMgr.popDefaultHandler();
-		
+
+		appCtxt.getShell().removeListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
+
 		this.notifyListeners(DwtEvent.POPDOWN, this);
 	}
 };
@@ -545,6 +549,13 @@ DwtBaseDialog.prototype._getInputFields =
 function() {
 	// overload me
 }
+
+DwtBaseDialog.prototype._resizeHdlr =
+function(ev) {
+	if (this._loc.x === Dwt.LOC_NOWHERE && this._loc.y === Dwt.LOC_NOWHERE) {
+		this._position();
+	}
+};
 
 /**
  * @private
