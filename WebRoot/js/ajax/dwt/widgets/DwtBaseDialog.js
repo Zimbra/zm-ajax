@@ -240,7 +240,7 @@ function(loc) {
 
 	// Push our tab group
 	var kbMgr = this._shell.getKeyboardMgr();
-	kbMgr.pushTabGroup(this._tabGroup);
+	kbMgr.pushTabGroup(this.getTabGroupMember());
 	kbMgr.pushDefaultHandler(this);
 
 	appCtxt.getShell().addListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
@@ -311,7 +311,7 @@ function() {
 
 		// Pop our tab group
 		var kbMgr = this._shell.getKeyboardMgr();
-		kbMgr.popTabGroup(this._tabGroup);
+		kbMgr.popTabGroup(this.getTabGroupMember());
 		kbMgr.popDefaultHandler();
 
 		appCtxt.getShell().removeListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));

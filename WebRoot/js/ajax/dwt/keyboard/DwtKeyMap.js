@@ -69,6 +69,7 @@ function(keymap) {
 };
 
 DwtKeyMap.MAP_DIALOG		= "dialog";
+DwtKeyMap.MAP_OPTION_DIALOG	= "optionDialog";
 DwtKeyMap.MAP_BUTTON		= "button";
 DwtKeyMap.MAP_LIST			= "list";
 DwtKeyMap.MAP_MENU			= "menu";
