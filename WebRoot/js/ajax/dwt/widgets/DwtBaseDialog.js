@@ -94,8 +94,7 @@ DwtBaseDialog = function(params) {
 
 	// Make sure mouse clicks propagate to the DwtDraggable handler (document.onMouseMove and onMouseUp)
 	this._propagateEvent[DwtEvent.ONMOUSEUP] = true;
-
-}
+};
 
 /**
  * @private
@@ -105,18 +104,12 @@ DwtBaseDialog.PARAMS = ["parent", "className", "title", "zIndex", "mode", "loc",
 DwtBaseDialog.prototype = new DwtComposite;
 DwtBaseDialog.prototype.constructor = DwtBaseDialog;
 
+DwtBaseDialog.prototype.toString = function() { return "DwtBaseDialog"; };
+DwtBaseDialog.prototype.isDwtBaseDialog = true;
+
 DwtBaseDialog.prototype.role = 'dialog';
 DwtBaseDialog.prototype.isFocusable = true;
 
-/**
- * Returns a string representation of the class.
- * 
- * @return {string}		a string representation of the class
- */
-DwtBaseDialog.prototype.toString =
-function() {
-	return "DwtBaseDialog";
-};
 
 //
 // Constants
@@ -243,7 +236,7 @@ function(loc) {
 	kbMgr.pushTabGroup(this.getTabGroupMember());
 	kbMgr.pushDefaultHandler(this);
 
-	appCtxt.getShell().addListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
+	DwtShell.getShell().addListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
 
 	this.notifyListeners(DwtEvent.POPUP, this);
 };
@@ -314,7 +307,7 @@ function() {
 		kbMgr.popTabGroup(this.getTabGroupMember());
 		kbMgr.popDefaultHandler();
 
-		appCtxt.getShell().removeListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
+		DwtShell.getShell().removeListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
 
 		this.notifyListeners(DwtEvent.POPDOWN, this);
 	}

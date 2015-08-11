@@ -166,10 +166,11 @@ function() {
 /**
  * Gets the shell managing the browser window (if any).
  *
+ * @param {Window}      win     the global context
  * @return {DwtShell}		the shell or <code>null</code>
  */
-DwtShell.getShell =
-function(win){
+DwtShell.getShell = function(win) {
+    win = win || window;
 	return DwtControl.fromElementId(win._dwtShellId);
 };
 
