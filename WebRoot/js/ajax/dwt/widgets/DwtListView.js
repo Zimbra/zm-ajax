@@ -66,11 +66,10 @@ DwtListView = function(params) {
         headHtml.appendChild(this._listColDiv);
 
         var colHtml = document.getElementById(colId);
-        this._listDiv = this.useListElement() ? document.createElement("ul"):document.createElement("div");
+        this._listDiv = this.useListElement() ? document.createElement("ul") : document.createElement("div");
         this._listDiv.id = DwtId.getListViewId(this._view, DwtId.LIST_VIEW_ROWS);
         this._listDiv.className = "DwtListView-Rows";
         colHtml.appendChild(this._listDiv);
-
 
 		// setup vars needed for sorting
 		this._bSortAsc = false;
@@ -80,7 +79,8 @@ DwtListView = function(params) {
 		this._listDiv = document.getElementById(params.id);
 		this.setScrollStyle(DwtControl.SCROLL); // auto scroll
 	}
-		
+    this._listDiv.tabIndex = 0;
+
 	this._setMouseEventHdlrs();
 	
 	this._listenerMouseOver = this._mouseOverListener.bind(this);
@@ -1119,7 +1119,7 @@ DwtListView.prototype.getFocusElement = function() {
 		this._setKbFocusElement(null, true);
 	}
 
-	return this._kbAnchor;
+	return this._kbAnchor || this._listDiv;
 };
 
 // this method simply appends the given list to this current one
