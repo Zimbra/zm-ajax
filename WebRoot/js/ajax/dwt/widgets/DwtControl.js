@@ -696,6 +696,7 @@ DwtControl.prototype.focus = function() {
     }
     var el = this.getFocusElement();
     if (el && el.focus) {
+        AjxTimedAction.scheduleAction(this._focusAction);
         el.focus();
     }
 };
@@ -711,6 +712,7 @@ DwtControl.prototype.blur = function() {
     }
     var el = this.getFocusElement();
     if (el && el.blur) {
+        AjxTimedAction.scheduleAction(this._blurAction);
         el.blur();
     }
 };
@@ -2855,7 +2857,9 @@ DwtControl.__focusHdlr = function(ev, evType, obj) {
         return false;
     }
 
-	return obj.__doFocus(ev);
+    obj._cancelFocusBlurActions();
+
+    return obj.__doFocus(ev);
 };
 
 /**
@@ -2868,7 +2872,19 @@ DwtControl.__blurHdlr = function(ev, evType, obj) {
         return false;
     }
 
+    obj._cancelFocusBlurActions();
+
 	return obj.__doBlur(ev);
+};
+
+DwtControl.prototype._cancelFocusBlurActions = function() {
+
+    if (this._focusAction._id !== -1) {
+        AjxTimedAction.cancelAction(this._focusAction._id);
+    }
+    if (this._blurAction._id !== -1) {
+        AjxTimedAction.cancelAction(this._blurAction._id);
+    }
 };
 
 /**
@@ -2884,18 +2900,41 @@ function() {
 	return Boolean(!this._browserToolTip && (this.__toolTipContent || (this.getToolTipContent != DwtControl.prototype.getToolTipContent)));
 };
 
-/**
- * This "private" method is actually called by <i>DwtKeyboardMgr</i> to indicate
- * that the control is being blurred. Subclasses should override the <i>_blur</i>
- * method
- *
- * @private
- */
+DwtControl.prototype.__doFocus = function(ev) {
+
+    DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
+
+    if (!this._checkState()) {
+        return false;
+    }
+
+    this._hasFocus = true;
+
+    var kbMgr = this.shell.getKeyboardMgr();
+    if (kbMgr) {
+        kbMgr.updateFocus(this);
+    }
+
+    if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
+        if (!ev) {
+            ev = DwtShell.focusEvent;
+        }
+
+        ev.dwtObj = this;
+        ev.state = DwtFocusEvent.FOCUS;
+        this.notifyListeners(DwtEvent.ONFOCUS, ev);
+    }
+    this._focus();
+    DBG.println(AjxDebug.FOCUS, "DwtControl DOFOCUS: " + [this, this._htmlElId].join(' / ') + ' [' + document.activeElement + ']' + ' [' + kbMgr.__focusObj + ' / ' + (this.getTabGroupMember().getFocusMember && this.getTabGroupMember().getFocusMember()) + ']');
+
+    return true;
+};
+
 DwtControl.prototype.__doBlur = function(ev) {
 
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
 
-	if (!this._checkState()) {
+    if (!this._checkState()) {
         return false;
     }
 
@@ -2910,43 +2949,6 @@ DwtControl.prototype.__doBlur = function(ev) {
 		this.notifyListeners(DwtEvent.ONBLUR, ev);
 	}
 	this._blur();
-
-    return true;
-};
-
-/**
- * This "private" method is actually called by <i>DwtKeyboardMgr</i> to indicate
- * that the control is being focused. Subclasses should override the <i>_focus</i>
- * method
- *
- * @private
- */
-DwtControl.prototype.__doFocus = function(ev) {
-
-	DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
-
-	if (!this._checkState()) {
-        return false;
-    }
-
-	this._hasFocus = true;
-
-	var kbMgr = this.shell.getKeyboardMgr();
-    if (kbMgr) {
-        kbMgr.updateFocus(this);
-    }
-
-	if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
-		if (!ev) {
-			ev = DwtShell.focusEvent;
-		}
-
-		ev.dwtObj = this;
-		ev.state = DwtFocusEvent.FOCUS;
-		this.notifyListeners(DwtEvent.ONFOCUS, ev);
-	}
-	this._focus();
-    DBG.println(AjxDebug.FOCUS, "DwtControl DOFOCUS: " + [this, this._htmlElId].join(' / ') + ' [' + document.activeElement + ']' + ' [' + kbMgr.__focusObj + ' / ' + (this.getTabGroupMember().getFocusMember && this.getTabGroupMember().getFocusMember()) + ']');
 
     return true;
 };
@@ -3643,6 +3645,10 @@ function() {
 	this.__ctrlInited = true;
 
     this.setFocusElement();
+
+    // timed actions in case we don't get focus/blur events when we programmatically focus/blur
+    this._focusAction = new AjxTimedAction(null, DwtControl.__focusHdlr, [ DwtShell.focusEvent, DwtEvent.ONFOCUS, this ]);
+    this._blurAction = new AjxTimedAction(null, DwtControl.__blurHdlr, [ DwtShell.focusEvent, DwtEvent.ONBLUR, this ]);
 
 	// Make sure this is the last thing we do
 	this.parent.addChild(this, this.__index);
