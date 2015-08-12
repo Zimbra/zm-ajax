@@ -79,7 +79,6 @@ DwtListView = function(params) {
 		this._listDiv = document.getElementById(params.id);
 		this.setScrollStyle(DwtControl.SCROLL); // auto scroll
 	}
-    this._listDiv.tabIndex = 0;
 
 	this._setMouseEventHdlrs();
 	
@@ -117,8 +116,9 @@ DwtListView = function(params) {
 			this._parentEl = ul;
 		}
 	}
-	
-	this._list = null;
+    this._parentEl.tabIndex = 0;
+
+    this._list = null;
 	this.offset = 0;
 	this.headerColCreated = false;
 	this.setMultiSelect(true);
@@ -1119,7 +1119,7 @@ DwtListView.prototype.getFocusElement = function() {
 		this._setKbFocusElement(null, true);
 	}
 
-	return this._kbAnchor || this._listDiv;
+	return this._kbAnchor || this._parentEl;
 };
 
 // this method simply appends the given list to this current one
