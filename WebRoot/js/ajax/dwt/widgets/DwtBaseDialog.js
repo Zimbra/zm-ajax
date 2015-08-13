@@ -424,6 +424,10 @@ function() {
 // Protected methods
 //
 
+DwtBaseDialog.prototype.getTabGroupMember = function() {
+	return this._tabGroup;
+};
+
 /**
  * @private
  */
