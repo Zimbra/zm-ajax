@@ -37,6 +37,7 @@ DwtLinkButton = function(params) {
 
 DwtLinkButton.prototype = new DwtButton;
 DwtLinkButton.prototype.constructor = DwtLinkButton;
+DwtLinkButton.prototype.role = 'link';
 
 DwtLinkButton.prototype.TEMPLATE = "dwt.Widgets#ZLinkButton";
 
