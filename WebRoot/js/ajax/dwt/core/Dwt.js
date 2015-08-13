@@ -851,7 +851,8 @@ Dwt.setOpacity =
 function(htmlElement, opacity) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
 	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-        Dwt.alterIEFilter(htmlElement, "alpha", "alpha(opacity="+opacity+")");
+		var filterVal = opacity < 100 ? "alpha(opacity="+opacity+")" : "";
+		Dwt.alterIEFilter(htmlElement, "alpha", filterVal);
 	} else {
 		htmlElement.style.opacity = opacity/100;
 	}
