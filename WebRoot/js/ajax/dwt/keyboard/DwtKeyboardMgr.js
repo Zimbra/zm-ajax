@@ -332,6 +332,33 @@ DwtKeyboardMgr.prototype.updateFocus = function(focusObj) {
 };
 
 /**
+ * Makes sure that focus is in sync, and that something has focus. There are three ways to track the currently focused
+ * element or control:
+ *
+ * 1. document.activeElement (the element that currently has browser focus)
+ * 2. The keyboard mgr's focus object
+ * 3. The focused member of the current tab group (usually the root tab group)
+ *
+ * We consider #2 to be authoritative. If the currently focused element is blurred but
+ * nothing else gets focus, the BODY will have browser focus. That's not useful, so we
+ * reset focus in that case. We also reset focus if the keyboard mgr and the root tab group
+ * are not in agreement.
+ */
+DwtKeyboardMgr.prototype.checkFocus = function() {
+
+    var activeEl = document.activeElement,
+        activeElName = activeEl && activeEl.tagName.toLowerCase(),
+        kbMgrFocusObj = this.getFocusObj(),
+        tg = this.getCurrentTabGroup(),
+        tgFocusObj = tg && tg.getFocusMember();
+
+    if (activeElName === 'body' || (kbMgrFocusObj && kbMgrFocusObj !== tgFocusObj)) {
+        DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr CHECKFOCUS: resetting focus to " + kbMgrFocusObj);
+        this.grabFocus(kbMgrFocusObj);
+    }
+};
+
+/**
  * Gets the object that has focus.
  *
  * @return {HTMLInputElement|DwtControl} focusObj		the object with focus
@@ -451,6 +478,8 @@ DwtKeyboardMgr.prototype.__doGrabFocus = function(focusObj) {
     DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr DOGRABFOCUS new focus obj: " + [focusObj, focusObj._htmlElId || focusObj.id].join(' / '));
     if (focusObj.focus) {
         focusObj.focus();
+        // focus handler should lead to focus update, but just in case ...
+        this.updateFocus(focusObj);
     }
 };
 
