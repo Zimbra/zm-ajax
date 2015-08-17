@@ -2143,8 +2143,9 @@ DwtListView.prototype._setKbFocusElement = function(next, noSetFocus) {
 			this._scrollList(this._kbAnchor);
 		}
 
-		if (this.hasFocus()) {
-			this._kbAnchor.focus();
+        var kbMgr = this.shell.getKeyboardMgr();
+		if (this.hasFocus() || kbMgr.getFocusObj() === this) {
+            kbMgr.grabFocus(this);
 		}
 	}
 };
