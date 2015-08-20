@@ -233,7 +233,7 @@ function(loc) {
 
 	// Push our tab group
 	var kbMgr = this._shell.getKeyboardMgr();
-	kbMgr.pushTabGroup(this.getTabGroupMember());
+	kbMgr.pushTabGroup(this._tabGroup);
 	kbMgr.pushDefaultHandler(this);
 
 	DwtShell.getShell().addListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
@@ -304,7 +304,7 @@ function() {
 
 		// Pop our tab group
 		var kbMgr = this._shell.getKeyboardMgr();
-		kbMgr.popTabGroup(this.getTabGroupMember());
+		kbMgr.popTabGroup(this._tabGroup);
 		kbMgr.popDefaultHandler();
 
 		DwtShell.getShell().removeListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));

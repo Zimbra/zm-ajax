@@ -141,11 +141,12 @@ DwtKeyboardMgr.isPossibleInputShortcut = function(ev) {
  */
 DwtKeyboardMgr.prototype.pushTabGroup = function(tabGroup, preventFocus) {
 
-	DBG.println(AjxDebug.FOCUS, "PUSH tab group " + tabGroup.getName());
-	if (!tabGroup) {
+    if (!(tabGroup && tabGroup.isDwtTabGroup)) {
+        DBG.println(AjxDebug.DBG1, "pushTabGroup() called without a tab group: " + tabGroup);
         return;
     }
-		
+
+	DBG.println(AjxDebug.FOCUS, "PUSH tab group " + tabGroup.getName());
 	this.__tabGrpStack.push(tabGroup);
 	this.__currTabGroup = tabGroup;
 	var focusMember = tabGroup.getFocusMember();
@@ -174,10 +175,12 @@ DwtKeyboardMgr.prototype.pushTabGroup = function(tabGroup, preventFocus) {
  */
 DwtKeyboardMgr.prototype.popTabGroup = function(tabGroup) {
 
-	if (!tabGroup) {
+    if (!(tabGroup && tabGroup.isDwtTabGroup)) {
+        DBG.println(AjxDebug.DBG1, "popTabGroup() called without a tab group: " + tabGroup);
         return null;
     }
-	DBG.println(AjxDebug.FOCUS, "POP tab group " + tabGroup.getName());
+
+    DBG.println(AjxDebug.FOCUS, "POP tab group " + tabGroup.getName());
 	
 	// we never want an empty stack
 	if (this.__tabGrpStack.length <= 1) {

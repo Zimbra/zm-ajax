@@ -1159,7 +1159,7 @@ function(x, y, kbGenerated) {
 	DwtMenu._activeMenus.add(this, null, true);
 
 	// Put our tabgroup in play
-	DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this.getTabGroupMember(), this.__preventMenuFocus);
+	DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this._compositeTabGroup, this.__preventMenuFocus);
 
 	/* If the popup was keyboard generated, then pick the first enabled child
 	   item */
@@ -1237,7 +1237,7 @@ function(ev) {
 	}
 
 	// Take our tabgroup out of play
-	DwtShell.getShell(window).getKeyboardMgr().popTabGroup(this.getTabGroupMember());
+	DwtShell.getShell(window).getKeyboardMgr().popTabGroup(this._compositeTabGroup);
 };
 
 DwtMenu.prototype._getActiveItem = 
