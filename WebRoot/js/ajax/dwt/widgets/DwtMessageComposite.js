@@ -88,20 +88,42 @@
  *
  * @author Andy Clark
  *
+ * @param {Object}		params		hash of params:
  * @param {DwtComposite}	parent    the parent widget.
  * @param {string}	className 	the CSS class
  * @param {constant}	posStyle  		the position style (see {@link DwtControl})
+ * @param {DwtComposite}	parent    the parent widget.
+ * @param {string}	format   the message that defines the text and controls within this composite control
+ * @param {AjxCallback}	[controlCallback]   the callback to create UI components (only used with format specified)
+ * @param {AjxCallback}	[hintsCallback]   the callback to provide display hints for the container element of the UI component (only used with format specified)
  * 
  * @extends		DwtComposite
  */
-DwtMessageComposite = function(parent, className, posStyle) {
+DwtMessageComposite = function(params) {
 	if (arguments.length == 0) return;
-	className = className || "DwtMessageComposite";
-	DwtComposite.call(this, {parent:parent, className:className, posStyle:posStyle});
+
+	params = Dwt.getParams(arguments, DwtMessageComposite.PARAMS);
+
+	if (!params.className) {
+		params.className = "DwtMessageComposite";
+	}
+
+	DwtComposite.call(this, params);
+
+	this._tabGroup = new DwtTabGroup("DwtMessageComposite");
+
+	if (params.format) {
+		this.setFormat(params.format,
+		               params.controlCallback,
+		               params.hintsCallback);
+	}
 }
+
+DwtMessageComposite.PARAMS = ['parent', 'className', 'posStyle'];
 
 DwtMessageComposite.prototype = new DwtComposite;
 DwtMessageComposite.prototype.constructor = DwtMessageComposite;
+DwtMessageComposite.prototype.isDwtMessageComposite = true;
 
 DwtMessageComposite.prototype.toString =
 function() {
@@ -125,62 +147,43 @@ function(message, callback, hintsCallback) {
 
     // create HTML
     var id = this._htmlElId;
-    var a = ["<table class='DwtCompositeTable' border='0' cellspacing='0' cellpadding='0'><tr valign='center'>"];
+    this.getHtmlElement().innerHTML = "<table class='DwtCompositeTable' border='0' cellspacing='0' cellpadding='0'><tr valign='center'></tr></table>";
+    var row = this.getHtmlElement().firstChild.rows[0];
 
     var segments = this._formatter.getSegments();
-    var cells = {};
-    var hints = {};
     for (var i = 0; i < segments.length; i++) {
         var segment = segments[i];
         var isMsgSegment = segment instanceof AjxMessageFormat.MessageSegment;
 
         var cid = [id,i].join("_");
-        a.push("<td id='",cid,"' class='",(isMsgSegment?"MessageControl"+segment.getIndex():"")," DwtCompositeCell'>");
+        var cell = document.createElement('TD');
+
+        cell.id = cid;
+        cell.className = 'DwtCompositeCell';
+        row.appendChild(cell);
 
         if (isMsgSegment) {
+            cell.className += ' MessageControl' + segment.getIndex();
             var control = callback ? callback.run(this, segment, i) : null;
             if (!control) {
-                control = new DwtInputField({parent:this});
+                control = new DwtInputField({parent:this, parentElement: cell});
+            } else {
+                control.reparentHtmlElement(cell);
             }
-            cells[cid] = control.getHtmlElement();
-            hints[cid] = hintsCallback && hintsCallback.run(this, segment, i);
+            this._tabGroup.addMember(control.getTabGroupMember());
+            if (hintsCallback) {
+                var hints = hintsCallback.run(this, segment, i);
+
+                AjxUtil.hashUpdate(control.getHtmlElement(), hints, true);
+            }
 
             var sindex = segment.getIndex();
             this._controls[sindex] = this._controls[sindex] || control;
         }
         else {
-            a.push(segment.toSubPattern());
-        }
-
-        a.push("</td>");
-    }
-
-    a.push("</tr></table>");
-
-    // insert HTML
-    var el = this.getHtmlElement();
-    /***
-    el.innerHTML = a.join("");
-    /***/
-    // HACK: IE seems to throw away input elements when they are children
-    //       of an element when you set the innerHTML to something else,
-    //       regardless of the fact that there are outstanding references
-    //       to said elements! Ugh.
-    var count = el.childNodes.length;
-    var tempEl = document.createElement("DIV");
-    tempEl.className = id+'_container';
-    el.appendChild(tempEl);
-    tempEl.innerHTML = a.join("");
-    /***/
-
-    // insert controls
-    for (var cid in cells) {
-        var cell = cells[cid];
-        var parentEl = document.getElementById(cid);
-        parentEl.appendChild(cell);
-
-        for (var p in hints[cid]) {
-            parentEl[p] = hints[cid][p];
+            control = new DwtText({parent:this, parentElement: cell});
+            control.setText(segment.toSubPattern());
+            this._tabGroup.addMember(control);
         }
     }
 };
@@ -196,4 +199,8 @@ DwtMessageComposite.prototype.format = function() {
         args[sindex] = this._controls[sindex].getValue();
     }
     return this._formatter.format(args);
+};
+
+DwtMessageComposite.prototype.getTabGroupMember = function() {
+	return this._tabGroup;
 };
