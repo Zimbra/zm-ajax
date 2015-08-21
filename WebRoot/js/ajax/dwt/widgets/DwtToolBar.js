@@ -599,6 +599,7 @@ DwtToolBarButton.prototype.TEMPLATE = "dwt.Widgets#ZToolbarButton";
 // Spacing controls (spacer, separator, filler)
 DwtToolBarSpacer = function(params) {
 	if (arguments.length == 0) { return; }
+	this._noFocus = this.noTab = true;
 	this.toolbarItemTemplate = params.toolbarItemTemplate;
 	DwtControl.call(this, params);
 };
