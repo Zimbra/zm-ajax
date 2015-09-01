@@ -369,15 +369,11 @@ function() {
 	DwtButton.prototype._blur.call(this);
 };
 
-DwtMenuItem.prototype._focus =
-function() {
+DwtMenuItem.prototype._focus = function() {
+
 	var menu = this.parent;
 	var currItem = menu.__currentItem;
 	var mev = new DwtMouseEvent();
-
-	if (currItem && currItem != this) {
-		currItem.blur();
-	}
 
 	this._setMouseEvent(mev, {dwtObj:this, ersatz: true});
 	this.notifyListeners(AjxEnv.isIE ? DwtEvent.ONMOUSEENTER : DwtEvent.ONMOUSEOVER, mev);	// mouseover selects a menu item

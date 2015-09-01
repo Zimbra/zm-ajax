@@ -1347,13 +1347,14 @@ DwtControl.prototype.setFocusElement = function(el) {
         return;
     }
 
-    var hadFocus = (document.activeElement === this._focusElement);
+    var hadFocus = (document.activeElement === this._focusElement),
+        focusEl = el || (this.getInputElement && this.getInputElement()) || this.getHtmlElement();
 
-    if (this._focusElement && this._focusElement !== el) {
+    if (this._focusElement && this._focusElement !== focusEl) {
         this._makeFocusable(this._focusElement, false);
     }
 
-    var focusEl = this._focusElement = el || (this.getInputElement && this.getInputElement()) || this.getHtmlElement();
+    this._focusElement = focusEl;
 
     if (focusEl) {
         this._makeFocusable(this._focusElement, true);
@@ -2524,13 +2525,12 @@ DwtControl.prototype._makeFocusable = function(element, focusable) {
     DBG.println(AjxDebug.FOCUS, "MAKE " + (focusable ? '' : 'NOT ') + "FOCUSABLE: " + this + ', ' + (element || ''));
 
 
+    this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, element);
     if (focusable) {
-        this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, element);	// clear the event handlers first, just in case
         this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], false, element);
         element.tabIndex = 0;
     }
     else {
-        this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, element);
         element.removeAttribute('tabIndex');
     }
 };
@@ -2900,6 +2900,10 @@ function() {
 	return Boolean(!this._browserToolTip && (this.__toolTipContent || (this.getToolTipContent != DwtControl.prototype.getToolTipContent)));
 };
 
+/**
+ * This control has gotten focus, so do some housekeeping: tell the keyboard mgr, notify listeners, and update our UI and state.
+ * @private
+ */
 DwtControl.prototype.__doFocus = function(ev) {
 
     DBG.println(AjxDebug.FOCUS, "DwtControl.__doFocus for " + this.toString() + ", id: " + this._htmlElId);
@@ -2916,20 +2920,21 @@ DwtControl.prototype.__doFocus = function(ev) {
     }
 
     if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
-        if (!ev) {
-            ev = DwtShell.focusEvent;
-        }
-
+        ev = ev || DwtShell.focusEvent;
         ev.dwtObj = this;
         ev.state = DwtFocusEvent.FOCUS;
         this.notifyListeners(DwtEvent.ONFOCUS, ev);
     }
+
     this._focus();
-    DBG.println(AjxDebug.FOCUS, "DwtControl DOFOCUS: " + [this, this._htmlElId].join(' / ') + ' [' + document.activeElement + ']' + ' [' + kbMgr.__focusObj + ' / ' + (this.getTabGroupMember().getFocusMember && this.getTabGroupMember().getFocusMember()) + ']');
 
     return true;
 };
 
+/**
+ * This control has lost focus, so do some housekeeping: notify listeners, and update our UI and state.
+ * @private
+ */
 DwtControl.prototype.__doBlur = function(ev) {
 
 	DBG.println(AjxDebug.FOCUS, "DwtControl.__doBlur for " + this.toString() + ", id: " + this._htmlElId);
@@ -2940,14 +2945,12 @@ DwtControl.prototype.__doBlur = function(ev) {
 
 	this._hasFocus = false;
 	if (this.isListenerRegistered(DwtEvent.ONBLUR)) {
-		if (!ev) {
-			ev = DwtShell.focusEvent;
-		}
-
+        ev = ev || DwtShell.focusEvent;
 		ev.dwtObj = this;
 		ev.state = DwtFocusEvent.BLUR;
 		this.notifyListeners(DwtEvent.ONBLUR, ev);
 	}
+
 	this._blur();
 
     return true;

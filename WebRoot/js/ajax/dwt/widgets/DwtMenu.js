@@ -835,20 +835,6 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 	return true;
 };
 
-DwtMenu.prototype._focus =
-function() {
-	//DBG.println(AjxDebug.DBG1, "DwtMenu.prototype._focus");
-	var item = this.__currentItem || this._children.get(0);
-	item.focus();
-};
-
-DwtMenu.prototype._blur =
-function() {
-	//DBG.println(AjxDebug.DBG1, "DwtMenu.prototype._blur");
-};
-
-
-
 /**
  * This allows the caller to associate one object with the menu. Association
  * means, for events, treat the menu, and this object as one. If I click on

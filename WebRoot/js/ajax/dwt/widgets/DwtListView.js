@@ -2840,7 +2840,7 @@ function() {
 	if (this._kbAnchor) {
 		Dwt.addClass(this._kbAnchor, this._kbFocusClass);
 	} else {
-		this._setKbFocusElement();
+		this._setKbFocusElement(null, true);
 	}
 };
 
