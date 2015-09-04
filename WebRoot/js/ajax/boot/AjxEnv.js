@@ -482,7 +482,7 @@ function() {
 	}
 
     //HTML5
-    AjxEnv.supportsHTML5File = !!( window.FileReader || AjxEnv.isChrome || AjxEnv.isSafari4up );
+    AjxEnv.supportsHTML5File = !!( window.FileReader || AjxEnv.isChrome || AjxEnv.isSafari6up );
     AjxEnv.supportsPlaceholder 	= 'placeholder' in document.createElement('INPUT');
 
     try {
