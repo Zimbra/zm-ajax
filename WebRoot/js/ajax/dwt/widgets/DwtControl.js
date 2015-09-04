@@ -2200,8 +2200,11 @@ DwtControl.prototype._focusByMouseUpEvent =
 function(ev)  {
     DBG.println(AjxDebug.FOCUS, "DwtControl FOCUSONMOUSEUP: " + [this, this._htmlElId].join(' / '));
  	if (this.getEnabled()) {
- 		this.focus();
- 	}
+        var kbMgr = this.shell.getKeyboardMgr();
+        if (kbMgr) {
+            kbMgr.grabFocus(this);
+        }
+    }
 };
 
 /**
