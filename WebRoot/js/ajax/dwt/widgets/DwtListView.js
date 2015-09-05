@@ -1142,8 +1142,12 @@ function() {
 	return DwtKeyMap.MAP_LIST;
 };
 
-DwtListView.prototype.handleKeyAction =
-function(actionCode, ev) {
+DwtListView.prototype.handleKeyAction = function(actionCode, ev) {
+
+    if (!this.size()) {
+        return false;
+    }
+
 	switch (actionCode) {
 		case DwtKeyMap.SELECT:			this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT, kbNavEvent:true}); break;
 		case DwtKeyMap.SELECT_CURRENT:	this._emulateSingleClick({target:this._kbAnchor, button:DwtMouseEvent.LEFT, ctrlKey:true, kbNavEvent:true}); break;
@@ -1153,8 +1157,11 @@ function(actionCode, ev) {
 		case DwtKeyMap.ADD_SELECT_PREV: this._selectItem(false, true, true); break;
 		case DwtKeyMap.PREV:			this._setKbFocusElement(false); break;
 		case DwtKeyMap.NEXT:			this._setKbFocusElement(true); break;
+
 		case DwtKeyMap.DBLCLICK: {
-			if (!this._kbAnchor) { break; }
+			if (!this._kbAnchor) {
+                break;
+            }
 			var anchorSelected = false;
 			var a = this.getSelectedItems().getArray();
 			for (var i = 0; i < a.length; i++) {
