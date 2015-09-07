@@ -458,6 +458,7 @@ function(child) {
 			this._expanded = false;
 
 		this._expandable = false;
+		this.removeAttribute('aria-expanded')
 		
 		if (this._initialized && this._nodeCell) {
 			AjxImg.setImage(this._nodeCell, "Blank_16");
@@ -599,9 +600,6 @@ function(index, realizeDeferred, forceNode) {
 		this.setAttribute("aria-labelledby", this._textCell.id);
 	}
 
-	// we start as collapsed
-	this.setAttribute('aria-expanded', false);
-
 	if (this._dynamicWidth){
 		var tableNode = document.getElementById(data.id + "_table");
 		if (tableNode) {
@@ -610,6 +608,7 @@ function(index, realizeDeferred, forceNode) {
 	}
 
 	this._expandable = false;
+	this.removeAttribute('aria-expanded');
 
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
@@ -695,6 +694,7 @@ function(child, index) {
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
 			if (imgEl) {
 				this._expandable = true;
+				this.setAttribute('aria-expanded', this._expanded);
 				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEDOWN, DwtTreeItem._nodeIconMouseDownHdlr);
 				Dwt.setHandler(imgEl, DwtEvent.ONMOUSEUP, DwtTreeItem._nodeIconMouseUpHdlr);
 			}
@@ -719,7 +719,7 @@ function(item, index, realizeDeferred) {
 			? "DwtTreeItemChildDiv" : "DwtTreeItemLevel1ChildDiv";
 		this._childDiv.setAttribute('role', 'group');
 		this._childDiv.setAttribute('aria-labelledby', this._itemDiv.id);
-		this._childDiv.setAttribute('aria-expanded', false);
+		this._childDiv.setAttribute('aria-expanded', this._expanded);
 		this.getHtmlElement().appendChild(this._childDiv);
 		if (!this._expanded) {
 			this._childDiv.style.display = "none";
