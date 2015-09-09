@@ -126,6 +126,16 @@ DwtTabGroup.prototype.addMember = function(member, index) {
 };
 
 /**
+ * Resets all members of the tab group to the given arguments.
+ * 
+ * @param {Array|DwtControl|DwtTabGroup|HTMLElement} members	the member(s) for the tab group
+ */
+DwtTabGroup.prototype.setMembers = function(members) {
+	this.removeAllMembers();
+	this.addMember(members);
+};
+
+/**
  * Adds a member to the tab group, positioned after another member.
  * 
  * @param {DwtControl|DwtTabGroup|HTMLElement} member 		the member to be added
