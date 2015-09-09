@@ -954,18 +954,23 @@ function(selected, noFocus) {
 			this._initialize();
 		}
 		if (!this._itemDiv) { return; }
+
+		var didSelect;
+
 		if (selected && (this._selectionEnabled || this._forceNotifySelection) /*&& this._origClassName == "DwtTreeItem"*/) {
 			this._itemDiv.className = this._selectedClassName;
 			this._setTreeElementStyles("DownArrowSmall", true);
+			this._tree.setAttribute('aria-activedescendant', this.getHTMLElId());
             if (!noFocus) {
 				this.focus();
 			}
-			return true;
+			didSelect = true;
 		} else {
 			this.blur();
 			this._setTreeElementStyles("Blank_16", false);
 			this._itemDiv.className = this._origClassName;;
-			return false;
+			this._tree.removeAttribute('aria-activedescendant');
+			didSelect = false;
 		}
 
 		this.getHtmlElement().setAttribute('aria-selected', selected);
@@ -978,6 +983,8 @@ function(selected, noFocus) {
 		} else {
 			treeEl.removeAttribute('aria-activedescendant');
 		}
+
+		return didSelect;
 	}
 };
 
