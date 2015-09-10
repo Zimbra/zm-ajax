@@ -2308,6 +2308,9 @@ function(style) {
 
     //check for negative padding
     style = style.replace(/\bpadding-?(top|left|right|bottom)?\s*:[^;]*-\d+[^;]*;?/gi, "");
+    
+    //remove absolute and fixed positioning
+    style = style.replace(/\bposition\s*:\s*(absolute|fixed)[^;]*;?/, "");
 
     return style;
 };
