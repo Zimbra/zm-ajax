@@ -279,6 +279,17 @@ function(prefix) {
 };
 
 /**
+ * This method is used to query an element for its id, generating one if it
+ * isn't set.
+ *
+ * @return {string}	the element ID
+ */
+Dwt.getId =
+function(element, prefix) {
+	return element.id || (element.id = Dwt.getNextId(prefix));
+};
+
+/**
  * @deprecated
  * The association between an element and a control is now via DwtControl.ALL_BY_ID,
  * where the unique element ID is a key to the control. The association is made when
