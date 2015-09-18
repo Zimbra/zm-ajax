@@ -47,7 +47,12 @@ DwtComposite = function(params) {
 	params.className = params.className || "DwtComposite";
 	DwtControl.call(this, params);
 
-	this._compositeTabGroup = new DwtTabGroup(this.toString() + ' (DwtComposite)');
+	var desc = this.toString();
+	if (desc == 'DwtComposite') {
+		desc = this.getHTMLElId();
+	}
+
+	this._compositeTabGroup = new DwtTabGroup(desc + ' (DwtComposite)');
 
 	/**
 	 * Vector of child elements

@@ -128,10 +128,8 @@ function (title, tabViewOrCallback, buttonId, index) {
 
 	// show the first tab
 	if (tabKey==1) {
-		if (tabViewOrCallback instanceof AjxCallback) {
-			tabViewOrCallback = tabViewOrCallback.run(tabKey);
-		}
-		if(tabViewOrCallback) {
+		var tabView = this.getTabView(tabKey);
+		if(tabView) {
 			tabViewOrCallback.showMe();
 		}
 		this._currentTabKey = tabKey;		
@@ -269,6 +267,7 @@ function(tabKey) {
 		this.setTabView(tabKey, tabView);
 		var size = this._getTabSize();
 		tabView.setSize(size.x, size.y);
+		tabView.setAttribute('aria-labelledby', tab.button.getHTMLElId());
 	}
 	return tabView;
 };
