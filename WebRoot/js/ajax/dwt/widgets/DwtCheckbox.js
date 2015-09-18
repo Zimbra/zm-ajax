@@ -103,19 +103,14 @@ function() {
 	return this._inputEl;
 };
 
-DwtCheckbox.prototype.focus =
+DwtCheckbox.prototype._focus =
 function() {
-	if (this._inputEl) {
-		this._inputEl.focus();
-		DwtShell.getShell(window).getKeyboardMgr().grabFocus(this.getInputElement());
-	}
+	Dwt.addClass(this.getHtmlElement(), DwtControl.FOCUSED);
 };
 
-DwtCheckbox.prototype.blur =
+DwtCheckbox.prototype._blur =
 function() {
-	if (this._inputEl) {
-		this._inputEl.blur();
-	}
+	Dwt.delClass(this.getHtmlElement(), DwtControl.FOCUSED);
 };
 
 // listeners
@@ -349,5 +344,6 @@ function(evt) {
 
 	var checkbox = DwtControl.findControl(target);
 	checkbox.setSelected(target.checked);
+	checkbox.focus();
 	checkbox.notifyListeners(DwtEvent.SELECTION, selEv);
 };

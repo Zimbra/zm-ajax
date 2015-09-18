@@ -41,6 +41,7 @@ AjxDateUtil.MSEC_PER_DAY = 24 * AjxDateUtil.MSEC_PER_HOUR;
 AjxDateUtil.MINUTES_PER_DAY = 60 * 24;
 AjxDateUtil.SECONDS_PER_DAY = 60 * 60 * 24;
 
+AjxDateUtil.DAYS_PER_WEEK = 7;
 
 AjxDateUtil.WEEKDAY_SHORT = AjxDateFormat.WeekdaySegment.WEEKDAYS[AjxDateFormat.SHORT];
 AjxDateUtil.WEEKDAY_MEDIUM = AjxDateFormat.WeekdaySegment.WEEKDAYS[AjxDateFormat.MEDIUM];
