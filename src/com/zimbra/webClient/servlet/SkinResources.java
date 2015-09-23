@@ -782,12 +782,15 @@ public class SkinResources
             File imgFile = null;
             for (String fileName : imgSet){
                 String relativePath = fileName.startsWith("/zimbra") ? fileName = fileName.substring(7) : fileName;
-                imgFile = new File(context.getRealPath(relativePath));
-                if (!imgFile.exists()){
-                    continue;
-                }
-				sb.append("\n").append(appContextPath).append(fileName).append("?v=").append(cacheBusterVersion);
-            }
+				String realPath = context.getRealPath(relativePath);
+				if (realPath != null) {
+					imgFile = new File(realPath);
+					if (!imgFile.exists()) {
+						continue;
+					}
+					sb.append("\n").append(appContextPath).append(fileName).append("?v=").append(cacheBusterVersion);
+				}
+			}
 			sb.append("\n\n#style sheets\n");
 			//create the url of the css files
             sb.append("\n").append(appContextPath).append("/css/").append(filenames).append(".css?v=").append(cacheBusterVersion)
