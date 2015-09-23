@@ -389,8 +389,9 @@ function(array, valueOrFunc) {
 	return hash;
 };
 
-AjxUtil.arrayAdd =
-function(array, member, index) {
+AjxUtil.arrayAdd = function(array, member, index) {
+
+    array = array || [];
 
 	if (index == null || index < 0 || index >= array.length) {
 		// index absent or is out of bounds - append object to the end
@@ -480,7 +481,10 @@ AjxUtil.backMap = AjxUtil.valueHash;
  * @param func [function]       Called with index or key and value.
  */
 AjxUtil.foreach = function(obj, func) {
-    if (!func) return;
+
+    if (!func || !obj) {
+        return;
+    }
 
     if (AjxUtil.isArrayLike(obj)) {
         var array = obj;
@@ -488,7 +492,8 @@ AjxUtil.foreach = function(obj, func) {
         for (var i = 0; i < array.length; i++) {
             func(array[i], i);
         }
-    } else {
+    }
+    else {
         // don't rely on the value in the object itself
         var hasown = Object.prototype.hasOwnProperty.bind(obj);
 
@@ -501,17 +506,30 @@ AjxUtil.foreach = function(obj, func) {
 };
 
 AjxUtil.map = function(array, func) {
+
+    if (!array) {
+        return [];
+    }
+
 	var narray = new Array(array.length);
 	for (var i = 0; i < array.length; i++) {
 		narray[i] = func ? func(array[i], i) : array[i];
 	}
+
 	return narray;
 };
+
 AjxUtil.uniq = function(array) {
-	var object = {};
+
+    if (!array) {
+        return [];
+    }
+
+    var object = {};
 	for (var i = 0; i < array.length; i++) {
 		object[array[i]] = true;
 	}
+
 	return AjxUtil.keys(object);
 };
 
@@ -531,8 +549,14 @@ AjxUtil.uniq = function(array) {
  *                          retained
  */
 AjxUtil.dedup = function(array, keyfn) {
-	if (!keyfn)
+
+    if (!array) {
+        return [];
+    }
+
+    if (!keyfn) {
 		keyfn = function(v) { return v; };
+    }
 
 	var seen = {};
 
@@ -550,6 +574,7 @@ AjxUtil.dedup = function(array, keyfn) {
 
 
 AjxUtil.concat = function(array1 /* ..., arrayN */) {
+
 	var array = [];
 	for (var i = 0; i < arguments.length; i++) {
 		array.push.apply(array, arguments[i]);
@@ -561,6 +586,7 @@ AjxUtil.union = function(array1 /* ..., arrayN */) {
 	var array = [];
 	return AjxUtil.uniq(array.concat.apply(array, arguments));
 };
+
 AjxUtil.intersection = function(array1 /* ..., arrayN */) {
 	var array = AjxUtil.concat.apply(this, arguments);
 	var object = AjxUtil.arrayAsHash(array, AjxUtil.__intersection_count);
@@ -571,9 +597,11 @@ AjxUtil.intersection = function(array1 /* ..., arrayN */) {
 	}
 	return AjxUtil.keys(object);
 };
+
 AjxUtil.__intersection_count = function(key, hash, index, array) {
 	return hash[key] != null ? hash[key] + 1 : 1;
 };
+
 AjxUtil.complement = function(array1, array2) {
 	var object1 = AjxUtil.arrayAsHash(array1);
 	var object2 = AjxUtil.arrayAsHash(array2);
@@ -889,33 +917,44 @@ function(hash1, hash2) {
 /**
  * Returns a shallow copy of the given hash.
  *
- * @param hash	[hash]
+ * @param {Object}  hash    source hash
+ * @param {Array}   omit    Keys to skip (blacklist)
+ * @param {Array}   keep 	Keys to keep (whitelist)
  */
-AjxUtil.hashCopy =
-function(hash) {
+AjxUtil.hashCopy = function(hash, omit, keep) {
+
+    omit = omit && AjxUtil.arrayAsHash(omit);
+    keep = keep && AjxUtil.arrayAsHash(keep);
+
 	var copy = {};
 	for (var key in hash) {
-		copy[key] = hash[key];
+        if ((!omit || !omit[key]) && (!keep || keep[key])) {
+    		copy[key] = hash[key];
+        }
 	}
+
 	return copy;
 };
 
 /**
- * updates one hash with attributes from another.
+ * Updates one hash with values from another.
  *
- * @param hash1	[hash]			Hash to be updated
- * @param hash2 [hash]			Hash to update from (values from hash2 will be copied to hash1)
- * @param overwrite [boolean]	Set to true if existing values in hash1 should be overwritten when keys match (defaults to false)
- * @param ignore [array]		Array of keys (string) to skip. (defaults to none)
+ * @param {Object}  hash1		Hash to be updated
+ * @param {Object}  hash2 		Hash to update from (values from hash2 will be copied to hash1)
+ * @param {Boolean} overwrite 	Set to true if existing values in hash1 should be overwritten when keys match (defaults to false)
+ * @param {Array}   omit 	    Keys to skip (blacklist)
+ * @param {Array}   keep        Keys to keep (whitelist)
  */
-AjxUtil.hashUpdate =
-function(hash1, hash2, overwrite, ignore) {
-	for (var key in hash2) {
-		if ((overwrite || !(key in hash1)) && (!ignore || AjxUtil.indexOf(ignore, key)==-1)) {
+AjxUtil.hashUpdate = function(hash1, hash2, overwrite, omit, keep) {
+
+    omit = omit && AjxUtil.arrayAsHash(omit);
+    keep = keep && AjxUtil.arrayAsHash(keep);
+
+    for (var key in hash2) {
+		if ((overwrite || !(key in hash1)) && (!omit || !omit[key]) && (!keep || keep[key])) {
 			hash1[key] = hash2[key];
 		}
 	}
-	return hash1;
 };
 
 // array check that doesn't rely on instanceof, since type info
