@@ -795,10 +795,6 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 			break;
 
         case DwtKeyMap.SELECT_PREV:
-//            if (this.getItemIndex(this.__currentItem) === 0) {
-//                this.popdown();
-//                break;
-//            }
 		case DwtKeyMap.SELECT_NEXT:
 			this.setSelectedItem(actionCode === DwtKeyMap.SELECT_NEXT);
 			break;
@@ -818,9 +814,8 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 		case DwtKeyMap.PARENTMENU:
 			if (this.parent.isDwtMenuItem) {
 				this.popdown();
+                this.parent.focus();
 			}
-
-			this.parent.focus();
 
 			break;
 			
