@@ -259,6 +259,7 @@ function () {
 		var focEl = document.getElementById(this._focusElementId);
 		if (focEl) {
 			focEl.focus();
+            return focEl;
 		}
 	}
 };

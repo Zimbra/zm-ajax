@@ -219,7 +219,7 @@ function(enabled) {
 };
 
 DwtComboBox.prototype.focus = function() {
-    this.input.focus();
+    return this.input.focus();
 };
 
 DwtComboBox.prototype.popdown = function() {
