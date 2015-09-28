@@ -319,13 +319,21 @@ DwtKeyboardMgr.prototype.grabFocus = function(focusObj) {
 };
 
 /**
- * Tells the keyboard manager that the given control now has focus.
+ * Tells the keyboard manager that the given control now has focus. That control will handle shortcuts and become
+ * the reference point for tabbing.
  *
- * @param {DwtControl}  focusObj    control that has focus
+ * @param {DwtControl|Element}  focusObj    control (or element) that has focus
  */
 DwtKeyboardMgr.prototype.updateFocus = function(focusObj) {
 
-	this.__focusObj = focusObj;
+    if (focusObj && focusObj.nodeType === AjxUtil.ELEMENT_NODE) {
+        focusObj = DwtControl.findControl(focusObj);
+    }
+    if (!focusObj) {
+        return;
+    }
+
+    this.__focusObj = focusObj;
     var tgm = focusObj.getTabGroupMember && focusObj.getTabGroupMember();
     DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS: " + focusObj + ", TGM: " + tgm);
 	if (this.__currTabGroup && tgm) {
@@ -480,9 +488,8 @@ DwtKeyboardMgr.prototype.__doGrabFocus = function(focusObj) {
 
     DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr DOGRABFOCUS new focus obj: " + [focusObj, focusObj._htmlElId || focusObj.id].join(' / '));
     if (focusObj.focus) {
-        focusObj.focus();
         // focus handler should lead to focus update, but just in case ...
-        this.updateFocus(focusObj);
+        this.updateFocus(focusObj.focus() || focusObj);
     }
 };
 
@@ -665,13 +672,9 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 
 	// First see if the control that currently has focus can handle the key event
 	var obj = ev.focusObj || kbMgr.__focusObj;
-	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr::__keyDownHdlr - ev.focusObj: " + ev.focusObj + " / kbMgr.__focusObj: " + kbMgr.__focusObj);
-	DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr::__keyDownHdlr - focus object: " + obj);
-//    var tgm = obj && obj.getTabGroupMember && obj.getTabGroupMember();
-//    var hasFocus = (obj && obj.hasFocus && obj.hasFocus()) || (tgm && tgm.hasFocus && tgm.hasFocus());
     var hasFocus = obj && obj.hasFocus && obj.hasFocus();
+    DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr::__keyDownHdlr - focus object " + obj + " has focus: " + hasFocus);
 	if (hasFocus && obj.handleKeyAction) {
-		DBG.println(AjxDebug.KEYBOARD, obj + " has focus: " + obj.hasFocus());
 		handled = kbMgr.__dispatchKeyEvent(obj, kev);
 		while ((handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && obj.parent && obj.parent.getKeyMapName) {
 			obj = obj.parent;

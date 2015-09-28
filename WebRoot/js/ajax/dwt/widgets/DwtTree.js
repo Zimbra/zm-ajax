@@ -323,8 +323,6 @@ DwtTree.prototype._addItem = function(item, index) {
 		//IE Considers undefined as an illegal value for second argument in the insertBefore method
 		thisHtmlElement.insertBefore(item.getHtmlElement(), thisHtmlElement.childNodes[index] || null);
 	}
-
-    this._delegateFocus(item);
 };
 
 DwtTree.prototype._getContainerElement = DwtTree.prototype.getHtmlElement;

@@ -687,7 +687,9 @@ function() {
 
 /**
  * Sets browser and keyboard focus to this control.
-  */
+ *
+ *  @return  {DwtControl|Element}   control or element that actually got focused
+ */
 DwtControl.prototype.focus = function() {
 
     DBG.println(AjxDebug.FOCUS, "DwtControl FOCUS: " + [this, this._htmlElId].join(' / '));
@@ -699,10 +701,14 @@ DwtControl.prototype.focus = function() {
         AjxTimedAction.scheduleAction(this._focusAction);
         el.focus();
     }
+
+    return this;
 };
 
 /**
  * Takes browser and keyboard focus away from this control.
+ *
+ *  @return   {DwtControl|Element}  control or element that actually got blurred
  */
 DwtControl.prototype.blur = function() {
 
@@ -715,6 +721,8 @@ DwtControl.prototype.blur = function() {
         AjxTimedAction.scheduleAction(this._blurAction);
         el.blur();
     }
+
+    return this;
 };
 
 /**

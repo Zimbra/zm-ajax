@@ -249,9 +249,6 @@ DwtToolBar.prototype.addChild = function(child, index) {
 	// actually add the child
 	DwtComposite.prototype.addChild.apply(this, arguments);
 
-    // we treat the toolbar itself as a tab stop
-    this._delegateFocus(child);
-
 	// create and insert the item element
     if (this._itemsEl) {
         var itemEl = this._createItemElement(child.toolbarItemTemplate);
@@ -386,11 +383,11 @@ DwtToolBar.prototype.focus = function(item) {
 	item = item || this._getCurrentFocusItem();
 	if (item && this._canFocusItem(item)) {
         this._curFocusIndex = this.__getButtonIndex(item);
-		item.focus();
+		return item.focus();
 	}
     else {
 		// if current item isn't focusable, find first one that is
-		this._moveFocus(false);
+		return this._moveFocus(false);
 	}
 };
 
@@ -464,6 +461,8 @@ DwtToolBar.prototype._moveFocus = function(back) {
 		this.blur();
 		this.focus(item);
 	}
+
+    return item;
 };
 
 // make sure the key for expanding a button submenu matches our style
