@@ -76,7 +76,7 @@ DwtTreeItem = function(params) {
 	this._dynamicWidth = params.dynamicWidth;
 
 	params.deferred = (params.deferred !== false);
-	params.className = null;
+	params.className = 'DwtTreeItem-Control';
 	DwtComposite.call(this, params);
 
 	this._imageInfoParam = params.imageInfo;
