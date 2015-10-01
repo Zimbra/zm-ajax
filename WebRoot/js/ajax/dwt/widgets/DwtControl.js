@@ -2208,10 +2208,7 @@ DwtControl.prototype._focusByMouseUpEvent =
 function(ev)  {
     DBG.println(AjxDebug.FOCUS, "DwtControl FOCUSONMOUSEUP: " + [this, this._htmlElId].join(' / '));
  	if (this.getEnabled()) {
-        var kbMgr = this.shell.getKeyboardMgr();
-        if (kbMgr) {
-            kbMgr.grabFocus(this);
-        }
+        this.shell.getKeyboardMgr().grabFocus(this);
     }
 };
 
@@ -2842,12 +2839,8 @@ function(ev) {
  * @private
  */
 DwtControl.__keyUpHdlr = function(ev) {
+
 	return DwtKeyboardMgr.__keyUpHdlr.apply(this, arguments);
-
-	var obj = obj ? obj : DwtControl.getTargetControl(ev);
-	if (!obj) return false;
-
-	/* TODO */
 };
 
 /**
@@ -2925,10 +2918,7 @@ DwtControl.prototype.__doFocus = function(ev) {
 
     this._hasFocus = true;
 
-    var kbMgr = this.shell.getKeyboardMgr();
-    if (kbMgr) {
-        kbMgr.updateFocus(this);
-    }
+    this.shell.getKeyboardMgr().updateFocus(this);
 
     if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
         ev = ev || DwtShell.focusEvent;

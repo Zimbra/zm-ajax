@@ -326,20 +326,40 @@ DwtKeyboardMgr.prototype.grabFocus = function(focusObj) {
  */
 DwtKeyboardMgr.prototype.updateFocus = function(focusObj) {
 
-    if (focusObj && focusObj.nodeType === AjxUtil.ELEMENT_NODE) {
-        focusObj = DwtControl.findControl(focusObj);
-    }
     if (!focusObj) {
         return;
     }
 
+    // Set the keyboard mgr's focus obj, which will be handed shortcuts
     this.__focusObj = focusObj;
-    var tgm = focusObj.getTabGroupMember && focusObj.getTabGroupMember();
-    DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS: " + focusObj + ", TGM: " + tgm);
-	if (this.__currTabGroup && tgm) {
-        // TODO: getTabGroupMember() can return a tab group - is that okay?
-		this.__currTabGroup.setFocusMember(tgm, false, true);
-	}
+    DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS kbMgr focus obj: " + focusObj);
+
+    // Update the current (usually root) tab group's focus member to whichever of these it contains: the focus obj,
+    // its tab group member, or its control.
+    var ctg = this.__currTabGroup;
+    if (!ctg) {
+        return;
+    }
+    var focusMember, tgm, control;
+    if (ctg.contains(focusObj)) {
+        focusMember = focusObj;
+    }
+    else {
+        tgm = focusObj.getTabGroupMember && focusObj.getTabGroupMember();
+        if (tgm && ctg.contains(tgm)) {
+            focusMember = tgm;
+        }
+        else if (!focusObj.isDwtControl) {
+            control = DwtControl.findControl(focusObj);
+            if (ctg.contains(control)) {
+                focusMember = control;
+            }
+        }
+    }
+    if (focusMember) {
+        ctg.setFocusMember(focusMember, false, true);
+        DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS tabGroup focus member: " + focusMember);
+    }
 };
 
 /**
@@ -363,7 +383,7 @@ DwtKeyboardMgr.prototype.checkFocus = function() {
         tg = this.getCurrentTabGroup(),
         tgFocusObj = tg && tg.getFocusMember();
 
-    if (activeElName === 'body' || (kbMgrFocusObj && kbMgrFocusObj !== tgFocusObj)) {
+    if (kbMgrFocusObj && (activeElName === 'body' || kbMgrFocusObj !== tgFocusObj)) {
         DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr CHECKFOCUS: resetting focus to " + kbMgrFocusObj);
         this.grabFocus(kbMgrFocusObj);
     }
@@ -563,9 +583,6 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 
 	ev = DwtUiEvent.getEvent(ev, this);
 	var kbMgr = DwtKeyboardMgr.__shell.getKeyboardMgr();
-    if (!kbMgr) {
-        return false;
-    }
 	ev.focusObj = null;
 	if (kbMgr._evtMgr.notifyListeners(DwtEvent.ONKEYDOWN, ev) === false) {
 		return false;
@@ -607,7 +624,6 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 			// a focus member
 			if (kbMgr.__currTabGroup.getFocusMember()) {
 				if (!kev.shiftKey) {
-				 	kbMgr.__currTabGroup.dump(AjxDebug.FOCUS);
 				 	kbMgr.__currTabGroup.getNextFocusMember(true);
 				} else {
 				 	kbMgr.__currTabGroup.getPrevFocusMember(true);
@@ -633,7 +649,7 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 	 }
 	 
     // Allow key events to propagate when keyboard manager is disabled (to avoid taking over browser shortcuts). Bugzilla #45469.
-    if (kbMgr && !kbMgr.isEnabled()) {
+    if (!kbMgr.isEnabled()) {
         return true;
     }
 
