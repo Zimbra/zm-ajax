@@ -157,7 +157,7 @@ DwtEvent.ONCUT = "oncut";
 /**
  * Browser "oninput" event is fired synchronously when the value of an <input> or <textarea> element is changed.
  */
-DwtEvent.ONINPUT = "input";
+DwtEvent.ONINPUT = "oninput";
 
 // semantic events
 

@@ -2239,8 +2239,8 @@ Textfield_XFormItem.prototype.createDataList  = function (list) {
 	// if there is an onChange handler, call that during on input event
 	var onChangeMethod = this.getOnChangeMethod();
 	if (typeof onChangeMethod === "function") {
-		$(element).on(DwtEvent.ONINPUT, {element : element, form : this.getForm()}, function(ev) {
-			onChangeMethod.call(this, ev.data.element.value, false, ev.data.form);
+		Dwt.setHandler(element, DwtEvent.ONINPUT, function() {
+			onChangeMethod.call(this, this.getElement().value, false, this.getForm());
 		}.bind(this));
 	}
 	this.listCreated = true;
