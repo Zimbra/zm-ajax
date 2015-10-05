@@ -912,6 +912,8 @@ public class SkinResources
                 sb.append("\n").append(appContextPath).append("/js/ZeroClipboard_all.js.zgz?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/TinyMCE_all.js.zgz?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/Alert_all.js.zgz?v=").append(cacheBusterVersion);
+				sb.append("\n").append(appContextPath).append("/js/BriefcaseCore_all.js.zgz?v=").append(cacheBusterVersion);
+				sb.append("\n").append(appContextPath).append("/js/Briefcase_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n");
 			}
 			
