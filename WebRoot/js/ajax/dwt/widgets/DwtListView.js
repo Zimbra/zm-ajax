@@ -2209,11 +2209,8 @@ function(clickedEl, ev) {
 		if (ev.button == DwtMouseEvent.LEFT) {
 			this._itemSelected(clickedEl, ev);
 		}
-		else if (ev.button == DwtMouseEvent.RIGHT && !bContained &&
-				this._evtMgr.isListenerRegistered(DwtEvent.ACTION))
-		{
-			//Right click - OUTSIDE of selection
-
+		else if (ev.button == DwtMouseEvent.RIGHT && !bContained && this._evtMgr.isListenerRegistered(DwtEvent.ACTION)) {
+			// Right click - OUTSIDE of selection
 			// Deselect all - otherwise, we can have a selection that is already showing,
 			// but the context menu is not applied to it - very confusing
 			this.deselectAll();
@@ -2223,9 +2220,7 @@ function(clickedEl, ev) {
 			this._rightSelItem = clickedEl;
             Dwt.delClass(clickedEl, this._styleRe, this._rightClickClass);
 
-			if (this._kbAnchor == clickedEl) {
-				Dwt.addClass(clickedEl, this._kbFocusClass);
-			}
+            this._setKbFocusElement(clickedEl, true);
 		}
 	}
 	else if (ev.button == DwtMouseEvent.LEFT) {
