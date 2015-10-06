@@ -324,69 +324,64 @@ DwtKeyboardMgr.prototype.grabFocus = function(focusObj) {
  *
  * @param {DwtControl|Element}  focusObj    control (or element) that has focus
  */
-DwtKeyboardMgr.prototype.updateFocus = function(focusObj) {
+DwtKeyboardMgr.prototype.updateFocus = function(focusObj, ev) {
 
     if (!focusObj) {
         return;
     }
 
-    // Set the keyboard mgr's focus obj, which will be handed shortcuts
-    this.__focusObj = focusObj;
-    DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS kbMgr focus obj: " + focusObj);
+    this.__currTabGroup.__showFocusedItem(focusObj, "updateFocus");
+    var control = focusObj.isDwtControl ? focusObj : DwtControl.findControl(focusObj);
+
+    // Set the keyboard mgr's focus obj, which will be handed shortcuts. It must be a DwtControl.
+    if (control) {
+        this.__focusObj = control;
+        DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS kbMgr focus obj: " + control);
+    }
 
     // Update the current (usually root) tab group's focus member to whichever of these it contains: the focus obj,
     // its tab group member, or its control.
-    var ctg = this.__currTabGroup;
-    if (!ctg) {
-        return;
-    }
-    var focusMember, tgm, control;
-    if (ctg.contains(focusObj)) {
-        focusMember = focusObj;
-    }
-    else {
-        tgm = focusObj.getTabGroupMember && focusObj.getTabGroupMember();
-        if (tgm && ctg.contains(tgm)) {
-            focusMember = tgm;
-        }
-        else if (!focusObj.isDwtControl) {
-            control = DwtControl.findControl(focusObj);
-            if (ctg.contains(control)) {
-                focusMember = control;
-            }
-        }
-    }
-    if (focusMember) {
-        ctg.setFocusMember(focusMember, false, true);
-        DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr UPDATEFOCUS tabGroup focus member: " + focusMember);
+    var tgm = this._findTabGroupMember(ev || focusObj),
+        ctg = this.__currTabGroup;
+
+    if (tgm && ctg) {
+        ctg.setFocusMember(tgm, false, true);
     }
 };
 
-/**
- * Makes sure that focus is in sync, and that something has focus. There are three ways to track the currently focused
- * element or control:
- *
- * 1. document.activeElement (the element that currently has browser focus)
- * 2. The keyboard mgr's focus object
- * 3. The focused member of the current tab group (usually the root tab group)
- *
- * We consider #2 to be authoritative. If the currently focused element is blurred but
- * nothing else gets focus, the BODY will have browser focus. That's not useful, so we
- * reset focus in that case. We also reset focus if the keyboard mgr and the root tab group
- * are not in agreement.
- */
-DwtKeyboardMgr.prototype.checkFocus = function() {
+// Goes up the DOM looking for something (element or control) that is in the current tab group.
+DwtKeyboardMgr.prototype._findTabGroupMember = function(obj) {
 
-    var activeEl = document.activeElement,
-        activeElName = activeEl && activeEl.tagName.toLowerCase(),
-        kbMgrFocusObj = this.getFocusObj(),
-        tg = this.getCurrentTabGroup(),
-        tgFocusObj = tg && tg.getFocusMember();
-
-    if (kbMgrFocusObj && (activeElName === 'body' || kbMgrFocusObj !== tgFocusObj)) {
-        DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr CHECKFOCUS: resetting focus to " + kbMgrFocusObj);
-        this.grabFocus(kbMgrFocusObj);
+    var ctg = this.__currTabGroup;
+    if (!obj || !ctg) {
+        return;
     }
+
+    var htmlEl = (obj.isDwtControl && obj.getHtmlElement()) || DwtUiEvent.getTarget(obj, false) || obj;
+
+    try {
+        while (htmlEl) {
+            if (ctg.contains(htmlEl)) {
+                return htmlEl;
+            }
+            else {
+                var control = DwtControl.ALL_BY_ID[htmlEl.id];
+                if (control && ctg.contains(control)) {
+                    return control;
+                }
+                else {
+                    var tgm = control && control.getTabGroupMember && control.getTabGroupMember();
+                    if (tgm && ctg.contains(tgm)) {
+                        return tgm;
+                    }
+                }
+            }
+            htmlEl = htmlEl.parentNode;
+        }
+    } catch(e) {
+    }
+
+    return null;
 };
 
 /**
