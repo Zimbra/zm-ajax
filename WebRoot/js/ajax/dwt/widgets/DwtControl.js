@@ -600,10 +600,8 @@ function() {
 	}
 	this._elRef = null;
 	
-	if (DwtControl.ALL_BY_ID) {
-		DwtControl.ALL_BY_ID[this._htmlElId] = null;
-		delete DwtControl.ALL_BY_ID[this._htmlElId];
-	}
+    DwtControl.ALL_BY_ID[this._htmlElId] = null;
+    delete DwtControl.ALL_BY_ID[this._htmlElId];
 
 	this._disposed = true;
 	var ev = new DwtDisposeEvent();
@@ -1378,9 +1376,9 @@ DwtControl.prototype.setFocusElement = function(el) {
  * @param {Element}		htmlEl	an HTML element
  * @return	{DwtControl}		the control element or <code>null</code> for none
  */
-DwtControl.fromElement =
-function(htmlEl)  {
-	return DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlEl.id];
+DwtControl.fromElement = function(htmlEl)  {
+
+	return DwtControl.ALL_BY_ID[htmlEl.id];
 };
 
 /**
@@ -1389,9 +1387,9 @@ function(htmlEl)  {
  * @param {string}		htmlElId	an HTML element Id
  * @return	{DwtControl}		the control element or <code>null</code> for none
  */
-DwtControl.fromElementId =
-function(htmlElId)  {
-	return DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlElId];
+DwtControl.fromElementId = function(htmlElId)  {
+
+	return DwtControl.ALL_BY_ID[htmlElId];
 };
 
 /**
@@ -1412,7 +1410,7 @@ function(htmlEl)  {
 
 	try{
 		while (htmlEl) {
-			if (htmlEl.id && DwtControl.ALL_BY_ID && DwtControl.ALL_BY_ID[htmlEl.id]) {
+			if (htmlEl.id && DwtControl.ALL_BY_ID[htmlEl.id]) {
 				return DwtControl.ALL_BY_ID[htmlEl.id];
 			}
 			htmlEl = htmlEl.parentNode;
@@ -2532,7 +2530,6 @@ DwtControl.prototype._makeFocusable = function(element, focusable) {
     focusable = (focusable !== false);
     DBG.println(AjxDebug.FOCUS, "MAKE " + (focusable ? '' : 'NOT ') + "FOCUSABLE: " + this + ', ' + (element || ''));
 
-
     this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], true, element);
     if (focusable) {
         this._setEventHdlrs([ DwtEvent.ONFOCUS, DwtEvent.ONBLUR ], false, element);
@@ -2918,7 +2915,7 @@ DwtControl.prototype.__doFocus = function(ev) {
 
     this._hasFocus = true;
 
-    this.shell.getKeyboardMgr().updateFocus(this);
+    this.shell.getKeyboardMgr().updateFocus(this, ev);
 
     if (this.isListenerRegistered(DwtEvent.ONFOCUS)) {
         ev = ev || DwtShell.focusEvent;
@@ -3629,13 +3626,11 @@ function() {
 	this._htmlElId = this.__internalId = this._htmlElId || Dwt.getNextId();
 	var htmlElement = this._elRef = this._createElement(this._htmlElId);
 	htmlElement.id = this._htmlElId;
-	if (DwtControl.ALL_BY_ID) {
-		if (DwtControl.ALL_BY_ID[this._htmlElId]) {
-			DBG.println(AjxDebug.DBG1, "Duplicate ID for " + this.toString() + ": " + this._htmlElId);
-			this._htmlElId = htmlElement.id = this.__internalId = DwtId.makeId(this._htmlElId, Dwt.getNextId());
-		}
-		DwtControl.ALL_BY_ID[this._htmlElId] = this;
-	}
+    if (DwtControl.ALL_BY_ID[this._htmlElId]) {
+        DBG.println(AjxDebug.DBG1, "Duplicate ID for " + this.toString() + ": " + this._htmlElId);
+        this._htmlElId = htmlElement.id = this.__internalId = DwtId.makeId(this._htmlElId, Dwt.getNextId());
+    }
+    DwtControl.ALL_BY_ID[this._htmlElId] = this;
 	DwtComposite._pendingElements[this._htmlElId] = htmlElement;
 	htmlElement.style.position = this.__posStyle || DwtControl.STATIC_STYLE;
 	htmlElement.className = this._className;

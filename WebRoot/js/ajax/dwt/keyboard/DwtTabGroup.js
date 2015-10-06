@@ -325,7 +325,6 @@ DwtTabGroup.prototype.setFocusMember = function(member, checkEnabled, skipNotify
 	}
 
 	if (this.contains(member)) {
-        DBG.println(AjxDebug.FOCUS, "DwtTabGroup SETFOCUSMEMBER: " + member);
 		this.__currFocusMember = member;
 		this.__showFocusedItem(this.__currFocusMember, "setFocusMember");
 		if (!skipNotify) {
@@ -709,10 +708,9 @@ DwtTabGroup.prototype.__setFocusMember = function(next, checkEnabled, skipNotify
 		}
 	}
 
-    DBG.println(AjxDebug.FOCUS, "DwtTabGroup __setFocusMember: " + m);
 	this.__currFocusMember = m;
 	
-	this.__showFocusedItem(this.__currFocusMember, "_setFocusMember");
+	this.__showFocusedItem(this.__currFocusMember, "__setFocusMember");
 	if (!skipNotify) {
 		this.__notifyListeners(this.__currFocusMember);
 	}
@@ -765,10 +763,11 @@ DwtTabGroup.prototype.__showFocusedItem = function(item, caller) {
 	if (item && window.AjxDebug && window.DBG) {
 		var callerText = caller ? "DwtTabGroup." + caller + ": " : "",
 			idText = " [" + (item.isDwtControl ? item._htmlElId : item.id) + "] ",
+            itemText = (item.nodeName || item) + " " + idText,
 			otherText = (item.getTitle && item.getTitle()) || (item.getText && item.getText()) || "",
-			fullText = item + idText + otherText;
+			fullText = itemText + otherText;
 
-		DBG.println(AjxDebug.FOCUS, callerText + "current focus member is now " + item);
+		DBG.println(AjxDebug.FOCUS, callerText + "current focus member is now " + itemText);
 		DBG.println(AjxDebug.FOCUS1, "Focus: " + fullText);
 	}
 };
