@@ -3803,7 +3803,7 @@ function() {
 	for (i in h) {
 		h[i]._elRef = null;
 	}
-	DwtControl.ALL_BY_ID = null;
+	DwtControl.ALL_BY_ID = {};
 };
 
 if (window.attachEvent) {
