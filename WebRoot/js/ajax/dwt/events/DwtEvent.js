@@ -75,7 +75,7 @@ DwtEvent.ONDBLCLICK = "ondblclick";
 DwtEvent.ONFOCUS = "onfocus";
 
 /**
- * Browser "onblug" event.
+ * Browser "onblur" event.
  */
 DwtEvent.ONBLUR = "onblur";
 

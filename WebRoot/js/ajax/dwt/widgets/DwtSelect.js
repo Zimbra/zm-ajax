@@ -640,7 +640,7 @@ function(templateId, data) {
     // set classes
     var el = this._containerEl = this.getHtmlElement();
     this._selectEl.className = el.className;
-    el.className = "ZSelectAutoSizingContainer";
+    Dwt.addClass(el, "ZSelectAutoSizingContainer");
     this.removeAttribute("style");
     if (AjxEnv.isIE && !AjxEnv.isIE9up) {
         el.style.overflow = "hidden";
