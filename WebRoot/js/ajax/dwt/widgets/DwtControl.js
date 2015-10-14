@@ -1091,6 +1091,8 @@ function(state) {
         return;
     }
 
+	var oldState = this._displayState;
+
     this._displayState = state;
     Dwt.delClass(this.getHtmlElement(), DwtControl._RE_STATES, state);
 
@@ -1101,6 +1103,14 @@ function(state) {
             this.removeAttribute(attribute);
         }
     }).bind(this));
+
+	if (this.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
+		this.__controlEvent.reset(DwtControlEvent.STATE);
+		this.__controlEvent.oldState = oldState;
+		this.__controlEvent.newState = state;
+		this.__controlEvent.dwtObj = this;
+		this.notifyListeners(DwtEvent.STATE_CHANGE, this.__controlEvent);
+	}
 };
 
 /**

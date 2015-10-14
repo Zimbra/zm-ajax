@@ -286,7 +286,7 @@ function(prefix) {
  */
 Dwt.getId =
 function(element, prefix) {
-	return element.id || (element.id = Dwt.getNextId(prefix));
+	return element ? element.id || (element.id = Dwt.getNextId(prefix)) : null;
 };
 
 /**

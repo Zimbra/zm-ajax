@@ -82,7 +82,11 @@ DwtInputField = function(params) {
 	this._hintIsVisible = false;
 	this._hint = params.hint;
 	this._label = params.label;
-	
+
+	this.addListener(DwtEvent.ONFOCUS, this._focusHdlr.bind(this));
+	this.addListener(DwtEvent.ONBLUR, this._blurHdlr.bind(this));
+	this.addListener(DwtEvent.STATE_CHANGE, this._stateChanged.bind(this));
+
 	var inputFieldId = params.inputId || Dwt.getNextId();
 	var errorIconId = Dwt.getNextId();
 	var htmlEl = this.getHtmlElement();
@@ -128,8 +132,6 @@ DwtInputField = function(params) {
 	if (params.forceMultiRow || this._rows > 1) {
         this._inputField = document.getElementById(inputFieldId);
         this._inputField.onkeyup = DwtInputField._keyUpHdlr;
-        this._inputField.onblur = DwtInputField._blurHdlr;
-		this._inputField.onfocus = DwtInputField._focusHdlr;
         this._inputField.onkeydown = DwtInputField._keyDownHdlr;
 
         if (params.size)
@@ -514,28 +516,6 @@ function(required) {
 };
 
 /**
- * Gets the enabled flag.
- * 
- * @return	{boolean}	<code>true</code> if the field is disabled
- */
-DwtInputField.prototype.getEnabled =
-function() {
-	return !this.getInputElement().disabled;
-};
-
-/**
- * Sets the enabled flag.
- * 
- * @param	{boolean}	enabled		if <code>true</code>, enable the field
- */
-DwtInputField.prototype.setEnabled = 
-function(enabled) {	
-	DwtControl.prototype.setEnabled.call(this, enabled);
-	this.getInputElement().disabled = !enabled;
-	this._validateInput(this.getValue());
-};
-
-/**
  * Sets the visibility flag.
  * 
  * @param	{boolean}	visible		if <code>true</code>, the field is visible
@@ -749,41 +729,33 @@ function(ev) {
 	return true;
 };
 
-DwtInputField._blurHdlr = function(ev) {
+DwtInputField.prototype._blurHdlr = function(ev) {
 
     DBG.println(AjxDebug.FOCUS, "DwtInputField ONBLUR: " + this);
-    var obj = DwtControl.getTargetControl(ev);
-    if (obj) {
-        if (obj.isDisposed()) {
-            return;
-        }
-        obj._updateClassName();
-        if (obj._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
-            var val = obj._validateInput(obj.getValue());
-            if (val != null) {
-                obj.setValue(val);
-            }
-        }
-        if (!obj._hintIsVisible && obj._hint) {
-            obj._showHint();
+
+    if (this.isDisposed()) {
+        return;
+    }
+    this._updateClassName();
+    if (this._validationStyle == DwtInputField.ONEXIT_VALIDATION) {
+        var val = this._validateInput(this.getValue());
+        if (val != null) {
+            this.setValue(val);
         }
     }
-
-    DwtControl.__blurHdlr(ev, obj);
+    if (!this._hintIsVisible && this._hint) {
+        this._showHint();
+    }
 };
 
-DwtInputField._focusHdlr = function(ev) {
+DwtInputField.prototype._focusHdlr = function(ev) {
 
     DBG.println(AjxDebug.FOCUS, "DwtInputField ONFOCUS: " + this);
-	var obj = DwtControl.getTargetControl(ev);
-	if (obj) {
-		obj._updateClassName();
-		if (obj._hintIsVisible) {
-			obj._hideHint('');
-		}
+	appCtxt.getKeyboardMgr().updateFocus(this);
+	this._updateClassName();
+	if (this._hintIsVisible) {
+		this._hideHint('');
 	}
-
-    DwtControl.__focusHdlr(ev, obj);
 };
 
 DwtInputField._keyDownHdlr =
@@ -971,15 +943,20 @@ function(params) {
 
 	// add event handlers
 	ninput.onkeyup = DwtInputField._keyUpHdlr;
-	ninput.onblur = DwtInputField._blurHdlr;
-	ninput.onfocus = DwtInputField._focusHdlr;
     ninput.onkeydown = DwtInputField._keyDownHdlr;
+	this._makeFocusable(ninput);
+
 	for (var eventType in this._inputEventHandlers) {
 		ninput[eventType] = this._inputEventHandlers[eventType];
 	}
 
 	return ninput;
 };
+
+DwtInputField.prototype._stateChanged = function(ev) {
+	this.getInputElement().disabled = !this.getEnabled();
+	this._validateInput(this.getValue());
+}
 
 /*
  * clears the onFocus handler
