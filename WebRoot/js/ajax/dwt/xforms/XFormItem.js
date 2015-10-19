@@ -2221,10 +2221,16 @@ Textfield_XFormItem.prototype.setElementEnabled  = function (enabled) {
 
 //Creates a datalist element which specifies a list of pre-defined options for an <input> element providing an autocomplete feature.
 Textfield_XFormItem.prototype.createDataList  = function (list) {
-	if (!AjxEnv.supported.input.list || this.listCreated || !list || list.length === 0) {
+	if (!AjxEnv.supported.input.list) {
 		return;
 	}
+	list = list || [];
 	var dataListId = this.getId() + "_datalist";
+	// If old datalist is already present remove it.
+	var oldDataList = Dwt.getElement(dataListId);
+	if (oldDataList) {
+		oldDataList.parentNode.removeChild(oldDataList);
+	}
 	var element = this.getElement();
 	element.setAttribute("list", dataListId);
 	var dataList = document.createElement("datalist");
@@ -2243,7 +2249,6 @@ Textfield_XFormItem.prototype.createDataList  = function (list) {
 			onChangeMethod.call(this, this.getElement().value, false, this.getForm());
 		}.bind(this));
 	}
-	this.listCreated = true;
 };
 
 
