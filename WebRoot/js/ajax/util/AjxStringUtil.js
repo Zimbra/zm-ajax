@@ -2239,6 +2239,9 @@ function(el, ctxt) {
 			// possible attribute.
 			for (var i = 0, attrs = el.attributes, l = attrs.length; i < l; i++) {
 				var attr = attrs.item(i);
+                if (!attr) {
+                    continue;
+                }
 				var attrName = attr.nodeName && attr.nodeName.toLowerCase();
 				// on* handlers (should have been removed by server, check again to be safe)
 				if (attrName && attrName.indexOf("on") === 0) {
