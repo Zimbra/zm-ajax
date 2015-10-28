@@ -348,24 +348,29 @@ function() {
 	return this._isPoppedUp;
 };
 
-DwtMenu.prototype.popup =
-function(msec, x, y, kbGenerated) {
-	if (this._style == DwtMenu.BAR_STYLE) return;
+DwtMenu.prototype.popup = function(msec, x, y, kbGenerated) {
+
+	if (this._style == DwtMenu.BAR_STYLE) {
+        return;
+    }
 	
 	if (this._popdownActionId != -1) {
 		AjxTimedAction.cancelAction(this._popdownActionId);
 		this._popdownActionId = -1;
-	} else {
+	}
+    else {
 		if (this._isPoppedUp || (this._popupActionId != -1 && msec && msec > 0)) {
 			return;
-		} else if (this._popupActionId != -1){
+		}
+        else if (this._popupActionId != -1) {
 			AjxTimedAction.cancelAction(this._popupActionId);
 			this._popupActionId = -1;
 		}
 
 		if (!msec) {
 			this._doPopup(x, y, kbGenerated);
-		} else {
+		}
+        else {
 			this._popupAction.args = [x, y, kbGenerated];
 			this._popupActionId = AjxTimedAction.scheduleAction(this._popupAction, msec);
 		}
@@ -450,8 +455,8 @@ DwtMenu.prototype._setupScroll = function() {
 	Dwt.setHandler(htmlElement, DwtEvent.ONMOUSEWHEEL, wheelListener);
 };
 
-DwtMenu.prototype.render =
-function(x, y) {
+DwtMenu.prototype.render = function(x, y) {
+
 	var windowSize = this.shell.getSize();
 	var mySize = this.getSize();
 	var htmlEl = this.getHtmlElement();
@@ -507,7 +512,8 @@ function(x, y) {
 			if (newY) {
 				y = newY - mySize.y;
 			}
-		} else if (isPopup && isScroll) {
+		}
+        else if (isPopup && isScroll) {
 			var rows = this._table.rows;
 			var numRows = rows.length;
 			var maxRows = this._maxRows;
@@ -517,26 +523,32 @@ function(x, y) {
 			var height = 20; //for scroll buttons
 			for (var i = 0; i < limRows; i++) {
 				var rowSize = Dwt.getSize(rows[i]).y;
-				if (height + rowSize <= availableSpace)
+				if (height + rowSize <= availableSpace) {
 					height += rowSize;
-				else
+                }
+				else {
 					break;
+                }
 			}
 			mySize.y = height;
 		}
 	}
+
 	var newW = "auto";
 	var newH = "auto";
 	if (isPopup && isScroll) {
 		newH = mySize.y;
-		if (this._tableContainer)
+		if (this._tableContainer) {
 			this._tableContainer.style.height = (newH - 20) +"px";
-	} else if ((isPopup && isCascade) || y + mySize.y < windowSize.y - 5 ) {
+        }
+	}
+    else if ((isPopup && isCascade) || y + mySize.y < windowSize.y - 5 ) {
 		newH = "auto";
-	} else {
+	}
+    else {
 		newH = windowSize.y - y - 5;
 	}
-    if(isScroll) {
+    if (isScroll) {
 	    if (this._table) {
 		    this._table.style.width = mySize.x;
         }
@@ -564,24 +576,27 @@ function(x, y) {
 		var tstyle = DwtCssStyle.getComputedStyleObject(htmlEl); // Get the style for this menu (includes skinning)
 
 		//if the cascading extends over the edge of the screen, cascade to the left
-		if ( ((newX > pbound.x && newX < pbound.x + pbound.width) || (pbound.x >= newX && pbound.x < newX + mySize.x)) && pbound.x >= mySize.x) {
+		if (((newX > pbound.x && newX < pbound.x + pbound.width) || (pbound.x >= newX && pbound.x < newX + mySize.x)) && pbound.x >= mySize.x) {
 			var totalWidth = parseInt(tstyle.width);
-			if (!AjxEnv.isIE)
+			if (!AjxEnv.isIE) {
 				totalWidth += parseInt(tstyle.paddingLeft) + parseInt(tstyle.paddingRight) + parseInt(tstyle.borderLeftWidth) + parseInt(tstyle.borderRightWidth);
+            }
 			newX = (parseInt(pmstyle.left) || pbound.x) - (totalWidth || mySize.x);
 			if (this._congruent) {
 				var offset;
-				if (AjxEnv.isIE)
+				if (AjxEnv.isIE) {
 					offset = parseInt(tstyle.borderLeftWidth);
-				else
+                }
+				else {
 					offset = parseInt(tstyle.borderLeftWidth) + parseInt(tstyle.borderRightWidth);
+                }
 				if (!isNaN(offset)) {
 					newX += offset;
 					Dwt.addClass(htmlEl, "DwtMenu-congruentLeft");
 				}
 			}
-
-		} else { // Cascade to the right
+		}
+        else { // Cascade to the right
 			var left = parseInt(pmstyle.left) || (pbound.x - (parseInt(pmstyle.paddingLeft) || 0));
 			var width = parseInt(pmstyle.width) || pbound.width;
 			newX = left + width;
@@ -605,10 +620,14 @@ function(x, y) {
 
 	if (this.parent instanceof DwtMenuItem && this._congruent) {
 		var offset = (parseInt(tstyle.paddingTop) || 0) - (parseInt(tstyle.borderTopWidth) || 0);
-		if (offset>0)
+		if (offset > 0) {
 			newY -= offset;
+        }
 	}
 
+    // make sure we aren't locating the menu offscreen
+    newX = newX < 0 && newX !== Dwt.DEFAULT ? 0 : newX;
+    newY = newY < 0 && newY !== Dwt.DEFAULT ? 0 : newY;
 	this.setLocation(newX, newY);
 };
 
