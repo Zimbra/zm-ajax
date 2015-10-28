@@ -694,10 +694,21 @@ DwtControl.prototype.focus = function() {
     if (!this._checkState()) {
         return;
     }
+
     var el = this.getFocusElement();
     if (el && el.focus) {
         AjxTimedAction.scheduleAction(this._focusAction);
+
+        // retain the scroll position if the user scrolled, since setting focus will cause browser to scroll this control into view
+        var scrollContainer = this.getScrollContainer(),
+            scrollTop = scrollContainer && scrollContainer.scrollTop;
+
         el.focus();
+
+        if (scrollTop > 0) {
+            DBG.println(AjxDebug.DBG1, "Resetting scroll after focus to: " + scrollTop);
+            scrollContainer.scrollTop = scrollTop;
+        }
     }
 
     return this;
@@ -1737,6 +1748,16 @@ function(scrollStyle) {
 	if (!this._checkState()) { return; }
 
 	Dwt.setScrollStyle(this.getHtmlElement(), scrollStyle);
+};
+
+/**
+ * Returns the element that this control scrolls within.
+ *
+ * @returns {HTMLElement}
+ */
+DwtControl.prototype.getScrollContainer = function() {
+
+    return this.parent && this.parent.getHtmlElement();
 };
 
 /**

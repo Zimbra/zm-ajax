@@ -1042,6 +1042,11 @@ function(row) {
 	}
 };
 
+DwtListView.prototype.getScrollContainer = function() {
+
+    return this._parentEl;
+};
+
 DwtListView.prototype.scrollToItem =
 function(item){
     var el = this._getElFromItem(item);
