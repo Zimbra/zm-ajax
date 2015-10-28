@@ -918,7 +918,7 @@ function() {
  * @see DwtRectangle
  * @see #getBounds
  * @see #getInsetBounds
- * @see #getInsets
+ * @see #getMargins
  * @see #getSize
  * @see #getLocation
  * @see #getH
@@ -936,6 +936,36 @@ function() {
 	if (!this._checkState()) { return; }
 
 	return Dwt.getInsets(this.getHtmlElement());
+};
+
+/**
+ * Gets the margins of the component.
+ *
+ * @return {DwtRectangle}		the control margins
+ *
+ * @see DwtRectangle
+ * @see #getBounds
+ * @see #getInsetBounds
+ * @see #getInsets
+ * @see #getSize
+ * @see #getLocation
+ * @see #getH
+ * @see #getW
+ * @see #getX
+ * @see #getXW
+ * @see #getY
+ * @see #getYH
+ * @see #setBounds
+ * @see #setSize
+ * @see #setLocation
+ */
+DwtControl.prototype.getMargins =
+function() {
+	if (!this._checkState()) {
+		return;
+	}
+
+	return Dwt.getMargins(this.getHtmlElement());
 };
 
 /**
