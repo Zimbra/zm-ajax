@@ -35,7 +35,6 @@ AjxPackage.require("ajax.3rdparty.converse.mode-ctr");
 AjxPackage.require("ajax.3rdparty.converse.eventemitter");
 AjxPackage.require("ajax.3rdparty.converse.otr");
 AjxPackage.require("ajax.3rdparty.converse.strophe");
-AjxPackage.require("ajax.3rdparty.converse.strophe_roster");
 AjxPackage.require("ajax.3rdparty.converse.strophe_vcard");
 AjxPackage.require("ajax.3rdparty.converse.strophe_disco");
 AjxPackage.require("ajax.3rdparty.converse.strophe_ping");
