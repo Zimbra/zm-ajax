@@ -204,6 +204,7 @@ ZmCsfeException.MAIL_MESSAGE_TOO_BIG				= "mail.MESSAGE_TOO_BIG";
 ZmCsfeException.MAIL_MUST_RESYNC					= "mail.MUST_RESYNC";
 ZmCsfeException.MAIL_NO_SUCH_CALITEM				= "mail.NO_SUCH_CALITEM";
 ZmCsfeException.MAIL_NO_SUCH_CONV					= "mail.NO_SUCH_CONV";
+ZmCsfeException.MAIL_NO_SUCH_CONTACT				= "mail.NO_SUCH_CONTACT";
 ZmCsfeException.MAIL_NO_SUCH_FOLDER					= "mail.NO_SUCH_FOLDER";
 ZmCsfeException.MAIL_NO_SUCH_ITEM					= "mail.NO_SUCH_ITEM";
 ZmCsfeException.MAIL_NO_SUCH_MOUNTPOINT				= "mail.NO_SUCH_MOUNTPOINT";
