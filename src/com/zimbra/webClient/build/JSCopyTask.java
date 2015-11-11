@@ -19,7 +19,6 @@ package com.zimbra.webClient.build;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -157,11 +156,11 @@ public class JSCopyTask extends Copy
 
             } catch (IOException exc) {
                 // an error occurred reading the file...
-                String msg =
-                    String.format("%s:0: error: %s", fileName, exc);
-
                 success = false;
-                log(msg, Project.MSG_ERR);
+
+                if (failonerror) {
+                    throw new BuildException(exc, getLocation());
+                }
 
             } catch (EvaluatorException exc) {
                 // the parse failed; the Java stacktrace isn't terribly
@@ -170,7 +169,7 @@ public class JSCopyTask extends Copy
                     String.format("%s: %s", exc.sourceName(), exc.getMessage());
 
                 success = false;
-                log(msg, Project.MSG_ERR);
+                log(msg, Project.MSG_VERBOSE);
             }
         }
 
