@@ -245,7 +245,9 @@ DwtDialog.prototype.CONTROLS_TEMPLATE = "dwt.Widgets#DwtDialogControls";
 DwtDialog.prototype.popdown =
 function() {
 	DwtBaseDialog.prototype.popdown.call(this);
-	this.resetButtonStates();
+	if (!this._disposeOnPopDown) {
+		this.resetButtonStates();
+	}
 };
 
 /**
