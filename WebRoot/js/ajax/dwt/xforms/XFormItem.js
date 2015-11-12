@@ -3537,15 +3537,8 @@ Case_XFormItem.prototype._outputHTML = function () {
 	
 	if(this.cacheInheritedMethod("getCustomHeight", "$getCustomHeight")) {
 		var height = this.cacheInheritedMethod("getCustomHeight", "$getCustomHeight").call(this);
-
-		if(height)
-			element.style.height = height;
-			
 		var width = this.cacheInheritedMethod("getCustomWidth", "$getCustomWidth").call(this);
-
-		if(width)
-			element.style.width = width;
-
+		Dwt.setSize(element, width, height);
 		var container = (form.parent instanceof DwtControl) ? form.parent : DwtControl.fromElementId(window._dwtShellId);
 		if(container) {
 			if(this.cacheInheritedMethod("resizeHdlr", "$resizeHdlr")) {
