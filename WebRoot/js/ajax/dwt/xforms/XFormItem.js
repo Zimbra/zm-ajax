@@ -2219,8 +2219,32 @@ Textfield_XFormItem.prototype.setElementEnabled  = function (enabled) {
 	this.setElementEnabledCssClass(enabled);
 }
 
+//Creates a datalist element which specifies a list of pre-defined options for an <input> element providing an autocomplete feature.
+Textfield_XFormItem.prototype.createDataList  = function (list) {
+	if (!AjxEnv.supported.input.list || this.listCreated || !list || list.length === 0) {
+		return;
+	}
+	var dataListId = this.getId() + "_datalist";
+	var element = this.getElement();
+	element.setAttribute("list", dataListId);
+	var dataList = document.createElement("datalist");
+	dataList.id = dataListId;
+	for (var i = 0; i < list.length; i++) {
+		var option = document.createElement('option');
+		option.value = list[i];
+		dataList.appendChild(option);
+	}
+	element.parentNode.appendChild(dataList);
 
-
+	// if there is an onChange handler, call that during on input event
+	var onChangeMethod = this.getOnChangeMethod();
+	if (typeof onChangeMethod === "function") {
+		$(element).on(DwtEvent.ONINPUT, {element : element, form : this.getForm()}, function(ev) {
+			onChangeMethod.call(this, ev.data.element.value, false, ev.data.form);
+		}.bind(this));
+	}
+	this.listCreated = true;
+};
 
 
 /**
