@@ -38,8 +38,6 @@ import javax.servlet.http.HttpServletResponse;
 public class AdminServlet extends ZimbraServlet {
 
     private static final String ACTION_GETCSR = "getCSR" ;
-//    private static final String ACTION_GETBP = "getBP" ;
-
 
     public AdminServlet() {
         super ();
