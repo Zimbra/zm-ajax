@@ -34,6 +34,7 @@ AjxStringUtil = function() {};
 AjxStringUtil.TRIM_RE = /^\s+|\s+$/g;
 AjxStringUtil.COMPRESS_RE = /\s+/g;
 AjxStringUtil.ELLIPSIS = " ... ";
+AjxStringUtil.ELLIPSIS_NO_SPACE = "...";
 AjxStringUtil.LIST_SEP = ", ";
 
 AjxStringUtil.CRLF = "\r\n";
@@ -1588,6 +1589,37 @@ function(str, bold, fontSize) {
 	AjxStringUtil._cacheSize++;
 
 	return w;
+};
+
+/**
+ * Fits as much of a string within the given width as possible. If truncation is needed, adds an ellipsis.
+ * Truncation could happen at any letter, and not necessarily at a word boundary.
+ *
+ * @param {String}  str     a string
+ * @param {Number}  width   available width in pixels
+ *
+ * @returns {String}    string (possibly truncated) that fits in width
+ */
+AjxStringUtil.fitString = function(str, width) {
+
+    var strWidth = AjxStringUtil.getWidth(str);
+    if (strWidth < width) {
+        return str;
+    }
+
+    var ell = AjxStringUtil.ELLIPSIS_NO_SPACE,
+        ellWidth = AjxStringUtil.getWidth(ell);
+
+    while (str.length > 0) {
+        if (AjxStringUtil.getWidth(str) + ellWidth < width) {
+            return str + ell;
+        }
+        else {
+            str = str.substring(0, str.length - 1); // remove last letter and try again
+        }
+    }
+
+    return '';
 };
 
 /**
