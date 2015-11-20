@@ -689,14 +689,15 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
     DBG.println(AjxDebug.KEYBOARD, "DwtKeyboardMgr::__keyDownHdlr - focus object " + obj + " has focus: " + hasFocus);
 	if (hasFocus && obj.handleKeyAction) {
 		handled = kbMgr.__dispatchKeyEvent(obj, kev);
-		while ((handled == DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && obj.parent && obj.parent.getKeyMapName) {
+		while ((handled === DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED) && obj.parent) {
 			obj = obj.parent;
-			handled = kbMgr.__dispatchKeyEvent(obj, kev);
+            if (obj.getKeyMapName) {
+			    handled = kbMgr.__dispatchKeyEvent(obj, kev);
+            }
 		}
 	}
 
-	// If the currently focused control didn't handle the event, hand it to the default key
-	// event handler
+	// If the currently focused control didn't handle the event, hand it to the default key event handler
 	if (handled === DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED && kbMgr.__currDefaultHandler) {
 		handled = kbMgr.__dispatchKeyEvent(kbMgr.__currDefaultHandler, kev);
 	}
