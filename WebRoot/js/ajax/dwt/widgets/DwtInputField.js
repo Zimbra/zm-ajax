@@ -66,6 +66,7 @@ DwtInputField = function(params) {
 	this._disabledClassName = this._origClassName + "-disabled";
 	this._focusedClassName = this._origClassName + "-focused";
 	this._errorHintClassName = this._origClassName + "-errorhint";
+	this._requiredClassName = this._origClassName + "-required";
 	DwtComposite.call(this, params);
 
     this._inputEventHandlers = {};
@@ -801,7 +802,9 @@ function() {
 	if (!this.getEnabled()) {
 		classList.push(this._disabledClassName);
 	} else if (this._hasError) {
-		if (this._hintIsVisible && !this._hasFocus) {
+		if (this._validationError === AjxMsg.valueIsRequired) {
+			classList.push(this._requiredClassName);
+		} else if (this._hintIsVisible && !this._hasFocus) {
 			classList.push(this._errorHintClassName);
 		} else {
 			classList.push(this._errorClassName);
