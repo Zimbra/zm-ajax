@@ -2739,7 +2739,8 @@ function() {
 					: (lastCell.clientWidth + scrollbarPad + "px");
 			}
 			else {
-				lastCell.style.width = div.style.width = lastCol._width +  $.isNumeric(lastCol._width) ? "px" : "";
+				Dwt.setSize(lastCell, lastCol._width, Dwt.DEFAULT);
+				Dwt.setSize(div, lastCol._width, Dwt.DEFAULT);
 			}
 			this.recalculateCssStyle(); //make sure to call this AFTER modifying the last col width.
 		}
