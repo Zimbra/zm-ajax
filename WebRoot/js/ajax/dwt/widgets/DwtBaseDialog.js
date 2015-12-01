@@ -89,7 +89,11 @@ DwtBaseDialog = function(params) {
 
 	// reset tab index
     this.setZIndex(Dwt.Z_HIDDEN); // not displayed until popup() called
-	this.setVisible(false);
+
+    // Set visible to true now to allow for getting metrics. ZIndex hidden will prevent it
+    // from actually being visible until the dialog is popped up.
+	this.setVisible(true);
+
 	this._position(DwtBaseDialog.__nowhereLoc);
 
 	// Make sure mouse clicks propagate to the DwtDraggable handler (document.onMouseMove and onMouseUp)
