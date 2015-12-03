@@ -856,7 +856,7 @@ public class SkinResources
 				cout = new CharArrayWriter(4096 << 2); // 16K buffer to start
 				String[] allPackages = ("Startup1_1,Startup1_2,Boot,Startup2,CalendarCore,Calendar,CalendarAppt," +
                         "ContactsCore,Contacts,MailCore,Mail,BriefcaseCore,Briefcase,PreferencesCore,Preferences," +
-                        "TasksCore,Tasks,Extras,Share,Zimlet,ZimletApp,Alert,ImportExport,Voicemail,TinyMCE,ZeroClipboard").split(",");
+						"TasksCore,Tasks,Extras,Share,Zimlet,ZimletApp,Alert,ImportExport,Voicemail,TinyMCE,ZeroClipboard,ConverseJS").split(",");
 				for(String name: allPackages) {
 					File file = new File(rootDir,"js/" + name + ".appcache");
 					preprocess(file, cout, null, null, null, null, null, requestedLocale);
@@ -882,6 +882,7 @@ public class SkinResources
 				sb.append("\n").append(appContextPath).append("/templates/zimbra/Widgets.template.js?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/ZeroClipboard.js?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/TinyMCE.js?v=").append(cacheBusterVersion);
+				sb.append("\n").append(appContextPath).append("/js/ConverseJS.js?v=").append(cacheBusterVersion);
 				sb.append("\n");
 
 			} else {
@@ -908,6 +909,7 @@ public class SkinResources
 				sb.append("\n").append(appContextPath).append("/js/Briefcase_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/PreferencesCore_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/Preferences_all.js.zgz?v=").append(cacheBusterVersion);
+				sb.append("\n").append(appContextPath).append("/js/ConverseJS_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n");
 			}
 
