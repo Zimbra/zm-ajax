@@ -4993,6 +4993,8 @@ Dwt_Datetime_XFormItem.initialize = function(){
 	 elementChanged:
 	 function (newDate, currentDate, event) {
 		currentDate = currentDate ? currentDate : new Date();
+		//If time is changed set the full year of new date with current date.
+		newDate.setFullYear(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
 		var elementChangedMethod = this.getParentItem().getElementChangedMethod();
 		if(elementChangedMethod)
 			elementChangedMethod.call(this.getParentItem(),newDate, currentDate, event);
