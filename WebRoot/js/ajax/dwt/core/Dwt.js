@@ -998,15 +998,20 @@ Dwt.getInsets = function(htmlElement) {
 };
 
 Dwt.insetBounds = function(bounds, insets) {
+
 	// given a 'bounds' object [from Dwt.getBounds()] 
 	//	and an 'insets' object [from Dwt.getInsets()]
 	//	munge the bounds so it takes the insets into account.
 	// Useful to get the inner dimensions of an element.
-	if (isNaN(bounds.x) || isNaN(insets.left)) return bounds;
+	if (!bounds) {
+        return null;
+    }
+
 	bounds.x += insets.left;
 	bounds.y += insets.top;
 	bounds.width  -= insets.left + insets.right;
 	bounds.height -= insets.top + insets.bottom;
+
 	return bounds;
 };
 
