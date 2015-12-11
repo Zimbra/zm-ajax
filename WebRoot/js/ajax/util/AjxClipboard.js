@@ -20,7 +20,8 @@
  */
 
 /**
- * Clipboard access singleton. Current implementation is built on ZeroClipboard.
+ * Clipboard access singleton. Current implementation either builds on
+ * ZeroClipboard or adapts clipboard.js to satisfy the same API.
  *
  * @class
  * @constructor
@@ -33,30 +34,50 @@ AjxClipboard = function() {
 	this._init();
 };
 
+// clipboard.js works on all browsers except IE8 and Safari, but triggers a
+// prompt on IE9-IE11. However, ZeroClipboard appears broken in IE for more
+// than one copy (bug 98289) so we use it anyway.
+//
+// Since the 'test' corresponds to the platforms supported by clipboard.js, we
+// put it here rather than in AjxEnv.
+AjxClipboard.USE_JS = !AjxEnv.isIE8 && !(AjxEnv.isSafari && !AjxEnv.isChrome);
+
 /**
  * Returns true if clipboard access is supported.
  * @returns {Boolean}   true if clipboard access is supported
  */
 AjxClipboard.isSupported = function() {
-	// ZeroClipboard requires Flash
-	return !!(window.ZeroClipboard && AjxPluginDetector.detectFlash());
+	// use clipboard.js when possible, otherwise fallback to ZeroClipboard which
+	// requires Flash
+	return AjxClipboard.USE_JS ||
+	    Boolean(window.ZeroClipboard && AjxPluginDetector.detectFlash());
 };
 
 AjxClipboard.prototype._init = function() {
 	this._clients = {};
-	ZeroClipboard.setMoviePath('/js/ajax/3rdparty/zeroclipboard/ZeroClipboard.swf');
+
+	if (!AjxClipboard.USE_JS) {
+		ZeroClipboard.setMoviePath('/js/ajax/3rdparty/zeroclipboard/ZeroClipboard.swf');
+	}
 };
 
 /**
- * Adds a (ZeroClipboard) clipboard client with the given name, and ties it to the given operation (usually
- * a DwtMenuItem) with the given listeners. The listener set up pretty much ties us to a ZeroClipboard
- * implementation. If we ever switch to a different implementation, this API will probably have to change.
+ * Adds a clipboard client with the given name, and ties it to the given
+ * operation (usually a DwtMenuItem) with the given listeners. The listener set
+ * is tied to ZeroClipboard's API, so if we ever drop it completely, we can
+ * switch to something more sane.
  *
  * @param {String}              name        a key to identify this client
  * @param {DwtControl}          op          widget that initiates copy (eg button or menu item)
  * @param {Object}              listeners   hash of events and (ZeroClipboard) callbacks
  */
 AjxClipboard.prototype.addClient = function(name, op, listeners) {
+
+	// use clipboard.js on supported browsers
+	if (op && AjxClipboard.USE_JS) {
+		this._clients[name] = new AjxClipboard.CJSAdapter(listeners, op);
+		return;
+	}
 
 	if (!op || this._clients[name]) {
 		return;
@@ -87,10 +108,38 @@ AjxClipboard.prototype.addClient = function(name, op, listeners) {
 };
 
 /**
- * Returns the (ZeroClipboard) client with the given name.
+ * Returns the client with the given name.
  * @param name
  * @returns {*}
  */
 AjxClipboard.prototype.getClient = function(name) {
 	return this._clients[name];
+};
+
+/**
+ * Private class which implements the ZeroClipboard API using 'clipboard.js'.
+ *
+ * @private
+ */
+AjxClipboard.CJSAdapter = function(listeners, op) {
+	this._completionListener = listeners.onComplete;
+
+	var selListener = this._mouseDownListener.bind(this, listeners.onMouseDown);
+	op.addSelectionListener(selListener);
+};
+
+AjxClipboard.CJSAdapter.prototype._mouseDownListener = function(listener, ev) {
+	listener(this);
+};
+
+AjxClipboard.CJSAdapter.prototype.setText = function(text) {
+	clipboard.copy(text, this._onSuccess.bind(this), this._onError.bind(this));
+};
+
+AjxClipboard.CJSAdapter.prototype._onSuccess = function() {
+	this._completionListener();
+};
+
+AjxClipboard.CJSAdapter.prototype._onError = function(err) {
+	appCtxt.setStatusMsg(err && err.message, ZmStatusView.LEVEL_WARNING);
 };
