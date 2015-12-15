@@ -66,6 +66,9 @@ AjxDebug = function(params) {
 	this.setDebugLevel(params.level);
 };
 
+AjxDebug.prototype.toString = function() { return "AjxDebug"; };
+AjxDebug.prototype.isAjxDebug = true;
+
 /**
  * Defines "no debugging" level.
  */
@@ -113,6 +116,7 @@ AjxDebug.KEYBOARD		= "kbnav";		// keyboard manager debugging
 AjxDebug.FOCUS			= "focus";		// focus
 AjxDebug.FOCUS1			= "focus1";		// focus - minimal logging
 AjxDebug.ACCESSIBILITY	= "a11y";		// accessibility logging
+AjxDebug.DRAFT	        = "draft";		// draft auto-save
 
 AjxDebug.BUFFER_MAX[AjxDebug.DEFAULT_TYPE]	= 0;	// this one can get big due to object dumps
 AjxDebug.BUFFER_MAX[AjxDebug.RPC]			= 200;
@@ -133,6 +137,7 @@ AjxDebug.BUFFER_MAX[AjxDebug.ZIMLET]		= 200;
 AjxDebug.BUFFER_MAX[AjxDebug.KEYBOARD]		= null;
 AjxDebug.BUFFER_MAX[AjxDebug.FOCUS]			= null;
 AjxDebug.BUFFER_MAX[AjxDebug.ACCESSIBILITY]	= null;
+AjxDebug.BUFFER_MAX[AjxDebug.DRAFT]	        = 200;
 
 AjxDebug.MAX_OUT = 25000; // max length capable of outputting an XML msg
 
@@ -140,16 +145,6 @@ AjxDebug._CONTENT_FRAME_ID	= "AjxDebug_CF";
 AjxDebug._LINK_FRAME_ID		= "AjxDebug_LF";
 AjxDebug._BOTTOM_FRAME_ID	= "AjxDebug_BFI";
 AjxDebug._BOTTOM_FRAME_NAME	= "AjxDebug_BFN";
-
-/**
- * Returns a string representation of the object.
- * 
- * @return	{string}		a string representation of the object
- */
-AjxDebug.prototype.toString =
-function() {
-	return "AjxDebug";
-};
 
 AjxDebug.prototype.setTitle =
 function(title) {
