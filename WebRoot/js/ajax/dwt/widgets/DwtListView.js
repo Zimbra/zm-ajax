@@ -507,6 +507,8 @@ function(list, noResultsOk, doAdd) {
 			this._parentEl.innerHTML = '';
 		}
 
+		Dwt.delClass(this._parentEl, 'DwtListView-Rows-Empty');
+
 		for (var i = 0; i < size; i++) {
 			var item = list.get(i);
 			var div = this._createItemHtml(item, {now:now}, false, i);
@@ -522,6 +524,7 @@ function(list, noResultsOk, doAdd) {
 		}
 	} else if (!noResultsOk) {
 		this._setNoResultsHtml();
+		Dwt.addClass(this._parentEl, 'DwtListView-Rows-Empty');
 	}
 };
 
@@ -1112,10 +1115,6 @@ function() {
 DwtListView.prototype.getList =
 function() {
 	return this._list;
-};
-
-DwtListView.prototype.getEnabled = function() {
-	return DwtComposite.prototype.getEnabled.call(this) && this.size() > 0;
 };
 
 DwtListView.prototype.getFocusElement = function() {
@@ -2127,7 +2126,9 @@ function(params) {
 DwtListView.prototype._setKbFocusElement = function(next, noSetFocus) {
 
 	// If there are no elements in the list, then bail
-	if (!this._list) {
+	if (!this._list || !this._list.size()) {
+		this._kbAnchor = null;
+		this.setFocusElement(this.getHtmlElement());
         return;
     }
 
