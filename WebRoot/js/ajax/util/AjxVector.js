@@ -556,6 +556,19 @@ AjxVector.prototype.join = function(sep) {
 };
 
 /**
+ * Return true if the given function returns true for a member of this vector,
+ * otherwise false.
+ *
+ * @param	{function}	f 	the function
+ * @param	{Object}	obj		the obj context
+*/
+AjxVector.prototype.some =
+function(f, obj) {
+	return this._array.some(f, obj);
+};
+
+
+/**
  * Return a new AjxVector containing the elements from this vector
  * except those for which f(el) returns true.  Otherwise said,
  * "SUBtracts" from this vector those elements for which f(el) returns true.

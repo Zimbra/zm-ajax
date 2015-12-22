@@ -434,6 +434,14 @@ DwtToolBar.prototype._getCurrentFocusItem = function() {
     return this.getItem(this._curFocusIndex);
 };
 
+DwtToolBar.prototype.getEnabled = function() {
+	// toolbars delegate focus to their children, and so are only 'enabled' --
+	// i.e. focusable -- when at least one child is
+	return this._children.some(function(child) {
+		return this._canFocusItem(child);
+	}, this);
+};
+
 /**
  * Moves focus to next or previous item that can take focus.
  *
