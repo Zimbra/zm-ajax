@@ -524,7 +524,7 @@ function(args) {
 AjxDebug.prototype._openDebugWindow =
 function(force) {
 	var name = AjxEnv.isIE ? "_blank" : this._dbgName;
-	this._debugWindow = window.open("", name, "width=600,height=400,resizable=yes,scrollbars=yes");
+	this._debugWindow = window.open("about:blank", name, "width=600,height=400,resizable=yes,scrollbars=yes");
 
 	if (this._debugWindow == null) {
 		this._enabled = false;
