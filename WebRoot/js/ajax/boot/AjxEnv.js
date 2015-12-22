@@ -719,3 +719,37 @@ if (!Array.prototype.indexOf) {
 		return -1;
 	};
 }
+
+/**
+ * Polyfill for Array.prototype.some -- currently only required by IE8.
+ *
+ * From Mozilla:
+ * https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/some
+ */
+if (!Array.prototype.some) {
+	// Production steps of ECMA-262, Edition 5, 15.4.4.17
+	// Reference: http://es5.github.io/#x15.4.4.17
+	Array.prototype.some = function(fun/*, thisArg*/) {
+		'use strict';
+
+		if (this == null) {
+			throw new TypeError('Array.prototype.some called on null or undefined');
+		}
+
+		if (typeof fun !== 'function') {
+			throw new TypeError();
+		}
+
+		var t = Object(this);
+		var len = t.length >>> 0;
+
+		var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+		for (var i = 0; i < len; i++) {
+			if (i in t && fun.call(thisArg, t[i], i, t)) {
+				return true;
+			}
+		}
+
+		return false;
+	};
+}
