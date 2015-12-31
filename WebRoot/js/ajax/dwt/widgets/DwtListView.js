@@ -520,6 +520,7 @@ function(list, noResultsOk, doAdd) {
 				} else {
 					this._addRow(div);
 				}
+                this._itemAdded(item);
 			}
 		}
 	} else if (!noResultsOk) {
@@ -1271,6 +1272,9 @@ function(row, index) {
 
 	row.setAttribute('role', this.itemRole);
 };
+
+// Placeholder function for any post-add processing
+DwtListView.prototype._itemAdded = function(item) {};
 
 DwtListView.prototype._fixAlternation =
 function(index) {
