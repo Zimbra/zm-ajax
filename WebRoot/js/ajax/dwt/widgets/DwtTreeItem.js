@@ -1073,26 +1073,35 @@ function(ev) {
     }
 };
 
-DwtTreeItem._mouseUpListener =
-function(ev) {
+DwtTreeItem._mouseUpListener = function(ev) {
+
 	var treeItem = ev.dwtObj;
-	if (!treeItem) { return false; }
+	if (!treeItem) {
+        return false;
+    }
+
 	// Ignore any mouse events in the child div i.e. the div which 
 	// holds all the items children. In the case of IE, no clicks are
 	// reported when clicking in the padding area (note all children
 	// are indented using padding-left style); however, mozilla
 	// reports mouse events that happen in the padding area
-	if (ev.target == treeItem._childDiv) { return; }
+	if (ev.target === treeItem._childDiv) {
+        return;
+    }
 
 	//ignore the collapse/expand arrow. This is handled in DwtTreeItem._nodeIconMouseDownHdlr. It should only collapse/expand and never select this item, so no point in going on.
 	if (treeItem._expandable && ev.target === AjxImg.getImageElement(treeItem._nodeCell)) {
 		return;
 	}
 
-	if (ev.button == DwtMouseEvent.LEFT && treeItem._gotMouseDownLeft) {
+    var targetElement = DwtUiEvent.getTargetWithProp(ev, "id"),
+        isContextCmd = (treeItem._extraCell && targetElement && treeItem._extraCell.id === targetElement.id);
+
+    if ((ev.button === DwtMouseEvent.RIGHT && treeItem._gotMouseDownRight) || isContextCmd) {
+        treeItem._tree._itemActioned(treeItem, ev);
+    }
+    else if (ev.button === DwtMouseEvent.LEFT && treeItem._gotMouseDownLeft) {
 		treeItem._tree._itemClicked(treeItem, ev);
-	} else if (ev.button == DwtMouseEvent.RIGHT && treeItem._gotMouseDownRight) {
-		treeItem._tree._itemActioned(treeItem, ev);
 	}
 };
 
