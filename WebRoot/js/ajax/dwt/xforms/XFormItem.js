@@ -2215,8 +2215,10 @@ Textfield_XFormItem.prototype.updateElement = function(newValue) {
 
 // set up how disabling works for this item type
 Textfield_XFormItem.prototype.setElementEnabled  = function (enabled) {
-	this.setElementDisabledProperty(enabled);
-	this.setElementEnabledCssClass(enabled);
+	if (this.getElement()) {
+		this.setElementDisabledProperty(enabled);
+		this.setElementEnabledCssClass(enabled);
+	}
 }
 
 //Creates a datalist element which specifies a list of pre-defined options for an <input> element providing an autocomplete feature.
