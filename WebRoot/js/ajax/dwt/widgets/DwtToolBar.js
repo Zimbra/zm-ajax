@@ -282,11 +282,15 @@ function() {
     return this._keyMapName;
 };
 
-DwtToolBar.prototype.handleKeyAction =
-function(actionCode, ev) {
+DwtToolBar.prototype.handleKeyAction = function(actionCode, ev) {
 
+    // if the user typed a left or right arrow in an INPUT, only go to the previous/next item if the cursor is at the
+    // beginning or end of the text in the INPUT
 	var curFocusIndex = this._curFocusIndex,
-	    numItems = this.getItemCount();
+	    numItems = this.getItemCount(),
+        input = ev && ev.target && ev.target.nodeName.toLowerCase() === 'input' ? ev.target : null,
+        cursorPos = input && input.selectionStart,
+        valueLen = input && input.value && input.value.length;
 
 	if (numItems < 2) {
 		return false;
@@ -297,14 +301,22 @@ function(actionCode, ev) {
 	switch (actionCode) {
 
 		case DwtKeyMap.PREV:
-			if (curFocusIndex > 0) {
-				this._moveFocus(true);
+            if (input && cursorPos > 0) {
+                ev.forcePropagate = true;   // don't let subsequent handlers block propagation
+                return false;
+            }
+			else if (curFocusIndex > 0) {
+				this._moveFocus(true, ev);
 				return true;
 			}
 			break;
 
 		case DwtKeyMap.NEXT:
-			if (curFocusIndex < numItems - 1) {
+            if (input && cursorPos < valueLen) {
+                ev.forcePropagate = true;   // don't let subsequent handlers block propagation
+                return false;
+            }
+			else if (curFocusIndex < numItems - 1) {
 				this._moveFocus(false);
 				return true;
 			}
@@ -500,7 +512,6 @@ DwtToolBar.prototype._childFocusListener = function(ev) {
 
     DBG.println(AjxDebug.FOCUS, "DwtToolBar CHILDFOCUSLISTENER: " + [ ev.dwtObj, ev.dwtObj._htmlElId ].join(' / '));
     this._curFocusIndex = this.__getButtonIndex(ev.dwtObj);
-    DwtComposite.prototype._childFocusListener.apply(this, arguments);
 };
 
 /**
