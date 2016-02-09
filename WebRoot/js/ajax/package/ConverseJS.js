@@ -18,6 +18,7 @@
  * All portions of the code are Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
  * ***** END LICENSE BLOCK *****
  */
+AjxPackage.require("ajax.3rdparty.converse.jquery_min");
 AjxPackage.require("ajax.3rdparty.converse.salsa20");
 AjxPackage.require("ajax.3rdparty.converse.bigint");
 AjxPackage.require("ajax.3rdparty.converse.core");
