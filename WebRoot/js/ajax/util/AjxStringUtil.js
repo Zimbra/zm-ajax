@@ -1883,6 +1883,13 @@ function(text, isHtml) {
 	if (first && first.type === AjxStringUtil.ORIG_UNKNOWN && second && (second.type === AjxStringUtil.ORIG_HEADER || second.type === AjxStringUtil.ORIG_WROTE_STRONG)) {
 		var originalText = AjxStringUtil._getTextFromBlock(first.block);
 		if (originalText) {
+			var third = results[2];
+			if (third && third.type === AjxStringUtil.ORIG_UNKNOWN) {
+				var originalThirdText = AjxStringUtil._getTextFromBlock(third.block);
+				if (originalThirdText && originalThirdText.indexOf(ZmItem.NOTES_SEPARATOR) !== -1) {
+					return originalText + originalThirdText;
+				}
+			}
 			return originalText;
 		}
 	}
