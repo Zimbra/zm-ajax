@@ -565,14 +565,17 @@ function(ev) {
 /**
  * @private
  */
-DwtBaseDialog.prototype._dragStart = 
+DwtBaseDialog.prototype._dragStart =
 function (x, y){
-	// fix for bug 3177
-	if (AjxEnv.isNav && !this._ignoreSetDragBoundries) {
-		this._currSize = this.getSize();
-		DwtDraggable.setDragBoundaries(DwtDraggable.dragEl, 0, document.body.offsetWidth - this._currSize.x, 0, 
-									   document.body.offsetHeight - this._currSize.y);
-	}
+    // fix for bug 3177
+    if (AjxEnv.isNav && !this._ignoreSetDragBoundries) {
+        this._currSize = this.getSize();
+        var control = DwtControl.fromElementId(window._dwtShellId);
+        if (control) {
+            var p = Dwt.getSize(control.getHtmlElement());
+            DwtDraggable.setDragBoundaries(DwtDraggable.dragEl, 0, p.x - this._currSize.x, 0, p.y - this._currSize.y);
+        }
+    }
 };
 
 /**
