@@ -421,7 +421,7 @@ AjxPackage.__onAsyncLoad = function() {
 };
 
 AjxPackage.__onLoad = function(data) {
-//    AjxPackage.define(data.name);
+    AjxPackage.define(data.name);
     if (data.callback) {
         try {
             data.callback.run();
