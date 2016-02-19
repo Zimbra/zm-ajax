@@ -367,7 +367,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._label) {
 		htmlArr[idx++] = "<td id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, field);
-		htmlArr[idx++] = "' class='DwtListHeaderItem-label' style='padding-right:6px; padding-left:6px'>";
+		htmlArr[idx++] = "' class='DwtListHeaderItem-label'>";
 		htmlArr[idx++] = headerCol._label;
 		htmlArr[idx++] = "</td>";
 	}
