@@ -695,6 +695,17 @@ function(n) {
 	return n < 10 ? ('0' + n) : n;
 };
 
+/**
+ * Returns the year portion of the given date as a YYYY string.
+ *
+ * @param {Date}    date    (optional, defaults to current date) a date
+ * @returns {string}    year as YYYY
+ */
+AjxDateUtil.getYearStr = function(date) {
+    date = date || new Date();
+    return date.getFullYear() + "";
+};
+
 AjxDurationFormatVerbose = function() { }
 
 AjxDurationFormatVerbose.formatYears =
