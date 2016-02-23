@@ -1121,6 +1121,10 @@ DwtChooserListView = function(params) {
 
 	this.type = params.type;
 	this._chooserParent = params.parent.parent;
+
+    // create a drag source so that dragging a column header will trigger mouse capture
+    this._dragSrc = new DwtDragSource(Dwt.DND_DROP_MOVE);
+    this.setDragSource(this._dragSrc);
 };
 
 DwtChooserListView.PARAMS = ["parent", "type", "className", "view"];
