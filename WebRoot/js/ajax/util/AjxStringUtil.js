@@ -2004,9 +2004,7 @@ AjxStringUtil.IGNORE_NODE = AjxUtil.arrayAsHash(AjxStringUtil.IGNORE_NODE_LIST);
 AjxStringUtil._getOriginalHtmlContent = function(text) {
 
 	// strip <script> tags (which should not be there)
-	while (AjxStringUtil.SCRIPT_REGEX.test(text)) {
-		text = text.replace(AjxStringUtil.SCRIPT_REGEX, "");
-	}
+    text = AjxStringUtil.stripScriptTags(text);
 
 	var htmlNode = AjxStringUtil._writeToTestIframeDoc(text);
 
@@ -2075,6 +2073,21 @@ AjxStringUtil._getOriginalHtmlContent = function(text) {
 
 	AjxStringUtil._removeTestIframeDoc();
 	return result;
+};
+
+/**
+ * Removes <script> tags from the given text.
+ *
+ * @param {string}  text    some HTML
+ * @returns {string}    cleaned up HTML
+ */
+AjxStringUtil.stripScriptTags = function(text) {
+
+    while (AjxStringUtil.SCRIPT_REGEX.test(text)) {
+        text = text.replace(AjxStringUtil.SCRIPT_REGEX, "");
+    }
+
+    return text;
 };
 
 /**
