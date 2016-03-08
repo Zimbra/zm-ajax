@@ -27,6 +27,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class YuiSwfFilter implements Filter {
@@ -36,15 +37,19 @@ public class YuiSwfFilter implements Filter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
-                    ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    throws IOException, ServletException {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpReq = (HttpServletRequest) request;
             String requestURI = httpReq.getRequestURI();
             if (requestURI.endsWith(".swf")) {
-                ZimbraLog.misc.debug("Rejecting request for direct access to .swf file %s", requestURI);
-                ((HttpServletResponse)response).sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
+                String queryString = httpReq.getQueryString();
+                if (!StringUtil.isNullOrEmpty(queryString)) {
+                    ZimbraLog.misc.info("Rejecting request for access to .swf file %s with query string '%s'",
+                            requestURI, queryString);
+                    ((HttpServletResponse)response).sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
             }
         }
         chain.doFilter(request, response);
