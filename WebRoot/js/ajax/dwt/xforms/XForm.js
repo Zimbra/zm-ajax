@@ -185,6 +185,8 @@ XForm.prototype.focusElement = function (id) {
 			this.onFocus(id);
 		}
 	}
+
+    return el;
 };
 
 //set focus on the first element in the actuve tab group or in the first element in the form
@@ -205,12 +207,12 @@ XForm.prototype.focusFirst = function(currentTabId) {
 		for (var i = 0; i < cnt; i++) {
 			var nextItem = this.getItemById(tabIdOrder[i]);
 			if(nextItem && nextItem.focusable && nextItem.getIsVisible() && nextItem.getIsEnabled()) {
-				this.focusElement(tabIdOrder[i]);
-				break;
+				return this.focusElement(tabIdOrder[i]);
 			}
 		}
 	}
-}
+    return null;
+};
 
 XForm.prototype.addTabGroup = function(item, tabGroupKeyAttr) {
 	tabGroupKeyAttr = tabGroupKeyAttr ? tabGroupKeyAttr : "tabGroupKey";
@@ -230,7 +232,6 @@ XForm.prototype.focusNext = function(id, currentTabId) {
 	if(tabIdOrder && tabIdOrder.length > 0) {
 		var cnt = tabIdOrder.length;
 		//DBG.println(AjxDebug.DBG1, "TabIdOrder: length = " + tabIdOrder.length + "<br />" + tabIdOrder.toString());
-		var found=false;
 		if (myId != null) {
 			for (var i = 0; i < cnt; i++) {
 				if(tabIdOrder[i] == myId) {
@@ -238,9 +239,7 @@ XForm.prototype.focusNext = function(id, currentTabId) {
 					if(tabIdOrder[elIndex]) {
 						var nextEl = this.getItemById(tabIdOrder[elIndex]);
 						if(nextEl.focusable && nextEl.getIsVisible() && nextEl.getIsEnabled()) {
-							this.focusElement(tabIdOrder[elIndex]);
-							found=true;
-							break;
+							return this.focusElement(tabIdOrder[elIndex]);
 						} else {
 							myId=tabIdOrder[elIndex];
 						}
@@ -248,11 +247,9 @@ XForm.prototype.focusNext = function(id, currentTabId) {
 				}
 			}
 		}		
-		if(!found) {
-			this.focusFirst(currentTabId);
-		}
-		
+		return this.focusFirst(currentTabId);
 	}
+    return null;
 };
 
 XForm.prototype.focusPrevious = function(id, currentTabId) {
@@ -266,7 +263,6 @@ XForm.prototype.focusPrevious = function(id, currentTabId) {
 	
 	if(tabIdOrder && tabIdOrder.length > 0) {
 		var cnt = tabIdOrder.length-1;
-		var found=false;
 		if (myId != null) {
 			for (var i = cnt; i >= 0; i--) {
 				if(tabIdOrder[i] == myId) {
@@ -274,9 +270,7 @@ XForm.prototype.focusPrevious = function(id, currentTabId) {
 					if(tabIdOrder[elIndex]) {
 						var nextEl = this.getItemById(tabIdOrder[elIndex]);
 						if(nextEl.focusable && nextEl.getIsVisible()  && nextEl.getIsEnabled()) {
-							this.focusElement(tabIdOrder[elIndex]);
-							found=true;
-							break;
+							return this.focusElement(tabIdOrder[elIndex]);
 						} else {
 							myId=tabIdOrder[elIndex];
 						}
@@ -284,11 +278,9 @@ XForm.prototype.focusPrevious = function(id, currentTabId) {
 				}
 			}
 		}		
-		if(!found) {
-			this.focusFirst(currentTabId);
-		}
-		
+		return this.focusFirst(currentTabId);
 	}
+    return null;
 };
 
 XForm.prototype.getModel = function () {
