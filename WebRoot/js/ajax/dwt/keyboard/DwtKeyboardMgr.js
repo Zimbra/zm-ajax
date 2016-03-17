@@ -613,37 +613,34 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 	 * If the tab happens in an object not under the tab group hierarchy, then set
 	 * focus to the current focus object in the tab hierarchy i.e. grab back control
 	 */
-     var ctg = kbMgr.__currTabGroup;
-	 if (keyCode == DwtKeyEvent.KEY_TAB) {
-	 	if (ctg && !DwtKeyMapMgr.hasModifier(kev)) {
+    var ctg = kbMgr.__currTabGroup,
+        member;
+
+	if (keyCode == DwtKeyEvent.KEY_TAB) {
+	    if (ctg && !DwtKeyMapMgr.hasModifier(kev)) {
 			DBG.println(AjxDebug.FOCUS, "Tab");
-			// If the tab hit is in an element or if the current tab group has
-			// a focus member
+			// If the tab hit is in an element or if the current tab group has a focus member
 			if (ctg.getFocusMember()) {
-				if (!kev.shiftKey) {
-                    ctg.getNextFocusMember(true);
-				} else {
-                    ctg.getPrevFocusMember(true);
-				}
-			} else {
+                member = kev.shiftKey ? ctg.getPrevFocusMember(true) : ctg.getNextFocusMember(true);
+			}
+            else {
 			 	DBG.println(AjxDebug.FOCUS, "DwtKeyboardMgr.__keyDownHdlr: no current focus member, resetting to first in tab group");
 			 	// If there is no current focus member, then reset
-                ctg.resetFocusMember(true);
+                member = ctg.resetFocusMember(true);
 			}
-		 	return kbMgr.__processKeyEvent(ev, kev, false, DwtKeyboardMgr.__KEYSEQ_HANDLED);
-	 	} else {
-	 		// No tab groups registered, or Alt or Ctrl was down. Let the browser handle it.
-		 	return kbMgr.__processKeyEvent(ev, kev, true, DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
-	 	}
-	 } else if (ctg && AjxEnv.isGecko && kev.target instanceof HTMLHtmlElement) {
+	    }
+        // If we did not handle the Tab, let the browser handle it
+        return kbMgr.__processKeyEvent(ev, kev, !member, member ? DwtKeyboardMgr.__KEYSEQ_HANDLED : DwtKeyboardMgr.__KEYSEQ_NOT_HANDLED);
+	}
+    else if (ctg && AjxEnv.isGecko && kev.target instanceof HTMLHtmlElement) {
 	 	/* With FF we focus get set to the <html> element when tabbing in
 	 	 * from the address or search fields. What we want to do is capture
 	 	 * this here and reset the focus to the first element in the tabgroup
 	 	 * 
 	 	 * TODO Verify this trick is needed/works with IE/Safari
 	 	 */
-         ctg.resetFocusMember(true);
-	 }
+        member = ctg.resetFocusMember(true);
+	}
 	 
     // Allow key events to propagate when keyboard manager is disabled (to avoid taking over browser shortcuts). Bugzilla #45469.
     if (!kbMgr.isEnabled()) {
@@ -652,10 +649,6 @@ DwtKeyboardMgr.__keyDownHdlr = function(ev) {
 
 
     /********* SHORTCUTS *********/
-
-    if (!kbMgr.isEnabled()) {
-        return false;
-    }
 
 	// Filter out modifier keys. If we're in an input field, filter out legitimate input.
 	// (A shortcut from an input field must use a modifier key.)
