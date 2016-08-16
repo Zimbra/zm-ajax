@@ -1,5 +1,5 @@
-<project name="ZimbraWebClient" default="war">
-    <import file="../ant-global.xml" />
+<project name="zm-ajax" default="zm-ajax">
+    <import file="../zm-zcs/ant-global.xml"/>
 
     <!-- Properties -->
     <dirname property="this.zwc.basedir" file="${ant.file.ZimbraWebClient}" />
@@ -146,16 +146,6 @@
 	</if>
     <!-- Paths and Filesets -->
 
-    <path id='class.path'>
-        <pathelement location="${build.classes.dir}"/>
-        <fileset dir="${lib.dir}" includes="**/*.jar"/>
-        <fileset dir="${overlay.lib.dir}" includes="**/*.jar" erroronmissingdir="false" />
-        <fileset dir="${common.lib.dir}" includes="**/*.jar"/>
-        <pathelement location="${common.build.classes.dir}"/>
-        <pathelement location="${client.build.classes.dir}"/>
-	<pathelement location="${server.build.classes.dir}"/>
-	<pathelement location="${taglib.build.classes.dir}"/>
-    </path>
 
     <!-- pseudo-fileset so that targets that rely on it don't fail -->
     <fileset id='help.fileset' dir='${build.dir}' excludes='**'/>
@@ -343,13 +333,14 @@
         </war>
     </target>
 
-    <target name='sync' depends='jquery,modernizr,tinymce,templates'>
+    <!--target name='sync' depends='jquery,modernizr,tinymce,templates'-->
+    <target name='sync' depends='compile'>
         <!-- NOTE: Keep order in sync with list of war filesets. -->
-        <copy todir='${webapp.dir}/WEB-INF' verbose='${sync.verbose}'>
+        <!--copy todir='${webapp.dir}/WEB-INF' verbose='${sync.verbose}'>
             <fileset refid="webinf.fileset" />
             <fileset refid="overlay.webinf.fileset" />
             <fileset refid='customer.webinf.fileset' />
-        </copy>
+        </copy-->
 
         <copy todir='${webapp.dir}/WEB-INF/classes' verbose='${sync.verbose}'>
             <fileset refid="src.props.fileset" />
@@ -357,23 +348,6 @@
             <fileset refid="messages.fileset" />
             <fileset refid="overlay.messages.fileset" />
             <fileset dir='${build.classes.dir}' excludes='**/build/**'/>
-        </copy>
-
-        <copy todir="${webapp.dir}/WEB-INF/lib" verbose="${sync.verbose}">
-            <fileset dir='${lib.dir}' includes='gifencoder.jar'/>
-            <fileset dir='${soap.build.dir}' includes='zimbrasoap.jar'/>
-            <fileset file="${client.jarfile}" />
-            <fileset dir='${taglib.build.dir}' includes='zimbrataglib.jar'/>
-            <fileset dir='${server.build.dir}' includes='zimbrastore.jar'/>
-            <fileset dir='${common.lib.dir}' includes='gmbal-api-only-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='jaxb-api-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='jaxb-impl-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='jaxws-api-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='jaxws-rt-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='jsr181-api-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='policy-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='stax-ex-*.jar'/>
-            <fileset dir='${common.lib.dir}' includes='streambuffer-*.jar'/>
         </copy>
 
         <taskdef name="jscopy"
@@ -388,7 +362,7 @@
             <fileset refid='customer.web.fileset'/>
         </jscopy>
 
-        <jscopy todir='${webapp.dir}/public' verbose='${sync.verbose}'>
+        <!--jscopy todir='${webapp.dir}/public' verbose='${sync.verbose}'>
             <fileset refid="jsp.fileset" />
             <fileset refid="overlay.jsp.fileset" />
             <fileset refid="customer.jsp.fileset" />
@@ -407,17 +381,17 @@
 		<copy todir='${webapp.dir}/help'>
 			<fileset refid='help.fileset' />
 			<fileset refid='network.help.fileset' />
-		</copy>
+		</copy-->
 
         <!-- files from build tree -->
-        <jscopy todir='${webapp.dir}' verbose='${sync.verbose}'>
+        <!-- <jscopy todir='${webapp.dir}' verbose='${sync.verbose}'>
             <fileset dir='${build.web.dir}' excludes='${build.web.excludes}'/>
-        </jscopy>
+        </jscopy> -->
 
         <!-- replace web.xml tokens -->
-		<antcall target='webxml-package-replace' />
+		<!--antcall target='webxml-package-replace' />
 		<copy tofile="${webapp.dir}/WEB-INF/web.xml" file='${build.dir}/web.xml' verbose='${sync.verbose}'/>
-        <antcall target='webxml-deploy-replace'/>
+        <antcall target='webxml-deploy-replace'/-->
     </target>
 
     <target name='init' depends='client,dev,customer-init'>
@@ -431,11 +405,6 @@
 
         <condition property='build.prod.value' value='true' else='false'>
             <isset property="build.prod"/>
-        </condition>
-
-
-        <condition property='external.done' value='true'>
-            <available file="${taglib.build.dir}/zimbrataglib.jar"/>
         </condition>
 
         <!-- deployment properties -->
@@ -605,18 +574,13 @@
 		</if>
     </target>
 
-    <target name='compile' depends='init,external'>
+     <target name='compile' depends='init,resolve'>
         <mkdir dir='${build.classes.dir}'/>
         <javac destdir="${build.classes.dir}" classpathref="class.path"
                debug="true" target="${javac.target}" includeantruntime="false">
             <src location='${src.dir}'/>
         </javac>
-    </target>
-
-    <target name='external' unless="external.done">
-        <!-- ant jar in ZimbraTagLib will build ZimbraCommon and ZimbraServer -->
-        <ant dir='${taglib.dir}' target="jar" inheritall="false"/>
-    </target>
+    </target> 
 
     <target name='templates' depends='compile'>
         <property name='templates.done' value='${build.dir}/templates.done'/>
@@ -624,7 +588,7 @@
         <dependset>
             <srcfileset refid="template.fileset" />
             <srcfileset refid="overlay.template.fileset" />
-            <srcfileset dir='${skins.dir}' includes='**/*.template'/>
+            <!--srcfileset dir='${skins.dir}' includes='**/*.template'/-->
             <targetfileset dir='${build.template.dir}' includes='**/*.template.js'/>
             <targetfileset dir='${build.classes.dir}/messages/AjxTemplateMsg*.properties' />
             <targetfilelist dir='.' files="${templates.done}"/>
@@ -656,7 +620,7 @@
             <then>
                 <taskdef name='template'
                          classname='com.zimbra.kabuki.tools.templates.TemplateTask'
-                         classpathref='class.path'
+                         classpath='${build.classes.dir}'
                         />
 	            <antcall target="templates-generate">
 		            <param name="srcdir" value="${template.dir}" />
@@ -671,7 +635,7 @@
                     <param name="authoritative" value="false" />
                 </antcall>
 	            <dirset id="skin.dirs" dir="${skins.dir}" includes="*" excludes="_*" />
-	            <pathconvert property="skin.names" refid="skin.dirs" pathsep=",">
+	            <!--pathconvert property="skin.names" refid="skin.dirs" pathsep=",">
 		            <flattenmapper />
 	            </pathconvert>
 	            <for list="${skin.names}" param="name">
@@ -684,72 +648,13 @@
 			            </antcall>
 		            </sequential>
 	            </for>
-                <antcall target="customer-templates"/>
+                <antcall target="customer-templates"/-->
 
                 <touch file="${templates.done}"/>
             </then>
         </if>
     </target>
-
-	<target name='templates-generate'>
-		<echo>srcdir: ${srcdir}, gendir: ${gendir}, destdir: ${destdir}, authoritative: ${authoritative}</echo>
-		<template destdir='${gendir}' authoritative="${authoritative}">
-		    <fileset dir='${srcdir}' erroronmissingdir="false"
-                     includes='${template.includes}' excludes='**/*_*.template,${template.excludes}' />
-		</template>
-		<template destdir='${gendir}' format="properties">
-		    <fileset dir='${srcdir}' erroronmissingdir="false"
-                     includes='**/*_*.template' excludes='${template.excludes}' />
-		</template>
-		<fileset id='templates-generate.fileset' erroronmissingdir="false"
-                 dir='${srcdir}' includes='**/*_*.template' />
-		<pathconvert property='locids' refid='templates-generate.fileset' pathsep=','>
-			<regexpmapper from="^.*/.*?_(.*).template" to="\1" />
-		</pathconvert>
-		<for list="${locids}" param="locid">
-			<sequential>
-				<if><not><isset property="templates.@{locid}" /></not>
-					<then>
-						<property name="templates.@{locid}" value="true" />
-						<concat destfile="${destdir}/AjxTemplateMsg_@{locid}.properties" fixlastline="yes">
-							<fileset dir="${gendir}" includes="**/*_@{locid}.template.properties" />
-						</concat>
-					</then>
-				</if>
-			</sequential>
-		</for>
-	</target>
-
-    <target name='customer-templates' depends='compile' if='env.CUSTOMER_SKIN'>
-        <if>
-            <and>
-				<available file='${customer.skin.dir}' />
-				<not>
-                    <isset property='build.ajax'/>
-                </not>
-                <not>
-                    <isset property='build.admin'/>
-                </not>
-            </and>
-            <then>
-                <dirset id='skins.dirset' dir='${customer.skin.dir}' includes='*'/>
-                <pathconvert property="skins.list" refid="skins.dirset" pathsep=",">
-                    <flattenmapper/>
-                </pathconvert>
-                <for list='${skins.list}' param='name'>
-                    <sequential>
-	                    <antcall target="templates-generate">
-		                    <param name="srcdir" value="${customer.skin.dir}/@{name}" />
-		                    <param name="gendir" value="${build.web.dir}/skins/@{name}" />
-		                    <param name="destdir" value="${build.web.dir}/skins/@{name}/messages" />
-		                    <param name="authoritative" value="true" />
-	                    </antcall>
-                    </sequential>
-                </for>
-            </then>
-        </if>
-    </target>
-
+	
     <target name='timezones' depends='compile'>
         <property name='tz.data' value='${server.dir}/conf/timezones.ics'/>
         <property name='tz.dir' value='${build.js.dir}/ajax/util'/>
@@ -1155,7 +1060,7 @@ ext = BeanUtils.cook(ext);
 
 	    <taskdef name="try"
 	             classname="com.zimbra.webClient.build.TryTask"
-	             classpath="${build.classes.dir}"
+	             classpath="${class.path}"
 	    />
 
         <!-- minimize js, prepend copyright, compress -->
@@ -1309,7 +1214,6 @@ ext = BeanUtils.cook(ext);
     </target>
 
     <target name='clean' depends='customer-init'>
-        <ant dir="${taglib.dir}" target="clean" inheritAll="false"/>
         <delete dir='${build.dir}'/>
         <delete dir='${customer.build.dir}' />
         <delete dir="${jquery.dir}"/>
@@ -1686,58 +1590,29 @@ ext = BeanUtils.cook(ext);
         <copy todir='${jquery.dir}' file='${web.dir}/jquery/${jquery.version}/jquery.js' verbose='${sync.verbose}'/>
     </target>
 
-    <!--<target name="converse">
-        <copy todir="${converse.dir}/" file="${converse.js.build.dir}/templates.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/converse.js"/>
-        <mkdir dir="${converse.dir}/css"/>
-        <copy todir="${converse.dir}/css/" file="${converse.css.dir}/converse.css" verbose="${sync.verbose}"/>
-        <copy todir="${build.css.dir}" file="${converse.css.dir}/converse.css" verbose="${sync.verbose}"/>
-        <copy todir="${converse.dir}/fonticons" verbose="${sync.verbose}">
-            <fileset dir="${converse.fonticons.dir}" includes="**"/>
-        </copy>
-        <copy todir="${build.web.dir}/fonticons" verbose="${sync.verbose}">
-            <fileset dir="${converse.fonticons.dir}" includes="**"/>
-        </copy>
-        <copy todir="${converse.dir}/sounds" verbose="${sync.verbose}">
-            <fileset dir="${converse.sounds.dir}" includes="**" excludes="README"/>
-        </copy>
-        <copy todir="${build.web.dir}/public/sounds" verbose="${sync.verbose}">
-            <fileset dir="${converse.dir}/sounds" includes="**"/>
-        </copy>
-        <copy tofile="${converse.dir}/jquery_min.js" file="${converse.js.dir}/components/jquery/dist/jquery.min.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/build/dep/salsa20.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/src/bigint.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/core.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/enc-base64.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/crypto-js-evanvosberg/src/md5.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/crypto-js-evanvosberg/src/evpkdf.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/cipher-core.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/aes.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/sha1.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/sha256.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/hmac.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/pad-nopadding.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/vendor/cryptojs/mode-ctr.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/otr/build/dep/eventemitter.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/src/otr.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/strophejs/strophe.js"/>
-        <copy tofile="${converse.dir}/strophe_vcard.js" file="${converse.js.dir}/components/strophejs-plugins/vcard/strophe.vcard.js"/>
-        <copy tofile="${converse.dir}/strophe_disco.js" file="${converse.js.dir}/components/strophejs-plugins/disco/strophe.disco.js"/>
-        <copy tofile="${converse.dir}/strophe_ping.js" file="${converse.js.dir}/components/strophejs-plugins/ping/strophe.ping.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/underscore/underscore.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/backbone/backbone.js"/>
-        <copy tofile="${converse.dir}/backbone_browserStorage.js" file="${converse.js.dir}/components/backbone.browserStorage/backbone.browserStorage.js"/>
-        <copy tofile="${converse.dir}/backbone_overview.js" file="${converse.js.dir}/components/backbone.overview/backbone.overview.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/src/moment-with-langs.js"/>
-        <copy tofile="${converse.dir}/jquery_browser.js" file="${converse.js.dir}/components/jquery.browser/dist/jquery.browser.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/typeahead.js/index.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/components/jed/jed.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.build.dir}/locales.js"/>
-        <copy todir="${converse.dir}/" file="${converse.js.dir}/src/utils.js"/>
+    <property name="jar.file" value="zimbraajax.jar" />
+    <!-- Jar target to product zimbraajax.jar output, depends on compile target of zm-ajax build.xml. -->
+    <target name="jar" depends="compile" description="Creates the jar file">
+      <antcall target="zimbra-jar">
+          <param name="implementation.title" value="Zimbra AJAX"/>
+      </antcall>
     </target>
 
-    <target name="get-converse-version">
-        <echo message="${converse.version}" />
-    </target>-->
-    
+    <target name="zm-ajax" depends="dev-sync">
+        <antcall target='jar' />
+
+       <!--  <tar destfile="${build.dir}/zimbra_ajax.tar" compression="gzip">
+            <tarfileset dir="${web.dir}" prefix="WebRoot">
+                <include name="js/ajax/**"/>
+                <include name="js/zimbra/**"/>
+            </tarfileset>
+            <tarfileset dir="${build.dir}/WebRoot" prefix="WebRoot">
+                <include name="templates/**"/>
+            </tarfileset>
+            <tarfileset dir="${src.dir}" prefix="src"/>
+            <tarfileset dir="${build.dir}" prefix="build">
+                <include name="classes/**"/>
+            </tarfileset>
+        </tar> -->
+    </target>
 </project>
