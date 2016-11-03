@@ -2,7 +2,7 @@
 <ivy-module version="2.0"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="com.zimbra" module="zm-ajax" status="release">
+ <info organisation="zimbra" module="zm-ajax" status="integration">
  </info>
  <dependencies>
 	<dependency org="ant" name="ant" rev="1.6.5"/>
@@ -16,9 +16,9 @@
 	<dependency org="rhino" name="js" rev="1.6R7"/>
 	<dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
 	<dependency org="gifencoder" name="gifencoder" rev="1" />	
-	<dependency org="zimbracommon" name="zimbracommon" rev="1.0" /> 
-	<dependency org="zimbraclient" name="zimbraclient" rev="1.0" /> 
-	<dependency org="zimbrastore" name="zimbrastore" rev="1.0" />
-	<dependency org="zimbrataglib" name="zimbrataglib" rev="1.0" />	
+	<dependency org="zimbra" name="zm-common" rev="latest.integration" />
+	<dependency org="zimbra" name="zm-client" rev="latest.integration" />
+	<dependency org="zimbra" name="zm-store" rev="latest.integration" />
+	<dependency org="zimbra" name="zm-taglib" rev="latest.integration" />
 </dependencies>
 </ivy-module>
