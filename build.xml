@@ -30,22 +30,23 @@
 			</else>
 		</if>
     </target>
-	
-    <target name='compile' depends='init,resolve'>
-        <mkdir dir='${build.classes.dir}'/>
-        <javac destdir="${build.classes.dir}" classpathref="class.path"
-               debug="true" target="${javac.target}" includeantruntime="false">
-            <src location='${src.dir}'/>
+
+    <path id="src.java.path">
+        <pathelement location="${src.dir}" />
+    </path>
+
+     <target name="compile" depends="build-init,resolve" description="Compiles from src/java into build/classes.">
+        <mkdir dir="${build.classes.dir}" />
+        <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
+            <src refid="src.java.path" />
         </javac>
-    </target> 
+    </target>
 	
-    <!-- Jar target to product zimbraajax.jar output, depends on compile target of zm-ajax build.xml. -->
+    <!-- Jar target to produce jar output, depends on compile target of zm-ajax build.xml. -->
     <target name="jar" depends="compile" description="Creates the jar file">
       <antcall target="zimbra-jar">
-		  <param name="jar.file" value="zimbraajax.jar"/>
-          <param name="implementation.title" value="Zimbra AJAX"/>
-		  
-      </antcall>
+      <param name="implementation.title" value="Zimbra Ajax"/>
+    </antcall>
     </target>
 	
     <target name="zm-ajax" depends="jar" />
