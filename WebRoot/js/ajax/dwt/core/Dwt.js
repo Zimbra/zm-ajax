@@ -850,23 +850,13 @@ Dwt.__MSIE_OPACITY_RE = /alpha\(opacity=(\d+)\)/;
 Dwt.getOpacity =
 function(htmlElement) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-		var filter = Dwt.getIEFilter(htmlElement, "alpha");
-		var m = Dwt.__MSIE_OPACITY_RE.exec(filter) || [ filter, "100" ];
-		return Number(m[1]);
-	}
 	return Number(htmlElement.style.opacity || 1) * 100;
 };
 
 Dwt.setOpacity =
 function(htmlElement, opacity) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-		var filterVal = opacity < 100 ? "alpha(opacity="+opacity+")" : "";
-		Dwt.alterIEFilter(htmlElement, "alpha", filterVal);
-	} else {
-		htmlElement.style.opacity = opacity/100;
-	}
+	htmlElement.style.opacity = opacity/100;
 };
 
 
@@ -927,9 +917,6 @@ function(point) {
 	if (window.innerWidth) {
 		p.x = window.innerWidth;
 		p.y = window.innerHeight;
-	} else if (AjxEnv.isIE6CSS) {
-		p.x = document.body.parentElement.clientWidth;
-		p.y = document.body.parentElement.clientHeight;
 	} else if (document.body && document.body.clientWidth) {
 		p.x = document.body.clientWidth;
 		p.y = document.body.clientHeight;
@@ -1107,9 +1094,7 @@ function(text) {
 Dwt.getIframeDoc =
 function(iframeObj) {
 	if (iframeObj) {
-		return AjxEnv.isIE
-			? iframeObj.contentWindow.document
-			: iframeObj.contentDocument;
+		return iframeObj.contentDocument;
 	}
 	return null;
 };
@@ -1895,8 +1880,6 @@ function(startColor, endColor, direction) {
  *    background: -o-linear-gradient(black, white);
  * -- IE6 & IE7
  *    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#000000', endColorstr='#ffffff');
- * -- IE8 & IE9
- *    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#000000', endColorstr='#ffffff')";
  * -- IE10
  *    background: -ms-linear-gradient(black, white);
  * -- the standard
@@ -1907,14 +1890,7 @@ function(startColor, endColor, direction) {
 
     var cssDirection;
     var gradient = {};
-    if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-        cssDirection = (direction == 'v') ? 0 : 1;
-        gradient.field = "filter";
-        gradient.name  = "DXImageTransform.Microsoft.Gradient";
-        gradient.css   = "progid:" + gradient.name + "(" +
-                         "GradientType=" + cssDirection + ",startColorstr=" + startColor +
-                         ",endColorstr=" + endColor + "); zoom:1;";
-    } else if (AjxEnv.isIE9) {
+	if (AjxEnv.isIE9) {
         var params = {
             x1: "0%",
             x2: direction == 'v' ? "0%" : "100%",
@@ -1949,52 +1925,6 @@ function(startColor, endColor, direction) {
         gradient.css   = "linear-gradient(" + cssDirection + "," + startColor + ", "  + endColor + ")";
     }
     return gradient;
-}
-
-Dwt.setLinearGradient =
-function(htmlElement, startColor, endColor, direction) {
-    var gradient = Dwt.createLinearGradientInfo(startColor, endColor, direction);
-    if (gradient.field == 'filter') {
-        Dwt.alterIEFilter(htmlElement, gradient.name, gradient.css);
-    } else {
-        htmlElement.style[gradient.field] = gradient.css;
-    }
-}
-
-Dwt.alterIEFilter =
-function(htmlElement, filterName, newFilter) {
-    if (htmlElement.style.filter) {
-        var found = false;
-        var filters = htmlElement.style.filter.split(" ");
-        for (var i = 0; i < filters.length; i++) {
-            if (filters[i].indexOf(filterName) != -1) {
-                filters[i] = newFilter;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            filters[filters.length] = newFilter;
-        }
-        htmlElement.style.filter = filters.join(" ");
-    } else {
-       htmlElement.style.filter = newFilter;
-    }
-}
-
-Dwt.getIEFilter =
-function(htmlElement, filterName) {
-    var filter = "";
-    if (htmlElement.style.filter) {
-        var filters = htmlElement.style.filter.split(" ");
-        for (var i = 0; i < filters.length; i++) {
-            if (filters[i].indexOf(filterName) != -1) {
-                filter = filters[i];
-                break;
-            }
-        }
-    }
-    return filter
 }
 
 // Used for an unattached DOM subtree.

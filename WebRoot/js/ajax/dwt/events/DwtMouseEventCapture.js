@@ -53,9 +53,6 @@ DwtMouseEventCapture = function(params) {
 	this._mouseOutHdlr = params.mouseOutHdlr || DwtMouseEventCapture.emptyHdlr;
 	this._mouseWheelHdlr = params.mouseWheelHdlr || DwtMouseEventCapture.emptyHdlr;
 	this._hardCapture = (params.hardCapture !== false)
-
-	this._supportsCapture = (document.body && document.body.setCapture &&
-	                         AjxEnv.isIE && !AjxEnv.isIE9up);
 }
 
 DwtMouseEventCapture.PARAMS = ["targetObj", "id", "mouseOverHdlr", "mouseDownHdlr", "mouseMoveHdlr",
@@ -116,9 +113,6 @@ function() {
 		document.onmouseout = this._mouseOutHdlr;
 		document.onmousewheel = this._mouseWheelHdlr;
 	}
-	if (this._hardCapture && this._supportsCapture) {
-		document.body.setCapture(true);
-	}
 	window._mouseEventCaptureObj = this;
 	DwtMouseEventCapture._capturing = true;
 }
@@ -144,9 +138,6 @@ function() {
 		document.onmouseup = this._savedMouseUpHdlr;
 		document.onmouseout = this._savedMouseOutHdlr;
 		document.onmousewheel = this._savedMouseWheelHdlr;
-	}
-	if (this._hardCapture && this._supportsCapture) {
-		document.body.releaseCapture();
 	}
 	window._mouseEventCaptureObj = null;
 	DwtMouseEventCapture._capturing = false;

@@ -109,8 +109,6 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
 		html[i++] = "</div>";
 		parentEl.innerHTML = html.join("");
 		return;
-	} else if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-		parentEl.firstChild.innerHTML = "";
 	}
 	if (className) {
 		classes.push(className);
@@ -205,96 +203,67 @@ function() {
                 attrStr += " alt='" + AjxStringUtil.encodeQuotes(altText) + "'";
             }
 
-            if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-                var size = [
-                    "width:", overlay.w, "px;",
-                    "height:", overlay.h, "px;"
-                ].join("");
-                var location = [
-                    "top:", mask.t, ";",
-                    "left:", mask.l, ";"
-                ].join("");
-                var clip = [
-                    'clip:rect(',
-                    (-1 * mask.t) - 1, 'px,',
-                    overlay.w - 1, 'px,',
-                    (mask.t * -1) + overlay.h - 1, 'px,',
-                    overlay.l, 'px);'
-                ].join('');
-                var filter = 'filter:mask(color=' + color + ');';
-                html = [
-                    // NOTE: Keep in sync with output of ImageMerger.java.
-                    "<div class='IEImage' style='display:inline-block;zoom:1;position:relative;overflow:hidden;", size, styles, "' ", attrStr,">",
-                        "<div class='IEImageMask' style='position:absolute;top:0px;left:0px;", size, "'>",
-                            "<img src='", mask.ief, "?v=", window.cacheKillerVersion, "' border=0 style='position:absolute;", location, filter, "'>",
-                        "</div>",
-                        "<div class='IEImageOverlay ", overlayName, "' style='", size, "position:absolute;top:0;left:0;'></div>",
-                    "</div>"
-                ].join("");
-            }
-            else {
-                if (!overlay[color]) {
-                    var width = overlay.w, height = overlay.h;
+            if (!overlay[color]) {
+                var width = overlay.w, height = overlay.h;
 
-                    var canvas = document.createElement("CANVAS");
-                    canvas.width = width;
-                    canvas.height = height;
+                var canvas = document.createElement("CANVAS");
+                canvas.width = width;
+                canvas.height = height;
 
-                    var ctx = canvas.getContext("2d");
+                var ctx = canvas.getContext("2d");
 
-                    ctx.save();
-                    ctx.clearRect(0,0,width,height);
+                ctx.save();
+                ctx.clearRect(0,0,width,height);
 
-                    ctx.save();
-	                var imgId = attrStr;
-	                if (!imgId) {
-		                imgId = Dwt.getNextId("CANVAS_IMG_");  //create an imgId in case we need to update the img.src for an element without an id
-		                attrStr = " id='" + imgId + "'";
-	                }
-	                else {
-		                var match = attrStr.match(/id=[\"\']([^\"\']+)[\"\']+/);
-		                if (match && match.length > 1) {
-			                imgId = match[1]; //extract the ID value
-		                }
-		                AjxDebug.println(AjxDebug.TAG_ICON, "imgId = " + imgId);
-	                }
-	                var maskElement = document.getElementById(maskName);
-	                var overlayElement = document.getElementById(overlayName);
-	                if (!maskElement.complete || !overlayElement.complete) {
-		                AjxDebug.println(AjxDebug.TAG_ICON, "mask status = " + maskElement.complete + " for " + imgId);
-		                AjxDebug.println(AjxDebug.TAG_ICON, "overlay status = " + overlayElement.complete + " for " + imgId);
-						var maskImg = new Image();
-						maskImg.onload = function() {
-							AjxDebug.println(AjxDebug.TAG_ICON, "mask image loaded");
-							var overlayImg = new Image();
-							overlayImg.onload = function() {
-								AjxImg._drawCanvasImage(ctx, maskImg, overlayImg, mask, overlay, color, width, height)
-								AjxDebug.println(AjxDebug.TAG_ICON, "overlay image loaded");
-								var el = document.getElementById(imgId);
-								if (el) {
-									AjxDebug.println(AjxDebug.TAG_ICON, "element found for id = " + imgId);
-									el.src = canvas.toDataURL();
-									overlay[color] = canvas.toDataURL(); //only save if successful
-								}
-								else {
-									AjxDebug.println(AjxDebug.TAG_ICON, "no element found for id = " + imgId);
-								}
-							}
-							overlayImg.src = document.getElementById(overlayName).src;
-	                    }
-	                    maskImg.src = document.getElementById(maskName).src;
-	                }
-	                else {
-		                //image already downloaded
-		                AjxImg._drawCanvasImage(ctx, maskElement, overlayElement, mask, overlay, color, width, height);
-		                overlay[color] = canvas.toDataURL();
-	                }
+                ctx.save();
+                var imgId = attrStr;
+                if (!imgId) {
+                    imgId = Dwt.getNextId("CANVAS_IMG_");  //create an imgId in case we need to update the img.src for an element without an id
+                    attrStr = " id='" + imgId + "'";
                 }
-
-                html = [
-                    "<img src='", overlay[color], "'"," border=0 ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
-                ].join("");
+                else {
+                    var match = attrStr.match(/id=[\"\']([^\"\']+)[\"\']+/);
+                    if (match && match.length > 1) {
+                        imgId = match[1]; //extract the ID value
+                    }
+                    AjxDebug.println(AjxDebug.TAG_ICON, "imgId = " + imgId);
+                }
+                var maskElement = document.getElementById(maskName);
+                var overlayElement = document.getElementById(overlayName);
+                if (!maskElement.complete || !overlayElement.complete) {
+                    AjxDebug.println(AjxDebug.TAG_ICON, "mask status = " + maskElement.complete + " for " + imgId);
+                    AjxDebug.println(AjxDebug.TAG_ICON, "overlay status = " + overlayElement.complete + " for " + imgId);
+                    var maskImg = new Image();
+                    maskImg.onload = function() {
+                        AjxDebug.println(AjxDebug.TAG_ICON, "mask image loaded");
+                        var overlayImg = new Image();
+                        overlayImg.onload = function() {
+                            AjxImg._drawCanvasImage(ctx, maskImg, overlayImg, mask, overlay, color, width, height)
+                            AjxDebug.println(AjxDebug.TAG_ICON, "overlay image loaded");
+                            var el = document.getElementById(imgId);
+                            if (el) {
+                                AjxDebug.println(AjxDebug.TAG_ICON, "element found for id = " + imgId);
+                                el.src = canvas.toDataURL();
+                                overlay[color] = canvas.toDataURL(); //only save if successful
+                            }
+                            else {
+                                AjxDebug.println(AjxDebug.TAG_ICON, "no element found for id = " + imgId);
+                            }
+                        }
+                        overlayImg.src = document.getElementById(overlayName).src;
+                    }
+                    maskImg.src = document.getElementById(maskName).src;
+                }
+                else {
+                    //image already downloaded
+                    AjxImg._drawCanvasImage(ctx, maskElement, overlayElement, mask, overlay, color, width, height);
+                    overlay[color] = canvas.toDataURL();
+                }
             }
+
+            html = [
+                "<img src='", overlay[color], "'"," border=0 ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
+            ].join("");
         }
         else {
 	        classes.push("Img" + imageName);

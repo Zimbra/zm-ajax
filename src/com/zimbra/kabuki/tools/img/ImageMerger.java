@@ -339,14 +339,6 @@ public class ImageMerger {
 
         // print normal info
         printlnCss(entry.filename, entry.image, entry.x, entry.y, entry.layout);
-
-        // print IE overlay info
-        String name = entry.image.getName();
-        if (name.endsWith("Overlay")) {
-            // NOTE: Keep in sync with output of AjxImg.js.
-            print(cssOut, ".IEImage ");
-            printlnCss(entry.iefilename, entry.image, 0, 0, ImageLayout.NONE);
-        }
     }
 
     private void printlnCss(String filename, DecodedImage image, int x, int y, ImageLayout layout) {
@@ -354,24 +346,7 @@ public class ImageMerger {
         String url = cssPath+"/"+filename.replace(File.separatorChar,'/')+"?v=@jsVersion@";
         print(cssOut, "%s {", selector);
 
-        // conditional properties for PNGs
-        boolean isPng = filename.toLowerCase().endsWith(".png");
-        if (isPng) {
-            println(cssOut);
-            println(cssOut, "#IFDEF MSIE_LOWER_THAN_7");
-            println(cssOut, "filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='%s',sizingMethod='crop');", url);
-            println(cssOut, "background-repeat:%s;", layout.toCss());
-            println(cssOut, "position:relative;");
-            println(cssOut, "top:%dpx;left:%dpx;", negative(y), negative(x));
-            println(cssOut, "#ELSE");
-            println(cssOut, "background:url('%s') %dpx %dpx %s;", url, negative(x), negative(y), layout.toCss());
-            println(cssOut, "#ENDIF");
-        }
-
-        // background image properties for non-PNGs
-        else {
-            print(cssOut, "background:url('%s') %dpx %dpx %s;", url, negative(x), negative(y), layout.toCss());
-        }
+        print(cssOut, "background:url('%s') %dpx %dpx %s;", url, negative(x), negative(y), layout.toCss());
 
         // common properties
         boolean isNone = layout.equals(ImageLayout.NONE);
@@ -406,11 +381,10 @@ public class ImageMerger {
         if (name.endsWith("Overlay") || name.endsWith("Mask")) {
             println(
                 jsOut,
-                "AjxImgData[\"%s\"]={t:%d,l:%d,w:%d,h:%d,f:\"%s/%s\",ief:\"%s/%s\"};",
+                "AjxImgData[\"%s\"]={t:%d,l:%d,w:%d,h:%d,f:\"%s/%s\"};",
                 name, -entry.y, -entry.x,
                 entry.image.getWidth(), entry.image.getHeight(),
-                cssPath, entry.filename.replace(File.separatorChar,'/'),
-                cssPath, entry.iefilename.replace(File.separatorChar,'/')
+                cssPath, entry.filename.replace(File.separatorChar,'/')
             );
         }
     }
@@ -588,7 +562,6 @@ public class ImageMerger {
     static class ImageEntry {
         // Data
         public String filename;
-        public String iefilename;
         public DecodedImage image;
         public int x;
         public int y;
@@ -597,7 +570,6 @@ public class ImageMerger {
         // Constructors
         public ImageEntry(File dir, File file, DecodedImage image, ImageLayout layout, boolean isSpacer) {
             this.filename = dir.getName()+File.separator+file.getName();
-            this.iefilename = this.filename;
             this.image = image;
             this.layout = layout;
 			this.isSpacer = isSpacer;

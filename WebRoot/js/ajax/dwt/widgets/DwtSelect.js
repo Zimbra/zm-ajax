@@ -642,9 +642,6 @@ function(templateId, data) {
     this._selectEl.className = el.className;
     Dwt.addClass(el, "ZSelectAutoSizingContainer");
     this.removeAttribute("style");
-    if (AjxEnv.isIE && !AjxEnv.isIE9up) {
-        el.style.overflow = "hidden";
-    }
 	if (this._legendId) {
 		this.setAttribute('aria-labelledby', [ this._legendId, this._textEl.id ].join(' '));
 	}

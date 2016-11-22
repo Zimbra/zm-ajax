@@ -106,7 +106,7 @@ DwtShell = function(params) {
 	this._veilOverlay = document.createElement("div");
 	this._veilOverlay.className = (!AjxEnv.isLinux) ? "VeilOverlay" : "VeilOverlay-linux";
 	this._veilOverlay.style.position = "absolute";
-	this._veilOverlay.style.cursor = AjxEnv.isIE6up ? "not-allowed" : "wait";
+	this._veilOverlay.style.cursor = "not-allowed";
 	Dwt.setBounds(this._veilOverlay, 0, 0, "100%", "100%");
 	Dwt.setZIndex(this._veilOverlay, Dwt.Z_HIDDEN);
 	this._veilOverlay.veilZ = new Array();
