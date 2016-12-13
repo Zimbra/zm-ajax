@@ -287,9 +287,6 @@ function(params) {
 		this._st = new Date();
 		
 		var requestHeaders = {"Content-Type": "application/soap+xml; charset=utf-8"};
-		if (AjxEnv.isIE6 && (location.protocol == "https:")) { //bug 22829
-			requestHeaders["Connection"] = "Close";
-		}
 			
 		if (params.asyncMode) {
 			//DBG.println(AjxDebug.DBG1, "set callback for asynchronous response");

@@ -233,7 +233,7 @@ function(aMessage) {
 	
 	// Compile a stack trace
 	var myStack = new Array();
-	if (AjxEnv.isIE5_5up) {
+	if (AjxEnv.isIE) {
 		// On IE, the caller chain is on the arguments stack
 		var myTrace = arguments.callee.caller;
 		var i = 0; // stop at 20 since there might be somehow an infinite loop here. Maybe in case of a recursion. 
@@ -974,12 +974,7 @@ function(arg) {
 		return arg;
 	}
 	else if (AjxUtil.isArrayLike(arg)) {
-		try {
-			// fails in IE8
-			return Array.prototype.slice.call(arg);
-		} catch (e) {
-			return AjxUtil.map(arg);
-		}
+		return Array.prototype.slice.call(arg);
 	}
 	else if (arg.isAjxVector) {
         return arg.getArray();
@@ -1106,44 +1101,8 @@ function (dataURI) {
 };
 
 AjxUtil.reduce = function(array, callback, opt_initialValue) {
-	var reducefn = Array.prototype.reduce;
-
-	if (reducefn) {
-		return reducefn.call(array, callback, opt_initialValue);
-	} else {
-		// polyfill from the Mozilla Developer Network for browsers without
-		// reduce -- i.e. IE8.
-
-		if (array === null || 'undefined' === typeof array) {
-			throw new TypeError('AjxUtil.reduce called on null or undefined');
-		}
-		if ('function' !== typeof callback) {
-			throw new TypeError(callback + ' is not a function');
-		}
-		var index, value,
-		length = array.length >>> 0,
-		isValueSet = false;
-		if (1 < arguments.length) {
-			value = opt_initialValue;
-			isValueSet = true;
-		}
-		for (index = 0; length > index; ++index) {
-			if (array.hasOwnProperty(index)) {
-				if (isValueSet) {
-					value = callback(value, array[index], index, array);
-				}
-				else {
-					value = array[index];
-					isValueSet = true;
-				}
-			}
-		}
-		if (!isValueSet) {
-			throw new TypeError('Reduce of empty array with no initial value');
-		}
-		return value;
-	}
-
+	/* left-over from IE8 support */
+	return Array.prototype.reduce.call(array, callback, opt_initialValue);
 };
 
 

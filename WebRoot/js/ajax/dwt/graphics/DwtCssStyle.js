@@ -107,14 +107,7 @@ DwtCssStyle.LINUX = "linux";
 
 DwtCssStyle.getProperty = 
 function(htmlElement, cssPropName) {
-	var result;
-	if (htmlElement.ownerDocument == null) {
-		// IE5.5 does not support ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
-		var doc = parent;
-	} else {
-		var doc = htmlElement.ownerDocument;
-	}
+	var doc = htmlElement.ownerDocument;
 
 	if (doc.defaultView && doc.defaultView.getComputedStyle) {
 		var cssDecl = doc.defaultView.getComputedStyle(htmlElement, "");
@@ -137,13 +130,7 @@ function(htmlElement, cssPropName) {
 
 DwtCssStyle.getComputedStyleObject = 
 function(htmlElement) {
-	if (htmlElement.ownerDocument == null) {
-		// IE5.5 does not suppoert ownerDocument
-		for (var parent = htmlElement.parentNode; parent.parentNode != null; parent = parent.parentNode) {}
-		var doc = parent;
-	} else {
-		var doc = htmlElement.ownerDocument;
-	}
+	var doc = htmlElement.ownerDocument;
 	
 	if (doc.defaultView) {
 		var style = doc.defaultView.getComputedStyle(htmlElement, null);

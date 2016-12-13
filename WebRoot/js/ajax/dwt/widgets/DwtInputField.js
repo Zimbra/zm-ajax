@@ -282,20 +282,14 @@ DwtInputField.prototype.setInputType = function(type) {
  * @param	{String}	replacement	the replacement string
  */
 DwtInputField.prototype.applySubstitution = function(regex, replacement) {
-	if (!this._inputField.setRangeText) {
-		// IE8 doesn't support setRangeText() - so we replace the value
-		// directly. This moves the caret, if any, to the end of the text.
-		this.setValue(this.getValue().replace(regex, replacement));
-	} else {
-		var match;
+	var match;
 
-		while ((match = regex.exec(this.getValue()))) {
-			this._inputField.setRangeText(replacement, match.index,
-		    	                          match.index + match[0].length);
+	while ((match = regex.exec(this.getValue()))) {
+		this._inputField.setRangeText(replacement, match.index,
+			                      match.index + match[0].length);
 
-			if (!regex.global)
-				return;
-		}
+		if (!regex.global)
+			return;
 	}
 };
 
