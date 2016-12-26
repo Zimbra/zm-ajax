@@ -15,7 +15,7 @@
 	<dependency org="com.yahoo.platform.yui" name="yuicompressor" rev="2.4.2-zimbra" />
 	<dependency org="rhino" name="js" rev="1.6R7"/>
 	<dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
-	<dependency org="gifencoder" name="gifencoder" rev="1" />	
+	<dependency org="gifencoder" name="gifencoder" rev="0.9" />
 	<dependency org="zimbra" name="zm-common" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-client" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-store" rev="latest.integration" />
