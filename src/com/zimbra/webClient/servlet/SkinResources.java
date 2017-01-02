@@ -864,7 +864,7 @@ public class SkinResources
 				cout = new CharArrayWriter(4096 << 2); // 16K buffer to start
 				String[] allPackages = ("Startup1_1,Startup1_2,Boot,Startup2,CalendarCore,Calendar,CalendarAppt," +
                         "ContactsCore,Contacts,MailCore,Mail,BriefcaseCore,Briefcase,PreferencesCore,Preferences," +
-						"TasksCore,Tasks,Extras,Share,Zimlet,ZimletApp,Alert,ImportExport,Voicemail,TinyMCE,ZeroClipboard").split(",");
+						"TasksCore,Tasks,Extras,Share,Zimlet,ZimletApp,Alert,ImportExport,Voicemail,TinyMCE").split(",");
 				for(String name: allPackages) {
 					File file = new File(rootDir,"js/" + name + ".appcache");
 					preprocess(file, cout, null, null, null, null, null, requestedLocale);
@@ -888,7 +888,6 @@ public class SkinResources
 				sb.append("\n").append(appContextPath).append("/templates/tasks/Tasks.template.js?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/templates/voicemail/Voicemail.template.js?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/templates/zimbra/Widgets.template.js?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/ZeroClipboard.js?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/TinyMCE.js?v=").append(cacheBusterVersion);
 				sb.append("\n");
 
@@ -909,7 +908,6 @@ public class SkinResources
 				sb.append("\n").append(appContextPath).append("/js/Extras_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/Contacts_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/TasksCore_all.js.zgz?v=").append(cacheBusterVersion);
-                sb.append("\n").append(appContextPath).append("/js/ZeroClipboard_all.js.zgz?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/TinyMCE_all.js.zgz?v=").append(cacheBusterVersion);
                 sb.append("\n").append(appContextPath).append("/js/Alert_all.js.zgz?v=").append(cacheBusterVersion);
 				sb.append("\n").append(appContextPath).append("/js/BriefcaseCore_all.js.zgz?v=").append(cacheBusterVersion);
@@ -924,8 +922,6 @@ public class SkinResources
 			sb.append("\n").append(appContextPath).append("/public/sounds/im/alert.wav");
 
 			sb.append("\n#movie files\n");
-            //ZeroClipboard dynamically loads this movie file. Don't append cacheBusterVersion.
-            sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/zeroclipboard/ZeroClipboard.swf");
 
 			sb.append("\nNETWORK:\n").append("*\n");
 
