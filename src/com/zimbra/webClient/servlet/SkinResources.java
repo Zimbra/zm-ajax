@@ -921,8 +921,6 @@ public class SkinResources
 			// Append the alert sound file
 			sb.append("\n").append(appContextPath).append("/public/sounds/im/alert.wav");
 
-			sb.append("\n#movie files\n");
-
 			sb.append("\nNETWORK:\n").append("*\n");
 
 			if (appContextPath != null && !appContextPath.isEmpty()) {
