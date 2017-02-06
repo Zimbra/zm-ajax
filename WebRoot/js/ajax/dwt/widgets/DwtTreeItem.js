@@ -133,7 +133,6 @@ DwtTreeItem.prototype._checkBoxVisible = true; // Assume it's shown, if check st
 
 // Consts
 
-DwtTreeItem._NODECELL_DIM = "16px";
 DwtTreeItem._processedMouseDown = false;
 
 // Public Methods
@@ -463,6 +462,7 @@ function(child) {
 		this.removeAttribute('aria-expanded')
 		
 		if (this._initialized && this._nodeCell) {
+            this._nodeCell.style.display = "none";
 			AjxImg.setImage(this._nodeCell, "Blank_16");
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
 			if (imgEl)
@@ -614,9 +614,9 @@ function(index, realizeDeferred, forceNode) {
 
 	// If we have deferred children, then make sure we set up accordingly
 	if (this._nodeCell) {
-		this._nodeCell.style.minWidth = this._nodeCell.style.width = this._nodeCell.style.height = DwtTreeItem._NODECELL_DIM;
 		if (this._children.size() > 0 || forceNode) {
 			this._expandable = true;
+            this._nodeCell.style.display = 'table-cell';
 			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
 			this.addNodeIconListeners();
 		}
@@ -692,6 +692,7 @@ function(child, index) {
 	// If we are initialized, then we need to add a expansion node
 	if (this._initialized && this._children.size() == 0) {
 		if (this._nodeCell) {
+            this._nodeCell.style.display = 'table-cell';
 			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
 			if (imgEl) {
@@ -730,6 +731,7 @@ function(item, index, realizeDeferred) {
 
 	if (realizeDeferred && this._nodeCell) {
 		if (AjxImg.getImageClass(this._nodeCell) == AjxImg.getClassForImage("Blank_16")) {
+            this._nodeCell.style.display = 'table-cell';
 			AjxImg.setImage(this._nodeCell, this._expanded ? this._expandNodeImage : this._collapseNodeImage);
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
 			if (imgEl) {
@@ -910,7 +912,7 @@ function() {
 		} else if (treeItem._isSeparator && !treeItem.div && this._childDiv) {
 			// Note: separators marked as initialized on construction
 			var div = treeItem.div = document.createElement("div");
-			div.className = "vSpace";
+			div.className = "horizSep";
 			this._childDiv.appendChild(div);
 			treeItem._initialized = true;
 		}
