@@ -1837,7 +1837,11 @@ public class SkinResources
 					} else if (operation.equals("opacity")) {
 						result = outputOpacity(stack, params);
 
-					} else {
+					// "hexToRGBA"
+                    } else if (operation.equals("hextorgba")) {
+                        result = convertHexToRGBA(stack, params);
+
+                    } else {
 						throw new IOException("Couldn't understand operation "+matcher.group(1)+".");
 					}
 
@@ -1909,6 +1913,45 @@ public class SkinResources
 			return (int) Math.max(0, Math.min(255, value * (1 - delta)));
 		}
 
+        //
+        // Converter function to convert hex string to rgba, opacity is optional
+        //
+        private String convertHexToRGBA(Stack<String> stack, String[] params) throws IOException {
+            Color color = this.getColor(stack, params[0]);
+            Float opacity;
+
+            try {
+                opacity = this.getOpacity(stack, params[1]);
+            } catch (Exception e) {
+                opacity = null;
+            }
+
+            int[] rgb = { color.getRed(), color.getGreen(), color.getBlue() };
+            StringBuilder str = new StringBuilder("");
+
+            str.append("rgb");
+            if(opacity != null) {
+                str.append("a");
+            }
+            str.append("(");
+
+            for (int val : rgb) {
+                str.append(val);
+                str.append(",");
+            }
+
+            if(opacity != null) {
+                str.append(opacity.toString());
+            } else {
+                // Remove extra separator
+                str.deleteCharAt(str.lastIndexOf(","));
+            }
+
+            str.append(")");
+
+            return str.toString();
+        }
+
 		//
 		// replace occurances of @invert(color)@ with the inverted color
 		//
@@ -1944,6 +1987,17 @@ public class SkinResources
 			}
 			return color;
 		}
+
+        private Float getOpacity(Stack<String> stack, String opacityStr) throws IOException {
+            Float opacity;
+            try {
+                opacity = Float.parseFloat(opacityStr) / 100;
+            } catch (Exception e) {
+                throw new IOException("opacity(): pass opacity as integer percentage");
+            }
+
+            return opacity;
+        }
 
 		private String colorToColorString(Color color) {
 			if (color == null) return "NULL_COLOR";
