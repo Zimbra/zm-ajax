@@ -1918,13 +1918,7 @@ public class SkinResources
         //
         private String convertHexToRGBA(Stack<String> stack, String[] params) throws IOException {
             Color color = this.getColor(stack, params[0]);
-            Float opacity;
-
-            try {
-                opacity = this.getOpacity(stack, params[1]);
-            } catch (Exception e) {
-                opacity = null;
-            }
+            Float opacity = (params.length > 1 ? this.getOpacity(stack, params[1]) : null);
 
             int[] rgb = { color.getRed(), color.getGreen(), color.getBlue() };
             StringBuilder str = new StringBuilder("");
@@ -1989,7 +1983,8 @@ public class SkinResources
 		}
 
         private Float getOpacity(Stack<String> stack, String opacityStr) throws IOException {
-            Float opacity;
+            Float opacity = null;
+
             try {
                 opacity = Float.parseFloat(opacityStr) / 100;
             } catch (Exception e) {
