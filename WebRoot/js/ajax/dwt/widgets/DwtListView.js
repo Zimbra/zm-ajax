@@ -161,6 +161,7 @@ DwtListView.ITEM_DBL_CLICKED 		= 3;
 DwtListView._LAST_REASON 			= 3;
 DwtListView._TOOLTIP_DELAY 			= 250;
 DwtListView.HEADERITEM_HEIGHT 		= 24;
+DwtListView.HEADERSASH_STYLE        = 0;    // 0 -> background, 1 -> dotted border
 DwtListView.TYPE_HEADER_ITEM 		= "1";
 DwtListView.TYPE_LIST_ITEM 			= "2";
 DwtListView.TYPE_HEADER_SASH 		= "3";
@@ -396,7 +397,13 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 		htmlArr[idx++] = "'><tr>";
 		htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
 		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
-		htmlArr[idx++] = "px; background-color: #8A8A8A;margin-left:2px'></div></td><td class='DwtListView-Sash'><div style='width: 1px; height: ";
+        htmlArr[idx++] = "px; ";
+        if(DwtListView.HEADERSASH_STYLE == 1) {
+            htmlArr[idx++] = "border-left: 1px dotted #CCCCCC;";
+        } else {
+            htmlArr[idx++] = "background-color: #8A8A8A;";
+        }
+		htmlArr[idx++] = " margin-left:2px'></div></td><td class='DwtListView-Sash'><div style='width: 1px; height: ";
 		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
 		htmlArr[idx++] = "px;'></div></td></tr></table>";
 		htmlArr[idx++] = "</td>";
