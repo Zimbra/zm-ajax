@@ -398,7 +398,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 		htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
 		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
         htmlArr[idx++] = "px; ";
-        if(DwtListView.HEADERSASH_STYLE == 1) {
+        if(DwtListView.HEADERSASH_STYLE === 1) {
             htmlArr[idx++] = "border-left: 1px dotted #CCCCCC;";
         } else {
             htmlArr[idx++] = "background-color: #8A8A8A;";
