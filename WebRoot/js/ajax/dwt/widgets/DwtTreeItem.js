@@ -1021,7 +1021,6 @@ function() {
 	if (!this._itemDiv) { return; }
 	// focused tree item should always be selected as well
 	this._itemDiv.className = this._selectedFocusedClassName;
-	//this._setTreeElementStyles("DownArrowSmall", true);
 };
 
 DwtTreeItem.prototype._blur =
@@ -1029,7 +1028,6 @@ function() {
 	if (!this._itemDiv) { return; }
 	this._itemDiv.className = this._selected
 		? this._selectedClassName : this._origClassName;
-	//this._setTreeElementStyles(this._selected ? "DownArrowSmall" : "Blank_16", this._selected);
 };
 
 DwtTreeItem._mouseDownListener =
@@ -1057,10 +1055,7 @@ function(ev) {
 	if (treeItem._singleClickAction && treeItem._textCell) {
 		treeItem._textCell.className = treeItem._textClassName;
 	}
-    //if(!treeItem._selected){
-       treeItem._setTreeElementStyles("Blank_16", false);
-    //}
-
+    treeItem._setTreeElementStyles("Blank_16", false);
 };
 
 DwtTreeItem._mouseOverListener =
@@ -1072,9 +1067,7 @@ function(ev) {
 	if (treeItem._singleClickAction && treeItem._textCell) {
 		treeItem._textCell.className = treeItem._hoverClassName;
 	}
-    //if(!treeItem._selected){
-       treeItem._setTreeElementStyles("ColumnDownArrow", true);
-    //}
+    treeItem._setTreeElementStyles("ColumnDownArrow", true);
 };
 
 DwtTreeItem._mouseUpListener = function(ev) {
