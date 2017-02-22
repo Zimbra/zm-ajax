@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -39,6 +40,12 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.FileImageOutputStream;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
 import net.jmge.gif.Gif89Encoder;
 
@@ -74,6 +81,7 @@ public class ImageMerger {
     private static final FileFilter F_GIF = new ExtensionFileFilter(".gif");
     private static final FileFilter F_JPG = new ExtensionFileFilter(".jpg", ".jpeg");
     private static final FileFilter F_PNG = new ExtensionFileFilter(".png");
+    private static final FileFilter F_SVG = new ExtensionFileFilter(".svg");
 
     // layout file filters
     private static final FileFilter F_HORIZONTAL = new SubExtensionFileFilter(ImageLayout.HORIZONTAL.toExtension());
@@ -87,6 +95,7 @@ public class ImageMerger {
     private static final ImageFactory IF_GIF = new GifImageFactory();
     private static final ImageFactory IF_JPG = new FullColorImageFactory();
     private static final ImageFactory IF_PNG = IF_JPG;
+    private static final ImageFactory IF_SVG = new SVGImageFactory();
 
     // static initialization
     static {
@@ -235,6 +244,7 @@ public class ImageMerger {
         processMerge(dir, dir.listFiles(F_GIF), IF_GIF, "1x1-trans.gif");
         processMerge(dir, dir.listFiles(F_JPG), IF_JPG, null);
         processMerge(dir, dir.listFiles(F_PNG), IF_PNG, "1x1-trans.png");
+        processMerge(dir, dir.listFiles(F_SVG), IF_SVG, null);
     }
 
     private void processMerge(File dir, File[] files, ImageFactory factory, String spacerFileName) throws IOException {
@@ -401,6 +411,7 @@ public class ImageMerger {
         processCopy(dir, dir.listFiles(F_GIF), IF_GIF);
         processCopy(dir, dir.listFiles(F_JPG), IF_JPG);
         processCopy(dir, dir.listFiles(F_PNG), IF_PNG);
+        processCopy(dir, dir.listFiles(F_SVG), IF_SVG);
     }
     private void processCopy(File dir, File[] files, ImageFactory factory) throws IOException {
         if (files.length == 0) return;
@@ -641,6 +652,32 @@ public class ImageMerger {
         @Override
         public AggregateImage createAggregateImage(ImageLayout layout) {
             return new AggregateFullColorImage(layout);
+        }
+    }
+    
+    static class SVGImageFactory extends ImageFactory {
+        // ImageFactory methods
+        @Override
+        public DecodedImage loadImage(File file) throws IOException {
+            return loadImage(file, false);
+        }
+        @Override
+        public DecodedImage loadImage(File file, boolean allowMultipleFrames) throws IOException {
+            try {
+            	DecodedSVGImage image = new DecodedSVGImage(file.getAbsolutePath());
+                image.load();
+                return image;
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                return null;
+            }
+        }
+        @Override
+        public AggregateImage createAggregateImage(ImageLayout layout) {
+            return new AggregateSVGImage(layout);
         }
     }
 
@@ -948,6 +985,64 @@ public class ImageMerger {
         }
 
     } // class AggregateFullColorImage
+    
+    static class AggregateSVGImage extends AggregateImage {
+
+        // Constructors
+        public AggregateSVGImage(ImageLayout layout) {
+            super(layout);
+        }
+
+        // AggregateImage methods
+        @Override
+        public boolean acceptSubImage(ImageEntry entry) {
+            if (!super.acceptSubImage(entry)) {
+            	return false;
+            }
+
+            addSubImage(entry);
+            return true;
+        }
+
+        @Override
+        public void saveImage(File file) throws IOException {
+        	// Create a new svg document
+        	Document doc = DocumentHelper.createDocument();
+
+        	// Append all svgs to a single svg file
+            generateImage(doc);
+
+            OutputFormat format = OutputFormat.createPrettyPrint();
+            XMLWriter writer = new XMLWriter(new FileWriter(file), format);
+            writer.write(doc);
+            writer.close();
+        }
+
+        // Protected methods
+
+        /**
+         * @return The aggregated image comprised of the sub-images.
+         */
+        protected void generateImage(Document doc) {
+        	// Root element
+        	Element rootEl = doc.addElement("svg", "http://www.w3.org/2000/svg");
+        	// Update height/width in root element
+            rootEl.addAttribute("height", Integer.toString(size.height) + "px");
+            rootEl.addAttribute("width", Integer.toString(size.width) + "px");
+
+        	for (ImageEntry entry : entries) {
+            	// Create copy of existing document and add it to new document
+        		Element cloneEl = ((DecodedSVGImage) entry.image).getSVG().createCopy();
+
+        		// Set X/Y position of image in sprite
+            	cloneEl.addAttribute("x", Integer.toString(entry.x) + "px");
+            	cloneEl.addAttribute("y", Integer.toString(entry.y) + "px");
+
+            	rootEl.add(cloneEl);
+            }
+        }
+
+    } // class AggregateSVGImage
 
     // file filters
 

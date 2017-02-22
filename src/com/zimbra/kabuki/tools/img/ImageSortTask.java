@@ -104,7 +104,8 @@ public class ImageSortTask
 	                int period = filename.lastIndexOf('.');
 	                String suffix = period != -1 ? filename.substring(period+1) : "";
 	                boolean image = suffix.equals("gif") || suffix.equals("png") ||
-	                				suffix.equals("jpg") || suffix.equals("jpeg");
+	                				suffix.equals("jpg") || suffix.equals("jpeg") ||
+	                				suffix.equals("svg");
 	                if (image) {
 	                    return true;
 	                }
