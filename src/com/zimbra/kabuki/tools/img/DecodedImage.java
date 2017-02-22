@@ -20,7 +20,6 @@ package com.zimbra.kabuki.tools.img;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.regex.Pattern;
 
 public abstract class DecodedImage {
 
