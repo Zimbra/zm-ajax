@@ -280,6 +280,10 @@ DwtControl.DEFAULT = "ZDefault";
  * Defines the "error" display state.
  */
 DwtControl.ERROR = "ZError";
+/**
+ * Defines submenu opened state
+ */
+DwtControl.SUB_MENU_ACTIVE = "ZSubMenuActive";
 
 DwtControl._STATES = [
 	DwtControl.ACTIVE,  DwtControl.FOCUSED,     DwtControl.DISABLED,
