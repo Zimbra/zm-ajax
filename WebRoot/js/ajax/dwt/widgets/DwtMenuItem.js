@@ -339,12 +339,14 @@ function(delay, kbGenerated) {
         }
 		//x = ((x + s.x) >= ws.x) ? pb.x - s.x - vBorder : x;
 	}
+	this.addClassName(DwtControl.SUB_MENU_ACTIVE);
 	menu.popup(delay, x, y, kbGenerated);
 };
 
 DwtMenuItem.prototype._popdownMenu =
 function() {
 	var menu = this.getMenu();
+	this.delClassName(DwtControl.SUB_MENU_ACTIVE);
 	if (menu) {
 		menu.popdown();
 	}
