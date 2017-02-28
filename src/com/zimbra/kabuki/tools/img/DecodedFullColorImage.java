@@ -51,6 +51,8 @@ public class DecodedFullColorImage extends DecodedImage {
 
     public BufferedImage getBufferedImage() { return mBufImg; }
 
+    public Boolean isVector() { return false; }
+
     public int getWidth() { return mBufImg.getWidth(); }
     public int getHeight() { return mBufImg.getHeight(); }
 

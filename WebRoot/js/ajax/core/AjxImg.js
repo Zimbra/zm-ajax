@@ -57,65 +57,89 @@ AjxImg.RE_COLOR = /^(.*?),color=(.*)$/;
  */
 AjxImg.setImage =
 function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
-	
-	if (!parentEl) { return; }
-	
-	classes = classes || [];
-	var origImageName = imageName;
+    
+    if (!parentEl) { return; }
+
+    classes = classes || [];
+    var origImageName = imageName;
     var color, m = imageName && imageName.match(AjxImg.RE_COLOR);
-	if (m) {
-		imageName = m && m[1];
-		color = m && m[2];
-	}
+    if (m) {
+        imageName = m && m[1];
+        color = m && m[2];
+    }
 
-	var className = AjxImg.getClassForImage(imageName, _disabled);
-	if (useParentEl) {
-		classes.push(className);
-		parentEl.className = classes.join(" ");
-		return;
-	}
-	var id = parentEl.firstChild && parentEl.firstChild.id;
-        
-	var overlayName = className+"Overlay";
-	var maskName = className+"Mask";
-	if (color && window.AjxImgData && AjxImgData[overlayName] && AjxImgData[maskName]) {
-		color = (color.match(/^\d$/) ? ZmOrganizer.COLOR_VALUES[color] : color) ||
-				ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
-		parentEl.innerHTML = AjxImg.getImageHtml({
-			imageName: origImageName,
-			attrStr: id ? "id='"+id+"'" : null,
-			altText: altText,
-			disabled: _disabled
-		});
-		return;
-	}
+    // Get image data based on image name
+    var imageData = window.AjxImgData[AjxImg.getClassForImage(imageName)];
+    if(!imageData) {
+        DBG.println(AjxDebug.IMAGES, "missing image: ", AjxImg.getClassForImage(imageName));
 
-	if (parentEl.firstChild == null || parentEl.firstChild.nodeName.toLowerCase() != "div") {
-		var html = [], i = 0;
-		html[i++] = "<div ";
-		if (id) {
-			html[i++] = " id='";
-			html[i++] = id;
-			html[i++] = "' ";
-		}
-		if (className) {
-			classes.push(className);
-		}
-		html[i++] = AjxUtil.getClassAttr(classes);
-		html[i++] = ">";
-		if (altText) {
-			html[i++] = "<div class='ScreenReaderOnly'>";
-			html[i++] = AjxStringUtil.htmlEncode(altText);
-			html[i++] = "</div>";
-		}
-		html[i++] = "</div>";
-		parentEl.innerHTML = html.join("");
-		return;
-	}
-	if (className) {
-		classes.push(className);
-	}
-	parentEl.firstChild.className = classes.join(" ");
+        return;
+    }
+
+    var className = AjxImg.getClassForImage(imageName, _disabled);
+    if (useParentEl ) {
+        // @TODO no support for vector image here, is this used?
+        DBG.println(AjxDebug.IMAGES, "No support for vector image when useParentEl is true");
+
+        classes.push(className);
+        parentEl.className = classes.join(" ");
+        return;
+    }
+
+    var id = parentEl.firstChild && parentEl.firstChild.id;
+
+    if (color) {
+        color = (color.match(/^\d$/) ? ZmOrganizer.COLOR_VALUES[color] : color) ||
+                ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
+        parentEl.innerHTML = AjxImg.getImageHtml({
+            imageName: origImageName,
+            attrStr: id ? "id='"+id+"'" : null,
+            altText: altText,
+            disabled: _disabled
+        });
+        return;
+    }
+
+    if (parentEl.firstChild == null || parentEl.firstChild.nodeName.toLowerCase() != "div") {
+        var html = [], i = 0;
+        html[i++] = "<div ";
+        if (id) {
+            html[i++] = " id='";
+            html[i++] = id;
+            html[i++] = "' ";
+        }
+        // Raster/Vector image using background
+        if (className && !imageData.v) {
+            classes.push(className);
+        }
+        html[i++] = AjxUtil.getClassAttr(classes);
+        html[i++] = ">";
+        if (altText) {
+            html[i++] = "<div class='ScreenReaderOnly'>";
+            html[i++] = AjxStringUtil.htmlEncode(altText);
+            html[i++] = "</div>";
+        }
+
+        // Vector image using SVG tag
+        if(imageData.v) {
+            html[i++] = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName));
+        }
+
+        html[i++] = "</div>";
+        parentEl.innerHTML = html.join("");
+        return;
+    }
+    if (className) {
+        if (imageData.v) {
+            // Vector image using SVG tag
+            parentEl.firstChild.innerHTML = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName));
+        }
+
+        // Raster/Vector image using background
+        classes.push(className);
+
+        parentEl.firstChild.className = classes.join(" ");
+    }
 };
 
 AjxImg.setDisabledImage = function(parentEl, imageName, useParentEl, classes) {
@@ -191,84 +215,43 @@ function() {
             color = m && m[2];
         }
 
+        // Get image data based on image name
+        var imageData = window.AjxImgData[AjxImg.getClassForImage(imageName)];
+        if(!imageData) {
+            DBG.println(AjxDebug.IMAGES, "missing image: ", AjxImg.getClassForImage(imageName));
+
+            return;
+        }
+
         var className = AjxImg.getClassForImage(imageName, disabled);
-        var overlayName = className + "Overlay";
-        var maskName = className + "Mask";
-        if (color && window.AjxImgData && AjxImgData[overlayName] && AjxImgData[maskName]) {
+
+        if (color) {
             color = (color.match(/^\d$/) ? ZmOrganizer.COLOR_VALUES[color] : color) ||
                     ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
-
-            var overlay = AjxImgData[overlayName], mask = AjxImgData[maskName];
 
             // we're creating IMG elements here, so we can use the alt attribute
             if (altText) {
                 attrStr += " alt='" + AjxStringUtil.encodeQuotes(altText) + "'";
             }
 
-            if (!overlay[color]) {
-                var width = overlay.w, height = overlay.h;
-
-                var canvas = document.createElement("CANVAS");
-                canvas.width = width;
-                canvas.height = height;
-
-                var ctx = canvas.getContext("2d");
-
-                ctx.save();
-                ctx.clearRect(0,0,width,height);
-
-                ctx.save();
-                var imgId = attrStr;
-                if (!imgId) {
-                    imgId = Dwt.getNextId("CANVAS_IMG_");  //create an imgId in case we need to update the img.src for an element without an id
-                    attrStr = " id='" + imgId + "'";
-                }
-                else {
-                    var match = attrStr.match(/id=[\"\']([^\"\']+)[\"\']+/);
-                    if (match && match.length > 1) {
-                        imgId = match[1]; //extract the ID value
-                    }
-                    AjxDebug.println(AjxDebug.TAG_ICON, "imgId = " + imgId);
-                }
-                var maskElement = document.getElementById(maskName);
-                var overlayElement = document.getElementById(overlayName);
-                if (!maskElement.complete || !overlayElement.complete) {
-                    AjxDebug.println(AjxDebug.TAG_ICON, "mask status = " + maskElement.complete + " for " + imgId);
-                    AjxDebug.println(AjxDebug.TAG_ICON, "overlay status = " + overlayElement.complete + " for " + imgId);
-                    var maskImg = new Image();
-                    maskImg.onload = function() {
-                        AjxDebug.println(AjxDebug.TAG_ICON, "mask image loaded");
-                        var overlayImg = new Image();
-                        overlayImg.onload = function() {
-                            AjxImg._drawCanvasImage(ctx, maskImg, overlayImg, mask, overlay, color, width, height)
-                            AjxDebug.println(AjxDebug.TAG_ICON, "overlay image loaded");
-                            var el = document.getElementById(imgId);
-                            if (el) {
-                                AjxDebug.println(AjxDebug.TAG_ICON, "element found for id = " + imgId);
-                                el.src = canvas.toDataURL();
-                                overlay[color] = canvas.toDataURL(); //only save if successful
-                            }
-                            else {
-                                AjxDebug.println(AjxDebug.TAG_ICON, "no element found for id = " + imgId);
-                            }
-                        }
-                        overlayImg.src = document.getElementById(overlayName).src;
-                    }
-                    maskImg.src = document.getElementById(maskName).src;
-                }
-                else {
-                    //image already downloaded
-                    AjxImg._drawCanvasImage(ctx, maskElement, overlayElement, mask, overlay, color, width, height);
-                    overlay[color] = canvas.toDataURL();
-                }
+            if(styles) {
+                styleStr = " style='" + styles + "; fill: " + color + "'";
+            } else {
+                styleStr = " style='fill: " + color + "'";
             }
 
-            html = [
-                "<img src='", overlay[color], "'"," border=0 ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
-            ].join("");
+            if(imageData.v) {
+                html = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName), styleStr, attrStr);
+            } else {
+                DBG.println(AjxDebug.IMAGES, "No support for raster image with specific color ", AjxImg.getClassForImage(imageName));
+            }
         }
         else {
-	        classes.push("Img" + imageName);
+            // Raster/Vector image using background
+            if(!imageData.v) {
+               classes.push(AjxImg.getClassForImage(imageName));
+            }
+
             html = [
                 "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
             ];
@@ -280,11 +263,17 @@ function() {
                     "</span>"
                 );
             };
+
+            // Vector image using SVG tag
+            if(imageData.v) {
+                html.push(AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName)));
+            }
+
             html.push("</div>");
 
             html = html.join("");
         }
-	}
+    }
     else {
         html = [
             "<div", styleStr, attrStr, ">"
@@ -300,7 +289,37 @@ function() {
         html.push("</div>");
         html = html.join("");
     }
-	return pre || post ? [pre,html,post].join("") : html;
+    return pre || post ? [pre,html,post].join("") : html;
+};
+
+/**
+ * Creates SVG tag that can be appended to any block level element
+ *
+ * @param imageData          the image data
+ * @param imageName          name of image
+ * @param styleStr           optional style info (for example, "display:inline")
+ * @param attrStr            optional attributes (for example, "id=X748")
+ * @return  {string}         the svg string
+ */
+AjxImg.createSVGTag = function(imageData, imageName, styleStr, attrStr) {
+    styleStr = styleStr || "";
+    attrStr = attrStr || "";
+
+    var retVal = [];
+    retVal.push("<svg aria-hidden='true' class='svg-icon " + imageName + "' " + styleStr + attrStr + ">");
+
+    // SVG2 has deprecated xlink:href, so in future we need to use href attribute
+    if(imageData.f.indexOf("#") !== -1) {
+        // Fragment identifier exists, it's a sprite
+        retVal.push("<use xlink:href=\"" + imageData.f + "\"></use>");
+    } else {
+        // Single image
+        retVal.push("<image xlink:href=\"" + imageData.f + "\"></image>");
+    }
+
+    retVal.push("</svg>");
+
+    return retVal.join("");
 };
 
 /**
@@ -327,30 +346,5 @@ function(imageName, imageStyleStr, attrStr, label, containerClassName) {
         "</span>"
     ];
 
-	return html.join("");
-};
-
-/**
- * Helper method to draw the image using both the mask image and the overlay image
- * 
- * @param ctx  {Object} canvas context
- * @param maskImg   {HtmlElement} mask image object
- * @param overlayImg {HtmlElement} overlay image object
- * @param mask  {Object} mask object
- * @param overlay {Object} overlay object
- * @param color {String} color for fill
- * @param width {int} width
- * @param height {int} height
- * 
- * @private
- */
-AjxImg._drawCanvasImage = 
-function(ctx, maskImg, overlayImg, mask, overlay, color, width, height) {
-	ctx.drawImage(maskImg, mask.l, mask.t);
-	ctx.globalCompositeOperation = "source-out";
-	ctx.fillStyle = color;
-	ctx.fillRect(0, 0, width, height);
-	ctx.restore();
-	ctx.drawImage(overlayImg, overlay.l, overlay.t);
-	ctx.restore();	
+    return html.join("");
 };
