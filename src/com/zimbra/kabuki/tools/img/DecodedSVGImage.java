@@ -51,17 +51,19 @@ public class DecodedSVGImage extends DecodedImage {
     //
 
     public BufferedImage getBufferedImage() { return null; }
-    
+
+    public Boolean isVector() { return true; }
+
     public Element getSVG() { return svg; }
 
     public int getWidth() {
-    	String width = svg.attributeValue("width").replace("px", "");
-    	return Integer.parseInt(width);
+        String width = svg.attributeValue("viewBox").split("\\s+")[2];
+        return Integer.parseInt(width);     
     }
 
     public int getHeight() {
-    	String height = svg.attributeValue("height").replace("px", "");
-    	return Integer.parseInt(height);
+        String height = svg.attributeValue("viewBox").split("\\s+")[3];
+        return Integer.parseInt(height);
     }
 
     /*
@@ -71,14 +73,14 @@ public class DecodedSVGImage extends DecodedImage {
         String fName = getFilename();
 
         try {
-        	SAXReader reader = new SAXReader();
+            SAXReader reader = new SAXReader();
             Document doc = reader.read(fName);
-            
+
             svg = doc.getRootElement();
         } catch (Exception e) {
-        	System.out.println("failed loading file: " + e.getMessage());
+            System.out.println("failed loading file: " + e.getMessage());
 
-        	svg = null;
+            svg = null;
         }
     }
 
