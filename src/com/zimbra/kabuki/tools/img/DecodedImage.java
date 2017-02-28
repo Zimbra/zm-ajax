@@ -42,6 +42,8 @@ public abstract class DecodedImage {
     //
 
     public abstract BufferedImage getBufferedImage();
+    
+    public abstract Boolean isVector();
 
     public abstract int getWidth();
 
