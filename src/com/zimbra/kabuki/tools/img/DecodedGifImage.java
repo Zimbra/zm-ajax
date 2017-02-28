@@ -65,6 +65,8 @@ public class DecodedGifImage extends DecodedImage {
 
     public BufferedImage getBufferedImage() { return d.getFrame(0); }
     
+    public Boolean isVector() { return false; }
+    
     public int getWidth() {
         return d.width;
     }
