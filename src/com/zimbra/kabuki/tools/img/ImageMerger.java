@@ -328,8 +328,9 @@ public class ImageMerger {
 					}
                     if (verbose) System.out.println("generating output for "+entry.image.getName());
                     entry.filename = filename;
-                    printlnJs(entry);
-                    printlnCss(entry);
+
+                    printlnCss(entry, true);
+                    printlnJs(entry, true);
                 }
             }
 
@@ -343,20 +344,40 @@ public class ImageMerger {
         }
 
     } // processMerge(File,File[],ImageFactory,ImageLayout)
-
+    
     private void printlnCss(ImageEntry entry) {
         if (cssOut == null) return;
 
         // print normal info
-        printlnCss(entry.filename, entry.image, entry.x, entry.y, entry.layout);
+        printlnCss(entry, false);
     }
 
-    private void printlnCss(String filename, DecodedImage image, int x, int y, ImageLayout layout) {
+    private void printlnCss(ImageEntry entry, Boolean sprite) {
+        if (cssOut == null) return;
+
+        // print normal info
+        printlnCss(entry.filename, entry.image, entry.x, entry.y, entry.layout, sprite);
+    }
+
+    private void printlnCss(String filename, DecodedImage image, int x, int y, ImageLayout layout, Boolean sprite) {
         String selector = toSelector(image.getName());
-        String url = cssPath+"/"+filename.replace(File.separatorChar,'/')+"?v=@jsVersion@";
+
+        String url = cssPath+"/"+filename.replace(File.separatorChar,'/');
+        if(image.isVector() && sprite) {
+            // Append image name to file path to work as fragment identifier
+            url += "#" + image.getName() + "-view";
+            selector += "-view";
+        }
+        url += "?v=@jsVersion@";
+
         print(cssOut, "%s {", selector);
 
-        print(cssOut, "background:url('%s') %dpx %dpx %s;", url, negative(x), negative(y), layout.toCss());
+        if(image.isVector() && sprite) {
+            print(cssOut, "background:url('%s') %s;", url, layout.toCss());
+            print(cssOut, "background-size: 100%%;");
+        } else {
+            print(cssOut, "background:url('%s') %dpx %dpx %s;", url, negative(x), negative(y), layout.toCss());
+        }
 
         // common properties
         boolean isNone = layout.equals(ImageLayout.NONE);
@@ -384,19 +405,39 @@ public class ImageMerger {
         return str.toString();
     }
 
-    private void printlnJs(ImageEntry entry) {
+    private void printlnJs(ImageEntry entry, Boolean sprite) {
         if (jsOut == null) return;
-        // TODO: should we output the info for all of the images???
+
         String name = entry.image.getName();
-        if (name.endsWith("Overlay") || name.endsWith("Mask")) {
-            println(
-                jsOut,
-                "AjxImgData[\"%s\"]={t:%d,l:%d,w:%d,h:%d,f:\"%s/%s\"};",
-                name, -entry.y, -entry.x,
-                entry.image.getWidth(), entry.image.getHeight(),
-                cssPath, entry.filename.replace(File.separatorChar,'/')
-            );
+        String fileName = entry.filename.replace(File.separatorChar,'/');
+        Boolean isVector = false;
+        Integer x = -entry.x;
+        Integer y = -entry.y;
+
+        if(entry.image.isVector() && sprite) {
+            // For vector images, append image name after file name to use it as fragment identifier
+            fileName += "#" + entry.image.getName();
+
+            // Set a flag, to identify on client side
+            isVector = true;
+
+            // No need for background positioning
+            x = 0;
+            y = 0;
         }
+
+        println(
+            jsOut,
+            "AjxImgData[\"%s\"]={t:%d,l:%d,w:%d,h:%d,f:\"%s/%s\",v:%b};",
+            name, y, x,
+            entry.image.getWidth(), entry.image.getHeight(),
+            cssPath, fileName,
+            isVector
+        );
+    }
+    
+    private void printlnJs(ImageEntry entry) {
+        printlnJs(entry, false);
     }
 
     private void printlnCache(ImageEntry entry) {
@@ -664,7 +705,7 @@ public class ImageMerger {
         @Override
         public DecodedImage loadImage(File file, boolean allowMultipleFrames) throws IOException {
             try {
-            	DecodedSVGImage image = new DecodedSVGImage(file.getAbsolutePath());
+                DecodedSVGImage image = new DecodedSVGImage(file.getAbsolutePath());
                 image.load();
                 return image;
             }
@@ -997,7 +1038,7 @@ public class ImageMerger {
         @Override
         public boolean acceptSubImage(ImageEntry entry) {
             if (!super.acceptSubImage(entry)) {
-            	return false;
+                return false;
             }
 
             addSubImage(entry);
@@ -1006,10 +1047,11 @@ public class ImageMerger {
 
         @Override
         public void saveImage(File file) throws IOException {
-        	// Create a new svg document
-        	Document doc = DocumentHelper.createDocument();
+            // Create a new svg document
+            Document doc = DocumentHelper.createDocument();
+            doc.addDocType("svg", "-//W3C//DTD SVG 1.1//EN", "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd");
 
-        	// Append all svgs to a single svg file
+            // Append all svgs to a single svg file
             generateImage(doc);
 
             OutputFormat format = OutputFormat.createPrettyPrint();
@@ -1024,21 +1066,47 @@ public class ImageMerger {
          * @return The aggregated image comprised of the sub-images.
          */
         protected void generateImage(Document doc) {
-        	// Root element
-        	Element rootEl = doc.addElement("svg", "http://www.w3.org/2000/svg");
-        	// Update height/width in root element
-            rootEl.addAttribute("height", Integer.toString(size.height) + "px");
-            rootEl.addAttribute("width", Integer.toString(size.width) + "px");
+            // Root element
+            Element rootEl = doc.addElement("svg", "http://www.w3.org/2000/svg");
+            rootEl.addAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            rootEl.addAttribute("version", "1.1");
 
-        	for (ImageEntry entry : entries) {
-            	// Create copy of existing document and add it to new document
-        		Element cloneEl = ((DecodedSVGImage) entry.image).getSVG().createCopy();
+            // Update viewbox attribute for entire sprite
+            String[] spriteViewBox = new String[]{"0", "0", Integer.toString(size.width), Integer.toString(size.height)};
+            rootEl.addAttribute("viewBox", String.join(" ", spriteViewBox));
 
-        		// Set X/Y position of image in sprite
-            	cloneEl.addAttribute("x", Integer.toString(entry.x) + "px");
-            	cloneEl.addAttribute("y", Integer.toString(entry.y) + "px");
+            // Add definitions tag, to create symbol tags that will be used from javascript
+            Element defsEl = rootEl.addElement("defs");
 
-            	rootEl.add(cloneEl);
+            for (ImageEntry entry : entries) {
+                // Create group element and copy all child nodes of svg to here
+                Element svgEl = ((DecodedSVGImage) entry.image).getSVG();
+                Element groupEl = rootEl.addElement("g", "http://www.w3.org/2000/svg");
+                Element symbolEl = defsEl.addElement("symbol", "http://www.w3.org/2000/svg");
+
+                // iterate through child elements of svg
+                for (Iterator i = svgEl.elementIterator(); i.hasNext();) {
+                    Element el = (Element) i.next();
+
+                    // Same element will be appended in two places, groupEl is used to render image using background css
+                    // symbolEl is used to render image using svg tag
+                    groupEl.add(el.createCopy());
+                    symbolEl.add(el.createCopy());
+                }
+
+                // viewBox attribute
+                String[] viewBox = new String[] {Integer.toString(entry.x), Integer.toString(entry.y), Integer.toString(entry.image.getWidth()), Integer.toString(entry.image.getHeight())};
+
+                // Add transform attribute to update X/Y position of image in sprite
+                groupEl.addAttribute("transform", "translate(" + viewBox[0] + " " + viewBox[1] + ")");
+
+                symbolEl.addAttribute("viewBox", svgEl.attributeValue("viewBox"));
+                symbolEl.addAttribute("id", entry.image.getName());
+
+                // Add a view element to reference this element using fragment identifier
+                Element viewEl = rootEl.addElement("view");
+                viewEl.addAttribute("viewBox", String.join(" ", viewBox));
+                viewEl.addAttribute("id", entry.image.getName() + "-view");
             }
         }
 
