@@ -1156,6 +1156,8 @@ function(x, y, kbGenerated) {
 		DwtMenu._activeMenuUp = true;
 	}
 
+	this.parent && this.parent.addClassName && this.parent.addClassName(DwtControl.SUB_MENU_ACTIVE);
+
 	DwtMenu._activeMenuIds.add(this._htmlElId, null, true);
 	DwtMenu._activeMenuIds.sort();	
 	DwtMenu._activeMenus.add(this, null, true);
@@ -1237,6 +1239,8 @@ function(ev) {
 	if (this.__currentItem) {
 		this.__currentItem.blur();
 	}
+
+	this.parent && this.parent.delClassName && this.parent.delClassName(DwtControl.SUB_MENU_ACTIVE);
 
 	// Take our tabgroup out of play
 	DwtShell.getShell(window).getKeyboardMgr().popTabGroup(this._compositeTabGroup);
