@@ -122,7 +122,7 @@ public class ServiceServlet extends HttpServlet {
         String authTokenEncoded = req.getHeader(WebClientServiceUtil.PARAM_AUTHTOKEN);
         try {
             AuthToken authToken = ZimbraAuthToken.getAuthToken(authTokenEncoded);
-            if (authToken.isRegistered() && !authToken.isExpired() && (authToken.isAdmin() || authToken.isDomainAdmin())) {
+            if (authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/deployzimlet".equals(path)) {
                     checkRight(req, authToken, Admin.R_deployZimlet);
