@@ -73,16 +73,16 @@ public class ServiceServlet extends HttpServlet {
                     //this operation does not require an admin permission. It can be triggered by a user login.
                     doLoadSkins(req, resp);
                 } else if ("/flushskins".equals(path)) {
-                    checkRight(req, authToken, Admin.R_flushCache);
+                    checkAdminRight(req, authToken, Admin.R_flushCache);
                     doFlushSkins(req, resp);
                 } else if ("/loadlocales".equals(path)) {
                     //this operation does not require an admin permission. It can be triggered by a user login.
                     doLoadLocales(req, resp);
                 } else if ("/flushuistrings".equals(path)) {
-                    checkRight(req, authToken, Admin.R_flushCache);
+                    checkAdminRight(req, authToken, Admin.R_flushCache);
                     doFlushUistrings(req, resp);
                 } else if ("/flushzimlets".equals(path)) {
-                    checkRight(req, authToken, Admin.R_flushCache);
+                    checkAdminRight(req, authToken, Admin.R_flushCache);
                     doFlushZimlets(req, resp);
                 } else if ("/extuserprov".equals(path)) {
                     //ZM_PRELIM_AUTH_TOKEN token is validated downstream. Opens a JSP with registration form.
@@ -125,10 +125,10 @@ public class ServiceServlet extends HttpServlet {
             if (authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/deployzimlet".equals(path)) {
-                    checkRight(req, authToken, Admin.R_deployZimlet);
+                    checkAdminRight(req, authToken, Admin.R_deployZimlet);
                     doDeployZimlet(req, resp);
                 } else if ("/undeployzimlet".equals(path)) {
-                    checkRight(req, authToken, Admin.R_deleteZimlet);
+                    checkAdminRight(req, authToken, Admin.R_deleteZimlet);
                     doUndeployZimlet(req, resp);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -157,7 +157,7 @@ public class ServiceServlet extends HttpServlet {
         }
     }
 
-    private void checkRight(HttpServletRequest req, AuthToken at, AdminRight permission) throws ServiceException {
+    private void checkAdminRight(HttpServletRequest req, AuthToken at, AdminRight permission) throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer();
         ZimbraSoapContext zsc = new ZimbraSoapContext(at, at.getAccountId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS);
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
