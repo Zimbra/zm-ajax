@@ -70,13 +70,13 @@ public class ServiceServlet extends HttpServlet {
             if (authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/loadskins".equals(path)) {
-                    //this operation does not require an admin permission. It can be triggered by a user login
+                    //this operation does not require an admin permission. It can be triggered by a user login.
                     doLoadSkins(req, resp);
                 } else if ("/flushskins".equals(path)) {
                     checkRight(req, authToken, Admin.R_flushCache);
                     doFlushSkins(req, resp);
                 } else if ("/loadlocales".equals(path)) {
-                    //this operation does not require an admin permission. It can be triggered by a user login
+                    //this operation does not require an admin permission. It can be triggered by a user login.
                     doLoadLocales(req, resp);
                 } else if ("/flushuistrings".equals(path)) {
                     checkRight(req, authToken, Admin.R_flushCache);
@@ -85,10 +85,10 @@ public class ServiceServlet extends HttpServlet {
                     checkRight(req, authToken, Admin.R_flushCache);
                     doFlushZimlets(req, resp);
                 } else if ("/extuserprov".equals(path)) {
-                    //ZM_PRELIM_AUTH_TOKEN token is validated downstream. Opens a JSP with registration form
+                    //ZM_PRELIM_AUTH_TOKEN token is validated downstream. Opens a JSP with registration form.
                     doExtUserProv(req, resp);
                 } else if ("/publiclogin".equals(path)) {
-                    //this operation loads a JSP with login form for public login
+                    //this operation loads a JSP with login form for public login.
                     doPublicLoginProv(req, resp);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -103,10 +103,16 @@ public class ServiceServlet extends HttpServlet {
             }
         } catch (ServiceException e) {
             ZimbraLog.webclient.error(e);
+            if(ServiceException.PERM_DENIED.equals(e.getCode())) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
         } catch (AuthTokenException e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
+        } catch (Exception e) {
+            ZimbraLog.webclient.error(e);
         }
         resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
     }
@@ -138,6 +144,13 @@ public class ServiceServlet extends HttpServlet {
         } catch (AuthTokenException e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (ServiceException e) {
+            ZimbraLog.webclient.error(e);
+            if(ServiceException.PERM_DENIED.equals(e.getCode())) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }
         } catch (Exception e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
