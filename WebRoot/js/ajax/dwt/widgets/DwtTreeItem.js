@@ -86,7 +86,7 @@ DwtTreeItem = function(params) {
 	this._textParam = params.text;
 	this._deferred = params.deferred;
 	this._expandNodeImage = params.expandNodeImage || "NodeExpanded";
-	this._collapseNodeImage = params.collapseNodeImage || "NodeCollapsed";
+	this._collapseNodeImage = params.collapseNodeImage || "NodeCollapsed-rev";
 	this._itemChecked = false;
 	this._initialized = false;
 	this._selectionEnabled = Boolean(params.selectable !== false);
