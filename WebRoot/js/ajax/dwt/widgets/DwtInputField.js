@@ -60,6 +60,11 @@
  */
 DwtInputField = function(params) {
 
+    if(!DwtInputField._ERROR_ICON_HTML || !DwtInputField._NOERROR_ICON_HTML) {
+        DwtInputField._ERROR_ICON_HTML = AjxImg.getImageHtml("Critical");
+        DwtInputField._NOERROR_ICON_HTML = AjxImg.getImageHtml("Blank_9");
+    }
+
 	if (arguments.length == 0) return;
 	params.className = params.className  || "DwtInputField";
 	this._origClassName = params.className;
@@ -234,9 +239,6 @@ DwtInputField.PASSWORD	= 5;
  * Defines the "Date input field" data type.
  */
 DwtInputField.DATE 		= 6;
-
-DwtInputField._ERROR_ICON_HTML = AjxImg.getImageHtml("Critical");
-DwtInputField._NOERROR_ICON_HTML = AjxImg.getImageHtml("Blank_9");
 
 //
 // Public methods
