@@ -39,6 +39,8 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.service.ExternalUserProvServlet;
 import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.util.SkinUtil;
@@ -55,6 +57,24 @@ import com.zimbra.cs.zimlet.ZimletUtil;
 public class ServiceServlet extends HttpServlet {
 
     private static final long serialVersionUID = 4025485927134616176L;
+
+    @Override
+    public void init() throws ServletException {
+        String ephemeralStoreURL;
+        try {
+            ephemeralStoreURL = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
+            if(ephemeralStoreURL != null) {
+                String[] tokens = ephemeralStoreURL.split(":");
+                if (tokens != null && tokens.length > 0) {
+                    String backend = tokens[0];
+                    ZimbraLog.webclient.info("Will attempt to load server extensions to handle ephemeral backend %s", backend);
+                    ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backend));
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.webclient.error("Failed to load Ephemeral backend extensions", e);
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
