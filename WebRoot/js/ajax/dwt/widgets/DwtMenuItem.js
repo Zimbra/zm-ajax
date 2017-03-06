@@ -276,7 +276,7 @@ function(checked, ev, skipNotify) {
 
 		if (this._checkEl) {
 			this._checkEl.innerHTML = "";
-			var icon = checked ? (isCheck ? "MenuCheck" : "MenuRadio") : "Blank_9";
+			var icon = checked ? (isCheck ? "MenuCheck" : "MenuRadio") : "";
 			AjxImg.setImage(this._checkEl, icon);
 			if (checked) {
 				// deselect currently selected radio button
