@@ -32,22 +32,29 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.ExternalUserProvServlet;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
+import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletFile;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  *
@@ -84,18 +91,25 @@ public class ServiceServlet extends HttpServlet {
             if (authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/loadskins".equals(path)) {
+                    //this operation does not require an admin permission. It can be triggered by a user login.
                     doLoadSkins(req, resp);
                 } else if ("/flushskins".equals(path)) {
+                    checkAdminRight(req, authToken, Admin.R_flushCache);
                     doFlushSkins(req, resp);
                 } else if ("/loadlocales".equals(path)) {
+                    //this operation does not require an admin permission. It can be triggered by a user login.
                     doLoadLocales(req, resp);
                 } else if ("/flushuistrings".equals(path)) {
+                    checkAdminRight(req, authToken, Admin.R_flushCache);
                     doFlushUistrings(req, resp);
                 } else if ("/flushzimlets".equals(path)) {
+                    checkAdminRight(req, authToken, Admin.R_flushCache);
                     doFlushZimlets(req, resp);
                 } else if ("/extuserprov".equals(path)) {
+                    //ZM_PRELIM_AUTH_TOKEN token is validated downstream. Opens a JSP with registration form.
                     doExtUserProv(req, resp);
                 } else if ("/publiclogin".equals(path)) {
+                    //this operation loads a JSP with login form for public login.
                     doPublicLoginProv(req, resp);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -110,10 +124,16 @@ public class ServiceServlet extends HttpServlet {
             }
         } catch (ServiceException e) {
             ZimbraLog.webclient.error(e);
+            if(ServiceException.PERM_DENIED.equals(e.getCode())) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
         } catch (AuthTokenException e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
+        } catch (Exception e) {
+            ZimbraLog.webclient.error(e);
         }
         resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
     }
@@ -126,8 +146,10 @@ public class ServiceServlet extends HttpServlet {
             if (authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/deployzimlet".equals(path)) {
+                    checkAdminRight(req, authToken, Admin.R_deployZimlet);
                     doDeployZimlet(req, resp);
                 } else if ("/undeployzimlet".equals(path)) {
+                    checkAdminRight(req, authToken, Admin.R_deleteZimlet);
                     doUndeployZimlet(req, resp);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -143,10 +165,24 @@ public class ServiceServlet extends HttpServlet {
         } catch (AuthTokenException e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (ServiceException e) {
+            ZimbraLog.webclient.error(e);
+            if(ServiceException.PERM_DENIED.equals(e.getCode())) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }
         } catch (Exception e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
+    }
+
+    private void checkAdminRight(HttpServletRequest req, AuthToken at, AdminRight permission) throws ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer();
+        ZimbraSoapContext zsc = new ZimbraSoapContext(at, at.getAccountId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS);
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkRight(server, permission);
     }
 
     private void doFlushUistrings(HttpServletRequest req, HttpServletResponse resp) throws ServiceException, ServletException, IOException {
@@ -203,7 +239,7 @@ public class ServiceServlet extends HttpServlet {
         ZimbraLog.zimlet.info("deployed zimlet %s", zimletName);
     }
 
-    private void doUndeployZimlet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void doUndeployZimlet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ZimletException {
         String zimletName = req.getHeader(ZimletUtil.PARAM_ZIMLET);
         ZimbraLog.zimlet.info("undeploying zimlet %s", zimletName);
         File zimletDir = ZimletUtil.getZimletRootDir(zimletName);
