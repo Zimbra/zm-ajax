@@ -363,18 +363,20 @@ public class ImageMerger {
         String selector = toSelector(image.getName());
 
         String url = cssPath+"/"+filename.replace(File.separatorChar,'/');
+        url += "?v=@jsVersion@";
+
         if(image.isVector() && sprite) {
             // Append image name to file path to work as fragment identifier
             url += "#" + image.getName() + "-view";
             selector += "-view";
         }
-        url += "?v=@jsVersion@";
+
 
         print(cssOut, "%s {", selector);
 
         if(image.isVector() && sprite) {
             print(cssOut, "background:url('%s') %s;", url, layout.toCss());
-            print(cssOut, "background-size: 100%%;");
+            print(cssOut, "background-size: 100%% 100%%;");
         } else {
             print(cssOut, "background:url('%s') %dpx %dpx %s;", url, negative(x), negative(y), layout.toCss());
         }
@@ -382,8 +384,8 @@ public class ImageMerger {
         // common properties
         boolean isNone = layout.equals(ImageLayout.NONE);
         if (isNone) {
-            print(cssOut, "width:%dpx !important;", image.getWidth());
-            print(cssOut, "height:%dpx !important;", image.getHeight());
+            print(cssOut, "width:%dpx;", image.getWidth());
+            print(cssOut, "height:%dpx;", image.getHeight());
         }
         print(cssOut, "overflow:hidden;");
 
