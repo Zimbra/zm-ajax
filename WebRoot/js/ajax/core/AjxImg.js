@@ -109,7 +109,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
             html[i++] = "' ";
         }
         // Raster/Vector image using background
-        if (className && !imageData.v) {
+        if (className) {
             classes.push(className);
         }
         html[i++] = AjxUtil.getClassAttr(classes);
@@ -248,9 +248,7 @@ function() {
         }
         else {
             // Raster/Vector image using background
-            if(!imageData.v) {
                classes.push(AjxImg.getClassForImage(imageName));
-            }
 
             html = [
                 "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
