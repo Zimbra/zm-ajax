@@ -384,8 +384,8 @@ public class ImageMerger {
         // common properties
         boolean isNone = layout.equals(ImageLayout.NONE);
         if (isNone) {
-            print(cssOut, "width:%dpx;", image.getWidth());
-            print(cssOut, "height:%dpx;", image.getHeight());
+            print(cssOut, "width:%dpx !important;", image.getWidth());
+            print(cssOut, "height:%dpx !important;", image.getHeight());
         }
         print(cssOut, "overflow:hidden;");
 
@@ -416,10 +416,11 @@ public class ImageMerger {
         Integer x = -entry.x;
         Integer y = -entry.y;
 
-        if(entry.image.isVector() && sprite) {
-            // For vector images, append image name after file name to use it as fragment identifier
-            fileName += "#" + entry.image.getName();
-
+        if(entry.image.isVector()) {
+            if(sprite) {
+                // For vector images, append image name after file name to use it as fragment identifier
+                fileName += "#" + entry.image.getName();
+            }
             // Set a flag, to identify on client side
             isVector = true;
 
