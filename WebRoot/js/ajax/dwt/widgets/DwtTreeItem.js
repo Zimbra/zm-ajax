@@ -804,8 +804,8 @@ function() {
 
 DwtTreeItem.prototype._dragEnter =
 function() {
-	this._preDragClassName = this._textCell.className;
-	this._textCell.className = this._dragOverClassName;
+	this._preDragClassName = this._itemDiv.className;
+	this._itemDiv.className = this._dragOverClassName;
 	this._draghovering = true;
 };
 
@@ -819,7 +819,7 @@ function() {
 DwtTreeItem.prototype._dragLeave =
 function(ev) {
 	if (this._preDragClassName) {
-		this._textCell.className = this._preDragClassName;
+		this._itemDiv.className = this._preDragClassName;
 	}
 	this._draghovering = false;
 };
@@ -827,7 +827,7 @@ function(ev) {
 DwtTreeItem.prototype._drop =
 function() {
 	if (this._preDragClassName) {
-		this._textCell.className = this._preDragClassName;
+		this._itemDiv.className = this._preDragClassName;
 	}
 	this._draghovering = false;
 };
