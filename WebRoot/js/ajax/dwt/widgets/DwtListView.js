@@ -1743,8 +1743,6 @@ function(dragOp) {
 	if (!dndSelection) { return null; }
 
 	var icon;
-	var div;
-	var roundPlusStyle;
 	this._dndImg = null;
 
 	if (!(dndSelection instanceof Array) || dndSelection.length == 1) {
@@ -1752,43 +1750,26 @@ function(dragOp) {
 		icon = this._createItemHtml(item, {now:new Date(), isDragProxy:true});
 		this._setItemData(icon, "origClassName", icon.className);
 		Dwt.setPosition(icon, Dwt.ABSOLUTE_STYLE);
-
-		roundPlusStyle = "position:absolute;top:18;left:-11;visibility:hidden";
 	} else {
 		// Create multi one
 		icon = document.createElement("div");
 		icon.className = "DragProxy";
+		icon.setAttribute("id", Dwt.getNextId());
+		this._setItemData(icon, "origClassName", icon.className);
+		// The size of the Icon is fixed to 100 x 46 for multiple select DnD.
+		var iconHeight = 46;
+		var iconWidth = 100;
 		Dwt.setPosition(icon, Dwt.ABSOLUTE_STYLE);
 
-		AjxImg.setImage(icon, "DndMultiYes_48");
 		this._dndImg = icon;
 
-		div = document.createElement("div");
-		Dwt.setPosition(div, Dwt.ABSOLUTE_STYLE);
 		var text = this.allSelected ? ZmMsg.all : dndSelection.length;
-		div.innerHTML = "<table><tr><td class='DragProxyTextLabel'>"
-						+ text + "</td></tr></table>";
-		icon.appendChild(div);
-
-		roundPlusStyle = "position:absolute;top:30;left:0;visibility:hidden";
-
-		// The size of the Icon is envelopeImg.width + sealImg.width - 20, ditto for height
-		Dwt.setBounds(icon, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE, 43 + 32 - 16, 36 + 32 - 20);
-	}
-
-	var imgHtml = AjxImg.getImageHtml("RoundPlus", roundPlusStyle, "id=" + DwtId.DND_PLUS_ID);
-	if (!this._noDndPlusImage) {
-		icon.appendChild(Dwt.parseHtmlFragment(imgHtml));
+		icon.innerHTML = "<div class='DragProxyTextLabel' style='line-height:"+ iconHeight +"px'>"
+						+ [text, ZmMsg.items].join(" ") + "</div>";
+		Dwt.setBounds(icon, Dwt.LOC_NOWHERE, Dwt.LOC_NOWHERE, iconWidth, iconHeight);
 	}
 
 	this.shell.getHtmlElement().appendChild(icon);
-
-	// If we have multiple items selected, then we have our cool little dnd icon,
-	// so position the text in the middle of the seal
-	if (div) {
-		var sz = Dwt.getSize(div);
-		Dwt.setLocation(div, 16 + (32 - sz.x) / 2, 19 + (32 - sz.y) / 2);
-	}
 
 	Dwt.setZIndex(icon, Dwt.Z_DND);
 	return icon;
@@ -1796,11 +1777,15 @@ function(dragOp) {
 
 DwtListView.prototype._setDragProxyState =
 function(dropAllowed) {
-	// If we are moving multiple items then set borders & icons, else delegate up
-	// to DwtControl.prototype._setDragProxyState()
+	//setting the classes on item being dragged based on permissions on the drop area.
+	var targetItem;
 	if (this._dndImg) {
-		AjxImg.setImage(this._dndImg, dropAllowed ? "DndMultiYes_48" : "DndMultiNo_48");
+		targetItem = this._dndImg;
 	} else if (this._dndProxy) {
+		targetItem = this._dndProxy;
+	}
+
+	if(targetItem){
 		var addClass = dropAllowed ? DwtCssStyle.DROPPABLE : DwtCssStyle.NOT_DROPPABLE;
 		var origClass = this._getItemData(this._dndProxy, "origClassName");
 		this._dndProxy.className = [origClass, addClass].join(" ");
