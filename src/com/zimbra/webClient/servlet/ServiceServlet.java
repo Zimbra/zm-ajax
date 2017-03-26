@@ -41,9 +41,11 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.ExternalUserProvServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -69,17 +71,22 @@ public class ServiceServlet extends HttpServlet {
     public void init() throws ServletException {
         String ephemeralStoreURL;
         try {
+            RightManager.getInstance();
             ephemeralStoreURL = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
             if(ephemeralStoreURL != null) {
                 String[] tokens = ephemeralStoreURL.split(":");
                 if (tokens != null && tokens.length > 0) {
                     String backend = tokens[0];
-                    ZimbraLog.webclient.info("Will attempt to load server extensions to handle ephemeral backend %s", backend);
-                    ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backend));
+                    if(!backend.equalsIgnoreCase("ldap")) {
+                        ZimbraLog.webclient.info("Will attempt to load server extensions to handle ephemeral backend %s", backend);
+                        ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backend));
+                    } else {
+                        ZimbraLog.webclient.info("Using LDAP backend. Will skip loading server extensions.");
+                    }
                 }
             }
-        } catch (ServiceException e) {
-            ZimbraLog.webclient.error("Failed to load Ephemeral backend extensions", e);
+        } catch (Exception e) {
+            ZimbraLog.webclient.error("Failed to initialize ServiceServlet", e);
         }
     }
 
@@ -112,6 +119,7 @@ public class ServiceServlet extends HttpServlet {
                     //this operation loads a JSP with login form for public login.
                     doPublicLoginProv(req, resp);
                 } else {
+                    ZimbraLog.webclient.warn("Unrecognized request %s", path);
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
                 }
@@ -123,9 +131,13 @@ public class ServiceServlet extends HttpServlet {
                 return;
             }
         } catch (ServiceException e) {
-            ZimbraLog.webclient.error(e);
             if(ServiceException.PERM_DENIED.equals(e.getCode())) {
+                ZimbraLog.webclient.error(e);
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            } else {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                ZimbraLog.webclient.error("Unexpected ServiceException while processing GET request: %s. %s", e.getCode(), e.getMessage(), e);
                 return;
             }
         } catch (AuthTokenException e) {
@@ -133,9 +145,10 @@ public class ServiceServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         } catch (Exception e) {
-            ZimbraLog.webclient.error(e);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            ZimbraLog.webclient.error("Encountered an unexpected exception while processing GET request", e);
+            return;
         }
-        resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
     }
 
     @Override
@@ -146,11 +159,15 @@ public class ServiceServlet extends HttpServlet {
             if (authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/deployzimlet".equals(path)) {
-                    checkAdminRight(req, authToken, Admin.R_deployZimlet);
-                    doDeployZimlet(req, resp);
+                    if(!authToken.isAdmin()) {
+                        checkAdminRight(req, authToken, Admin.R_deployZimlet);
+                    }
+                    doDeployZimlet(req, resp, authToken);
                 } else if ("/undeployzimlet".equals(path)) {
-                    checkAdminRight(req, authToken, Admin.R_deleteZimlet);
-                    doUndeployZimlet(req, resp);
+                    if(!authToken.isAdmin()) {
+                        checkAdminRight(req, authToken, Admin.R_deployZimlet);
+                    }
+                    doUndeployZimlet(req, resp, authToken);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
@@ -165,20 +182,31 @@ public class ServiceServlet extends HttpServlet {
         } catch (AuthTokenException e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         } catch (ServiceException e) {
-            ZimbraLog.webclient.error(e);
             if(ServiceException.PERM_DENIED.equals(e.getCode())) {
+                ZimbraLog.webclient.error(e);
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             } else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                ZimbraLog.webclient.error("Unexpected ServiceException while processing POST request: %s. %s", e.getCode(), e.getMessage(), e);
+                return;
             }
         } catch (Exception e) {
-            ZimbraLog.webclient.error(e);
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            ZimbraLog.webclient.error("Encountered an unexpected exception while processing POST request", e);
+            return;
         }
     }
 
     private void checkAdminRight(HttpServletRequest req, AuthToken at, AdminRight permission) throws ServiceException {
+        if(permission == null) {
+            ZimbraLog.webclient.error("cannot check null permission");
+            throw ServiceException.FAILURE("permission object is NULL", null);
+        } else {
+            ZimbraLog.webclient.info("checking %s admin permission on local server", permission.getName());
+        }
         Server server = Provisioning.getInstance().getLocalServer();
         ZimbraSoapContext zsc = new ZimbraSoapContext(at, at.getAccountId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS);
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
@@ -188,12 +216,12 @@ public class ServiceServlet extends HttpServlet {
     private void doFlushUistrings(HttpServletRequest req, HttpServletResponse resp) throws ServiceException, ServletException, IOException {
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
         RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(FlushCache.RES_AJXMSG_JS);
-        ZimbraLog.misc.debug("flushCache: sending flush request");
+        ZimbraLog.webclient.debug("flushCache: sending flush request");
         req.setAttribute(FlushCache.FLUSH_CACHE, Boolean.TRUE);
         dispatcher.include(req, resp);
 
         dispatcher = this.getServletContext().getContext("/zimbraAdmin").getRequestDispatcher(FlushCache.RES_AJXMSG_JS);
-        ZimbraLog.misc.debug("flushCache: sending flush request to zimbraAdmin");
+        ZimbraLog.webclient.debug("flushCache: sending flush request to zimbraAdmin");
         req.setAttribute(FlushCache.FLUSH_CACHE, Boolean.TRUE);
         dispatcher.include(req, resp);
     }
@@ -209,7 +237,7 @@ public class ServiceServlet extends HttpServlet {
     private void doFlushSkins(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, ServiceException {
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
         RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(FlushCache.JS_SKIN_JS);
-        ZimbraLog.misc.debug("flushCache: sending flush request");
+        ZimbraLog.webclient.debug("flushCache: sending flush request");
         req.setAttribute(FlushCache.FLUSH_CACHE, Boolean.TRUE);
         dispatcher.include(req, resp);
     }
@@ -231,17 +259,26 @@ public class ServiceServlet extends HttpServlet {
         ZimletUtil.flushAllZimletsCache();
     }
 
-    private void doDeployZimlet(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+    private void doDeployZimlet(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws Exception {
         String zimletName = req.getHeader(ZimletUtil.PARAM_ZIMLET);
         ZimbraLog.zimlet.info("deploying zimlet %s", zimletName);
         ZimletFile zf = new ZimletFile(zimletName, req.getInputStream());
+        if(zf.getZimletDescription().isExtension() && !authToken.isAdmin()) {
+            throw ServiceException.PERM_DENIED("Only global admins are allowed to deploy extensions for Zimbra Admin UI");
+        }
         ZimletUtil.deployZimletLocally(zf);
         ZimbraLog.zimlet.info("deployed zimlet %s", zimletName);
     }
 
-    private void doUndeployZimlet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ZimletException {
+    private void doUndeployZimlet(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ZimletException, ServiceException {
         String zimletName = req.getHeader(ZimletUtil.PARAM_ZIMLET);
-        ZimbraLog.zimlet.info("undeploying zimlet %s", zimletName);
+        Zimlet z = Provisioning.getInstance().getZimlet(zimletName);
+        if(z != null && z.isExtension() && !authToken.isAdmin()) {
+            throw ServiceException.PERM_DENIED("Only global admins are allowed to undeploy extensions for Zimbra Admin UI");
+        } else if (z == null) {
+            ZimbraLog.zimlet.info("%s has already been deleted from LDAP. Cleaning up.", zimletName);
+        }
+        ZimbraLog.zimlet.info("deleting zimlet %s from disk", zimletName);
         File zimletDir = ZimletUtil.getZimletRootDir(zimletName);
         FileUtil.deleteDir(zimletDir);
         ZimbraLog.zimlet.info("zimlet directory %s is deleted", zimletDir.getName());
@@ -254,7 +291,7 @@ public class ServiceServlet extends HttpServlet {
         req.setAttribute("extuseremail", extUserEmail);
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
         RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(ExternalUserProvServlet.PUBLIC_EXTUSERPROV_JSP);
-        ZimbraLog.misc.debug("ExternalUserProvServlet: sending extuserprov request");
+        ZimbraLog.webclient.debug("ExternalUserProvServlet: sending extuserprov request");
         dispatcher.forward(req, resp);
     }
 
@@ -263,7 +300,7 @@ public class ServiceServlet extends HttpServlet {
         String vacctdomain = req.getHeader("virtualacctdomain");
         req.setAttribute("virtualacctdomain", vacctdomain);
         RequestDispatcher dispatcher = this.getServletContext().getContext(mailURL).getRequestDispatcher(ExternalUserProvServlet.PUBLIC_LOGIN_JSP);
-        ZimbraLog.misc.debug("ExternalUserProvServlet: sending publc login request");
+        ZimbraLog.webclient.debug("ExternalUserProvServlet: sending publc login request");
         dispatcher.forward(req, resp);
     }
 }
