@@ -86,7 +86,7 @@ public class ServiceServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            ZimbraLog.webclient.error("Failed to initialize ServiceServlet", e);
+            ZimbraLog.webclient.error("Failed to initialize ServiceServlet. Ignoring", e);
         }
     }
 
