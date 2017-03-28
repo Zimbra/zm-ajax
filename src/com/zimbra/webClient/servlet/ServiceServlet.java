@@ -229,7 +229,6 @@ public class ServiceServlet extends HttpServlet {
         Server server = Provisioning.getInstance().getLocalServer();
         ZimbraSoapContext zsc = new ZimbraSoapContext(at, at.getAccountId(), SoapProtocol.SoapJS, SoapProtocol.SoapJS);
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
-        ZimbraLog.webclient.debug(String.format("Checking %s on %s using %s. Account %s", permission.getName(), server.getName(), aac.getClass().getSimpleName(), zsc.getAuthToken().isDelegatedAdmin() ? "delegated" : "not delegated"));
         aac.checkRight(server, permission);
     }
 
