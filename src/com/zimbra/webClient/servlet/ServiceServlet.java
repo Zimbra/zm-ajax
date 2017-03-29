@@ -124,8 +124,9 @@ public class ServiceServlet extends HttpServlet {
                 } else if ("/publiclogin".equals(path)) {
                     //this operation loads a JSP with login form for public login.
                     doPublicLoginProv(req, resp);
-                } else if ("/flushall".equals(path)) {
-                    //only automated tests need to flush all cache in /zimbra app
+                } else if ("/flushacl".equals(path)) {
+                    //only automated tests need to flush ACL cache in /zimbra app.
+                    //this call invalidates all LDAP entry caches where the ACL is cached.
                     if(authToken.isAdmin()) {
                         PermissionCache.invalidateAllCache();
                     } else {
