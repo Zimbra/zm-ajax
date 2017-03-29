@@ -307,17 +307,13 @@ public class ImageMerger {
             List<ImageEntry> subEntries = aggregate.entries();
             if (subEntries.size() == 0) break;
 
-            // only one entry in aggregate, treat as single
-            if (subEntries.size() == 1) {
-                ImageEntry entry = subEntries.get(0);
-                if (verbose) System.out.println("generating output for "+entry.image.getName());
-                printlnJs(entry);
-                printlnCss(entry);
-            }
-
-            // generate output for aggregate
-            else {
-                String ext = files[0].getName().replaceAll("^.*\\.", ".");
+            // for raster image, if only one entry in aggregate, treat as single
+            // for vector image, even if there is only one entry, treat as aggregate
+            boolean generateAggregate = subEntries.size() == 1 ? subEntries.get(0).image.isVector() : true;
+            
+            if(generateAggregate) {
+            	// generate output for aggregate
+            	String ext = files[0].getName().replaceAll("^.*\\.", ".");
                 String filename = dir.getName()+(filecount>1?""+filecount:"")+layout.toExtension()+ext;
                 File file = new File(outputDir, filename);
                 System.out.println("generating "+file);
@@ -332,8 +328,13 @@ public class ImageMerger {
                     printlnCss(entry, true);
                     printlnJs(entry, true);
                 }
-            }
+            } else {
+            	ImageEntry entry = subEntries.get(0);
 
+                if (verbose) System.out.println("generating output for "+entry.image.getName());
+                printlnJs(entry);
+                printlnCss(entry);
+            }
         }
 
         // generate output for anything left
@@ -365,16 +366,18 @@ public class ImageMerger {
         String url = cssPath+"/"+filename.replace(File.separatorChar,'/');
         url += "?v=@jsVersion@";
 
-        if(image.isVector() && sprite) {
+        if(image.isVector()) {
             // Append image name to file path to work as fragment identifier
-            url += "#" + image.getName() + "-view";
+            if(sprite) {
+                url += "#" + image.getName() + "-view";
+            }
+
             selector += "-view";
         }
 
-
         print(cssOut, "%s {", selector);
 
-        if(image.isVector() && sprite) {
+        if(image.isVector()) {
             print(cssOut, "background:url('%s') %s;", url, layout.toCss());
             print(cssOut, "background-size: 100%% 100%%;");
         } else {
