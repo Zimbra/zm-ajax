@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.ExternalUserProvServlet;
@@ -93,9 +94,14 @@ public class ServiceServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String authTokenEncoded = req.getHeader(WebClientServiceUtil.PARAM_AUTHTOKEN);
+        if(authTokenEncoded == null || authTokenEncoded.isEmpty()) {
+            ZimbraLog.webclient.warn("AuthToken is missing");
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
         try {
             AuthToken authToken = ZimbraAuthToken.getAuthToken(authTokenEncoded);
-            if (authToken.isRegistered() && !authToken.isExpired()) {
+            if (authToken != null && authToken.isRegistered() && !authToken.isExpired()) {
                 String path = req.getPathInfo();
                 if ("/loadskins".equals(path)) {
                     //this operation does not require an admin permission. It can be triggered by a user login.
@@ -118,6 +124,16 @@ public class ServiceServlet extends HttpServlet {
                 } else if ("/publiclogin".equals(path)) {
                     //this operation loads a JSP with login form for public login.
                     doPublicLoginProv(req, resp);
+                } else if ("/flushacl".equals(path)) {
+                    //only automated tests need to flush ACL cache in /zimbra app.
+                    //this call invalidates all LDAP entry caches where the ACL is cached.
+                    if(authToken.isAdmin()) {
+                        PermissionCache.invalidateAllCache();
+                    } else {
+                        ZimbraLog.webclient.warn("Only global admin is allowed to access %s", path);
+                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                        return;
+                    }
                 } else {
                     ZimbraLog.webclient.warn("Unrecognized request %s", path);
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -182,6 +198,10 @@ public class ServiceServlet extends HttpServlet {
         } catch (AuthTokenException e) {
             ZimbraLog.webclient.error(e);
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        } catch (ZimletException e) {
+            ZimbraLog.webclient.error(e);
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         } catch (ServiceException e) {
             if(ServiceException.PERM_DENIED.equals(e.getCode())) {
