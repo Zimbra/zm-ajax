@@ -307,13 +307,7 @@ AjxImg.createSVGTag = function(imageData, imageName, styleStr, attrStr) {
     retVal.push("<svg aria-hidden='true' class='svg-icon " + imageName + "' " + styleStr + attrStr + ">");
 
     // SVG2 has deprecated xlink:href, so in future we need to use href attribute
-    if(imageData.f.indexOf("#") !== -1) {
-        // Fragment identifier exists, it's a sprite
-        retVal.push("<use xlink:href=\"" + imageData.f + "\"></use>");
-    } else {
-        // Single image
-        retVal.push("<image xlink:href=\"" + imageData.f + "\"></image>");
-    }
+    retVal.push("<use xlink:href=\"" + imageData.f + "\"></use>");
 
     retVal.push("</svg>");
 
