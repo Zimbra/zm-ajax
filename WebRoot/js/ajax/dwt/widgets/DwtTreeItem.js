@@ -141,6 +141,7 @@ DwtTreeItem.prototype.dispose =
 function() {
     DwtComposite.prototype.dispose.call(this);
 	this._itemDiv = null;
+	this._tableEl = null;
 	this._nodeCell = null;
 	this._checkBoxCell = null;
 	this._checkedImg = null;
@@ -585,6 +586,7 @@ function(index, realizeDeferred, forceNode) {
 
 	// cache DOM objects here
 	this._itemDiv = document.getElementById(data.id + "_div");
+	this._tableEl = document.getElementById(data.id + "_table"); //tree-item content wrapper
 	this._nodeCell = document.getElementById(data.id + "_nodeCell");
 	this._checkBoxCell = document.getElementById(data.id + "_checkboxCell");
 	this._checkBox = document.getElementById(data.id + "_checkbox");
@@ -1140,7 +1142,7 @@ function(params) {
 
 DwtTreeItem.prototype.getTooltipBase =
 function(hoverEv) {
-	return this._itemDiv;
+	return this._tableEl;
 };
 
 DwtTreeItem._listeners = {};
