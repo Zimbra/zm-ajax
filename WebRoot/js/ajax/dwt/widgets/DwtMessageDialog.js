@@ -109,9 +109,6 @@ DwtMessageDialog.TITLE[DwtMessageDialog.WARNING_STYLE] = AjxMsg.warningMsg;
 DwtMessageDialog.TITLE[DwtMessageDialog.PLAIN_STYLE] = AjxMsg.infoMsg;
 
 DwtMessageDialog.ICON = {};
-DwtMessageDialog.ICON[DwtMessageDialog.CRITICAL_STYLE] = "Critical_32";
-DwtMessageDialog.ICON[DwtMessageDialog.INFO_STYLE] = "Information_32";
-DwtMessageDialog.ICON[DwtMessageDialog.WARNING_STYLE] = "Warning_32";
 
 DwtMessageDialog.HELP_BUTTON = "Help";
 // Public methods
