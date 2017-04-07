@@ -73,6 +73,11 @@ DwtDialog = function(params) {
 		standardButtons = [standardButtons];
 	}
 
+	//sort buttons so that they are based on their position in order
+	if(AjxUtil.isArray(standardButtons)) {
+		standardButtons.sort();
+	}
+	
 	// assemble the list of button IDs, and the list of button descriptors
 	this._buttonList = [];
 	var buttonOrder = {};
@@ -127,6 +132,10 @@ DwtDialog = function(params) {
 	for (var i = 0; i < this._buttonList.length; i++) {
 		var buttonId = this._buttonList[i];
 		var b = this._button[buttonId] = new DwtButton({parent:this,id:this._htmlElId+"_button"+buttonId});
+		b.addClassName('ZDialogButton');
+		if(buttonId == DwtDialog.OK_BUTTON || buttonId == DwtDialog.YES_BUTTON) {
+			b.addClassName('ZPrimaryButton');
+		}
 		b.setText(this._buttonDesc[buttonId].label);
 		b.buttonId = buttonId;
 		b.addSelectionListener(new AjxListener(this, this._buttonListener));
