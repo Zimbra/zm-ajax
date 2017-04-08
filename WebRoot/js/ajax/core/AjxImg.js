@@ -78,11 +78,10 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
 
     var className = AjxImg.getClassForImage(imageName, _disabled);
     if (useParentEl ) {
-        // @TODO no support for vector image here, is this used?
         DBG.println(AjxDebug.IMAGES, "No support for vector image when useParentEl is true");
-
         classes.push(className);
         parentEl.className = classes.join(" ");
+        imageData.v && (parentEl.innerHTML = AjxImg.createSVGTag(imageData, className));
         return;
     }
 
