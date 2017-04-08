@@ -808,7 +808,7 @@ function(show, direction) {
 	var iconEl = this._getIconEl(direction);
 	if (iconEl) {  //add a null check so buttons with no icon elements don't break the app.
 		var info = show ? this._hoverImageInfo[direction] : this.__imageInfo[direction];
-		iconEl.firstChild.className = AjxImg.getClassForImage(info);
+		AjxImg.setImage(iconEl.firstChild, info, true );
 	}
 };
 
