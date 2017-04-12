@@ -90,12 +90,25 @@ DwtCheckbox.TEXT_RIGHT			= "right";
  */
 DwtCheckbox.DEFAULT_POSITION	= DwtCheckbox.TEXT_RIGHT;
 
+/**
+ * Icons for custom checkbox style
+ */
+DwtCheckbox.CUSTOM_STYLE_ICONS	= {
+	CheckBox: "CheckboxUnchecked",
+	CheckBoxChecked: "CheckboxChecked"
+};
+
 //
 // Data
 //
 DwtCheckbox.prototype.TEMPLATE = "dwt.Widgets#DwtCheckbox";
 
 DwtCheckbox.prototype.INPUT_TYPE = 'checkbox';
+
+/**
+ * Defines if to set custom checkbox style
+ */
+DwtCheckbox.prototype.CUSTOM_CHECKBOX	= true;
 
 //
 // Public methods
@@ -164,6 +177,9 @@ DwtCheckbox.prototype.setSelected =
 function(selected) {
 	if (this._inputEl && this._inputEl.checked != selected) {
 		this._inputEl.checked = selected;
+	}
+	if (this.CUSTOM_CHECKBOX_STYLE) {
+		this.__setCustomCheckboxIcon();
 	}
 };
 
@@ -294,6 +310,9 @@ function(oel, nel, inheritClass, inheritStyle) {
 		if (this._textEl) {
 			this._textEl.setAttribute(AjxEnv.isIE ? "htmlFor" : "for", oel.id);
 		}
+		if (this.CUSTOM_CHECKBOX_STYLE) {
+			this._inputIconEl.setAttribute(AjxEnv.isIE ? "htmlFor" : "for", oel.id);
+		}
 	}
 };
 
@@ -317,6 +336,8 @@ function(templateId, data) {
     data.value = this._initValue;
 	data.type = this.INPUT_TYPE;
 	DwtControl.prototype._createHtmlFromTemplate.call(this, templateId, data);
+	//set custom style for check box only
+	this.CUSTOM_CHECKBOX_STYLE = this.CUSTOM_CHECKBOX && this.INPUT_TYPE == 'checkbox';
 	this._inputEl = document.getElementById(data.id+"_input");
 	if (this._inputEl) {
 		var keyboardMgr = DwtShell.getShell(window).getKeyboardMgr();
@@ -324,6 +345,15 @@ function(templateId, data) {
 		Dwt.setHandler(this._inputEl, DwtEvent.ONFOCUS, handleFocus);
 		Dwt.setHandler(this._inputEl, DwtEvent.ONCLICK, DwtCheckbox.__handleClick);
 		this.setFocusElement();
+		if (this.CUSTOM_CHECKBOX_STYLE) {
+			//Add custom input icon
+			this._inputIconEl = document.createElement("label");
+			this._inputIconEl.setAttribute(AjxEnv.isIE ? "htmlFor" : "for", this._inputEl.id);
+			this._inputEl.style.position = Dwt.ABSOLUTE_STYLE;
+			this._inputEl.style.left = "-10000px"; //offset input element
+			this._inputEl.parentNode.appendChild(this._inputIconEl);
+			this._inputIconEl.setAttribute(AjxEnv.isIE ? "htmlFor" : "for", this._inputEl.id);
+		}
 	}
 	this._textElLeft = document.getElementById(data.id+"_text_left");
 	this._textElRight = document.getElementById(data.id+"_text_right");
@@ -349,3 +379,12 @@ function(evt) {
 	checkbox.focus();
 	checkbox.notifyListeners(DwtEvent.SELECTION, selEv);
 };
+
+/**
+ * Set custom icon for checkbox
+ */
+DwtCheckbox.prototype.__setCustomCheckboxIcon =
+function () {
+	var icon = this.isSelected() ? 'CheckBoxChecked' : 'CheckBox';
+	this._inputIconEl.innerHTML = AjxImg.getImageHtml(DwtCheckbox.CUSTOM_STYLE_ICONS[icon]);
+}
