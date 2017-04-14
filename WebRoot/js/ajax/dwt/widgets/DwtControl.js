@@ -2770,25 +2770,29 @@ function() {
 DwtControl.prototype._position =
 function(loc) {
 	this._checkState();
+
 	var sizeShell = this.shell.getSize();
 	var sizeThis = this.getSize();
 	var x, y;
-	if (!loc) {
-		// if no location, go for the middle
-		x = Math.round((sizeShell.x - sizeThis.x) / 2);
-		y = Math.round((sizeShell.y - sizeThis.y) / 2);
-	} else {
-		x = loc.x;
-		y = loc.y;
+
+	if (sizeThis) {
+		if (!loc) {
+			// if no location, go for the middle
+			x = Math.round((sizeShell.x - sizeThis.x) / 2);
+			y = Math.round((sizeShell.y - sizeThis.y) / 2);
+		} else {
+			x = loc.x;
+			y = loc.y;
+		}
+		// try to stay within shell boundaries
+		if ((x + sizeThis.x) > sizeShell.x) {
+			x = sizeShell.x - sizeThis.x;
+		}
+		if ((y + sizeThis.y) > sizeShell.y) {
+			y = sizeShell.y - sizeThis.y;
+		}
+		this.setLocation(x, y);
 	}
-	// try to stay within shell boundaries
-	if ((x + sizeThis.x) > sizeShell.x) {
-		x = sizeShell.x - sizeThis.x;
-	}
-	if ((y + sizeThis.y) > sizeShell.y) {
-		y = sizeShell.y - sizeThis.y;
-	}
-	this.setLocation(x, y);
 };
 
 /**
