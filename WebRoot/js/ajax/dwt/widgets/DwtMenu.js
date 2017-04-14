@@ -1156,7 +1156,7 @@ function(x, y, kbGenerated) {
 		DwtMenu._activeMenuUp = true;
 	}
 
-	this.parent && this.parent.addClassName && this.parent.addClassName(DwtControl.SUB_MENU_ACTIVE);
+	this.parent && !(this.parent instanceof DwtShell) && this.parent.addClassName && this.parent.addClassName(DwtControl.SUB_MENU_ACTIVE);
 
 	DwtMenu._activeMenuIds.add(this._htmlElId, null, true);
 	DwtMenu._activeMenuIds.sort();	
