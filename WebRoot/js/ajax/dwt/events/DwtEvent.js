@@ -258,3 +258,9 @@ DwtEvent.MOUSE_EVENTS = [
 	DwtEvent.ONMOUSEDOWN, DwtEvent.ONMOUSEMOVE, DwtEvent.ONMOUSEUP,
 	DwtEvent.ONSELECTSTART, DwtEvent.ONMOUSEOVER, DwtEvent.ONMOUSEOUT
 ];
+
+DwtEvent.ONDRAGENTER	=	"ondragenter";
+DwtEvent.ONDRAGLEAVE	=	"ondragleave";
+DwtEvent.ONDRAGOVER 	=	"ondragover";
+DwtEvent.ONDROP 	=	"ondrop";
+
