@@ -1007,7 +1007,7 @@ function(ev) {
 		return;
 	} else if (target.id.charAt(0) == 'b') {
 		var img;
-		if (target.firstChild == null) {
+		if (target.firstChild == null || target.firstChild instanceof SVGElement) {
 			img = target;
 			AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_HOVERED_CLASS;
 		} else {
@@ -1032,7 +1032,7 @@ function(ev) {
 	} else if (target.id.charAt(0) == 'b') {
 		var img;
 		target.className = DwtCalendar._BUTTON_CLASS;
-		if (target.firstChild == null) {
+		if (target.firstChild == null || target.firstChild instanceof SVGElement) {
 			img = target;
 			AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_CLASS;
 		} else {
@@ -1053,7 +1053,7 @@ function(ev) {
 			target.className = DwtCalendar._TITLE_ACTIVE_CLASS;
 		} else if (target.id.charAt(0) == 'b') {
 			var img;
-			if (target.firstChild == null) {
+			if (target.firstChild == null || target.firstChild instanceof SVGElement) {
 				img = target;
 				AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_ACTIVE_CLASS;
 			} else {
@@ -1084,7 +1084,7 @@ function(ev) {
 			this._setClassName(target, DwtCalendar._HOVERED);
 		} else if (target.id.charAt(0) == 'b') {
 			var img;
-			if (target.firstChild == null) {
+			if (target.firstChild == null || target.firstChild instanceof SVGElement) {
 				img = target;
 				AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_HOVERED_CLASS;
 			} else {
