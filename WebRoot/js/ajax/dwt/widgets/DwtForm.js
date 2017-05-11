@@ -1441,7 +1441,7 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 		addButton.addSelectionListener(new AjxListener(this, this._handleAddRow, [itemDef.id]));
 	}
 
-	var removeDef = this._itemDef.removeitem ? AjxUtil.createProxy(this._itemDef.removeitem) : { image: "Remove", tooltip: ZmMsg.removeRow };
+	var removeDef = this._itemDef.removeitem ? AjxUtil.createProxy(this._itemDef.removeitem) : { image: "Minus", tooltip: ZmMsg.removeRow };
 	removeDef.id = removeDef.id || itemDef.id+"_remove";
 	removeDef.visible = "this.getRowCount() > this.getMinRows()";
 	removeDef.ignore = true;
