@@ -76,12 +76,12 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
         return;
     }
 
-    var className = AjxImg.getClassForImage(imageName, _disabled);
-    if (useParentEl ) {
+    var className = AjxImg.getClassForImage(imageName + (imageData.v ? '-svg' : ''), _disabled);
+    if (useParentEl) {
         DBG.println(AjxDebug.IMAGES, "No support for vector image when useParentEl is true");
         classes.push(className);
         parentEl.className = classes.join(" ");
-        imageData.v && (parentEl.innerHTML = AjxImg.createSVGTag(imageData, className));
+        imageData.v && (parentEl.innerHTML = AjxImg.createSVGTag(imageData));
         return;
     }
 
@@ -121,7 +121,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
 
         // Vector image using SVG tag
         if(imageData.v) {
-            html[i++] = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName));
+            html[i++] = AjxImg.createSVGTag(imageData);
         }
 
         html[i++] = "</div>";
@@ -131,7 +131,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
     if (className) {
         if (imageData.v) {
             // Vector image using SVG tag
-            parentEl.firstChild.innerHTML = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName));
+            parentEl.firstChild.innerHTML = AjxImg.createSVGTag(imageData);
         }
 
         // Raster/Vector image using background
@@ -222,8 +222,7 @@ function() {
             return;
         }
 
-        var className = AjxImg.getClassForImage(imageName, disabled);
-
+        var className = AjxImg.getClassForImage(imageName + (imageData.v ? '-svg' : ''), disabled);
         if (color) {
             color = (color.match(/^\d$/) ? ZmOrganizer.COLOR_VALUES[color] : color) ||
                     ZmOrganizer.COLOR_VALUES[ZmOrganizer.ORG_DEFAULT_COLOR];
@@ -240,14 +239,14 @@ function() {
             }
 
             if(imageData.v) {
-                html = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName), styleStr, attrStr);
+                html = AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName + '-svg'), styleStr, attrStr);
             } else {
                 DBG.println(AjxDebug.IMAGES, "No support for raster image with specific color ", AjxImg.getClassForImage(imageName));
             }
         }
         else {
             // Raster/Vector image using background
-               classes.push(AjxImg.getClassForImage(imageName));
+            classes.push(className);
 
             html = [
                 "<div ", AjxUtil.getClassAttr(classes), styleStr, attrStr, ">"
@@ -263,7 +262,7 @@ function() {
 
             // Vector image using SVG tag
             if(imageData.v) {
-                html.push(AjxImg.createSVGTag(imageData, AjxImg.getClassForImage(imageName)));
+                html.push(AjxImg.createSVGTag(imageData));
             }
 
             html.push("</div>");
@@ -301,9 +300,14 @@ function() {
 AjxImg.createSVGTag = function(imageData, imageName, styleStr, attrStr) {
     styleStr = styleStr || "";
     attrStr = attrStr || "";
+    clsStr = 'svg-icon';
+
+    if(imageName) {
+        clsStr += ' ' + imageName;
+    }
 
     var retVal = [];
-    retVal.push("<svg aria-hidden='true' class='svg-icon " + imageName + "' " + styleStr + attrStr + ">");
+    retVal.push("<svg aria-hidden='true' class='" + clsStr + "' " + styleStr + attrStr + ">");
 
     // SVG2 has deprecated xlink:href, so in future we need to use href attribute
     retVal.push("<use xlink:href=\"" + imageData.f + "\"></use>");
