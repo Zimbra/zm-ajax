@@ -151,6 +151,7 @@ public class SkinResources
 
 	private static final String N_SKIN = "skin";
 	private static final String N_IMAGES = "images";
+	private static final String N_SVGS = "svgs";
 
 	private static final String SKIN_MANIFEST = "manifest.xml";
 
@@ -174,6 +175,7 @@ public class SkinResources
     private static final Pattern RE_CSSURL = Pattern.compile("^(?!/\\*).*url\\(\'?\"?(.*?)\\??v?=?\\d*\'?\"?\\)");
 
 	private static final String IMAGE_CSS = "img/images.css";
+	private static final String SVG_CSS = "svg/svgs.css";
 
 	private static final Map<String, String> TYPES = new HashMap<String, String>();
 
@@ -616,6 +618,12 @@ public class SkinResources
 					String cssFilename = file.getName().replaceAll("\\.css$", "");
 					String cssExt = file.getName().replaceAll("^.*\\.", ".");
 					addLocaleFiles(files, requestedLocale, file.getParentFile(), cssFilename, cssExt);
+
+					file = new File(skinDir, SVG_CSS);
+					files.add(file);
+					cssFilename = file.getName().replaceAll("\\.css$", "");
+					cssExt = file.getName().replaceAll("^.*\\.", ".");
+					addLocaleFiles(files, requestedLocale, file.getParentFile(), cssFilename, cssExt);
 				}
 				else if (type.equals(T_JAVASCRIPT)) {
 					// decide whether to include templates
@@ -660,9 +668,15 @@ public class SkinResources
 				File file = new File(dir, filenameExt);
 				if (ZimbraLog.webclient.isDebugEnabled())
 					ZimbraLog.webclient.debug("DEBUG: file " + file.getAbsolutePath());
-				if (!file.exists() && (type.equals(T_CSS) || type.equals(T_APPCACHE)) && filename.equals(N_IMAGES)) {
-					file = new File(rootDir, IMAGE_CSS);
-					dir = file.getParentFile();
+				if (!file.exists() && (type.equals(T_CSS) || type.equals(T_APPCACHE))) {
+					if(filename.equals(N_IMAGES)) {
+						file = new File(rootDir, IMAGE_CSS);
+						dir = file.getParentFile();
+					} else if (filename.equals(N_SVGS)) {
+						file = new File(rootDir, SVG_CSS);
+						dir = file.getParentFile();
+					}
+
 					if (ZimbraLog.webclient.isDebugEnabled())
 						ZimbraLog.webclient.debug("DEBUG: !file.exists() " + file.getAbsolutePath());
 				}
