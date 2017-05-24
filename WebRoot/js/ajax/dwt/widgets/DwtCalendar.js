@@ -940,12 +940,6 @@ function() {
 	html[idx++] = "</td></tr></table></table>";
 
 	this.getHtmlElement().innerHTML = html.join("");
-	if (!this._readOnly) {
-		document.getElementById("b:py:img:" + this._uuid)._origClassName = AjxImg.getClassForImage("FastRevArrowSmall");
-		document.getElementById("b:pm:img:" + this._uuid)._origClassName = AjxImg.getClassForImage("RevArrowSmall");
-		document.getElementById("b:nm:img:" + this._uuid)._origClassName = AjxImg.getClassForImage("FwdArrowSmall");
-		document.getElementById("b:ny:img:" + this._uuid)._origClassName = AjxImg.getClassForImage("FastFwdArrowSmall");
-	}
 
 	this._calWidgetInited = true;
 };
@@ -1006,15 +1000,11 @@ function(ev) {
 		// Dont activate title for now
 		return;
 	} else if (target.id.charAt(0) == 'b') {
-		var img;
 		if (target.firstChild == null || target.firstChild instanceof SVGElement) {
-			img = target;
 			AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_HOVERED_CLASS;
 		} else {
 			target.className = DwtCalendar._BUTTON_HOVERED_CLASS;
-			img = AjxImg.getImageElement(target);
 		}
-		img.className = img._origClassName;
 	}
 
 	ev._stopPropagation = true;
@@ -1030,16 +1020,11 @@ function(ev) {
 			this._mouseOutDayCB.run(this);
 		}
 	} else if (target.id.charAt(0) == 'b') {
-		var img;
-		target.className = DwtCalendar._BUTTON_CLASS;
 		if (target.firstChild == null || target.firstChild instanceof SVGElement) {
-			img = target;
 			AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_CLASS;
 		} else {
 			target.className = DwtCalendar._BUTTON_CLASS;
-			img = AjxImg.getImageElement(target);
 		}
-		img.className = img._origClassName;
 	}
 };
 
@@ -1052,15 +1037,11 @@ function(ev) {
 		} else if (target.id.charAt(0) == 't') {
 			target.className = DwtCalendar._TITLE_ACTIVE_CLASS;
 		} else if (target.id.charAt(0) == 'b') {
-			var img;
 			if (target.firstChild == null || target.firstChild instanceof SVGElement) {
-				img = target;
 				AjxImg.getParentElement(target).className = DwtCalendar._BUTTON_ACTIVE_CLASS;
 			} else {
 				target.className = DwtCalendar._BUTTON_ACTIVE_CLASS;
-				img = AjxImg.getImageElement(target);
 			}
-			img.className = img._origClassName;
 		} else if (target.id.charAt(0) == 'w') {
 		}
 	}
@@ -1091,8 +1072,7 @@ function(ev) {
 				target.className = DwtCalendar._BUTTON_HOVERED_CLASS;
 				img = AjxImg.getImageElement(target);
 			}
-			img.className = img._origClassName;
-			
+
 			if (img.id.indexOf("py") != -1) {
 				this._prevYear();
 			} else if (img.id.indexOf("pm") != -1) {
