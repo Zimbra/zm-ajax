@@ -2827,7 +2827,8 @@ function() {
 DwtListView.prototype._sizeChildren =
 function(height) {
 	if (this.headerColCreated && this._listDiv && (height != Dwt.DEFAULT)) {
-		Dwt.setSize(this._listDiv, Dwt.DEFAULT, height - DwtListView.HEADERITEM_HEIGHT);
+		var headerHeight = (this._listColDiv && Dwt.getSize(this._listColDiv).y ) || DwtListView.HEADERITEM_HEIGHT;
+		Dwt.setSize(this._listDiv, Dwt.DEFAULT, height - headerHeight);
 		return true;
 	} else {
 		return false;
