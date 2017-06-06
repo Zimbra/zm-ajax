@@ -98,6 +98,12 @@ DwtCheckbox.CUSTOM_STYLE_ICONS	= {
 	CheckBoxChecked: "CheckboxChecked"
 };
 
+//classes for label
+DwtCheckbox.LABEL_CLASS = { 
+	left: "ZCheckboxTableLeftText", 
+	right: "ZCheckboxTableRightText" 
+};
+
 //
 // Data
 //
@@ -163,8 +169,8 @@ function(enabled) {
 		DwtControl.prototype.setEnabled.call(this, enabled);
 		this._inputEl.disabled = !enabled;
 		var className = enabled ? "Text" : "DisabledText";
-		if (this._textElLeft) this._textElLeft.className = "ZCheckboxTableLeftText " + className;
-		if (this._textElRight) this._textElRight.className = "ZCheckboxTableRightText " + className;
+		if (this._textElLeft) this._textElLeft.className = [DwtCheckbox.LABEL_CLASS.left, className].join(" ");
+		if (this._textElRight) this._textElRight.className = [DwtCheckbox.LABEL_CLASS.right, className].join(" ");
 	}
 };
 
