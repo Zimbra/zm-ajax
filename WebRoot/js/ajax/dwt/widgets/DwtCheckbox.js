@@ -163,8 +163,8 @@ function(enabled) {
 		DwtControl.prototype.setEnabled.call(this, enabled);
 		this._inputEl.disabled = !enabled;
 		var className = enabled ? "Text" : "DisabledText";
-		if (this._textElLeft) this._textElLeft.className = className;
-		if (this._textElRight) this._textElRight.className = className;
+		if (this._textElLeft) this._textElLeft.className = "ZCheckboxTableLeftText " + className;
+		if (this._textElRight) this._textElRight.className = "ZCheckboxTableRightText " + className;
 	}
 };
 
