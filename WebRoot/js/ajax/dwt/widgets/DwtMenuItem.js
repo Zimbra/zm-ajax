@@ -259,6 +259,11 @@ DwtMenuItem.prototype._createHtml =
 function(templateId) {
 	var defaultTemplate = this.isSeparator() ? this.SEPARATOR_TEMPLATE : this.TEMPLATE;
 	DwtButton.prototype._createHtml.call(this, templateId || defaultTemplate);
+	var isCheck = this._style & DwtMenuItem.CHECK_STYLE;
+	var isRadio = this._style & DwtMenuItem.RADIO_STYLE;
+	if(isCheck || isRadio) {
+		Dwt.addClass(this.getHtmlElement(), DwtMenu.HAS_CHECK);
+	}
 };
 
 DwtMenuItem.prototype._createHtmlFromTemplate =
