@@ -1148,4 +1148,40 @@ AjxUtil.getForegroundColor = function(bgColor) {
 	return (brightness != null && brightness < 130) ? 'white' : 'black';
 };
 
+/**
+ * Wrapper function to html encode data, this function handles normal string or array of strings
+ * and returns encoded data in same format.
+ *
+ * @param   {string/array}    obj     array or string to html encode
+ * @returns {string/array}    html encoded string or array
+ */
+AjxUtil.htmlEncode = function(obj) {
+	if(AjxUtil.isArray(obj)) {
+		obj = obj.map(function(item) {
+			return AjxStringUtil.htmlEncode(item);
+		});
+	} else if (AjxUtil.isString(obj)) {
+		obj = AjxStringUtil.htmlEncode(obj);
+	}
 
+	return obj;
+};
+
+/**
+ * Wrapper function to html decode data, this function handles normal string or array of strings
+ * and returns decoded data in same format.
+ *
+ * @param   {string/array}    obj     array or string to html decode
+ * @returns {string/array}    html decoded string or array
+ */
+AjxUtil.htmlDecode = function(obj) {
+	if(AjxUtil.isArray(obj)) {
+		obj = obj.map(function(item) {
+			return AjxStringUtil.htmlDecode(item);
+		});
+	} else if (AjxUtil.isString(obj)) {
+		obj = AjxStringUtil.htmlDecode(obj);
+	}
+
+	return obj;
+};
