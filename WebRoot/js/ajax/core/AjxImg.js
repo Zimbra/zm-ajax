@@ -354,24 +354,24 @@ AjxImg.getCircularProgressBar =
 function (percentage) {
 	percentage = percentage || 0;
 	var htmlArr = [],
-		idx = 0;  
-	if (percentage != 100) {    
+		idx = 0;
+	if (percentage != 100) {
 		var offset = 100 - percentage;
 		var label = AjxMessageFormat.format(AjxMsg.percentageString, percentage);
-		htmlArr[idx++] = "<svg class='progress-circle' viewBox='0 0 38 38'>";    
-		htmlArr[idx++] = "<text x='19' y='19' font-size='10' text-anchor='middle' alignment-baseline='central'>";    
-		htmlArr[idx++] = label;    
-		htmlArr[idx++] = "</text>";    
-		htmlArr[idx++] = "<circle class='bg' r='16' cx='19' cy='19' stroke-width='2' fill='none'></circle>";    
-		htmlArr[idx++] = "<circle class='progress' r='16' cx='19' cy='19' stroke-width='2' transform='rotate(-90, 19, 19)' stroke-width='4' fill='none' stroke-dasharray='100' stroke-dashoffset='";    
-		htmlArr[idx++] = offset;    
-		htmlArr[idx++] = "'>";    
-		htmlArr[idx++] = "</circle>";    
-		htmlArr[idx++] = "</svg>";  
-	} else {    
-		htmlArr[idx++] = "<svg viewBox='0 0 50 50' class='progress-circle tick-inside' enable-background='0 0 50 50'>";    
-		htmlArr[idx++] = "<path d='M 25 3 C 12.86158 3 3 12.86158 3 25 C 3 37.13842 12.86158 47 25 47 C 37.13842 47 47 37.13842 47 25 C 47 12.86158 37.13842 3 25 3 z M 25 5 C 36.05754 5 45 13.94246 45 25 C 45 36.05754 36.05754 45 25 45 C 13.94246 45 5 36.05754 5 25 C 5 13.94246 13.94246 5 25 5 z M 34.0625 14.46875 L 23.125 31.46875 L 15.78125 24.84375 L 14.4375 26.34375 L 22.625 33.75 L 23.5 34.53125 L 24.125 33.53125 L 35.75 15.53125 L 34.0625 14.46875 z' overflow='visible'></path>";    
-		htmlArr[idx++] = "</svg>";  
+		htmlArr[idx++] = "<svg class='progress-circle' viewBox='0 0 38 38'>";
+		htmlArr[idx++] = "<text x='19' y='19' font-size='10' text-anchor='middle' alignment-baseline='central'>";
+		htmlArr[idx++] = label;
+		htmlArr[idx++] = "</text>";
+		htmlArr[idx++] = "<circle class='bg' r='16' cx='19' cy='19' stroke-width='2' fill='none'></circle>";
+		htmlArr[idx++] = "<circle class='progress' r='16' cx='19' cy='19' stroke-width='2' transform='rotate(-90, 19, 19)' stroke-width='4' fill='none' stroke-dasharray='100' stroke-dashoffset='";
+		htmlArr[idx++] = offset;
+		htmlArr[idx++] = "'>";
+		htmlArr[idx++] = "</circle>";
+		htmlArr[idx++] = "</svg>";
+	} else {
+		htmlArr[idx++] = "<svg viewBox='0 0 50 50' class='progress-circle tick-inside' enable-background='0 0 50 50'>";
+		htmlArr[idx++] = "<path d='M 25 3 C 12.86158 3 3 12.86158 3 25 C 3 37.13842 12.86158 47 25 47 C 37.13842 47 47 37.13842 47 25 C 47 12.86158 37.13842 3 25 3 z M 25 5 C 36.05754 5 45 13.94246 45 25 C 45 36.05754 36.05754 45 25 45 C 13.94246 45 5 36.05754 5 25 C 5 13.94246 13.94246 5 25 5 z M 34.0625 14.46875 L 23.125 31.46875 L 15.78125 24.84375 L 14.4375 26.34375 L 22.625 33.75 L 23.5 34.53125 L 24.125 33.53125 L 35.75 15.53125 L 34.0625 14.46875 z' overflow='visible'></path>";
+		htmlArr[idx++] = "</svg>";
 	}
 	return htmlArr.join("");
-}
+};
