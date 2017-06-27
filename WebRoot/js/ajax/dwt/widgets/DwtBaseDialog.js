@@ -100,6 +100,8 @@ DwtBaseDialog = function(params) {
 
 	// Make sure mouse clicks propagate to the DwtDraggable handler (document.onMouseMove and onMouseUp)
 	this._propagateEvent[DwtEvent.ONMOUSEUP] = true;
+
+	this.shellResizeHandler = this._resizeHdlr.bind(this);
 };
 
 /**
@@ -242,7 +244,7 @@ function(loc) {
 	kbMgr.pushTabGroup(this._tabGroup);
 	kbMgr.pushDefaultHandler(this);
 
-	DwtShell.getShell().addListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
+	DwtShell.getShell().addListener(DwtEvent.CONTROL, this.shellResizeHandler);
 
 	this.notifyListeners(DwtEvent.POPUP, this);
 };
@@ -314,8 +316,7 @@ function() {
 		kbMgr.popTabGroup(this._tabGroup);
 		kbMgr.popDefaultHandler();
 
-		DwtShell.getShell().removeListener(DwtEvent.CONTROL, this._resizeHdlr.bind(this));
-
+		DwtShell.getShell().removeListener(DwtEvent.CONTROL, this.shellResizeHandler);
 		this.notifyListeners(DwtEvent.POPDOWN, this);
 	}
 };
