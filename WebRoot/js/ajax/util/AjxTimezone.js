@@ -318,7 +318,7 @@ AjxTimezone.getShortName = function(clientId) {
 AjxTimezone.getMediumName = function(clientId) {
 	var rule = AjxTimezone.getRule(clientId);
     if (rule && rule.mediumName) return rule.mediumName;
-    var generatedMediumName = AjxMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
+    var generatedMediumName = TzMsg[clientId] || ['(',AjxTimezone.getShortName(clientId),') ',clientId].join("");
     if(rule) rule.mediumName = generatedMediumName;
 	return generatedMediumName;
 };
