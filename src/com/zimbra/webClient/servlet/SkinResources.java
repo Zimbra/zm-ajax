@@ -807,7 +807,7 @@ public class SkinResources
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/content.min.css");
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/fonts/tinymce-small.woff");
 			String tinyMCELocale = null;
-			List tinyMCELocaleList = Arrays.asList("ar", "da", "de", "en_AU", "en_GB", "es", "eu", "fr_CA", "fr_FR", "hi", "hu_HU", "id", "it", "iw", "ja", "ko_KR", "lo", "ms", "nl", "pl", "pt_BR", "pt_PT", "ro", "ru", "sl_SI", "sv_SE", "th_TH", "tr_TR", "uk_UA", "zh_CN", "zh_HK", "zh_TW");
+			List tinyMCELocaleList = Arrays.asList("ar", "ca", "da", "de", "en_AU", "en_GB", "es", "eu", "fr_CA", "fr_FR", "hi", "hu_HU", "id", "it", "iw", "ja", "ko_KR", "lo", "ms", "nl", "no", "pl", "pt_BR", "pt_PT", "ro", "ru", "sl_SI", "sv_SE", "th_TH", "tr_TR", "uk_UA", "zh_CN", "zh_HK", "zh_TW");
 			if (tinyMCELocaleList.contains(localeStr)) {
 				tinyMCELocale = localeStr;
 			}
@@ -826,10 +826,10 @@ public class SkinResources
               .append(appContextPath);
 			//create the resources url
             if (debugStr != null && (debugStr.equals(Boolean.TRUE.toString()) || debugStr.equals("1"))) {
-                sb.append("/res/I18nMsg,AjxMsg,ZMsg,ZmMsg,AjxKeys,ZmKeys,ZdMsg,AjxTemplateMsg.js?v=");
+                sb.append("/res/I18nMsg,TzMsg,AjxMsg,ZMsg,ZmMsg,AjxKeys,ZmKeys,ZdMsg,AjxTemplateMsg.js?v=");
             }
             else {
-                sb.append("/res/I18nMsg,AjxMsg,ZMsg,ZmMsg,AjxKeys,ZmKeys,ZdMsg,AjxTemplateMsg.js.zgz?v=");
+                sb.append("/res/I18nMsg,TzMsg,AjxMsg,ZMsg,ZmMsg,AjxKeys,ZmKeys,ZdMsg,AjxTemplateMsg.js.zgz?v=");
             }
             sb.append(cacheBusterVersion)
               .append('&')
