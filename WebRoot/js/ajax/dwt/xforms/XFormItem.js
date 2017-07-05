@@ -999,14 +999,8 @@ XFormItem.prototype.getKeyPressHandlerHTML = function () {
         var keydownEv = "onkeypress";
 
         // IE, EDGE, & Firefox do not handle onkeypress consistenly
-        if (AjxEnv.isIE || AjxEnv.isIE3 || AjxEnv.isIE4 || AjxEnv.isIE4up ||
-            AjxEnv.isIE5 || AjxEnv.isIE5_5 || AjxEnv.isIE5up || AjxEnv.isIE5_5up ||
-            AjxEnv.isIE6  || AjxEnv.isIE6up || AjxEnv.isIE7  || AjxEnv.isIE7up ||
-            AjxEnv.isIE8  || AjxEnv.isIE8up || AjxEnv.isIE9   || AjxEnv.isIE9up ||
-            AjxEnv.isIE10  || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
-            AjxEnv.isFirefox || AjxEnv.isFirefox1up || AjxEnv.isFirefox1_5up ||
-            AjxEnv.isFirefox3up || AjxEnv.isFirefox3_6up || AjxEnv.isFirefox4up ||
-            AjxEnv.isMozilla || AjxEnv.isMozilla1_4up) {
+        if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+            AjxEnv.isFirefox || AjxEnv.isMozilla) {
             keydownEv = "onkeydown";
         }
 
@@ -2340,14 +2334,8 @@ Textarea_XFormItem.prototype.getKeyPressHandlerHTML = function () {
         }
 
         // IE, EDGE, & Firefox do not handle onkeypress consistenly
-        if (AjxEnv.isIE || AjxEnv.isIE3 || AjxEnv.isIE4 || AjxEnv.isIE4up ||
-            AjxEnv.isIE5 || AjxEnv.isIE5_5 || AjxEnv.isIE5up || AjxEnv.isIE5_5up ||
-            AjxEnv.isIE6  || AjxEnv.isIE6up || AjxEnv.isIE7  || AjxEnv.isIE7up ||
-            AjxEnv.isIE8  || AjxEnv.isIE8up || AjxEnv.isIE9   || AjxEnv.isIE9up ||
-            AjxEnv.isIE10  || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
-            AjxEnv.isFirefox || AjxEnv.isFirefox1up || AjxEnv.isFirefox1_5up ||
-            AjxEnv.isFirefox3up || AjxEnv.isFirefox3_6up || AjxEnv.isFirefox4up ||
-            AjxEnv.isMozilla || AjxEnv.isMozilla1_4up) {
+        if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+            AjxEnv.isFirefox || AjxEnv.isMozilla) {
             keydownEv = "onkeydown";
         }
 
