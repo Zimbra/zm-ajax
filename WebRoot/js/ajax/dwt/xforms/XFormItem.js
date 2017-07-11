@@ -995,10 +995,15 @@ XFormItem.prototype.handleKeyPressDelay = function(ev, domItem) {
 
 XFormItem.prototype.getKeyPressHandlerHTML = function () {
 
-	var keydownEv = "onkeydown";
-	if (AjxEnv.isNav) {
-		keydownEv = "onkeypress";
-	}
+        // if AjxEnv.isNav, etc.
+        var keydownEv = "onkeypress";
+
+        // IE, EDGE, & Firefox do not handle onkeypress consistenly
+        if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+            AjxEnv.isFirefox || AjxEnv.isMozilla) {
+            keydownEv = "onkeydown";
+        }
+
 	return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
 						   " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
 };
@@ -2327,6 +2332,13 @@ Textarea_XFormItem.prototype.getKeyPressHandlerHTML = function () {
         if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
                 keydownEv = "onkeypress";
         }
+
+        // IE, EDGE, & Firefox do not handle onkeypress consistenly
+        if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+            AjxEnv.isFirefox || AjxEnv.isMozilla) {
+            keydownEv = "onkeydown";
+        }
+
         return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
                                                    " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
 };
