@@ -688,7 +688,7 @@ XFormItem.prototype.setError = function(message, childError) {
 	this.getForm().addErrorItem(this);
 	this.__errorState = XFormItem.ERROR_STATE_ERROR;
 	var container = this.getErrorContainer(true);
-	if (container) container.innerHTML = message;
+	if (container) container.innerHTML = AjxStringUtil.htmlEncode(message);
 };
 
 /** 
