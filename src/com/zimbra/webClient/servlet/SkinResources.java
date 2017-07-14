@@ -807,7 +807,7 @@ public class SkinResources
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/content.min.css");
             sb.append("\n").append(appContextPath).append("/js/ajax/3rdparty/tinymce/skins/lightgray/fonts/tinymce-small.woff");
 			String tinyMCELocale = null;
-			List tinyMCELocaleList = Arrays.asList("ar", "ca", "da", "de", "en_AU", "en_GB", "es", "eu", "fr_CA", "fr_FR", "hi", "hu_HU", "id", "it", "iw", "ja", "ko_KR", "lo", "ms", "nl", "no", "pl", "pt_BR", "pt_PT", "ro", "ru", "sl_SI", "sv_SE", "th_TH", "tr_TR", "uk_UA", "zh_CN", "zh_HK", "zh_TW");
+			List tinyMCELocaleList = Arrays.asList("ar", "ca", "da", "de", "en_AU", "en_GB", "es", "eu", "fr_CA", "fr_FR", "hi", "hu", "id", "it", "iw", "ja", "ko", "lo", "ms", "nl", "no", "pl", "pt_BR", "pt_PT", "ro", "ru", "sl", "sv", "th", "tr", "uk", "zh_CN", "zh_HK", "zh_TW");
 			if (tinyMCELocaleList.contains(localeStr)) {
 				tinyMCELocale = localeStr;
 			}
