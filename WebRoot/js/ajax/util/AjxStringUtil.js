@@ -2258,11 +2258,15 @@ function(el, ctxt) {
         //checks for invalid styles and removes them.  Bug: 78875 - bad styles from user = email displays incorrectly
         if (el.style) {
             var style = el.style && el.style.cssText;
-            style = style.toLowerCase();
-            if (!AjxStringUtil._checkStyle(style)){
-                isCleanHtml = false;
+
+            // Ignore empty style tags, we don't want to pollute DOM by adding empty style tags
+            if (style !== "") {
+                style = style.toLowerCase();
+                if (!AjxStringUtil._checkStyle(style)){
+                    isCleanHtml = false;
+                }
+                el.style.cssText = AjxStringUtil._fixStyle(style);
             }
-            el.style.cssText = AjxStringUtil._fixStyle(style);
         }
 
 		if (el.removeAttribute && el.attributes && el.attributes.length) {
