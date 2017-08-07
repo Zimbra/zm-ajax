@@ -688,7 +688,7 @@ XFormItem.prototype.setError = function(message, childError) {
 	this.getForm().addErrorItem(this);
 	this.__errorState = XFormItem.ERROR_STATE_ERROR;
 	var container = this.getErrorContainer(true);
-	if (container) container.innerHTML = message;
+	if (container) container.innerHTML = AjxStringUtil.htmlEncode(message);
 };
 
 /** 
@@ -860,7 +860,7 @@ XFormItem.prototype.getElementValueGetterHTML = function () {
 **/
 XFormItem.prototype.getChangeHandlerHTML = function() {
 	var elementChangeHandler = this.getElementChangeHandler();
-	if (elementChangeHandler != "onkeypress") {
+	if (elementChangeHandler != DwtEvent.ONKEYPRESS) {
 		return AjxBuffer.concat(" ", elementChangeHandler, "=\"", this.getChangehandlerJSCode() + "\"",this.getKeyPressHandlerHTML());
 	} else {
 		return this.getKeyPressHandlerHTML();
@@ -929,7 +929,7 @@ function () {
 
 /**
 * Schedules {@link #handleKeyPressDelay} to fire later when the user finishes typing
-* @param ev - "onkeypress" event 
+* @param ev - DwtEvent.ONKEYPRESS event 
 * @param domItem - HTML form element
 * @author Greg Solovyev
 **/
@@ -994,18 +994,17 @@ XFormItem.prototype.handleKeyPressDelay = function(ev, domItem) {
 };
 
 XFormItem.prototype.getKeyPressHandlerHTML = function () {
+  // if AjxEnv.isNav, etc.
+  var keydownEv = DwtEvent.ONKEYPRESS; // "onkeypress"
 
-        // if AjxEnv.isNav, etc.
-        var keydownEv = DwtEvent.ONKEYPRESS; // "onkeypress"
-
-        // IE, EDGE, & Firefox do not handle onkeypress consistenly
-        if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
-            AjxEnv.isFirefox || AjxEnv.isMozilla) {
-            keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
-        }
+  // IE, EDGE, & Firefox do not handle onkeypress consistenly
+  if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+        AjxEnv.isFirefox || AjxEnv.isMozilla) {
+        keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
+  }
 
 	return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
-						   " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
+							" onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
 };
 
 
@@ -2327,20 +2326,19 @@ Textarea_XFormItem.prototype.setElementDisabledProperty = function (enable) {
 }
 
 Textarea_XFormItem.prototype.getKeyPressHandlerHTML = function () {
+  var keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
+  if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
+        keydownEv = DwtEvent.ONKEYPRESS; // "onkeypress"
+  }
 
-        var keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
-        if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
-                keydownEv = DwtEvent.ONKEYPRESS; // "onkeypress"
-        }
+  // IE, EDGE, & Firefox do not handle onkeypress consistenly
+  if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+  AjxEnv.isFirefox || AjxEnv.isMozilla) {
+       keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
+  }
 
-        // IE, EDGE, & Firefox do not handle onkeypress consistenly
-        if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
-            AjxEnv.isFirefox || AjxEnv.isMozilla) {
-            keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
-        }
-
-        return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
-                                                   " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
+  return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
+                         " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
 };
 
 /**
