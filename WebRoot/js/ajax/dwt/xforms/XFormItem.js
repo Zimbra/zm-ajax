@@ -994,14 +994,14 @@ XFormItem.prototype.handleKeyPressDelay = function(ev, domItem) {
 };
 
 XFormItem.prototype.getKeyPressHandlerHTML = function () {
-	// if AjxEnv.isNav, etc.
-	var keydownEv = DwtEvent.ONKEYPRESS;
+  // if AjxEnv.isNav, etc.
+  var keydownEv = DwtEvent.ONKEYPRESS; // "onkeypress"
 
-	// IE, EDGE, & Firefox do not handle onkeypress consistenly
-	if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
-			AjxEnv.isFirefox || AjxEnv.isMozilla) {
-		keydownEv = DwtEvent.ONKEYDOWN;
-	}
+  // IE, EDGE, & Firefox do not handle onkeypress consistenly
+  if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+        AjxEnv.isFirefox || AjxEnv.isMozilla) {
+        keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
+  }
 
 	return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
 							" onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
@@ -2326,19 +2326,19 @@ Textarea_XFormItem.prototype.setElementDisabledProperty = function (enable) {
 }
 
 Textarea_XFormItem.prototype.getKeyPressHandlerHTML = function () {
-	var keydownEv = DwtEvent.ONKEYDOWN;
-	if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
-		keydownEv = DwtEvent.ONKEYPRESS;
-	}
+  var keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
+  if (AjxEnv.isNav || AjxEnv.isChrome || AjxEnv.isSafari) {
+        keydownEv = DwtEvent.ONKEYPRESS; // "onkeypress"
+  }
 
-	// IE, EDGE, & Firefox do not handle onkeypress consistenly
-	if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
-			AjxEnv.isFirefox || AjxEnv.isMozilla) {
-		keydownEv = DwtEvent.ONKEYDOWN;
-	}
+  // IE, EDGE, & Firefox do not handle onkeypress consistenly
+  if (AjxEnv.isIE || AjxEnv.isModernIE || AjxEnv.isMSEdge ||
+  AjxEnv.isFirefox || AjxEnv.isMozilla) {
+       keydownEv = DwtEvent.ONKEYDOWN; // "onkeydown"
+  }
 
-	return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
-							" onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
+  return AjxBuffer.concat(" ", keydownEv,"=\"",this.getGlobalRef(), ".handleKeyDown(event, this)\"",
+                         " onkeyup=\"", this.getGlobalRef(), ".handleKeyUp(event, this)\"");
 };
 
 /**
