@@ -144,7 +144,6 @@ function() {
 	this._tableEl = null;
 	this._nodeCell = null;
 	this._checkBoxCell = null;
-	this._checkedImg = null;
 	this._checkBox = null;
 	this._imageCell = null;
 	this._textCell = null;
@@ -192,14 +191,15 @@ function(checked, force) {
 		if (this._checkBox != null &&
 			(this._checkBoxCell && Dwt.getVisible(this._checkBoxCell)))
 		{
-			Dwt.setVisible(this._checkedImg, checked);
+			var checkboxImg = checked ? "CheckboxChecked" : "CheckboxUnchecked";
+			AjxImg.setImage(this._checkBox, checkboxImg);
 		}
 	}
 };
 
 DwtTreeItem.prototype._handleCheckboxOnclick =
 function(ev) {
-	this.setChecked(!Dwt.getVisible(this._checkedImg));
+	this.setChecked(!this.getChecked());
 
 	ev = ev || window.event;
 	ev.item = this;
@@ -463,7 +463,7 @@ function(child) {
 		this.removeAttribute('aria-expanded')
 		
 		if (this._initialized && this._nodeCell) {
-            this._nodeCell.style.display = "none";
+            !this._tree.isCheckedStyle && (this._nodeCell.style.display = "none");
 			AjxImg.setImage(this._nodeCell, "Blank_16");
 			var imgEl = AjxImg.getImageElement(this._nodeCell);
 			if (imgEl)
@@ -590,7 +590,6 @@ function(index, realizeDeferred, forceNode) {
 	this._nodeCell = document.getElementById(data.id + "_nodeCell");
 	this._checkBoxCell = document.getElementById(data.id + "_checkboxCell");
 	this._checkBox = document.getElementById(data.id + "_checkbox");
-	this._checkedImg = document.getElementById(data.id + "_checkboxImg");
 	this._imageCell = document.getElementById(data.id + "_imageCell");
 	this._textCell = document.getElementById(data.id + "_textCell");
 	this._extraCell = document.getElementById(data.id + "_extraCell");
@@ -621,6 +620,9 @@ function(index, realizeDeferred, forceNode) {
             this._nodeCell.style.display = 'table-cell';
 			AjxImg.setImage(this._nodeCell, this._collapseNodeImage);
 			this.addNodeIconListeners();
+		}
+		else if(this._tree.isCheckedStyle) {
+			this._nodeCell.style.display = 'table-cell';
 		}
 	}
 
