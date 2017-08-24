@@ -29,7 +29,7 @@ DwtGrouper = function(parent, className, posStyle) {
 	if (arguments.length == 0) return;
 	className = className || "DwtGrouper";
 	posStyle = posStyle || DwtControl.STATIC_STYLE;
-	DwtComposite.call(this, {parent:parent, posStyle:posStyle});
+	DwtComposite.call(this, {parent:parent, posStyle:posStyle, className: className});
 
 	this._labelEl = document.createElement("LEGEND");
 	this._labelEl.id = Dwt.getNextId();
