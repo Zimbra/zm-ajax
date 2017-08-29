@@ -340,12 +340,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	htmlArr[idx++] = "<div";
 	var headerColWidth = null;
 	if (headerCol._width && headerCol._width != "auto") {
-		//why we need to + 2 here ? It causes the misalign of the list items in IE
-		if (AjxEnv.isIE) {
-			headerColWidth = headerCol._width;
-		} else {
-			headerColWidth = headerCol._width + 2;
-		}
+		headerColWidth = headerCol._width;
 		if (headerCol._widthUnits) {
 			headerColWidth += headerCol._widthUnits;
 		}
@@ -378,7 +373,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._sortable && !headerCol._noSortArrow) {
 		var arrowIcon = this._bSortAsc ? "ColumnUpArrow" : "ColumnDownArrow";
 
-		htmlArr[idx++] = "<td align=right style='padding-right:2px' width='8px' id='";
+		htmlArr[idx++] = "<td align=right width='20px' id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ARROW, this._view, field);
 		htmlArr[idx++] = "'>";
 		var isDefault = (field == defaultColumnSort);
@@ -391,12 +386,12 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 
 	// ALWAYS add "sash" separators
 	if (i < (numCols - 1)) {
-		htmlArr[idx++] = "<td width=6>";
+		htmlArr[idx++] = "<td width=4>";
 		htmlArr[idx++] = "<table align=right width=4 height=100% id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_SASH, this._view, field);
 		htmlArr[idx++] = "'><tr>";
 		htmlArr[idx++] = "<td class='DwtListView-Sash'><div style='width: 1px; height: ";
-		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
+		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 12);
         htmlArr[idx++] = "px; ";
         if(DwtListView.HEADERSASH_STYLE === 1) {
             htmlArr[idx++] = "border-left: 1px dotted #CCCCCC;";
@@ -404,7 +399,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
             htmlArr[idx++] = "background-color: #8A8A8A;";
         }
 		htmlArr[idx++] = " margin-left:2px'></div></td><td class='DwtListView-Sash'><div style='width: 1px; height: ";
-		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 2);
+		htmlArr[idx++] = (DwtListView.HEADERITEM_HEIGHT - 12);
 		htmlArr[idx++] = "px;'></div></td></tr></table>";
 		htmlArr[idx++] = "</td>";
 	}
