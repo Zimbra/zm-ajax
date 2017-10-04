@@ -316,6 +316,7 @@ function() {
 DwtMenuItem.prototype._popupMenu =
 function(delay, kbGenerated) {
 	var menu = this.getMenu();
+	var menuElement = menu.getHtmlElement();
 	var pp = this.parent.parent;
 	var pb = this.getBounds();
 	var ws = menu.shell.getSize();
@@ -342,6 +343,8 @@ function(delay, kbGenerated) {
         if (menu.centerOnParentVertically()) {
             y += pb.height / 2;
         }
+        // Remove top padding value of sub menu item to align submenu with main menu
+        y -= parseInt(DwtCssStyle.getComputedStyleObject(menuElement).paddingTop, 10) || 0;
 		//x = ((x + s.x) >= ws.x) ? pb.x - s.x - vBorder : x;
 	}
 	this.addClassName(DwtControl.SUB_MENU_ACTIVE);
