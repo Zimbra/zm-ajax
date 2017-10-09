@@ -139,4 +139,4 @@ AjxPackage.require("ajax.dwt.widgets.DwtComboBox");
 AjxPackage.require("ajax.dwt.widgets.DwtTimeSelect");
 
 AjxPackage.require("ajax.3rdparty.jquery.jquery");
-
+AjxPackage.require("ajax.3rdparty.svg4everybody.svg4everybody");
