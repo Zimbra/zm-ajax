@@ -56,6 +56,7 @@
  * @param {string}	params.className		the CSS class
  * @param {string}	params.slvClassName	the CSS class for source list view
  * @param {string}	params.tlvClassName	the CSS class for target list view
+ * @param {string}	params.buttonClassName	the CSS class for action buttons
  * @param {array}	params.buttonInfo		the id/label pairs for transfer buttons
  * @param {DwtChooser.HORIZ_STYLE|DwtChooser.VERT_STYLE}	params.layoutStyle	the layout style (vertical or horizontal)
  * @param {DwtChooser.SINGLE_SELECT|DwtChooser.MULTI_SELECT}	params.selectStyle	the multi-select (default) or single-select
@@ -89,7 +90,8 @@ DwtChooser = function(params) {
 	this._handleButtonInfo(params.buttonInfo);
 	this._mode = params.mode ? params.mode :
 						this._hasMultiButtons ? DwtChooser.MODE_COPY : DwtChooser.MODE_MOVE;
-
+	
+	this._buttonClassName = params.buttonClassName;
 	this._createHtml();
 	this._initialize();
 	
@@ -736,7 +738,7 @@ function(width, height) {
  */
 DwtChooser.prototype._setupButton =
 function(id, buttonId, buttonDivId, label) {
-	var button = new DwtButton({parent:this, id:buttonId});
+	var button = new DwtButton({parent:this, id:buttonId, className:this._buttonClassName});
 	button.setText(label);
 	button.id = buttonId;
 	button._buttonId = id;
