@@ -87,7 +87,7 @@ DwtDialog = function(params) {
 	if (standardButtons || extraButtons) {
 		this._buttonDesc = {};
 		if (standardButtons && standardButtons.length) {
-			this._initialEnterButtonId = this._enterButtonId = standardButtons[0];
+			this._initialEnterButtonId = this._enterButtonId = standardButtons[standardButtons.length - 1];
 			for (var i = 0; i < standardButtons.length; i++) {
 				var buttonId = standardButtons[i];
 				this._buttonList.push(buttonId);
