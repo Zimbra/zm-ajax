@@ -69,12 +69,7 @@ function(parentEl, imageName, useParentEl, _disabled, classes, altText) {
     }
 
     // Get image data based on image name
-    var imageData = window.AjxImgData[AjxImg.getClassForImage(imageName)];
-    if(!imageData) {
-        DBG.println(AjxDebug.IMAGES, "missing image: ", AjxImg.getClassForImage(imageName));
-
-        return;
-    }
+    var imageData = window.AjxImgData[AjxImg.getClassForImage(imageName)] || {};
 
     var className = AjxImg.getClassForImage(imageName + (imageData.v ? '-svg' : ''), _disabled);
     if (useParentEl) {
@@ -215,12 +210,7 @@ function() {
         }
 
         // Get image data based on image name
-        var imageData = window.AjxImgData[AjxImg.getClassForImage(imageName)];
-        if(!imageData) {
-            DBG.println(AjxDebug.IMAGES, "missing image: ", AjxImg.getClassForImage(imageName));
-
-            return;
-        }
+        var imageData = window.AjxImgData[AjxImg.getClassForImage(imageName)] || {};
 
         var className = AjxImg.getClassForImage(imageName + (imageData.v ? '-svg' : ''), disabled);
         if (color) {
