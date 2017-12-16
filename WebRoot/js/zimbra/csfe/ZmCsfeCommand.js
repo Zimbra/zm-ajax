@@ -57,6 +57,7 @@ ZmCsfeCommand.RETRY		= "retry";
  * Gets the auth token cookie.
  * 
  * @return	{String}	the auth token
+ * @deprecated this method does not work as the ZM_AUTH_TOKEN cookie is a http only cookie
  */
 ZmCsfeCommand.getAuthToken =
 function() {
