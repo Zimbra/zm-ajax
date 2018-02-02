@@ -283,21 +283,22 @@ function(date) {
 }
 
 AjxDateUtil.computeDateStr =
-function(now, dateMSec) {
+function(now, dateMSec, requireTime) {
 	if (dateMSec == null)
 		return "";
 
 	var date = new Date(dateMSec);
+	var time = AjxDateUtil.computeTimeString(date);
 	if (now.getTime() - dateMSec < AjxDateUtil.MSEC_PER_DAY &&
 		now.getDay() == date.getDay()) {
-		return AjxDateUtil.computeTimeString(date);
+		return time;
 	}
 
 	if (now.getFullYear() == date.getFullYear()) {
-		return AjxDateUtil._dateFormatNoYear.format(date);
+		return AjxDateUtil._dateFormatNoYear.format(date) + (requireTime ? " " + time : "");
 	}
 
-	return AjxDateUtil.simpleComputeDateStr(date);
+	return AjxDateUtil.simpleComputeDateStr(date) + (requireTime ? " " + time : "");
 };
 
 AjxDateUtil.computeDateStrNoYear =
