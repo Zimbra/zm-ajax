@@ -295,10 +295,9 @@ function(now, dateMSec, requireTime) {
 		return "";
 
 	var date = new Date(dateMSec);
-	var time = AjxDateUtil.computeTimeString(date);
 	if (now.getTime() - dateMSec < AjxDateUtil.MSEC_PER_DAY &&
 		now.getDay() == date.getDay()) {
-		return time;
+		return AjxDateUtil.computeTimeString(date);
 	}
 
 	if (now.getFullYear() == date.getFullYear()) {
