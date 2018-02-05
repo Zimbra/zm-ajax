@@ -295,17 +295,24 @@ function(now, dateMSec, requireTime) {
 		return "";
 
 	var date = new Date(dateMSec);
-	var time = AjxDateUtil.computeTimeString(date);
 	if (now.getTime() - dateMSec < AjxDateUtil.MSEC_PER_DAY &&
 		now.getDay() == date.getDay()) {
-		return time;
+		return AjxDateUtil.computeTimeString(date);
 	}
 
 	if (now.getFullYear() == date.getFullYear()) {
-		return AjxDateUtil._dateFormatNoYear.format(date) + (requireTime ? " " + time : "");
+		if (requireTime) {
+			return AjxDateUtil._dateTimeFormatNoYear.format(date);
+		} else {
+			return AjxDateUtil._dateFormatNoYear.format(date);
+		}
 	}
 
-	return AjxDateUtil.simpleComputeDateStr(date) + (requireTime ? " " + time : "");
+	if (requireTime) {
+		return AjxDateUtil.simpleComputeDateTimeStr(date);
+	} else {
+		return AjxDateUtil.simpleComputeDateStr(date);
+	}
 };
 
 AjxDateUtil.computeDateStrNoYear =
