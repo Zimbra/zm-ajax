@@ -81,10 +81,17 @@ function() {
 			segments[i] = new AjxDateFormat.YearSegment(AjxDateUtil._dateFormat, "yyyy");
 		}
 	}
-	AjxDateUtil._dateTimeFormat = 
-		new AjxDateFormat(AjxDateUtil._dateFormat.toPattern() + " " + AjxDateFormat.getTimeInstance(AjxDateFormat.SHORT));
+
+	AjxDateUtil._dateTimeFormat = new AjxDateFormat(I18nMsg.formatDateTimeShort);
+	segments = AjxDateUtil._dateTimeFormat.getSegments();
+	for (i = 0; i < segments.length; i++) {
+		if (segments[i] instanceof AjxDateFormat.YearSegment) {
+			segments[i] = new AjxDateFormat.YearSegment(AjxDateUtil._dateTimeFormat, "yyyy");
+		}
+	}
 
 	AjxDateUtil._dateFormatNoYear = new AjxDateFormat(AjxMsg.formatDateMediumNoYear);
+	AjxDateUtil._dateTimeFormatNoYear = new AjxDateFormat(AjxMsg.formatDateTimeMediumNoYear);
 };
 
 AjxDateUtil._init();                    
@@ -283,7 +290,7 @@ function(date) {
 }
 
 AjxDateUtil.computeDateStr =
-function(now, dateMSec) {
+function(now, dateMSec, requireTime) {
 	if (dateMSec == null)
 		return "";
 
@@ -294,10 +301,18 @@ function(now, dateMSec) {
 	}
 
 	if (now.getFullYear() == date.getFullYear()) {
-		return AjxDateUtil._dateFormatNoYear.format(date);
+		if (requireTime) {
+			return AjxDateUtil._dateTimeFormatNoYear.format(date);
+		} else {
+			return AjxDateUtil._dateFormatNoYear.format(date);
+		}
 	}
 
-	return AjxDateUtil.simpleComputeDateStr(date);
+	if (requireTime) {
+		return AjxDateUtil.simpleComputeDateTimeStr(date);
+	} else {
+		return AjxDateUtil.simpleComputeDateStr(date);
+	}
 };
 
 AjxDateUtil.computeDateStrNoYear =
