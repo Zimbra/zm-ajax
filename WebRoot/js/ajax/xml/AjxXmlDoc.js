@@ -232,9 +232,9 @@ function(url) {
  */
 AjxXmlDoc.prototype.toJSObject = 
 function(dropns, lowercase, withAttrs) {
-	_node = function() { this.__msh_content = ''; };
+	var _node = function() { this.__msh_content = ''; };
 	_node.prototype.toString = function() { return this.__msh_content; };
-	rec = function(i, o) {
+	var rec = function(i, o) {
 		var tags = {}, t, n;
 		for (i = i.firstChild; i; i = i.nextSibling) {
 			if (i.nodeType == 1) {
@@ -256,7 +256,7 @@ function(dropns, lowercase, withAttrs) {
 				if(withAttrs) {
 					if(i.attributes && i.attributes.length) {
 						for(var ix = 0;ix<i.attributes.length;ix++) {
-							attr = i.attributes[ix];
+							var attr = i.attributes[ix];
 							n[attr.name] = AjxUtil.isNumeric(attr.value) ? attr.value : String(attr.value);
 						}
 					}
@@ -324,7 +324,7 @@ function() {
 		}
 		
 		if (AjxEnv.isNav) {
-			_NodeGetXml = function() {
+			var _NodeGetXml = function() {
 				var ser = new XMLSerializer();
 				return ser.serializeToString(this);
 			}

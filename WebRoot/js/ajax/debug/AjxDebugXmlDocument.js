@@ -31,9 +31,9 @@ AjxDebugXmlDocument = function() {
 }
 
 // used to find the Automation server name
-getDomDocumentPrefix = function() {
-	if (getDomDocumentPrefix.prefix)
-		return getDomDocumentPrefix.prefix;
+AjxDebugXmlDocument.getDomDocumentPrefix = function() {
+	if (AjxDebugXmlDocument.getDomDocumentPrefix.prefix)
+		return AjxDebugXmlDocument.getDomDocumentPrefix.prefix;
 	
 	var prefixes = ["MSXML2", "Microsoft", "MSXML", "MSXML3"];
 	var o;
@@ -42,7 +42,7 @@ getDomDocumentPrefix = function() {
 		try {
 			// try to create the objects
 			o = new ActiveXObject(prefixes[i] + ".DomDocument");
-			return getDomDocumentPrefix.prefix = prefixes[i];
+			return AjxDebugXmlDocument.getDomDocumentPrefix.prefix = prefixes[i];
 		}
 		catch (ex) {};
 	}
@@ -71,7 +71,7 @@ function () {
 			return doc;
 		}
 		if (window.ActiveXObject)
-			return new ActiveXObject(getDomDocumentPrefix() + ".DomDocument");
+			return new ActiveXObject(AjxDebugXmlDocument.getDomDocumentPrefix() + ".DomDocument");
 	}
 	catch (ex) {}
 	throw new Error("Your browser does not support XmlDocument objects");

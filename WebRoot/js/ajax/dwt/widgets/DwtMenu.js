@@ -660,11 +660,11 @@ DwtMenu.prototype._handleMouseOut =
 function(divID, tableID, ev) {
 	if (divID && ev.type && ev.type == "mouseout" && !AjxEnv.isIE) {
 		var div = divID ? Dwt.byId(divID) : null;
-		fromEl = ev.target;
+		var fromEl = ev.target;
 		if (fromEl != div) {
 			return;
 		}
-		toEl = ev.relatedTarget;
+		var toEl = ev.relatedTarget;
 		while (toEl) {
 			toEl = toEl.parentNode;
 			if (toEl == div) {

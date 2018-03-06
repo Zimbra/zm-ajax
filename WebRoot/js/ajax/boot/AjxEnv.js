@@ -188,6 +188,8 @@ AjxEnv.supported.addTest('template', function() {
 
 /** Supports indirect global eval() **/
 AjxEnv.indirectEvalIsGlobal;
+
+/** @suppress {checkVars} **/
 (function(){
 	// Feature detection to see if eval referenced by alias runs in global scope
 	// See davidflanagan.com/2010/12/global-eval-in.html 

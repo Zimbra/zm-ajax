@@ -407,7 +407,7 @@ function(event) {
 				DwtMenu.closeActiveMenu(event);
 			}
 			else {
-				this._popupMenu(DwtKeyEvent.isKeyEvent(ev));
+				this._popupMenu(DwtKeyEvent.isKeyEvent(event));
 			}
 		}
 		return;
