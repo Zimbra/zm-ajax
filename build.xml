@@ -1,40 +1,14 @@
-<project name="zm-ajax" default="jar">
-    <import file="../zm-zcs/ant-global.xml"/>
-
-    <target name='init' >
-	
-		<!-- build dir initialization -->
-		<property name='properties.file' value='${build.dir}/build.properties'/>
-
-        <mkdir dir='${build.dir}'/>
-        <if>
-            <or>
-                <not>
-                    <available file='${properties.file}'/>
-                </not>
-                <isset property='build.prod'/>
-            </or>
-            <then>
-                <propertyfile file="${properties.file}">
-                    <entry key="build.number" type="int" default="1" operation="+" pattern="00000"/>
-                    <entry key="build.date" type="date" value="now" pattern="yyyy-MM-dd HH:mm:ss"/>
-                    <entry key="build.simpleDate" type="date" value="now" pattern="yyMMddHHmmss"/>
-                    <entry key="date.format" value="yyyyMMddHHmmss"/>
-                </propertyfile>
-                <property file="${properties.file}"/>
-            </then>
-			<else>
-				<tstamp>
-					<format property="build.simpleDate" pattern="yyMMddHHmmss" />
-				</tstamp>
-			</else>
-		</if>
-    </target>
+<project name="zm-ajax" default="jar" xmlns:antcontrib="antlib:net.sf.antcontrib">
+    <import file="build-common.xml"/>
 
     <!-- modify all.java.path, as by default it includes src.java.dir which points to src/java, but we don't have java directory here -->
     <path id="all.java.path">
-        <pathelement location="${src.dir}" />
+      <pathelement location="${src.dir}" />
     </path>
+
+    <target name="3rd-party-defines"  description="Declare 3rd party ANT tasks" depends="resolve">
+      <taskdef uri="antlib:net.sf.antcontrib" classpathref="class.path"/>
+    </target>
 
     <!-- Jar target to produce jar output, depends on compile target of zm-ajax build.xml. -->
     <target name="jar" depends="compile" description="Creates the jar file">
