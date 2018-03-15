@@ -206,7 +206,7 @@ function(option, selected, value, image) {
 
 DwtSelect.prototype.addHR =
 function() {
-    opt = new DwtSelectOption("hr" + this._hrCount.toString(), false, "", this, null, null, null, true);
+    var opt = new DwtSelectOption("hr" + this._hrCount.toString(), false, "", this, null, null, null, true);
     this._hrCount++;
 	this._options.add(opt);
 };

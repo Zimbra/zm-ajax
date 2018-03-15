@@ -71,7 +71,7 @@ DwtOptionDialog = function(params) {
 		var button = option.button = new DwtRadioButton({
 			parent: this,
 			parentElement: this._buttonContainer,
-			id: [this.getHTMLElId(), name, 'button'].join('_'),
+			id: [this.getHTMLElId(), options.name, 'button'].join('_'),
 			name: option.name,
 			value: option.value || option.name,
 			checked: checked

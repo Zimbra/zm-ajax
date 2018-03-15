@@ -325,7 +325,7 @@ AjxPackage.__doLoad = function(data) {
 };
 
 AjxPackage.__doAsyncLoad = function(data, force) {
-    AjxPackage.__data[name] = data;
+    AjxPackage.__data[data.name] = data;
     if (force || AjxPackage.__scripts.length == 0) {
         AjxPackage.__scripts.push(data);
         if (data.method == AjxPackage.METHOD_SCRIPT_TAG) {

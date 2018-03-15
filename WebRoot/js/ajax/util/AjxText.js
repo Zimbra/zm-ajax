@@ -613,7 +613,7 @@ AjxDateFormat.parseTime = function(timeStr) {
 				}
 			}
 			if (hours < 24 && minutes < 60) {
-				date = new Date();
+				var date = new Date();
 				date.setHours(hours);
 				date.setMinutes(minutes);
 				date.setSeconds(0);

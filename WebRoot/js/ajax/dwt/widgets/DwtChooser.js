@@ -1118,7 +1118,7 @@ DwtChooserListView = function(params) {
 	if (arguments.length == 0) return;
 	params = Dwt.getParams(arguments, DwtChooserListView.PARAMS);
 	params.className = params.className || "DwtChooserListView";
-	params.headerList = this._getHeaderList(parent);
+	params.headerList = this._getHeaderList(params.parent);
 	DwtListView.call(this, params);
 
 	this.type = params.type;

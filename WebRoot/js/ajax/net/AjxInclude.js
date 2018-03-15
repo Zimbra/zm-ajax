@@ -68,8 +68,8 @@ AjxInclude = function(includes, baseurl, callback, proxy) {
 			if (!/^((https?|ftps?):\x2f\x2f|\x2f)/.test(fullurl)) {
 				if (baseurl)
 					fullurl = baseurl + fullurl;
-				if (cacheKillerVersion)
-					fullurl += "?v=" + cacheKillerVersion;
+				if (window.cacheKillerVersion)
+					fullurl += "?v=" + window.cacheKillerVersion;
 			} else if (proxy && fullurl.indexOf('/') != 0) {
  				// fully qualified URL-s will go through our proxy
  				fullurl = proxy + AjxStringUtil.urlEncode(fullurl);

@@ -414,6 +414,9 @@ DwtForm.prototype.getDirtyItems = function() {
 	DwtForm.__acceptDirtyItem.form = this;
 	return AjxUtil.keys(this._dirty, DwtForm.__acceptDirtyItem);
 };
+/**
+ * @suppress {es5Strict}
+ */
 DwtForm.__acceptDirtyItem = function(id) {
 	var form = arguments.callee.form;
 	var item = form._items[id];

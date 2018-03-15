@@ -324,8 +324,8 @@ function(target) {
 	// determine if anything has been selected (IE and mozilla do it differently)
 	if (document.selection) {			// IE
 		bSelection = document.selection.type == "Text";
-	} else if (getSelection()) {		// mozilla
-		bSelection = getSelection().toString().length > 0;
+	} else if (window.getSelection()) {		// mozilla
+		bSelection = window.getSelection().toString().length > 0;
 	}
 
 	// if something has been selected and target is not a custom object,

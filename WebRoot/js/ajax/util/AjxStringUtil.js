@@ -910,13 +910,13 @@ function(origString, pixelWidth, className) {
 			newString += newLine + "<br>";
 			newLine = "";
 		}
-		htmlRows = textRows[trCount].split("<br>");
+		var htmlRows = textRows[trCount].split("<br>");
 		for (var hrCount=0; hrCount<htmlRows.length; hrCount++) {
 			if (hrCount != 0) {
 				newString += newLine + "<br>";
 				newLine = "";
 			}
-			words = htmlRows[hrCount].split(" ");
+			var words = htmlRows[hrCount].split(" ");
 			var wCount=0;
 			while (wCount<words.length) {
 				calcDIV.innerHTML = newLine + " " + words[wCount];

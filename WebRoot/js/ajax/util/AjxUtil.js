@@ -227,6 +227,9 @@ function(aCondition, aMessage) {
 	if (!aCondition && AjxUtil.onassert) AjxUtil.onassert(aMessage);
 };
 
+/**
+ * @suppress {es5Strict}
+ */
 AjxUtil.onassert = 
 function(aMessage) {
 	// Create an exception object and set the message
