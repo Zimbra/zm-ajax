@@ -28,7 +28,7 @@
  * @constructor
  */
 AjxClipboard = function() {
-
+	AjxDispatcher.require("Clipboard");
 };
 
 /**
