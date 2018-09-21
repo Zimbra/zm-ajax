@@ -112,7 +112,7 @@ function(htmlElement, cssPropName) {
 	var doc = htmlElement.ownerDocument;
 
 	if (doc.defaultView && doc.defaultView.getComputedStyle) {
-		var cssDecl = doc.defaultView.getComputedStyle(htmlElement, "");
+		var cssDecl = doc.defaultView.getComputedStyle(htmlElement, null);
 		if (cssDecl && cssDecl.length > 0) { //on Chrome/Safari it returns cssDecl with length 0 for some elements for some reason. (a wild guess could be invisible items, as it happens with invite toolbar when it's invisible) So in that case fall back on the other ways.
 			return cssDecl.getPropertyValue(cssPropName);
 		}
@@ -134,7 +134,7 @@ DwtCssStyle.getComputedStyleObject =
 function(htmlElement) {
 	var doc = htmlElement.ownerDocument;
 	
-	if (doc.defaultView) {
+	if (doc.defaultView && doc.defaultView.getComputedStyle) {
 		var style = doc.defaultView.getComputedStyle(htmlElement, null);
 		if (!style && htmlElement.style) {
 // TODO: destructive ?
