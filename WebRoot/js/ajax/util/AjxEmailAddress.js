@@ -242,7 +242,7 @@ function(emailStr, type, strict) {
 				good.add(addr);
 				all.add(addr);
 			} else {
-				bad.add(addrStr);
+				good.add(addrStr);
 				all.add(new AjxEmailAddress(addrStr));
 			}
 		}
