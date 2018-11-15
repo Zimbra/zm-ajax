@@ -38,7 +38,7 @@
  * @param {boolean}	[params.forceRollOver=true] 	if <code>true</code>, then clicking on (or setting) the widget to a 
  *												date that is not part of the current month (i.e. one of 
  *												the grey prev or next month days) will result in the 
- *												widget rolling 	the date to that month.
+ *												widget rolling the date to that month.
  * @param {array}      params.workingDays		a list of days that are work days. This array assumes that
  * 												index 0 is Sunday. Defaults to Mon-Fri being work days.
  * @param {boolean}      params.hidePrevNextMo 	a flag indicating whether widget should hide days of the 
@@ -136,6 +136,10 @@ DwtCalendar.WORK_WEEK = 3;
  * Defines the "month" selection mode.
  */
 DwtCalendar.MONTH = 4;
+/**
+ * Defines the "multi-day" selection mode.
+ */
+DwtCalendar.MULTI_DAY = 5;
 
 DwtCalendar.RANGE_CHANGE = "DwtCalendar.RANGE_CHANGE";
 
@@ -703,6 +707,7 @@ function() {
 	this._setRange();
 };
 
+//sets up the date range for the 42 days the minical displays
 DwtCalendar.prototype._setRange =
 function() {
 	var cell = document.getElementById(this._getDayCellId(0));
@@ -782,19 +787,33 @@ function() {
 	this._setClassName(cell, DwtCalendar._SELECTED);
 };
 
+/**
+ * @param {int}	#of days in the multi-day range
+ */
+DwtCalendar.prototype.setMultiDayRange =
+function(rangeLength) {
+	this._multiDayRange = parseInt(rangeLength);
+}
+
 DwtCalendar.prototype._setCellClassName = 
 function(cell, className, mode) {
+	var match = /\w+:(\d+):\w+/;
+	var cellId = parseInt(match.exec(cell.id)[1]);
+	var selectedDayId = match.exec(this._selectedDayElId);//[1];
+
 	if (cell._dayType != DwtCalendar._THIS_MONTH) {
 		className += this._greyClassName;
 	}
 
-	if (this._selectionMode == DwtCalendar.DAY &&
-		cell.id == this._selectedDayElId &&
+	if (selectedDayId &&
+		(this._selectionMode == DwtCalendar.DAY || this._selectionMode == DwtCalendar.MULTI_DAY) &&
+		(cellId >= parseInt(selectedDayId[1]) && cellId < parseInt(selectedDayId[1])+(this._multiDayRange || 1)) &&
 		mode != DwtCalendar._DESELECTED)
 	{
 		className += this._selectedDayClassName;
 	}
 	else if (this._selectionMode != DwtCalendar.DAY &&
+			 this._selectionMode != DwtCalendar.MULTI_DAY &&
 			 mode != DwtCalendar._DESELECTED &&
 			 this._selectedDayElId != null)
 	{
@@ -820,7 +839,6 @@ function(cell, className, mode) {
 DwtCalendar.prototype._setClassName = 
 function(cell, mode) {
 	var className = "";
-	
 	if (mode == DwtCalendar._NORMAL) {
 		className = this._origDayClassName;
 	} else if (mode == DwtCalendar._HOVERED) {
@@ -830,15 +848,28 @@ function(cell, mode) {
 	} else if (mode == DwtCalendar._DESELECTED && this._selectionMode == DwtCalendar.DAY) {
 		className = this._origDayClassName;
 	} else if (this._selectionMode != DwtCalendar.DAY &&
-			(mode == DwtCalendar._SELECTED || mode == DwtCalendar._DESELECTED))
+		this._selectionMode != DwtCalendar.MULTI_DAY &&
+		(mode == DwtCalendar._SELECTED || mode == DwtCalendar._DESELECTED))
 	{
-		// If we are not in day mode, then we need to highlite multiple cells
-		// e.g. the whole week if we are in week mode
+		// If we are in week or work week mode,
+		// then we need to highlight multiple cells on both ends of the "selected" day
 		var firstCellIdx = Math.floor(this._getDayCellIndex(this._selectedDayElId) / 7) * 7;
 
 		for (var i = 0; i < 7; i++) {
 			className = this._origDayClassName;
 			var aCell = document.getElementById(this._getDayCellId(firstCellIdx++));
+			aCell.className = this._setCellClassName(aCell, className, mode);
+		}
+		return;
+	} else if (this._multiDayRange && this._selectionMode == DwtCalendar.MULTI_DAY &&
+			(mode == DwtCalendar._SELECTED || mode == DwtCalendar._DESELECTED))
+	{
+		// if we are in multi-day mode, we need to highlight cells on the selected day and a set # after
+		var firstCellIdx = parseInt(this._getDayCellIndex(this._selectedDayElId));
+		var endIdx = firstCellIdx + this._multiDayRange;
+		for (var i = firstCellIdx; i < endIdx; i++) {
+			className = this._origDayClassName;
+			var aCell = document.getElementById(this._getDayCellId(i));
 			aCell.className = this._setCellClassName(aCell, className, mode);
 		}
 		return;
