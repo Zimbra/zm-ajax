@@ -1541,7 +1541,8 @@ DwtFormRows.prototype.removeRow = function(indexOrId) {
 
 	if (hadFocus) {
 		var otherItem = this._items[item.aka] || this._items[this._rowCount - 1];
-		otherItem.control.getTabGroupMember().focus();
+		var tabGroup = otherItem.control.getTabGroupMember();
+		tabGroup.setFocusMember(tabGroup.getFirstMember(true), true, false);
 	}
 
 	if (this._onremoverow) {
