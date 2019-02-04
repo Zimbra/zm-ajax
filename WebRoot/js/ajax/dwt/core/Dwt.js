@@ -556,7 +556,13 @@ function(htmlElement, point) {
 Dwt.setLocation =
 function(htmlElement, x, y) {
 	if (!(htmlElement = Dwt.getElement(htmlElement))) { return; }
-	var position = DwtCssStyle.getProperty(htmlElement, 'position');
+	var position;
+	if (AjxEnv.isMSEdge && AjxEnv.browserVersion > 18) {
+		position = htmlElement.style.position;
+	}
+	if (!position) {
+		position = DwtCssStyle.getProperty(htmlElement, 'position');
+	}
 	if (position != Dwt.ABSOLUTE_STYLE && position != Dwt.RELATIVE_STYLE && position != Dwt.FIXED_STYLE) {
 		DBG.println(AjxDebug.DBG1, "Cannot position static widget " + htmlElement.className);
 		throw new DwtException("Static widgets may not be positioned", DwtException.INVALID_OP, "Dwt.setLocation");
