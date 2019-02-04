@@ -387,13 +387,23 @@ function(listener) {
 };
 
 /**
- * Gets the source <code>&lt;divgt;</code> that contains the source list view.
+ * Gets the source <code>&lt;divgt;</code> that contains the source tree view.
  * 
  * @return	{Element}		the element
  */
+DwtChooser.prototype.getSourceTreeView = 
+function() {
+	return document.getElementById(this._sourceTreeViewDivId);
+};
+
+/**
+* Gets the source <code>&lt;divgt;</code> that contains the source list view.
+* 
+* @return	{Element}		the element
+*/
 DwtChooser.prototype.getSourceListView = 
 function() {
-	return document.getElementById(this._sourceListViewDivId);
+   return document.getElementById(this._sourceListViewDivId);
 };
 
 /**
@@ -434,6 +444,7 @@ function() {
 DwtChooser.prototype._createHtml = 
 function() {
 
+	this._sourceTreeViewDivId	= Dwt.getNextId();
 	this._sourceListViewDivId	= Dwt.getNextId();
 	this._targetListViewDivId	= Dwt.getNextId();
 	this._buttonsDivId			= Dwt.getNextId();
@@ -453,6 +464,11 @@ function() {
 		// start new table for list views
 		html[idx++] = "<table>";
 		html[idx++] = "<tr>";
+
+		// tree
+		html[idx++] = "<td id='";
+		html[idx++] = this._sourceTreeViewDivId;
+		html[idx++] = "'></td>";
 
 		// source list
 		html[idx++] = "<td id='";
@@ -610,6 +626,18 @@ function() {
 	this._removeButton = this._setupButton(DwtChooser.REMOVE_BTN_ID, this._removeButtonId, this._removeButtonDivId, AjxMsg.remove);
 	this._removeButton.addSelectionListener(new AjxListener(this, this._removeButtonListener));
 
+	// Somehow the width gets changed to a very very high number after tree will be added, so lets save it here then re-apply
+	var tempSize = this.getSize();
+
+	// Create and add source tree view
+	this.sourceTreeView = appCtxt.getOverviewController().createOverview({parent : this, VISIBLE : false});
+	this.sourceTreeView.setTreeView("HAB");
+	this.sourceTreeView.reparentHtmlElement(this._sourceTreeViewDivId);
+	this.sourceTreeView.setVisible(false);
+
+	// now, the width gets very large, let's just move it back to the previous width
+	this.setSize(tempSize.x);
+
 	if (this._allButtons) {
 		// create and add "Add All" and "Remove All" buttons
 		this._addAllButtonId = Dwt.getNextId();
@@ -708,8 +736,10 @@ function(width, height) {
 	var buttonsDiv = document.getElementById(this._buttonsDivId);
 	var btnSz = Dwt.getSize(buttonsDiv);
 	var w, sh, th;
+	var isSourceTreeDisplayed = Dwt.getVisible(this.sourceTreeView.getHtmlElement());
+	var division = isSourceTreeDisplayed ? 3 : 2;
 	if (this._layoutStyle == DwtChooser.HORIZ_STYLE) {
-		w = this._listSize ? this._listSize : (width == Dwt.DEFAULT) ? width : Math.floor(((width - btnSz.x) / 2) - 12);
+		w = this._listSize ? this._listSize : (width == Dwt.DEFAULT) ? width : Math.floor(((width - btnSz.x) / division) - 12);
 		sh = th = height;
 	} else {
 		w = width;
@@ -719,6 +749,10 @@ function(width, height) {
 		} else {
 			sh = th = this._listSize ? this._listSize : (height == Dwt.DEFAULT) ? height : Math.floor(((height - btnSz.y) / 2) - 12);
 		}
+	}
+
+	if (isSourceTreeDisplayed) {
+		this.sourceTreeView.setSize((w == Dwt.DEFAULT) ? w : w+2, sh);
 	}
 	this.sourceListView.setSize((w == Dwt.DEFAULT) ? w : w+2, sh);
 	this.targetListView.setSize((w == Dwt.DEFAULT) ? w : w+2, th);
