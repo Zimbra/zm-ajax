@@ -387,13 +387,13 @@ function(listener) {
 };
 
 /**
-* Gets the source <code>&lt;divgt;</code> that contains the source list view.
-* 
-* @return	{Element}		the element
-*/
+ * Gets the source <code>&lt;divgt;</code> that contains the source list view.
+ * 
+ * @return	{Element}		the element
+ */
 DwtChooser.prototype.getSourceListView = 
 function() {
-   return document.getElementById(this._sourceListViewDivId);
+	return document.getElementById(this._sourceListViewDivId);
 };
 
 /**
@@ -433,6 +433,7 @@ function() {
  */
 DwtChooser.prototype._createHtml = 
 function() {
+
 	this._sourceListViewDivId	= Dwt.getNextId();
 	this._targetListViewDivId	= Dwt.getNextId();
 	this._buttonsDivId			= Dwt.getNextId();
@@ -719,7 +720,6 @@ function(width, height) {
 			sh = th = this._listSize ? this._listSize : (height == Dwt.DEFAULT) ? height : Math.floor(((height - btnSz.y) / 2) - 12);
 		}
 	}
-
 	this.sourceListView.setSize((w == Dwt.DEFAULT) ? w : w+2, sh);
 	this.targetListView.setSize((w == Dwt.DEFAULT) ? w : w+2, th);
 };
