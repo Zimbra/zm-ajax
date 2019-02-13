@@ -18,6 +18,8 @@
 package com.zimbra.kabuki.tools.i18n;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import org.apache.tools.ant.*;
 import org.apache.tools.ant.types.*;
@@ -120,6 +122,15 @@ public class CompareKeysTask
 					return super.getResourceAsStream(path);
 				}
 			}
+			public URL getResource(String path) {
+                try {
+                    File file = new File(CompareKeysTask.this.dir, path);
+                    return file.toURI().toURL();
+                }
+                catch (MalformedURLException e) {
+                    return super.getResource(path);
+                }
+            }
 		};
 
 		// check keycodes for each locale
