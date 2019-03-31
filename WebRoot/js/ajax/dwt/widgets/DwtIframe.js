@@ -261,7 +261,7 @@ DwtIframe.prototype._createFrame = function(html) {
 		if(self._onLoadHandler){
 			tmp[i++] = " onload='" + self._onLoadHandler + "'";
 		}
-		tmp[i++] = " src='javascript:\"\";' ></iframe>";
+		tmp[i++] = " src='about:blank' ></iframe>";
 		self.setContent(tmp.join(''));
 
 		// Bug 7523: @import url() lines will make Gecko report
