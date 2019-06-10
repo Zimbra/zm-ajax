@@ -650,6 +650,13 @@ function(str, decodeSpaces) {
      return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 };
 
+
+AjxStringUtil.inlineImageDecoder =
+function(str) {
+	return str.replace(/(src=[\x27\x22]cid:[^\x27\x22]+)&#64;(zimbra)/g, "$1@$2");
+}
+
+
 AjxStringUtil.__jsEscapeChar = function(c) {
 	var codestr = c.charCodeAt(0).toString(16);
 
