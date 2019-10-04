@@ -763,6 +763,10 @@ AjxTimezone._generateDefaultRule = function() {
 
 	// now that standard offset is determined, set serverId
 	rule.serverId = ["(GMT",AjxTimezone._generateShortName(rule.standard.offset, true),") ",AjxTimezone.AUTO_DETECTED].join("");
+	//To resolve brasilia timezone Issue this is hack.Details in ZBUG-922.
+	if (rule.serverId.includes('GMT-03.00')) {
+	  rule.serverId = "America/Sao_Paulo";
+	}
 
 	// bug 33800: guard against inverted daylight/standard onsets
 	if (rule.daylight && rule.daylight.offset < rule.standard.offset) {
