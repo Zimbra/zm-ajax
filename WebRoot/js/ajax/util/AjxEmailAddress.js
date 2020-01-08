@@ -527,6 +527,9 @@ function(name) {
 	// remove wrapping single quotes from name if present
 	if (name && name.charAt(0) == "'" && name.charAt(name.length - 1) == "'")
 		name = name.substring(1, name.length - 1);
+	//remove wrapping double quotes from name if present
+	if (name && name.charAt(0) == '"' && name.charAt(name.length - 1) == '"')
+		name = name.substring(1, name.length - 1);
 		
 	return name;		
 };
