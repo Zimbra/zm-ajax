@@ -237,6 +237,10 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 	var idx = 0;
 	var htmlArr = [];
 
+	if(!defaultColumnSort && !isColumnHeaderTableFixed) {
+		htmlArr[idx++] = "<div id='briefcase_progress_div'></div>";
+	}
+
 	htmlArr[idx++] = "<table id='";
 	htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_TABLE, this._view);
 	htmlArr[idx++] = "' height=100%";
