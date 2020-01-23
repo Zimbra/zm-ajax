@@ -55,6 +55,9 @@ DwtListView = function(params) {
         var idx = 0;
         var headId = Dwt.getNextId();
         var colId = Dwt.getNextId();
+        if(params.controller == "ZmBriefcaseController") {
+        	html[idx++] = "<div id='briefcase_progress_div'></div>";
+    	}
         html[idx++] = "<table width='100%'><tr><td ";
         html[idx++] = "id=" + headId;
         html[idx++] = "></td></tr><tr><td ";
