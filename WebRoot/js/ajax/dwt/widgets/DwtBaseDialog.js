@@ -447,13 +447,11 @@ function(dragHandleId) {
 		if (control) {
 			var p = Dwt.getSize(control.getHtmlElement());
 			var dragObj = document.getElementById(this._htmlElId);
-			var size = this.getSize();
 			var dragEndCb = new AjxCallback(this, this._dragEnd);
 			var dragCb = new AjxCallback(this, this._duringDrag);
 			var dragStartCb = new AjxCallback(this, this._dragStart);
 
-			DwtDraggable.init(dragHandle, dragObj, 0,
-							  document.body.offsetWidth - 10, 0, document.body.offsetHeight - 10, dragStartCb, dragCb, dragEndCb);
+			DwtDraggable.init(dragHandle, dragObj, 0, p.x - 10, 0, p.y - 10, dragStartCb, dragCb, dragEndCb);
 		}
 	}
 };
