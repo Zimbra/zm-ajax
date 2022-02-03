@@ -106,7 +106,7 @@ DwtShell = function(params) {
 
 	// Veil overlay - used by DwtDialog to disable underlying app
 	this._veilOverlay = document.createElement("div");
-	this._veilOverlay.className = (!AjxEnv.isLinux) ? "VeilOverlay" : "VeilOverlay-linux";
+	this._veilOverlay.className = "VeilOverlay";
 	this._veilOverlay.style.position = "absolute";
 	this._veilOverlay.style.cursor = "not-allowed";
 	this._veilOverlay.veilZ = new Array();
@@ -436,7 +436,7 @@ function(id) {
 DwtShell.prototype._createBusyOverlay =
 function(htmlElement) {
     this._busyOverlay = document.createElement("div");
-    this._busyOverlay.className = (!AjxEnv.isLinux) ? "BusyOverlay" : "BusyOverlay-linux";
+    this._busyOverlay.className = "BusyOverlay";
     this._busyOverlay.style.position = "absolute";
     this._busyOverlay.innerHTML = "<table cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
     htmlElement.appendChild(this._busyOverlay);
