@@ -2228,7 +2228,7 @@ function(html, okTags, untrustedAttrs) {
 	};
 	AjxStringUtil._traverseCleanHtml(htmlNode, ctxt);
 
-	var result = "<html>" + htmlNode.innerHTML + "</html>";
+	var result = "<!DOCTYPE html><html>" + htmlNode.innerHTML + "</html>";
 
 	var width = Math.max(htmlNode.scrollWidth, htmlNode.lastChild.scrollWidth);
 
