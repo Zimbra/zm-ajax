@@ -1001,8 +1001,8 @@ function(value) {
 	date.setUTCSeconds(se);
 	date.setUTCMinutes(mi);
 	date.setUTCHours(hr);
-	date.setUTCDate(da);
 	date.setUTCMonth(mo - 1);
+	date.setUTCDate(da);
 	date.setUTCFullYear(yr);
 	yr = date.getFullYear();
 	mo = date.getMonth() + 1;
