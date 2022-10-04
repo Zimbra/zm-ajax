@@ -82,6 +82,7 @@ DwtTreeItem = function(params) {
 	DwtComposite.call(this, params);
 
 	this._imageInfoParam = params.imageInfo;
+	this._imageAltInfo = params.imageAltText;
 	this._extraInfo = params.extraInfo;
 	this._textParam = params.text;
 	this._deferred = params.deferred;
@@ -299,16 +300,19 @@ function() {
  * Sets the image.
  * 
  * @param	{string}	imageInfo		the image
+ * * @param	{string}	imageAlt		the image alter text
  */
 DwtTreeItem.prototype.setImage =
-function(imageInfo) {
+function(imageInfo, imageAltText) {
 	if (this._initialized) {
 		if (this._imageCell) {
-			AjxImg.setImage(this._imageCell, imageInfo);
+			AjxImg.setImage(this._imageCell, imageInfo, null, null, null, imageAltText);
 		}
 		this._imageInfo = imageInfo;
+		this._imageAltInfo = imageAltText;
 	} else {
 		this._imageInfoParam = imageInfo;
+		this._imageAltInfo = imageAltText;
 	}	
 };
 
@@ -636,7 +640,7 @@ function(index, realizeDeferred, forceNode) {
 
 	// initialize icon
 	if (this._imageCell && this._imageInfoParam) {
-		AjxImg.setImage(this._imageCell, this._imageInfoParam);
+		AjxImg.setImage(this._imageCell, this._imageInfoParam, null, null, null, this._imageAltInfo);
 		this._imageInfo = this._imageInfoParam;
 	}
 
