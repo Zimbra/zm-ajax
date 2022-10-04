@@ -106,6 +106,7 @@ DwtListView = function(params) {
 	this._stateChangeEv = new DwtEvent(true);
 	this._headerList = params.headerList;
 	this._noMaximize = params.noMaximize;
+	this._listLabel = params.listLabel;
 	if (this._headerList) {
 		this._parentEl = this._listDiv;
 	} else {
@@ -124,6 +125,8 @@ DwtListView = function(params) {
 	this.offset = 0;
 	this.headerColCreated = false;
 	this.setMultiSelect(true);
+	this.setRole();
+	this.setLabel();
 	this.firstSelIndex = -1;
 
 	// the key is the HTML ID of the item's associated DIV; the value is an object
@@ -149,8 +152,8 @@ DwtListView.prototype.constructor = DwtListView;
 DwtListView.prototype.isDwtListView = true;
 DwtListView.prototype.toString = function() { return "DwtListView"; };
 
-DwtListView.prototype.role = 'list';
-DwtListView.prototype.itemRole = 'listitem';
+DwtListView.prototype.listRole = 'listbox';
+DwtListView.prototype.itemRole = 'option';
 
 // Consts
 
@@ -1220,12 +1223,23 @@ DwtListView.prototype.handleKeyAction = function(actionCode, ev) {
 	return true;
 };
 
+DwtListView.prototype.setLabel = function () {
+	if (this._listLabel) {
+		this._listDiv.setAttribute('aria-label', this._listLabel);
+	}
+};
+
+DwtListView.prototype.setRole = function () {
+	this._listDiv.setAttribute('role', this.listRole);
+};
+
 DwtListView.prototype.setMultiSelect = function (enabled) {
-	this.setAttribute('aria-multiselectable', Boolean(enabled));
+
+	this._listDiv.setAttribute('aria-multiselectable', Boolean(enabled));
 };
 
 DwtListView.prototype.isMultiSelectEnabled = function () {
-	return this.getAttribute('aria-multiselectable') === "true";
+	return this._listDiv.getAttribute('aria-multiselectable') === "true";
 };
 
 // DO NOT REMOVE - used by xforms
@@ -1454,6 +1468,12 @@ function(item, params, html, idx, count, classes) {
 	if (style.length) {
 		html[idx++] = " style='";
 		html[idx++] = style.join(";");
+		html[idx++] = "'";
+	}
+
+	if (params.role) {
+		html[idx++] = " role='";
+		html[idx++] = params.role;
 		html[idx++] = "'";
 	}
 

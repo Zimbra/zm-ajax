@@ -68,7 +68,7 @@ DwtText.prototype.toString = function() { return "DwtText"; };
  * @param	{string}	text		the text
  */
 DwtText.prototype.setText =
-function(text) {
+function(text, ariaLive) {
 	// only appear in tab order when we have text
 	this.noTab = !text;
 
@@ -84,6 +84,10 @@ function(text) {
 	// this is largely redundant, but helps ensure screen readers read aloud
 	// text in toolbars
 	this.setAttribute('aria-label', text);
+
+	if (ariaLive) {
+		this.setAttribute('aria-live', ariaLive);
+	}
 };
 
 /**

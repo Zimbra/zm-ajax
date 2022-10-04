@@ -1008,5 +1008,3 @@ DwtSelectMenuItem.prototype.isDwtSelectMenuItem = true;
 DwtSelectMenuItem.prototype.toString = function() { return "DwtSelectMenuItem"; };
 
 DwtSelectMenuItem.prototype.role = 'option';
-
-DwtLabel.prototype._textSet = function(text) {};
