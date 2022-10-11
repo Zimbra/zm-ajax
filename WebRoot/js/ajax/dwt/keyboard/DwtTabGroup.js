@@ -706,7 +706,7 @@ DwtTabGroup.prototype.__setFocusMember = function(next, checkEnabled, skipNotify
 
 		// Test for the case where there is only one member in the tabgroup
 		if (m == this.__currFocusMember) {
-			return null;
+			return this.__currFocusMember;
 		}
 	}
 
