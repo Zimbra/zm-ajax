@@ -159,6 +159,10 @@ DwtControl = function(params) {
 		this.ariaLabel = params.ariaLabel;
 	}
 
+	if (params.ariaControls != null) {
+		this.ariaControls = params.ariaControls;
+	}
+
 	/**
 	 * @private
 	 */
@@ -1131,7 +1135,7 @@ function(state) {
         for (var i = 0; i < arguments.length; i++) {
             a.push(arguments[i]);
         }
-        state = a.join(" ");
+        state = a.join(" ").trim();
     }
 
     if (this._displayState == state) {
@@ -1143,13 +1147,26 @@ function(state) {
     this._displayState = state;
     Dwt.delClass(this.getHtmlElement(), DwtControl._RE_STATES, state);
 
-    AjxUtil.foreach(DwtControl._ARIA_STATES, (function(attribute, state) {
-        if (DwtControl._RE_STATE[state].test(this._displayState)) {
-            this.setAttribute(attribute, true);
-        } else {
-            this.removeAttribute(attribute);
+    // Set Aria states.
+    var ariaStateKeys = Object.keys(DwtControl._ARIA_STATES);
+    var attribute = DwtControl._ARIA_STATES[state];
+
+    // Add/remove aria states only if given state is blank or given state is present in _ARIA_STATES
+    // state will be blank when user navigate to other app. e.g. User is on Mail and navigate to Calendar then state='' for Mail app object.
+    if (attribute || (state === '' && ariaStateKeys.indexOf(oldState.trim()) != -1)) {
+        for (var i = 0; i < ariaStateKeys.length; i++) {
+            var ariaStateValue = DwtControl._ARIA_STATES[ariaStateKeys[i]];
+            if (attribute === ariaStateValue) {
+                this.setAttribute(ariaStateValue, true);
+            } else {
+                if (ariaStateValue == 'aria-selected' && this.role == 'tab') {
+                    this.setAttribute(ariaStateValue, false); // Setting aria-selected='false' for `tab` element to prevent SR to announce as selected on travesing it.
+                } else {
+                    this.removeAttribute(ariaStateValue);
+                }
+            }
         }
-    }).bind(this));
+    }
 
 	if (this.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
 		this.__controlEvent.reset(DwtControlEvent.STATE);
@@ -3712,10 +3729,24 @@ function() {
 	htmlElement.style.overflow = "visible";
 	if (this.role) {
 		htmlElement.setAttribute('role', this.role);
+		if (this.role == 'tab') {
+			htmlElement.setAttribute('aria-selected', false);
+		}
+	}
+	if (this.ariaControls) {
+		htmlElement.setAttribute('aria-controls', this.ariaControls);
 	}
 
 	if (this.ariaLabel) {
 		htmlElement.setAttribute('aria-label', this.ariaLabel);
+	}
+
+	if (this.ariaOrientation) {
+		htmlElement.setAttribute('aria-orientation', this.ariaOrientation);
+	}
+
+	if (this.ariaModal) {
+		htmlElement.setAttribute('aria-modal', true);
 	}
 
 	this._enabled = true;

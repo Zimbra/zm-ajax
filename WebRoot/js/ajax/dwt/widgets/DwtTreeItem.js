@@ -598,12 +598,14 @@ function(index, realizeDeferred, forceNode) {
 	this._extraCell = document.getElementById(data.id + "_extraCell");
 
 	/* assign the ARIA level */
-	this.setAttribute("aria-level", this.getNestingLevel());
+	if (this._itemDiv) {
+		this._itemDiv.setAttribute("aria-level", this.getNestingLevel());
+		this._itemDiv.setAttribute("role", "heading");
 
-	/* add a label for screenreaders, so that they don't read the entire
-	   element */
-	if (this._textCell) {
-		this.setAttribute("aria-labelledby", this._textCell.id);
+		/* add a label for screenreaders, so that they don't read the entire element */
+		if (this._textCell) {
+			this._itemDiv.setAttribute("aria-labelledby", this._textCell.id);
+		}
 	}
 
 	if (this._dynamicWidth){
