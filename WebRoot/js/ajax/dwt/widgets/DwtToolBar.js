@@ -632,3 +632,5 @@ DwtToolBarSpacer.prototype.isDwtToolBarSpacer = true;
 DwtToolBarSpacer.prototype.toString = function() { return 'DwtToolBarSpacer'; };
 
 DwtToolBarSpacer.prototype.role = 'separator';
+
+DwtToolBarSpacer.prototype.ariaOrientation = 'vertical';
