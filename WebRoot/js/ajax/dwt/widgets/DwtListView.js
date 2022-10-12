@@ -1230,16 +1230,18 @@ DwtListView.prototype.setLabel = function () {
 };
 
 DwtListView.prototype.setRole = function () {
-	this._listDiv.setAttribute('role', this.listRole);
+	var ele = this._listDiv || this;
+	ele.setAttribute('role', this.listRole);
 };
 
 DwtListView.prototype.setMultiSelect = function (enabled) {
-
-	this._listDiv.setAttribute('aria-multiselectable', Boolean(enabled));
+	var ele = this._listDiv || this;
+	ele.setAttribute('aria-multiselectable', Boolean(enabled));
 };
 
 DwtListView.prototype.isMultiSelectEnabled = function () {
-	return this._listDiv.getAttribute('aria-multiselectable') === "true";
+	var ele = this._listDiv || this;
+	return ele.getAttribute('aria-multiselectable') === "true";
 };
 
 // DO NOT REMOVE - used by xforms
