@@ -39,6 +39,7 @@ DwtPropertySheet = function(parent, className, posStyle, labelSide) {
 	this._tabGroup = new DwtTabGroup(this.toString());
 
 	this._tableEl = document.createElement("TABLE");
+	this._tableEl.setAttribute('role', 'presentation');
 	// Cellspacing needed for IE in quirks mode
 	this._tableEl.cellSpacing = 6;
 

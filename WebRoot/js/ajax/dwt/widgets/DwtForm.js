@@ -939,6 +939,9 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 		if (parent instanceof DwtToolBar || parent instanceof DwtMenu) {
 			parentId = parentDef.id;
 		}
+		if (itemDef.ariaLabel) {
+			control.setAriaLabel(itemDef.ariaLabel);
+		}
 		// handlers
 		var handler = DwtForm.__makeFunc(itemDef.onclick || (parentDef && parentDef.onclick));
 		control.addSelectionListener(new AjxListener(this, this._item2parent, [id, parentId, handler]));
@@ -1058,6 +1061,10 @@ DwtForm.prototype._createControl = function(itemDef, parentDef,
 
 	if (itemDef.tooltip) {
 		control.setToolTipContent(itemDef.tooltip);
+	}
+
+	if (itemDef.ariaLabel) {
+		control.setAriaLabel(itemDef.ariaLabel);
 	}
 
 	// return control
@@ -1432,7 +1439,7 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 	var tabIndexes = [];
 	var rowControl = this._registerControl(itemDef, null, tabIndexes);
 
-	var addDef = this._itemDef.additem ? AjxUtil.createProxy(this._itemDef.additem) : { image: "Add", tooltip: ZmMsg.addRow };
+	var addDef = this._itemDef.additem ? AjxUtil.createProxy(this._itemDef.additem) : { image: "Add", tooltip: ZmMsg.addRow, ariaLabel: ZmMsg.addRow };
 	addDef.id = addDef.id || itemDef.id+"_add";
 	addDef.visible = "this.getRowCount() < this.getMaxRows()";
 	addDef.ignore = true;
@@ -1441,7 +1448,7 @@ DwtFormRows.prototype.addRow = function(itemDef, index) {
 		addButton.addSelectionListener(new AjxListener(this, this._handleAddRow, [itemDef.id]));
 	}
 
-	var removeDef = this._itemDef.removeitem ? AjxUtil.createProxy(this._itemDef.removeitem) : { image: "Remove", tooltip: ZmMsg.removeRow };
+	var removeDef = this._itemDef.removeitem ? AjxUtil.createProxy(this._itemDef.removeitem) : { image: "Remove", tooltip: ZmMsg.removeRow, ariaLabel: ZmMsg.removeRow };
 	removeDef.id = removeDef.id || itemDef.id+"_remove";
 	removeDef.visible = "this.getRowCount() > this.getMinRows()";
 	removeDef.ignore = true;

@@ -114,6 +114,7 @@ DwtMenu = function(params) {
 		this._table = document.createElement("table");
 		this._table.border = this._table.cellPadding = this._table.cellSpacing = 0;
 		this._table.className = "DwtMenuTable";
+		this._table.setAttribute('role', 'presentation');
 		this._table.id = Dwt.getNextId();
 
 
@@ -1024,6 +1025,8 @@ function(item, index) {
 		col = row.insertCell(0);
 	}
 	col.noWrap = true;
+	row.setAttribute('role', 'none');
+	col.setAttribute('role', 'none');
 	col.appendChild(item.getHtmlElement());
 //	this._children.add(item, index);
 };
