@@ -284,7 +284,7 @@ DwtLabel.prototype.setText = function(text) {
         this._textEl.innerHTML = text;
     }
 
-	this._textSet(text);
+	this.setAriaLabel(text);
 };
 
 /**
@@ -411,7 +411,7 @@ function(imageInfo, direction, altText) {
 };
 
 // Accessibility
-DwtLabel.prototype._textSet = function(text) {
+DwtLabel.prototype.setAriaLabel = function(text) {
 
 	// assign the ARIA label directly; we want it to override the tooltip, if any
 	if (!this.hasAttribute('aria-labelledby')) {
