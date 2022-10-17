@@ -227,6 +227,7 @@ DwtProgressBar.prototype._createHTML =
 function() {
 	this._table = document.createElement("table");
 	this._table.border = this._table.cellpadding = this._table.cellspacing = 0;	
+	this._table.setAttribute('role', 'presentation');
 
 	this._row = this._table.insertRow(-1);
 

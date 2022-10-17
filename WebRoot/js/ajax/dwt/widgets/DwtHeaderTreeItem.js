@@ -88,6 +88,7 @@ function() {
 			this._optButtonItem.addSelectionListener(new AjxListener(this, this._onclickHandler));
 			this._optButtonItem.replaceElement(this._optButtonId);
 			this._optButtonItem.setImage("ContextMenu");
+			this._optButtonItem.setAriaLabel(this._optButton.tooltip);
 			this._optButtonItem.setIconEl(this._optButtonItem.getHtmlElement()); // image container is button
 		}
 	}

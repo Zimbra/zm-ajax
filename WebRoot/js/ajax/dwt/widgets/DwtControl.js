@@ -155,6 +155,10 @@ DwtControl = function(params) {
 		this.role = params.role;
 	}
 
+	if (params.ariaLabel != null) {
+		this.ariaLabel = params.ariaLabel;
+	}
+
 	/**
 	 * @private
 	 */
@@ -3031,6 +3035,10 @@ function(ev) {
 		return;
 	}
 
+	if (obj.hasAttribute('aria-haspopup')) {
+		obj.setAttribute('aria-expanded', !(obj.getAttribute('aria-expanded') === 'true'));
+	}
+
 	try {
 
 	return DwtControl.__mouseEvent(ev, DwtEvent.ONCLICK);
@@ -3705,6 +3713,11 @@ function() {
 	if (this.role) {
 		htmlElement.setAttribute('role', this.role);
 	}
+
+	if (this.ariaLabel) {
+		htmlElement.setAttribute('aria-label', this.ariaLabel);
+	}
+
 	this._enabled = true;
 	this.__controlEvent = DwtControl.__controlEvent;
 	this._dragging = DwtControl._NO_DRAG;

@@ -877,6 +877,7 @@ DwtButton.prototype._createHtmlFromTemplate = function(templateId, data) {
 // Accessibility
 DwtButton.prototype._menuAdded = function(menu) {
 	this.setAttribute("aria-haspopup", true);
+	this.setAttribute("aria-expanded", false);
 	this.setAttribute("aria-controls", menu._htmlElId);
 };
 
