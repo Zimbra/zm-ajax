@@ -243,6 +243,7 @@ DwtWizardDialog.prototype._createContentHtml =
 function () {
 
 	this._table = document.createElement("table");
+	this._table.setAttribute('role', 'presentation');
 	this._table.border = 0;
 	this._table.width = this._contentW;
 	this._table.cellPadding = this._table.cellSpacing = 0;
@@ -413,6 +414,7 @@ DwtWizProgressBar = function(parent) {
 	if (arguments.length == 0) return;
 	DwtComposite.call(this, {parent:parent, className:"DwtWizProgressBar", posStyle:DwtControl.STATIC_STYLE});
 	this._table = document.createElement("table");
+	this._table.setAttribute('role', 'presentation');
 	this._table.border = 0;
 	this._table.cellPadding = 0;
 	this._table.cellSpacing = 0;

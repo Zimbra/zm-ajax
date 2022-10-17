@@ -64,6 +64,7 @@ function() {
  	htmlEl.style.zIndex = Dwt.Z_SPLASH;
 	
  	var myTable = document.createElement("table");
+	myTable.setAttribute('role', 'presentation');
  	myTable.border = myTable.cellSpacing = myTable.cellPadding = 0;
  	Dwt.setSize(myTable, "100%", "100%");
 	

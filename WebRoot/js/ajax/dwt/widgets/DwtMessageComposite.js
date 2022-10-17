@@ -149,7 +149,7 @@ function(message, callback, hintsCallback) {
 
     // create HTML
     var id = this._htmlElId;
-    this.getHtmlElement().innerHTML = "<table class='DwtCompositeTable' border='0' cellspacing='0' cellpadding='0'><tr valign='center'></tr></table>";
+    this.getHtmlElement().innerHTML = "<table role='presentation' class='DwtCompositeTable' border='0' cellspacing='0' cellpadding='0'><tr valign='center'></tr></table>";
     var row = this.getHtmlElement().firstChild.rows[0];
 
     var segments = this._formatter.getSegments();
