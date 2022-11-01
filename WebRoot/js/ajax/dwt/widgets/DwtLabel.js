@@ -284,7 +284,10 @@ DwtLabel.prototype.setText = function(text) {
         this._textEl.innerHTML = text;
     }
 
-	this.setAriaLabel(text);
+	// Do not set combobox selected value as aria-label
+	if (!(this instanceof DwtSelect)) {
+		this.setAriaLabel(text);
+	}
 };
 
 /**
