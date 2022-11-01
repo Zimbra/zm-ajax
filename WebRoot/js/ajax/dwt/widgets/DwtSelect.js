@@ -74,6 +74,8 @@ DwtSelect = function(params) {
         }
     }
 
+    this.setAttribute("aria-expanded", false);
+
     // setup display
     this.setDropDownImages("SelectPullDownArrow",			// normal
                            "SelectPullDownArrowDis",		// disabled
@@ -511,6 +513,7 @@ function() {
 DwtSelect.prototype.addChangeListener =
 function(listener) {
     this.addListener(DwtEvent.ONCHANGE, listener);
+    this.setAttribute('aria-expanded', false);
 };
 
 /**
