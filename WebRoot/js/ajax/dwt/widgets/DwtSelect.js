@@ -1010,4 +1010,4 @@ DwtSelectMenuItem.prototype.TEMPLATE = "dwt.Widgets#ZSelectMenuItem";
 DwtSelectMenuItem.prototype.isDwtSelectMenuItem = true;
 DwtSelectMenuItem.prototype.toString = function() { return "DwtSelectMenuItem"; };
 
-DwtSelectMenuItem.prototype.role = 'option';
+DwtSelectMenuItem.prototype.role = 'menuitem';
