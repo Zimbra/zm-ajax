@@ -879,6 +879,12 @@ DwtButton.prototype._menuAdded = function(menu) {
 	this.setAttribute("aria-haspopup", true);
 	this.setAttribute("aria-expanded", false);
 	this.setAttribute("aria-controls", menu._htmlElId);
+	var button = this;
+	var setAriaExpand = function (val) {
+		button.setAttribute('aria-expanded', val);
+	};
+	menu.addPopupListener(setAriaExpand(true));
+	menu.addPopdownListener(setAriaExpand(false));
 };
 
 // Accessibility
