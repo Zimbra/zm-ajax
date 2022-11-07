@@ -3052,10 +3052,6 @@ function(ev) {
 		return;
 	}
 
-	if (obj.hasAttribute('aria-haspopup')) {
-		obj.setAttribute('aria-expanded', !(obj.getAttribute('aria-expanded') === 'true'));
-	}
-
 	try {
 
 	return DwtControl.__mouseEvent(ev, DwtEvent.ONCLICK);
