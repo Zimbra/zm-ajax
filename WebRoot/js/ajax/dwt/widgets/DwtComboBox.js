@@ -99,7 +99,9 @@ DwtComboBox.prototype.addChangeListener = function(listener) {
 };
 
 DwtComboBox.prototype.setAriaLabel = function(label) {
-	this.getHtmlElement().setAttribute('aria-label', label);
+	this.input._inputField.setAttribute('aria-label', label);
+	this._button.setAriaLabel(label);
+	this._button.setAttribute('aria-expanded', false);
 }
 /**
  * Removes the change listener.
