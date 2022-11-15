@@ -117,6 +117,7 @@ DwtListView = function(params) {
 			ul.className = "DwtListView-Rows";
 			this._parentEl.appendChild(ul);
 			this._parentEl = ul;
+			this._listDiv = ul;
 		}
 	}
     this._parentEl.tabIndex = 0;
@@ -757,7 +758,7 @@ function() {
 		var sz = this._selectedItems.size();
 		for (var i = 0; i < sz; i++) {
 	        Dwt.delClass(a[i], this._styleRe);
-	        a[i].removeAttribute('aria-selected');
+			a[i].setAttribute('aria-selected', false);
 	    }
 	    this._selectedItems.removeAll();
 		this._rightSelItem = this._selAnchor = null;
@@ -857,7 +858,7 @@ DwtListView.prototype.setMultiSelection =
 function(clickedEl, bContained, ev) {
 	if (bContained) {
 		this._selectedItems.remove(clickedEl);
-		clickedEl.removeAttribute('aria-selected');
+		clickedEl.setAttribute('aria-selected', false);
 		Dwt.delClass(clickedEl, this._styleRe);		// , this._normalClass	MOW
 		this._selEv.detail = DwtListView.ITEM_DESELECTED;
 	} else {
@@ -1289,6 +1290,7 @@ function(row, index) {
 	this._fixAlternation((index != null) ? index : len);
 
 	row.setAttribute('role', this.itemRole);
+	row.setAttribute('aria-selected', false);
 };
 
 // Placeholder function for any post-add processing
@@ -2294,7 +2296,7 @@ function(clickedEl, ev) {
 				}
 				else if (el.className.indexOf(selStyleClass) !== -1) {
 					Dwt.delClass(el, this._styleRe);		// , this._normalClass	MOW
-					el.removeAttribute('aria-selected');
+					el.setAttribute('aria-selected', false);
 				}
 			}
 
