@@ -891,8 +891,14 @@ function(htmlElement, idx) {
 	htmlElement.style.zIndex = idx;
 	if (idx < Dwt.Z_VIEW) {
 		htmlElement.setAttribute('aria-hidden', true);
+		if (htmlElement.getAttribute('tabindex')) {
+			htmlElement.setAttribute('tabindex', -1);
+		}
 	} else {
 		htmlElement.removeAttribute('aria-hidden');
+		if (htmlElement.getAttribute('tabindex')) {
+			htmlElement.setAttribute('tabindex', 0);
+		}
 	}
 };
 
