@@ -952,7 +952,7 @@ function() {
 	// Construct the header row with the prev/next year and prev/next month
 	// icons as well as the month/year title cell
 	html[idx++] =	"<table role='presentation' width=100%>";
-	html[idx++] =		"<tr><td class='DwtCalendarTitlebar'>";
+	html[idx++] =		"<tr role='complementary' aria-label='"+ I18nMsg.miniCalendar +"'><td class='DwtCalendarTitlebar'>";
 	html[idx++] =			"<table role='presentation'>";
 	html[idx++] =				"<tr>";
 	html[idx++] =					"<td align='center' tabindex='0' class='";
