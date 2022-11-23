@@ -198,6 +198,14 @@ function(checked, force) {
 	}
 };
 
+DwtTreeItem._handleKeyPress =
+function(event) {
+	var keyCode = DwtKeyEvent.getCharCode(event);
+	if (keyCode === DwtKeyEvent.KEY_SPACE) {
+		this._handleCheckboxOnclick(event);
+	}
+}
+
 DwtTreeItem.prototype._handleCheckboxOnclick =
 function(ev) {
 	this.setChecked(!Dwt.getVisible(this._checkedImg));
@@ -635,6 +643,7 @@ function(index, realizeDeferred, forceNode) {
 
 	// initialize checkbox
 	if (this._tree.isCheckedStyle && this._checkBox) {
+		Dwt.setHandler(this.getHtmlElement(), DwtEvent.ONKEYUP, DwtTreeItem._handleKeyPress.bind(this));
 		this._checkBox.onclick = AjxCallback.simpleClosure(this._handleCheckboxOnclick, this);
 		this.showCheckBox(this._checkBoxVisible);
 		this.setChecked(this._tree.isCheckedByDefault, true);
