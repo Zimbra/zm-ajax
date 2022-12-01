@@ -237,6 +237,7 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 
 	this._headerHash = {};
 	this._headerIdHash = {};
+	this._headerItemsId = [];
 
 	var idx = 0;
 	var htmlArr = [];
@@ -253,6 +254,13 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 		var field = headerCol._field;
 		headerCol._index = i;
 		var id = headerCol._id = DwtId.getListViewHdrId(DwtId.WIDGET_HDR, this._view, field);
+
+		if (headerCol._iconInfo) {
+			this._headerItemsId[i] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, headerCol._field);
+		}
+		if (headerCol._label) {
+			this._headerItemsId[i] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, headerCol._field);
+		}
 
 		this._headerHash[field] = headerCol;
 		this._headerIdHash[id] = headerCol;
@@ -326,7 +334,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
     tmpClass += headerCol._sortable ? "" : " DwtDefaultCursor";
     htmlArr[idx++] = tmpClass + "'";
 	if (headerCol._width) {
-		htmlArr[idx++] = " width=";
+		htmlArr[idx++] = " tabindex='0' width=";
 		htmlArr[idx++] = headerCol._width;
 		if (headerCol._cssClass && headerCol._resizeable && headerCol._width !== 'auto') {
 			this._createHeaderCssStyle(headerCol, headerCol._width);
@@ -354,7 +362,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 		}
 	}
 	if (!!headerColWidth) {
-		htmlArr[idx++] = " style='overflow: hidden; width: ";
+		htmlArr[idx++] = " style='width: ";
 		htmlArr[idx++] = headerColWidth;
 		htmlArr[idx++] = "'>";
 	} else {
@@ -364,7 +372,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	// add new table for icon/label/sorting arrow
 	htmlArr[idx++] = "<table role='presentation' width=100%><tr>";
 	if (headerCol._iconInfo) {
-		var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "'"].join("");
+		var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "' tabindex='0'"].join("");
 		htmlArr[idx++] = "<td><center>";
 		htmlArr[idx++] = AjxImg.getImageHtml(headerCol._iconInfo, null, idText);
 		htmlArr[idx++] = "</center></td>";
@@ -373,7 +381,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._label) {
 		htmlArr[idx++] = "<td id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, field);
-		htmlArr[idx++] = "' class='DwtListHeaderItem-label' style='padding-right:6px; padding-left:6px'>";
+		htmlArr[idx++] = "' class='DwtListHeaderItem-label' tabindex='0' style='padding-right:6px; padding-left:6px'>";
 		htmlArr[idx++] = headerCol._label;
 		htmlArr[idx++] = "</td>";
 	}
