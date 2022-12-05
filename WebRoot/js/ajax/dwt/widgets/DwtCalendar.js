@@ -885,7 +885,7 @@ DwtCalendar.prototype.handleKeyAction = function(actionCode, ev) {
 
 	switch (actionCode) {
 		case DwtKeyMap.SELECT:
-			if (this.tabgroup.__currFocusMember || ev.target) {
+			if (ev.target || this.tabgroup.__currFocusMember) {
 				ev.button = DwtMouseEvent.LEFT;
 				this._mouseDownListener(ev);
 				this._mouseUpListener(ev);
@@ -907,7 +907,7 @@ DwtCalendar.prototype.handleKeyAction = function(actionCode, ev) {
 
 DwtCalendar.prototype.selectElement =
 function (type, ev) {
-	var currentMember = this.tabgroup.__currFocusMember || ev.target;
+	var currentMember = ev.target || this.tabgroup.__currFocusMember;
 
 	// focus should not move to any element using arrow key when focus is on calendar dailog outline.
 	if (currentMember instanceof DwtControl) {
