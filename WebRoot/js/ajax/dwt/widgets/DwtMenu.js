@@ -794,8 +794,9 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 	switch (this._style) {
 		case DwtMenu.BAR_STYLE:
 		case DwtMenu.POPUP_STYLE:
-        case DwtMenu.DROPDOWN_STYLE:
-        case DwtMenu.DROPDOWN_CENTERV_STYLE:
+		case DwtMenu.DROPDOWN_STYLE:
+		case DwtMenu.DROPDOWN_CENTERV_STYLE:
+		case DwtMenu.GENERIC_WIDGET_STYLE:
 			break;
 			
 		default:
