@@ -73,7 +73,23 @@ DwtCalendar = function(params) {
 	}
 
 	this._selectionMode = DwtCalendar.DAY;
-	
+	this.navigationMembers = [];
+	this.currentNavigationMemberInTabGroup = null;
+
+	this.dayMembers = [];
+	this.currentDayMemberInTabGroup = null;
+
+	var menuInstance = this.parent;
+	while (typeof menuInstance !== 'undefined' && !(menuInstance instanceof DwtMenu)) {
+		menuInstance = menuInstance.parent;
+	}
+
+	if (menuInstance instanceof DwtMenu) {
+		this.tabgroup = menuInstance._compositeTabGroup;
+	} else {
+		this.tabgroup = this._compositeTabGroup;
+	}
+
 	this._init();
 
 	this._weekDays = new Array(7);
@@ -90,6 +106,10 @@ DwtCalendar.PARAMS = ["parent", "className", "posStyle", "firstDayOfWeek", "forc
 DwtCalendar.prototype = new DwtComposite;
 DwtCalendar.prototype.constructor = DwtCalendar;
 
+DwtCalendar.KEY_UP = 'KEY_UP';
+DwtCalendar.KEY_DOWN = 'KEY_DOWN';
+DwtCalendar.KEY_RIGHT = 'KEY_RIGHT';
+DwtCalendar.KEY_LEFT = 'KEY_LEFT';
 /**
  * Sunday.
  */
@@ -793,6 +813,7 @@ function(cell, className, mode) {
 		mode != DwtCalendar._DESELECTED)
 	{
 		className += this._selectedDayClassName;
+		this.setDayMemberInTabGroup(null, cell);
 	}
 	else if (this._selectionMode != DwtCalendar.DAY &&
 			 mode != DwtCalendar._DESELECTED &&
@@ -855,6 +876,73 @@ function(month, year) {
 	cell.innerHTML = formatter.format(date);
 };
 
+DwtCalendar.prototype.getKeyMapName =
+function() {
+	return DwtKeyMap.MAP_MENU;
+};
+
+DwtCalendar.prototype.handleKeyAction = function(actionCode, ev) {
+
+	switch (actionCode) {
+		case DwtKeyMap.SELECT:
+			if (ev.target || this.tabgroup.__currFocusMember) {
+				ev.button = DwtMouseEvent.LEFT;
+				this._mouseDownListener(ev);
+				this._mouseUpListener(ev);
+				this._mouseOutListener(ev);
+			}
+			break;
+		case DwtKeyMap.SUBMENU: // right arrow
+		case DwtKeyMap.PARENTMENU: // Left arrow
+		case DwtKeyMap.SELECT_PREV: // Up arrow
+		case DwtKeyMap.SELECT_NEXT: // down arrow
+			this.selectElement(actionCode, ev);
+			break;
+		default:
+			return false;
+	}
+	return true;
+};
+
+
+DwtCalendar.prototype.selectElement =
+function (type, ev) {
+	var currentMember = ev.target || this.tabgroup.__currFocusMember;
+
+	// focus should not move to any element using arrow key when focus is on calendar dailog outline.
+	if (currentMember instanceof DwtControl) {
+		return false;
+	}
+
+	switch (type) {
+		case DwtKeyMap.SUBMENU: // right arrow
+			if (currentMember.id.indexOf('b:') === 0) { // Navigation focus
+				this.setNavigationInTabGroup(true, true);
+			}
+			else if (currentMember.id.indexOf('c:') === 0) { // Day focus
+				this.setDayMemberInTabGroup(DwtCalendar.KEY_RIGHT, null, true);
+			}
+			break;
+		case DwtKeyMap.PARENTMENU: // left arrow
+			if (currentMember.id.indexOf('b:') === 0) { // Navigation focus
+				this.setNavigationInTabGroup(false, true);
+			}
+			else if (currentMember.id.indexOf('c:') === 0) { // Day focus
+				this.setDayMemberInTabGroup(DwtCalendar.KEY_LEFT, null, true);
+			}
+			break;
+		case DwtKeyMap.SELECT_PREV: // up arrow
+			if (currentMember.id.indexOf('c:') === 0) { // Day focus
+				this.setDayMemberInTabGroup(DwtCalendar.KEY_UP, null, true);
+			}
+			break;
+		case DwtKeyMap.SELECT_NEXT: // down arrow
+			if (currentMember.id.indexOf('c:') === 0) { // Day focus
+				this.setDayMemberInTabGroup(DwtCalendar.KEY_DOWN, null, true);
+			}
+	}
+};
+
 DwtCalendar.prototype._init =
 function() {
 	var html = new Array(100);
@@ -867,14 +955,14 @@ function() {
 	html[idx++] =		"<tr><td class='DwtCalendarTitlebar'>";
 	html[idx++] =			"<table role='presentation'>";
 	html[idx++] =				"<tr>";
-	html[idx++] =					"<td align='center' class='";
+	html[idx++] =					"<td align='center' tabindex='0' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:py:";
 	html[idx++] =						this._uuid;
 	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FastRevArrowSmall", null, ["id='b:py:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td align='center' class='";
+	html[idx++] =					"<td align='center' tabindex='0' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:pm:";
 	html[idx++] =						this._uuid;
@@ -886,14 +974,14 @@ function() {
 	html[idx++] = 						"' id='";
 	html[idx++] =						this._monthCell;
 	html[idx++] =					"'></span></td>";
-	html[idx++] =					"<td align='center' class='";
+	html[idx++] =					"<td align='center' tabindex='0' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:nm:";
 	html[idx++] =						this._uuid;
 	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FwdArrowSmall", null, ["id='b:nm:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td align='center' class='";
+	html[idx++] =					"<td align='center' tabindex='0' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:ny:";
 	html[idx++] =						this._uuid;
@@ -932,7 +1020,7 @@ function() {
 		for (var j = 0; j < 7; j++) {
 			html[idx++] = "<td id='";
 			html[idx++] = this._getDayCellId(i * 7 + j);
-			html[idx++] = "'>&nbsp;</td>";
+			html[idx++] = "' tabindex='0'>&nbsp;</td>";
 		}
 		html[idx++] ="</tr>";
 	}
@@ -948,7 +1036,144 @@ function() {
 	}
 
 	this._calWidgetInited = true;
+
+	this.navigationMembers.push(document.getElementById("b:py:" + this._uuid));
+	this.navigationMembers.push(document.getElementById("b:pm:" + this._uuid));
+	this.navigationMembers.push(document.getElementById("b:nm:" + this._uuid));
+	this.navigationMembers.push(document.getElementById("b:ny:" + this._uuid));
+
+	this.setNavigationInTabGroup(true);
+
+	for (var i = 0; i < 42; i++) {
+		var dayElement = document.getElementById(this._getDayCellId(i));
+		if (dayElement) {
+			this.dayMembers.push(dayElement);
+		}
+	}
 };
+
+DwtCalendar.prototype.__doBlur = function(ev) {
+	DwtControl.prototype.__doBlur.call(this, ev);
+	this._hasFocus = true;
+	return true;
+};
+
+DwtCalendar.prototype.assignToTagGroup =
+function(element) {
+	this.tabgroup.addMember(element);
+};
+
+DwtCalendar.prototype.setDayMemberInTabGroup =
+function(action, nextMember, setFocus) {
+	if (!this.currentDayMemberInTabGroup) {
+		this.assignToTagGroup(nextMember);
+	}
+	else if (!action) {
+		this.tabgroup.replaceMember(this.currentDayMemberInTabGroup, nextMember);
+	}
+	else if (action){
+		var index = this.dayMembers.indexOf(this.currentDayMemberInTabGroup);
+		var nextIndex = index + 1;
+		if (action === DwtCalendar.KEY_RIGHT) {
+			nextIndex = index + 1;
+			if (nextIndex > 41) {
+				// call next month
+				if (parseInt(this.currentDayMemberInTabGroup.textContent) > 7) {
+					nextIndex = nextIndex + 14;
+				} else {
+					nextIndex = nextIndex + 7;
+				}
+				this._nextMonth();
+			}
+		}
+		else if (action === DwtCalendar.KEY_LEFT) {
+			nextIndex = (index + this.dayMembers.length - 1);
+			if (nextIndex === 41) {
+				// call prev month
+				var currentDay = parseInt(this.currentDayMemberInTabGroup.textContent);
+				this._prevMonth();
+
+				var matchFound = false;
+				for (var i = 0 ; i < 3 ; i++) {
+					if (parseInt(this.dayMembers[nextIndex].textContent) + 1 === currentDay) {
+						matchFound = true;
+						break;
+					}
+					nextIndex = nextIndex - 7;
+				}
+
+				if (!matchFound) {
+					nextIndex = 34;
+				}
+			}
+		}
+		else if (action === DwtCalendar.KEY_UP) {
+			nextIndex = index - 7;
+			if (nextIndex < 0) {
+				nextIndex = nextIndex + 42;
+				// call prevMonth
+				var currentDay = parseInt(this.currentDayMemberInTabGroup.textContent);
+				this._prevMonth();
+				for (var i = 0; i < 3; i++) {
+					var prevElement = this.dayMembers[nextIndex];
+					var enableElement = prevElement.classList.value.indexOf('DwtCalendarDay-grey') === -1;
+					var prevDay = parseInt(prevElement.textContent);
+					if ( enableElement && currentDay !== prevDay) {
+						break;
+					}
+					nextIndex = nextIndex - 7;
+				}
+
+			}
+		}
+		else if (action === DwtCalendar.KEY_DOWN) {
+			nextIndex = index + 7;
+			if (nextIndex > 41) {
+				// call next month
+				var currentDay = parseInt(this.currentDayMemberInTabGroup.textContent);
+				this._nextMonth();
+				var matchFound = false;
+				var updatedIndex = nextIndex;
+				for (var i = 0; i < 3; i++) {
+					var nextElement = this.dayMembers[updatedIndex%42]
+					var enableNextElement = nextElement.classList.value.indexOf('DwtCalendarDay-grey') === -1;
+					var nextDay = parseInt(nextElement.textContent);
+					if ( enableNextElement && currentDay !== nextDay && currentDay < nextDay) {
+						matchFound = true;
+						break;
+					}
+					updatedIndex = updatedIndex + 7;
+				}
+
+				nextIndex = matchFound ? updatedIndex : nextIndex + 7;
+			}
+		}
+
+		var nextMember = this.dayMembers[nextIndex % 42];
+		this.tabgroup.replaceMember(this.currentDayMemberInTabGroup, nextMember);
+	}
+	this.currentDayMemberInTabGroup = nextMember;
+
+	if (setFocus) {
+		this.tabgroup.setFocusMember(this.currentDayMemberInTabGroup);
+	}
+};
+
+DwtCalendar.prototype.setNavigationInTabGroup =
+function (next, setFocus) {
+	var index = this.navigationMembers.indexOf(this.currentNavigationMemberInTabGroup);
+	var nextIndex = next ? index + 1 : (index + this.navigationMembers.length - 1);
+	var nextMember = this.navigationMembers[nextIndex%4];
+	if (this.currentNavigationMemberInTabGroup) {
+		this.tabgroup.replaceMember(this.currentNavigationMemberInTabGroup, nextMember);
+	} else {
+		this.assignToTagGroup(nextMember);
+	}
+	this.currentNavigationMemberInTabGroup = nextMember;
+	if (setFocus) {
+		this.tabgroup.setFocusMember(this.currentNavigationMemberInTabGroup);
+	}
+}
 
 /**
  * Sets the mouse over day callback.
