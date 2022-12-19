@@ -498,7 +498,7 @@ DwtBaseDialog.prototype._createHtmlFromTemplate = function(templateId, data) {
 	if (this._titleEl) {
 		this.setAttribute('aria-labelledby', this._titleEl.id);
 		this._titleEl.setAttribute('role', 'heading');
-		this._titleEl.setAttribute('aria-level', '2');
+		this._titleEl.setAttribute('aria-level', '3');
 	}
 
     // NOTE: This is for backwards compatibility. There are just

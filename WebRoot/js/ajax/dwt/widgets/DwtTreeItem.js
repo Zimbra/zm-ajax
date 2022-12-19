@@ -291,7 +291,15 @@ function(item) {
  */
 DwtTreeItem.prototype.getNestingLevel =
 function() {
-	return this.parent.getNestingLevel() + 1;
+	var nestingLevelCheck;
+	// the toplevel tree is zero, we can have only one level(1) heading in the page which is already defined in the banner,so initializing the toplevel with level2 for all nested folders
+	if (this.parent.getNestingLevel() == 0) {
+		nestingLevelCheck = this.parent.getNestingLevel() + 2;
+	}
+	else {
+		nestingLevelCheck = this.parent.getNestingLevel() + 1;
+	}
+	return (nestingLevelCheck > 6 ? 6 : nestingLevelCheck);
 };
 
 /**
