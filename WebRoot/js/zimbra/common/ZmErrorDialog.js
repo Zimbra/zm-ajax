@@ -49,11 +49,16 @@ ZmErrorDialog = function(parent, msgs) {
 
 	var reportButton = new DwtDialog_ButtonDescriptor(ZmErrorDialog.REPORT_BUTTON, msgs.report, DwtDialog.ALIGN_LEFT);
 	var detailButton = new DwtDialog_ButtonDescriptor(ZmErrorDialog.DETAIL_BUTTON, msgs.showDetails, DwtDialog.ALIGN_LEFT);
-	DwtMessageDialog.call(this, {parent:parent, extraButtons:[reportButton, detailButton], id:"ErrorDialog"});
 
-	this.registerCallback(ZmErrorDialog.REPORT_BUTTON, this._reportCallback, this);
-	this.registerCallback(ZmErrorDialog.DETAIL_BUTTON, this.showDetail, this);
-	
+	var result = { handled: false };
+	appCtxt.notifyZimlets("onZmErrorDialog", [this, parent, msgs, reportButton, detailButton, result]);
+
+	if (!result.handled) {
+		DwtMessageDialog.call(this, {parent:parent, extraButtons:[reportButton, detailButton], id:"ErrorDialog"});
+		this.registerCallback(ZmErrorDialog.REPORT_BUTTON, this._reportCallback, this);
+		this.registerCallback(ZmErrorDialog.DETAIL_BUTTON, this.showDetail, this);
+	}
+
 	this._showDetailsMsg = msgs.showDetails;
 	this._hideDetailsMsg = msgs.hideDetails;
 
@@ -132,7 +137,9 @@ function(msgStr, detailStr, style, title) {
 
 	// clear the 'detailsVisible' flag and reset the title of the 'showDetails' button
 	this._detailsVisible = false;
-	this._button[ZmErrorDialog.DETAIL_BUTTON].setText(this._showDetailsMsg);
+	if (this._button[ZmErrorDialog.DETAIL_BUTTON]) {
+		this._button[ZmErrorDialog.DETAIL_BUTTON].setText(this._showDetailsMsg);
+	}
 	
 	// Set the content, enveloped
 	this._updateContent();
@@ -332,5 +339,7 @@ ZmErrorDialog.prototype.showDetail =
 function() {
 	this._detailsVisible = !this._detailsVisible;
 	this._updateContent();
-	this._button[ZmErrorDialog.DETAIL_BUTTON].setText(this._detailsVisible ? this._hideDetailsMsg : this._showDetailsMsg);
+	if (this._button[ZmErrorDialog.DETAIL_BUTTON]) {
+		this._button[ZmErrorDialog.DETAIL_BUTTON].setText(this._detailsVisible ? this._hideDetailsMsg : this._showDetailsMsg);
+	}
 };

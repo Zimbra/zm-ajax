@@ -294,6 +294,12 @@ function(now, dateMSec, requireTime) {
 	if (dateMSec == null)
 		return "";
 
+	var result = { value: null };
+	appCtxt.notifyZimlets("onAjxDateUtil_computeDateStr", [now, dateMSec, requireTime, result]);
+	if (result.value) {
+		return result.value;
+	}
+
 	var date = new Date(dateMSec);
 	if (now.getTime() - dateMSec < AjxDateUtil.MSEC_PER_DAY &&
 		now.getDay() == date.getDay()) {
