@@ -767,6 +767,7 @@ function() {
 		for (var i = 0; i < sz; i++) {
 	        Dwt.delClass(a[i], this._styleRe);
 			a[i].setAttribute('aria-selected', false);
+			this._updateAriaLabel(a[i]);
 	    }
 	    this._selectedItems.removeAll();
 		this._rightSelItem = this._selAnchor = null;
@@ -862,6 +863,12 @@ function(item, skipNotify, forceSelection) {
 	}
 };
 
+DwtListView.prototype._updateAriaLabel =
+function(element) {
+	var item = element.tagName ? this.getItemFromElement(element) : element;
+	this._updateLabelForItem(item);
+};
+
 DwtListView.prototype.setMultiSelection =
 function(clickedEl, bContained, ev) {
 	if (bContained) {
@@ -886,6 +893,7 @@ function(clickedEl, bContained, ev) {
 	this._setKbFocusElement(clickedEl);
 	this._selAnchor = clickedEl;
 	Dwt.addClass(this._kbAnchor, this._kbFocusClass);
+	this._updateAriaLabel(clickedEl);
 };
 
 DwtListView.prototype.setSelectedItems =
@@ -913,7 +921,6 @@ function(item, selected) {
 			el.focus();
 		}
 		this._selectedItems.add(el);
-		el.setAttribute('aria-selected', true);
 	}
 };
 
@@ -1299,6 +1306,7 @@ function(row, index) {
 
 	row.setAttribute('role', this.itemRole);
 	row.setAttribute('aria-selected', false);
+	this._updateAriaLabel(row);
 };
 
 // Placeholder function for any post-add processing
@@ -2214,7 +2222,6 @@ function(itemDiv, ev) {
 
 		// save new left click selection
 		this._selectedItems.add(itemDiv);
-		itemDiv.setAttribute('aria-selected', true);
 
 		this._setKbFocusElement(itemDiv);
 		this._selAnchor = itemDiv;
@@ -2301,10 +2308,12 @@ function(clickedEl, ev) {
 					this._selectedItems.add(el);
 					el.setAttribute('aria-selected', true);
 					Dwt.delClass(el, this._styleRe, selStyleClass);
+					this._updateAriaLabel(el);
 				}
 				else if (el.className.indexOf(selStyleClass) !== -1) {
 					Dwt.delClass(el, this._styleRe);		// , this._normalClass	MOW
 					el.setAttribute('aria-selected', false);
+					this._updateAriaLabel(el);
 				}
 			}
 
