@@ -865,8 +865,10 @@ function(item, skipNotify, forceSelection) {
 
 DwtListView.prototype._updateAriaLabel =
 function(element) {
-	var item = element.tagName ? this.getItemFromElement(element) : element;
-	this._updateLabelForItem(item);
+	if (this._updateLabelForItem) {
+		var item = element.tagName ? this.getItemFromElement(element) : element;
+		this._updateLabelForItem(item);
+	}
 };
 
 DwtListView.prototype.setMultiSelection =
