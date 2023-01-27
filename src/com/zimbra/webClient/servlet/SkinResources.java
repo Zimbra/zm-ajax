@@ -1540,6 +1540,7 @@ public class SkinResources
 		private static final String E_COMMON = "common";
 		private static final String E_STANDARD = "standard";
 		private static final String E_ADVANCED = "advanced";
+		private static final String E_IGNORE_SUFFIX = "Ignore";
 
 		private static final Pattern RE_TOKEN = Pattern.compile("@.+?@");
 		private static final Pattern RE_SKIN_METHOD = Pattern.compile("@(\\w+)\\((.*?)\\)@");
@@ -2241,6 +2242,7 @@ public class SkinResources
 				root = docElement;
 			}
 			addFiles(root, ename, baseDir, list);
+			removeFiles(root, (ename + E_IGNORE_SUFFIX), baseDir, list);
 		}
 
 		private void addFiles(Element root, String ename,
@@ -2254,6 +2256,30 @@ public class SkinResources
 					String filename = getChildText(fileEl);
 					File file = new File(baseDir, filename);
 					list.add(file);
+					fileEl = getNextSiblingElement(fileEl, E_FILE);
+				}
+			}
+		}
+
+		private void removeFiles(Element root, String ename,
+							  File baseDir, List<File> list) {
+			if (root == null) return;
+
+			Element element = getFirstChildElement(root, ename);
+			if (element != null) {
+				Element fileEl = getFirstChildElement(element, E_FILE);
+				while (fileEl != null) {
+					String filename = getChildText(fileEl);
+					File file = new File(baseDir, filename);
+					for (File f : list) {
+						if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
+							list.remove(f);
+							if (ZimbraLog.webclient.isDebugEnabled()) {
+								ZimbraLog.webclient.debug("DEBUG: ignored file " + file.getAbsolutePath());
+							}
+							break;
+						}
+					}
 					fileEl = getNextSiblingElement(fileEl, E_FILE);
 				}
 			}
