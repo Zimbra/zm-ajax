@@ -997,13 +997,8 @@ function(value) {
 	mi = parseInt(value.substr(10, 2), 10);
 	se = parseInt(value.substr(12, 2), 10);
 	var date = new Date();
-	date.setUTCMilliseconds(0);
-	date.setUTCSeconds(se);
-	date.setUTCMinutes(mi);
-	date.setUTCHours(hr);
-	date.setUTCMonth(mo - 1);
-	date.setUTCDate(da);
-	date.setUTCFullYear(yr);
+	date.setUTCHours(hr, mi, se, 0);
+	date.setUTCFullYear(yr, mo - 1, da);
 	yr = date.getFullYear();
 	mo = date.getMonth() + 1;
 	da = date.getDate();
