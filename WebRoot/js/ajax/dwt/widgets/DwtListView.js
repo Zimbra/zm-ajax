@@ -2345,6 +2345,47 @@ function(clickedEl, ev) {
 			this._evtMgr.notifyListeners(DwtEvent.ACTION, this._actionEv);
 		}
 	}
+
+	var selectedText = '; ' + ZmMsg.selected;
+	var allRows = this.getHtmlElement().querySelectorAll('*[class*="Row"]');
+	for (var i = 0; i < allRows.length; i++) {
+		allRows[i].setAttribute('aria-selected', 'false');
+
+		var ariaLabelElement = DwtListView.getAriaLabelElement(allRows[i]);
+
+		if (ariaLabelElement) {
+			var currentLabel = ariaLabelElement.getAttribute('aria-label');
+			if (currentLabel.includes(selectedText)) {
+				ariaLabelElement.setAttribute('aria-label', currentLabel.replace(selectedText, ''));
+			}
+		}
+	}
+
+	var selectedRows = this.getHtmlElement().querySelectorAll('*[class*="Row-selected"]');
+	for (var i = 0; i < selectedRows.length; i++) {
+		selectedRows[i].setAttribute('aria-selected', 'true');
+		var ariaLabelElement = DwtListView.getAriaLabelElement(selectedRows[i]);
+
+		if (ariaLabelElement) {
+			var currentLabel = ariaLabelElement.getAttribute('aria-label');
+			if (!currentLabel.includes(selectedText)) {
+				ariaLabelElement.setAttribute('aria-label', currentLabel + selectedText);
+			}
+		}
+	}
+
+};
+
+DwtListView.getAriaLabelElement =
+function(currentElement) {
+	if (currentElement.getAttribute('aria-label')) {
+		return currentElement;
+	} 
+	var childEls = currentElement.querySelectorAll('*[aria-label]')
+	if (childEls.length) {
+		return childEls[childEls.length - 1];
+	}
+	return null;
 };
 
 DwtListView.prototype._focusByMouseDownEvent =
