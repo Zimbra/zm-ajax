@@ -47,6 +47,13 @@ DwtListView = function(params) {
 	params.className = params.className || "DwtListView";
 	DwtComposite.call(this, params);
 
+	if (this.tableView && params.headerList) {
+		this.column = [];
+		for (var i = 0, length = params.headerList.length; i < length; i++) {
+			this.column.push(params.headerList[i]._name);
+		}
+	}
+
 	this._view = params.view || Dwt.getNextId();
 	if (params.headerList) {
 		var htmlElement = this.getHtmlElement();
@@ -508,6 +515,55 @@ function(defaultColumnSort, noResultsOk) {
 	this.removeAll();
 	this.createHeaderHtml(defaultColumnSort);
 	this._renderList(this._list, noResultsOk);
+	this._createScreenReaderTable();
+};
+
+DwtListView.prototype._createScreenReaderTable =
+function() {
+	if (!this.tableView) {
+		return;
+	}
+
+	var div = this.getHtmlElement();
+	var table = div.querySelector('table.ScreenReaderOnly');
+	if (table) {
+		table.remove();
+	}
+	var newTable = document.createElement('table');
+	newTable.className = 'ScreenReaderOnly';
+	var header = '<thead class="ScreenReaderOnly"><tr>';
+	for (var i = 0, columnLength = this.column.length; i < columnLength; i++) {
+		header += '<th>' + this.column[i] + '</th>';
+	}
+	header += '</tr></thead>';
+
+	var body = '<tbody class="ScreenReaderOnly">';
+
+	// Get list of rows from table appear on UI.
+	var uiRows = div.querySelector('div.DwtListView-Rows').childNodes;
+
+	for (var j = 0, rowLength = uiRows.length; j < rowLength; j++) {
+		
+		var columnTds = uiRows[j].querySelectorAll('td');
+		if (columnTds && columnTds.length === this.column.length) {
+			body +='<tr>'; 
+			for (var k = 0, columnTdsLength = columnTds.length; k < columnTdsLength; k++) {
+				var cell = columnTds[k];
+				if (cell.firstChild && cell.firstChild.nodeName === 'INPUT' && cell.firstChild.type === 'checkbox') {
+					var status = cell.firstChild.checked ? ZmMsg.checked : ZmMsg.unChecked;
+					body += '<td>' + status + '</td>';
+				} else {
+					body +='<td>' + cell.innerText + '</td>';
+				}
+			}
+			body += '</tr>';
+		}
+	}
+	body +='</tbody>';
+
+	newTable.innerHTML = header + body;
+
+	div.appendChild(newTable);
 };
 
 DwtListView.prototype._renderList =
@@ -599,6 +655,8 @@ function(item, index, skipNotify, itemIndex) {
 	if (!skipNotify && this._evtMgr.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
 		this._evtMgr.notifyListeners(DwtEvent.STATE_CHANGE, this._stateChangeEv);
 	}
+
+	this._createScreenReaderTable();
 };
 
 /**
@@ -641,6 +699,8 @@ function(item, skipNotify, skipAlternation) {
 	if (!skipNotify && this._evtMgr.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
 		this._evtMgr.notifyListeners(DwtEvent.STATE_CHANGE, this._stateChangeEv);
 	}
+
+	this._createScreenReaderTable();
 };
 
 DwtListView.prototype.redrawItem =
