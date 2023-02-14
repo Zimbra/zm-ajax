@@ -923,7 +923,8 @@ function(which, preventFocus) {
 	while (currItem) {
 		if (!currItem.isStyle) { // this is not a DwtMenuItem
 			if (!preventFocus) {
-				currItem.focus();
+				// Delay on change focus such that NVDA tool announce a dropdown get expanded
+				setTimeout(function() {currItem.focus();}, 1);
 			}
 			break;
 		}
@@ -936,7 +937,8 @@ function(which, preventFocus) {
 
 	this.scrollToItem(currItem, true);
 	if (!preventFocus) {
-		currItem.focus();
+		// Delay on change focus such that NVDA tool announce a dropdown get expanded
+		setTimeout(function() {currItem.focus();}, 1);
 	}
 
 	if (this.parent && this.parent._menuItemSelected) {
@@ -1165,7 +1167,8 @@ function(x, y, kbGenerated) {
 	DwtMenu._activeMenus.add(this, null, true);
 
 	// Put our tabgroup in play
-	DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this._compositeTabGroup, this.__preventMenuFocus);
+	// Delay on change focus such that NVDA tool announce a dropdown get expanded
+	setTimeout(function() { DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this._compositeTabGroup, this.__preventMenuFocus); }, 1);
 
 	/* If the popup was keyboard generated, then pick the first enabled child
 	   item */
