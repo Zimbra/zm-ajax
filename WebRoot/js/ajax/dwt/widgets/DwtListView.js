@@ -531,7 +531,7 @@ function() {
 	}
 	var newTable = document.createElement('table');
 	newTable.className = 'ScreenReaderOnly';
-	var header = '<thead class="ScreenReaderOnly"><tr>';
+	var header = '<caption class="ScreenReaderOnly">'+ this.tableCaption +'</caption><thead class="ScreenReaderOnly"><tr>';
 	for (var i = 0, columnLength = this.column.length; i < columnLength; i++) {
 		header += '<th>' + this.column[i] + '</th>';
 	}
