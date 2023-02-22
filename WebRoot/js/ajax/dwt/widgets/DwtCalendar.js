@@ -952,7 +952,7 @@ function() {
 	// Construct the header row with the prev/next year and prev/next month
 	// icons as well as the month/year title cell
 	html[idx++] =	"<table role='presentation' width=100%>";
-	html[idx++] =		"<tr role='complementary' aria-label='"+ ZmMsg.miniCalendar +"'><td class='DwtCalendarTitlebar'>";
+	html[idx++] =		"<tr><td class='DwtCalendarTitlebar'>";
 	html[idx++] =			"<table role='presentation'>";
 	html[idx++] =				"<tr>";
 	html[idx++] =					"<td align='center' tabindex='0' class='";
@@ -1028,6 +1028,9 @@ function() {
 	html[idx++] = "</td></tr></table></table>";
 
 	this.getHtmlElement().innerHTML = html.join("");
+	this.getHtmlElement().setAttribute('role', 'complementary');
+	this.getHtmlElement().setAttribute('aria-label', ZmMsg.miniCalendar);
+
 	if (!this._readOnly) {
 		document.getElementById("b:py:img:" + this._uuid)._origClassName = AjxImg.getClassForImage("FastRevArrowSmall");
 		document.getElementById("b:pm:img:" + this._uuid)._origClassName = AjxImg.getClassForImage("RevArrowSmall");
