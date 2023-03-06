@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Web Client
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2023 Synacor, Inc.
  *
  * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,6 +162,7 @@ ZmCsfeException.SVC_RESOURCE_UNREACHABLE			= "service.RESOURCE_UNREACHABLE";
 ZmCsfeException.SVC_UNKNOWN_DOCUMENT				= "service.UNKNOWN_DOCUMENT";
 ZmCsfeException.SVC_TEMPORARILY_UNAVAILABLE			= "service.TEMPORARILY_UNAVAILABLE";
 ZmCsfeException.SVC_WRONG_HOST						= "service.WRONG_HOST";
+ZmCsfeException.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION		= "service.SIEVE_SCRIPT_MAX_SIZE_EXCEPTION";
 
 ZmCsfeException.ACCT_AUTH_FAILED					= "account.AUTH_FAILED";
 ZmCsfeException.ACCT_CHANGE_PASSWORD				= "account.CHANGE_PASSWORD";
