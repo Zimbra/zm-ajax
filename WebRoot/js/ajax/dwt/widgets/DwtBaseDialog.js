@@ -116,6 +116,7 @@ DwtBaseDialog.prototype.toString = function() { return "DwtBaseDialog"; };
 DwtBaseDialog.prototype.isDwtBaseDialog = true;
 
 DwtBaseDialog.prototype.role = 'dialog';
+DwtBaseDialog.prototype.ariaModal = 'true';
 DwtBaseDialog.prototype.isFocusable = true;
 
 

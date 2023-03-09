@@ -62,6 +62,7 @@ DwtPropertyEditor.prototype._init = function() {
 	div.id = this._relDivId = Dwt.getNextId();
 	div.style.position = "relative";
 	var table = document.createElement("table");
+	table.setAttribute('role', 'presentation');
 	table.id = this._tableId = Dwt.getNextId();
 	table.cellSpacing = table.cellPadding = 0;
 	table.appendChild(document.createElement("tbody"));
@@ -411,6 +412,7 @@ DwtPropertyEditor.prototype._createCheckBoxGroup = function(prop, target) {
 	div.appendChild(document.createTextNode(prop.value));
 	
 	var table = document.createElement("table");
+	table.setAttribute('role', 'presentation');
 	table.id = Dwt.getNextId();
 	table.border=0;
 	table.cellSpacing = table.cellPadding = 0;

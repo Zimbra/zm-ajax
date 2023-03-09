@@ -284,7 +284,10 @@ DwtLabel.prototype.setText = function(text) {
         this._textEl.innerHTML = text;
     }
 
-	this._textSet(text);
+	// Do not set combobox selected value as aria-label
+	if (!(this instanceof DwtSelect)) {
+		this.setAriaLabel(text);
+	}
 };
 
 /**
@@ -411,7 +414,7 @@ function(imageInfo, direction, altText) {
 };
 
 // Accessibility
-DwtLabel.prototype._textSet = function(text) {
+DwtLabel.prototype.setAriaLabel = function(text) {
 
 	// assign the ARIA label directly; we want it to override the tooltip, if any
 	if (!this.hasAttribute('aria-labelledby')) {

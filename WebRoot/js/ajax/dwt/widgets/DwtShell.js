@@ -113,7 +113,7 @@ DwtShell = function(params) {
 	this._veilOverlay.veilZ.push(Dwt.Z_HIDDEN);
 	this._veilOverlay.dialogZ = new Array();
 	this._veilOverlay.activeDialogs = new Array();
-	this._veilOverlay.innerHTML = "<table cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
+	this._veilOverlay.innerHTML = "<table role='presentation' cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
 	htmlElement.appendChild(this._veilOverlay);
 	Dwt.setBounds(this._veilOverlay, 0, 0, "100%", "100%");
 	Dwt.setZIndex(this._veilOverlay, Dwt.Z_HIDDEN);
@@ -123,7 +123,7 @@ DwtShell = function(params) {
 		this._curtainOverlay = document.createElement("div");
 		this._curtainOverlay.className = "CurtainOverlay";
 		this._curtainOverlay.style.position = "absolute";
-		this._curtainOverlay.innerHTML = "<table cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
+		this._curtainOverlay.innerHTML = "<table role='presentation' cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
 		htmlElement.appendChild(this._curtainOverlay);
 		Dwt.setBounds(this._curtainOverlay, 0, 0, "100%", "100%")
 		Dwt.setZIndex(this._curtainOverlay, Dwt.Z_CURTAIN);
@@ -438,7 +438,7 @@ function(htmlElement) {
     this._busyOverlay = document.createElement("div");
     this._busyOverlay.className = "BusyOverlay";
     this._busyOverlay.style.position = "absolute";
-    this._busyOverlay.innerHTML = "<table cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
+    this._busyOverlay.innerHTML = "<table role='presentation' cellspacing=0 cellpadding=0 style='width:100%; height:100%'><tr><td>&nbsp;</td></tr></table>";
     htmlElement.appendChild(this._busyOverlay);
 	Dwt.setBounds(this._busyOverlay, 0, 0, "100%", "100%")
 	Dwt.setZIndex(this._busyOverlay, Dwt.Z_VEIL);
