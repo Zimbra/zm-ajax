@@ -700,6 +700,9 @@ function() {
 				dayCell._dayType = DwtCalendar._NEXT_MONTH;
 			}
 			this._setClassName(dayCell, DwtCalendar._NORMAL);
+
+			dayCell.setAttribute('role', 'cell');
+			dayCell.setAttribute('aria-label', dayCell.innerText);
 		}
 
 		if (this._showWeekNumber) {
@@ -955,14 +958,14 @@ function() {
 	html[idx++] =		"<tr><td class='DwtCalendarTitlebar'>";
 	html[idx++] =			"<table role='presentation'>";
 	html[idx++] =				"<tr>";
-	html[idx++] =					"<td align='center' tabindex='0' class='";
+	html[idx++] =					"<td align='center' tabindex='0' role='cell' aria-label='" + ZmMsg.previousYear + "' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:py:";
 	html[idx++] =						this._uuid;
 	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FastRevArrowSmall", null, ["id='b:py:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td align='center' tabindex='0' class='";
+	html[idx++] =					"<td align='center' tabindex='0' role='cell' aria-label='" + ZmMsg.previousMonth + "' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:pm:";
 	html[idx++] =						this._uuid;
@@ -974,14 +977,14 @@ function() {
 	html[idx++] = 						"' id='";
 	html[idx++] =						this._monthCell;
 	html[idx++] =					"'></span></td>";
-	html[idx++] =					"<td align='center' tabindex='0' class='";
+	html[idx++] =					"<td align='center' tabindex='0' role='cell' aria-label='" + ZmMsg.nextMonth + "' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:nm:";
 	html[idx++] =						this._uuid;
 	html[idx++] =						"'>";
 	html[idx++] =						AjxImg.getImageHtml("FwdArrowSmall", null, ["id='b:nm:img:", this._uuid, "'"].join(""));
 	html[idx++] =					"</td>";
-	html[idx++] =					"<td align='center' tabindex='0' class='";
+	html[idx++] =					"<td align='center' tabindex='0' role='cell' aria-label='" + ZmMsg.nextYear + "' class='";
 	html[idx++] =						DwtCalendar._BUTTON_CLASS;
 	html[idx++] =						"' id='b:ny:";
 	html[idx++] =						this._uuid;
