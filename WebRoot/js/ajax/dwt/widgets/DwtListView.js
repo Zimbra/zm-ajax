@@ -704,7 +704,7 @@ function(item, skipNotify, skipAlternation) {
 };
 
 DwtListView.prototype.redrawItem =
-function(item) {
+function(item, restoreState) {
     var odiv = this._getElFromItem(item);
     if (odiv) {
 		var className = odiv.className;
@@ -714,7 +714,11 @@ function(item) {
 		// preserve selection
 		if (this._selectedItems.contains(odiv)) {
 			this._selectedItems.remove(odiv);
-			this.selectItem(item);
+			if (restoreState) {
+				this.setMultiSelection(ndiv, false);
+			} else {
+				this.selectItem(item);
+			}
 		}
 
         //update the _kbAnchor as the old element has been swapped with the new element
