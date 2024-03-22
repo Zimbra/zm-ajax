@@ -20,5 +20,6 @@
 	<dependency org="zimbra" name="zm-client" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-store" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-taglib" rev="latest.integration" />
+       <dependency org="javax.xml.bind" name="jaxb-api" rev="2.3.0"/>
 </dependencies>
 </ivy-module>
