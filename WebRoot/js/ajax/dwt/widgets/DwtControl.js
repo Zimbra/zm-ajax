@@ -3052,10 +3052,6 @@ function(ev) {
 		return;
 	}
 
-	if (obj.hasAttribute('aria-haspopup')) {
-		obj.setAttribute('aria-expanded', !(obj.getAttribute('aria-expanded') === 'true'));
-	}
-
 	try {
 
 	return DwtControl.__mouseEvent(ev, DwtEvent.ONCLICK);
@@ -3609,13 +3605,16 @@ function(ev, eventType, obj, mouseEv) {
 
 	// By default, we halt event processing. The default can be overridden here through
 	// the use of setEventPropagation(). A listener may also change the event props when called.
-	var tn = mouseEv.target.tagName && mouseEv.target.tagName.toLowerCase();
-	var propagate = obj._propagateEvent[eventType] || (tn === "input" || tn === "textarea" || tn === "a" || tn === "label" || tn === "select");
+	var target = mouseEv.target;
+	var tn = target.tagName;
+	var parentTn = target.parentElement && target.parentElement.tagName;
+	var containerTags = ["A", "LABEL"];
+	var propagate = obj._propagateEvent[eventType] || (tn === "INPUT" || tn === "TEXTAREA" || tn === "SELECT" || containerTags.includes(tn));
 	//todo - not sure if _stopPropagation and _dontCallPreventDefault should not the the SAME. Since if you stop propagation and dontCallPreventDefault,
 	//it DOES allow selection (or context menu, etc, any default browser stuff). But if you allow to propagate, this might be overriden by a DOM element
 	//higher up, which might not be what we want. Very confusing.
 	mouseEv._stopPropagation = !propagate;
-	mouseEv._dontCallPreventDefault = propagate;
+	mouseEv._dontCallPreventDefault = containerTags.includes(parentTn) || propagate;
 	mouseEv._returnValue = propagate;
 
 	// notify global listeners

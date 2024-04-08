@@ -47,6 +47,13 @@ DwtListView = function(params) {
 	params.className = params.className || "DwtListView";
 	DwtComposite.call(this, params);
 
+	if (this.tableView && params.headerList) {
+		this.column = [];
+		for (var i = 0, length = params.headerList.length; i < length; i++) {
+			this.column.push(params.headerList[i]._name);
+		}
+	}
+
 	this._view = params.view || Dwt.getNextId();
 	if (params.headerList) {
 		var htmlElement = this.getHtmlElement();
@@ -117,6 +124,7 @@ DwtListView = function(params) {
 			ul.className = "DwtListView-Rows";
 			this._parentEl.appendChild(ul);
 			this._parentEl = ul;
+			this._listDiv = ul;
 		}
 	}
     this._parentEl.tabIndex = 0;
@@ -236,6 +244,7 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 
 	this._headerHash = {};
 	this._headerIdHash = {};
+	this._headerItemsId = [];
 
 	var idx = 0;
 	var htmlArr = [];
@@ -252,6 +261,13 @@ function(defaultColumnSort, isColumnHeaderTableFixed) {
 		var field = headerCol._field;
 		headerCol._index = i;
 		var id = headerCol._id = DwtId.getListViewHdrId(DwtId.WIDGET_HDR, this._view, field);
+
+		if (headerCol._iconInfo) {
+			this._headerItemsId[i] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, headerCol._field);
+		}
+		if (headerCol._label) {
+			this._headerItemsId[i] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, headerCol._field);
+		}
 
 		this._headerHash[field] = headerCol;
 		this._headerIdHash[id] = headerCol;
@@ -325,7 +341,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
     tmpClass += headerCol._sortable ? "" : " DwtDefaultCursor";
     htmlArr[idx++] = tmpClass + "'";
 	if (headerCol._width) {
-		htmlArr[idx++] = " width=";
+		htmlArr[idx++] = " tabindex='0' width=";
 		htmlArr[idx++] = headerCol._width;
 		if (headerCol._cssClass && headerCol._resizeable && headerCol._width !== 'auto') {
 			this._createHeaderCssStyle(headerCol, headerCol._width);
@@ -353,7 +369,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 		}
 	}
 	if (!!headerColWidth) {
-		htmlArr[idx++] = " style='overflow: hidden; width: ";
+		htmlArr[idx++] = " style='width: ";
 		htmlArr[idx++] = headerColWidth;
 		htmlArr[idx++] = "'>";
 	} else {
@@ -363,7 +379,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	// add new table for icon/label/sorting arrow
 	htmlArr[idx++] = "<table role='presentation' width=100%><tr>";
 	if (headerCol._iconInfo) {
-		var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "'"].join("");
+		var idText = ["id='", DwtId.getListViewHdrId(DwtId.WIDGET_HDR_ICON, this._view, field), "' tabindex='0'"].join("");
 		htmlArr[idx++] = "<td><center>";
 		htmlArr[idx++] = AjxImg.getImageHtml(headerCol._iconInfo, null, idText);
 		htmlArr[idx++] = "</center></td>";
@@ -372,7 +388,7 @@ function(htmlArr, idx, headerCol, i, numCols, id, defaultColumnSort) {
 	if (headerCol._label) {
 		htmlArr[idx++] = "<td id='";
 		htmlArr[idx++] = DwtId.getListViewHdrId(DwtId.WIDGET_HDR_LABEL, this._view, field);
-		htmlArr[idx++] = "' class='DwtListHeaderItem-label' style='padding-right:6px; padding-left:6px'>";
+		htmlArr[idx++] = "' class='DwtListHeaderItem-label' tabindex='0' style='padding-right:6px; padding-left:6px'>";
 		htmlArr[idx++] = headerCol._label;
 		htmlArr[idx++] = "</td>";
 	}
@@ -499,6 +515,55 @@ function(defaultColumnSort, noResultsOk) {
 	this.removeAll();
 	this.createHeaderHtml(defaultColumnSort);
 	this._renderList(this._list, noResultsOk);
+	this._createScreenReaderTable();
+};
+
+DwtListView.prototype._createScreenReaderTable =
+function() {
+	if (!this.tableView) {
+		return;
+	}
+
+	var div = this.getHtmlElement();
+	var table = div.querySelector('table.ScreenReaderOnly');
+	if (table) {
+		table.remove();
+	}
+	var newTable = document.createElement('table');
+	newTable.className = 'ScreenReaderOnly';
+	var header = '<caption class="ScreenReaderOnly">'+ this.tableCaption +'</caption><thead class="ScreenReaderOnly"><tr>';
+	for (var i = 0, columnLength = this.column.length; i < columnLength; i++) {
+		header += '<th>' + this.column[i] + '</th>';
+	}
+	header += '</tr></thead>';
+
+	var body = '<tbody class="ScreenReaderOnly">';
+
+	// Get list of rows from table appear on UI.
+	var uiRows = div.querySelector('div.DwtListView-Rows').childNodes;
+
+	for (var j = 0, rowLength = uiRows.length; j < rowLength; j++) {
+		
+		var columnTds = uiRows[j].querySelectorAll('td');
+		if (columnTds && columnTds.length === this.column.length) {
+			body +='<tr>'; 
+			for (var k = 0, columnTdsLength = columnTds.length; k < columnTdsLength; k++) {
+				var cell = columnTds[k];
+				if (cell.firstChild && cell.firstChild.nodeName === 'INPUT' && cell.firstChild.type === 'checkbox') {
+					var status = cell.firstChild.checked ? ZmMsg.checked : ZmMsg.unChecked;
+					body += '<td>' + status + '</td>';
+				} else {
+					body +='<td>' + cell.innerText + '</td>';
+				}
+			}
+			body += '</tr>';
+		}
+	}
+	body +='</tbody>';
+
+	newTable.innerHTML = header + body;
+
+	div.appendChild(newTable);
 };
 
 DwtListView.prototype._renderList =
@@ -590,6 +655,8 @@ function(item, index, skipNotify, itemIndex) {
 	if (!skipNotify && this._evtMgr.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
 		this._evtMgr.notifyListeners(DwtEvent.STATE_CHANGE, this._stateChangeEv);
 	}
+
+	this._createScreenReaderTable();
 };
 
 /**
@@ -632,10 +699,12 @@ function(item, skipNotify, skipAlternation) {
 	if (!skipNotify && this._evtMgr.isListenerRegistered(DwtEvent.STATE_CHANGE)) {
 		this._evtMgr.notifyListeners(DwtEvent.STATE_CHANGE, this._stateChangeEv);
 	}
+
+	this._createScreenReaderTable();
 };
 
 DwtListView.prototype.redrawItem =
-function(item) {
+function(item, restoreState) {
     var odiv = this._getElFromItem(item);
     if (odiv) {
 		var className = odiv.className;
@@ -645,7 +714,11 @@ function(item) {
 		// preserve selection
 		if (this._selectedItems.contains(odiv)) {
 			this._selectedItems.remove(odiv);
-			this.selectItem(item);
+			if (restoreState) {
+				this.setMultiSelection(ndiv, false);
+			} else {
+				this.selectItem(item);
+			}
 		}
 
         //update the _kbAnchor as the old element has been swapped with the new element
@@ -757,7 +830,8 @@ function() {
 		var sz = this._selectedItems.size();
 		for (var i = 0; i < sz; i++) {
 	        Dwt.delClass(a[i], this._styleRe);
-	        a[i].removeAttribute('aria-selected');
+			a[i].setAttribute('aria-selected', false);
+			this._updateAriaLabel(a[i]);
 	    }
 	    this._selectedItems.removeAll();
 		this._rightSelItem = this._selAnchor = null;
@@ -853,11 +927,19 @@ function(item, skipNotify, forceSelection) {
 	}
 };
 
+DwtListView.prototype._updateAriaLabel =
+function(element) {
+	if (this._updateLabelForItem) {
+		var item = element.tagName ? this.getItemFromElement(element) : element;
+		this._updateLabelForItem(item);
+	}
+};
+
 DwtListView.prototype.setMultiSelection =
 function(clickedEl, bContained, ev) {
 	if (bContained) {
 		this._selectedItems.remove(clickedEl);
-		clickedEl.removeAttribute('aria-selected');
+		clickedEl.setAttribute('aria-selected', false);
 		Dwt.delClass(clickedEl, this._styleRe);		// , this._normalClass	MOW
 		this._selEv.detail = DwtListView.ITEM_DESELECTED;
 	} else {
@@ -877,6 +959,7 @@ function(clickedEl, bContained, ev) {
 	this._setKbFocusElement(clickedEl);
 	this._selAnchor = clickedEl;
 	Dwt.addClass(this._kbAnchor, this._kbFocusClass);
+	this._updateAriaLabel(clickedEl);
 };
 
 DwtListView.prototype.setSelectedItems =
@@ -904,7 +987,6 @@ function(item, selected) {
 			el.focus();
 		}
 		this._selectedItems.add(el);
-		el.setAttribute('aria-selected', true);
 	}
 };
 
@@ -1289,6 +1371,8 @@ function(row, index) {
 	this._fixAlternation((index != null) ? index : len);
 
 	row.setAttribute('role', this.itemRole);
+	row.setAttribute('aria-selected', false);
+	this._updateAriaLabel(row);
 };
 
 // Placeholder function for any post-add processing
@@ -2204,7 +2288,6 @@ function(itemDiv, ev) {
 
 		// save new left click selection
 		this._selectedItems.add(itemDiv);
-		itemDiv.setAttribute('aria-selected', true);
 
 		this._setKbFocusElement(itemDiv);
 		this._selAnchor = itemDiv;
@@ -2291,10 +2374,12 @@ function(clickedEl, ev) {
 					this._selectedItems.add(el);
 					el.setAttribute('aria-selected', true);
 					Dwt.delClass(el, this._styleRe, selStyleClass);
+					this._updateAriaLabel(el);
 				}
 				else if (el.className.indexOf(selStyleClass) !== -1) {
 					Dwt.delClass(el, this._styleRe);		// , this._normalClass	MOW
-					el.removeAttribute('aria-selected');
+					el.setAttribute('aria-selected', false);
+					this._updateAriaLabel(el);
 				}
 			}
 
@@ -2324,6 +2409,47 @@ function(clickedEl, ev) {
 			this._evtMgr.notifyListeners(DwtEvent.ACTION, this._actionEv);
 		}
 	}
+
+	var selectedText = '; ' + ZmMsg.selected;
+	var allRows = this.getHtmlElement().querySelectorAll('*[class*="Row"]');
+	for (var i = 0; i < allRows.length; i++) {
+		allRows[i].setAttribute('aria-selected', 'false');
+
+		var ariaLabelElement = DwtListView.getAriaLabelElement(allRows[i]);
+
+		if (ariaLabelElement) {
+			var currentLabel = ariaLabelElement.getAttribute('aria-label');
+			if (currentLabel.includes(selectedText)) {
+				ariaLabelElement.setAttribute('aria-label', currentLabel.replace(selectedText, ''));
+			}
+		}
+	}
+
+	var selectedRows = this.getHtmlElement().querySelectorAll('*[class*="Row-selected"]');
+	for (var i = 0; i < selectedRows.length; i++) {
+		selectedRows[i].setAttribute('aria-selected', 'true');
+		var ariaLabelElement = DwtListView.getAriaLabelElement(selectedRows[i]);
+
+		if (ariaLabelElement) {
+			var currentLabel = ariaLabelElement.getAttribute('aria-label');
+			if (!currentLabel.includes(selectedText)) {
+				ariaLabelElement.setAttribute('aria-label', currentLabel + selectedText);
+			}
+		}
+	}
+
+};
+
+DwtListView.getAriaLabelElement =
+function(currentElement) {
+	if (currentElement.getAttribute('aria-label')) {
+		return currentElement;
+	} 
+	var childEls = currentElement.querySelectorAll('*[aria-label]')
+	if (childEls.length) {
+		return childEls[childEls.length - 1];
+	}
+	return null;
 };
 
 DwtListView.prototype._focusByMouseDownEvent =

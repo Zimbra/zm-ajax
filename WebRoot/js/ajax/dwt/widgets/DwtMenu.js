@@ -794,8 +794,9 @@ DwtMenu.prototype.handleKeyAction = function(actionCode, ev) {
 	switch (this._style) {
 		case DwtMenu.BAR_STYLE:
 		case DwtMenu.POPUP_STYLE:
-        case DwtMenu.DROPDOWN_STYLE:
-        case DwtMenu.DROPDOWN_CENTERV_STYLE:
+		case DwtMenu.DROPDOWN_STYLE:
+		case DwtMenu.DROPDOWN_CENTERV_STYLE:
+		case DwtMenu.GENERIC_WIDGET_STYLE:
 			break;
 			
 		default:
@@ -922,7 +923,8 @@ function(which, preventFocus) {
 	while (currItem) {
 		if (!currItem.isStyle) { // this is not a DwtMenuItem
 			if (!preventFocus) {
-				currItem.focus();
+				// Delay on change focus such that NVDA tool announce a dropdown get expanded
+				setTimeout(function(item) {item.focus();}, 1, currItem);
 			}
 			break;
 		}
@@ -935,7 +937,8 @@ function(which, preventFocus) {
 
 	this.scrollToItem(currItem, true);
 	if (!preventFocus) {
-		currItem.focus();
+		// Delay on change focus such that NVDA tool announce a dropdown get expanded
+		setTimeout(function(item) {item.focus();}, 1, currItem);
 	}
 
 	if (this.parent && this.parent._menuItemSelected) {
@@ -1164,7 +1167,9 @@ function(x, y, kbGenerated) {
 	DwtMenu._activeMenus.add(this, null, true);
 
 	// Put our tabgroup in play
-	DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(this._compositeTabGroup, this.__preventMenuFocus);
+	// Delay on change focus such that NVDA tool announce a dropdown get expanded
+	setTimeout(function(tabGroup, preventMenuFocus) {
+		DwtShell.getShell(window).getKeyboardMgr().pushTabGroup(tabGroup, preventMenuFocus); }, 1, this._compositeTabGroup, this.__preventMenuFocus);
 
 	/* If the popup was keyboard generated, then pick the first enabled child
 	   item */

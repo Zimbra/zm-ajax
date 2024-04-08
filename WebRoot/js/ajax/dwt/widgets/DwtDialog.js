@@ -62,6 +62,8 @@ DwtDialog = function(params) {
 	params.className = params.className || "DwtDialog";
 	this._title = params.title = params.title || "";
 
+	window.appCtxt && appCtxt.notifyZimlets("onDwtDialog", [this, params]);
+
 	// standard buttons default to OK / Cancel
 	var standardButtons = params.standardButtons;
 	var extraButtons = params.extraButtons;
@@ -534,6 +536,13 @@ function(html, idx) {
 		}
 		html[idx++] = this._getButtonsContainerStartTemplate();
 		
+		var result = { handled: false, value: null };
+		window.appCtxt && appCtxt.notifyZimlets("onDwtDialog_addButtonsHtml", [this, html, idx, result]);
+		if (result.handled) {
+			html = result.value.html;
+			idx = result.value.idx;
+		}
+
 		if (leftButtons.length) {
 			html[idx++] = AjxMessageFormat.format(
 								  this._getButtonsAlignStartTemplate(),

@@ -198,6 +198,14 @@ function(checked, force) {
 	}
 };
 
+DwtTreeItem._handleKeyPress =
+function(event) {
+	var keyCode = DwtKeyEvent.getCharCode(event);
+	if (keyCode === DwtKeyEvent.KEY_SPACE) {
+		this._handleCheckboxOnclick(event);
+	}
+}
+
 DwtTreeItem.prototype._handleCheckboxOnclick =
 function(ev) {
 	this.setChecked(!Dwt.getVisible(this._checkedImg));
@@ -283,7 +291,15 @@ function(item) {
  */
 DwtTreeItem.prototype.getNestingLevel =
 function() {
-	return this.parent.getNestingLevel() + 1;
+	var nestingLevelCheck;
+	// the toplevel tree is zero, we can have only one level(1) heading in the page which is already defined in the banner,so initializing the toplevel with level2 for all nested folders
+	if (this.parent.getNestingLevel() == 0) {
+		nestingLevelCheck = this.parent.getNestingLevel() + 2;
+	}
+	else {
+		nestingLevelCheck = this.parent.getNestingLevel() + 1;
+	}
+	return (nestingLevelCheck > 6 ? 6 : nestingLevelCheck);
 };
 
 /**
@@ -635,6 +651,7 @@ function(index, realizeDeferred, forceNode) {
 
 	// initialize checkbox
 	if (this._tree.isCheckedStyle && this._checkBox) {
+		Dwt.setHandler(this.getHtmlElement(), DwtEvent.ONKEYUP, DwtTreeItem._handleKeyPress.bind(this));
 		this._checkBox.onclick = AjxCallback.simpleClosure(this._handleCheckboxOnclick, this);
 		this.showCheckBox(this._checkBoxVisible);
 		this.setChecked(this._tree.isCheckedByDefault, true);
