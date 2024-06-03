@@ -2484,3 +2484,13 @@ AjxStringUtil.defangHtmlContent = function(html) {
 	return content;
 };
 
+
+AjxStringUtil.getRandomString = function(length) {
+	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghijklmnopqrstuvwxyz";
+	var randomString = '';
+	for (var i = 0; i < length; i++) {
+		var rnum = Math.floor(Math.random() * chars.length);
+		randomString += chars.substring(rnum, rnum + 1);
+	}
+	return randomString;
+};
