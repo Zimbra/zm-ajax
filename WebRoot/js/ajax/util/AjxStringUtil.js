@@ -44,9 +44,6 @@ AjxStringUtil.CRLF2 = "\r\n\r\n";
 AjxStringUtil.CRLF_HTML = "<br>";
 AjxStringUtil.CRLF2_HTML = "<div><br></div><div><br></div>";
 
-//Regex for image tag having src starting with cid:
-AjxStringUtil.IMG_SRC_CID_REGEX = /<img([^>]*)\ssrc=["']cid:/gi;
-
 AjxStringUtil.makeString =
 function(val) {
 	return val ? String(val) : "";
@@ -1755,8 +1752,7 @@ function(html) {
 	}
 
 	var idoc = Dwt.getIframeDoc(iframe);
-
-    html = html && html.replace(AjxStringUtil.IMG_SRC_CID_REGEX, '<img $1 pnsrc="cid:');
+	html = AjxStringUtil.updateHtmlForIframe(html);
 	idoc.open();
 	idoc.write(html);
 	idoc.close();
@@ -1774,6 +1770,36 @@ function() {
 		}
 		AjxStringUtil.__curIframeId = null;
 	}
+};
+
+// Update some elements before creating iframe doc
+AjxStringUtil.updateHtmlForIframe =
+function(html) {
+	if (html) {
+		var testDoc = new DOMParser().parseFromString(html, "text/html");
+		var styleElements = testDoc.getElementsByTagName('style');
+		if (styleElements) {
+			for (var i = 0; i < styleElements.length; i++) {
+				if (styleElements[i].innerHTML && styleElements[i].innerHTML.replace) {
+					styleElements[i].innerHTML = styleElements[i].innerHTML.replace(/@import.*?(;|$)/gi, "");
+				}
+			}
+		}
+
+		var imgElements = testDoc.getElementsByTagName('img');
+		if (imgElements) {
+			for (i = 0; i < imgElements.length; i++) {
+				var srcAttr = imgElements[i].getAttribute('src');
+				if (srcAttr && srcAttr.toLowerCase().startsWith("cid:")) {
+					imgElements[i].setAttribute('pnsrc', srcAttr);
+					imgElements[i].removeAttribute('src');
+				}
+			}
+		}
+
+		html = testDoc.body.innerHTML;
+	}
+	return html;
 };
 
 /**
