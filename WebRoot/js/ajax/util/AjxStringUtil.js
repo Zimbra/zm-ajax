@@ -1780,7 +1780,7 @@ function(html) {
 		var styleElements = testDoc.getElementsByTagName('style');
 		if (styleElements) {
 			for (var i = 0; i < styleElements.length; i++) {
-				if (styleElements[i].innerHTML && styleElements[i].innerHTML.replace) {
+				if (styleElements[i].innerHTML) {
 					styleElements[i].innerHTML = styleElements[i].innerHTML.replace(/@import.*?(;|$)/gi, "");
 				}
 			}
