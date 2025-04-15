@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -484,7 +485,7 @@ public class SkinResources
 							String cacheId, Map<String, String> macros,
 							String type, String client, Locale requestedLocale,
 							String templatesParam, String cacheBusterVersion)
-			throws IOException {
+            throws IOException, ServletException {
 		String commentStart = "/* ";
 		String commentContinue = " * ";
 		String commentEnd = " */";
@@ -594,9 +595,21 @@ public class SkinResources
 		Manifest manifest = new Manifest(manifestFile, macros, client, substOverrides, requestedLocale);
 
 		// process input files
-		StringTokenizer tokenizer = new StringTokenizer(filenames, ",");
-		while (tokenizer.hasMoreTokens()) {
-			String filename = tokenizer.nextToken();
+		String[] tokenizer = Arrays.stream(filenames.split(","))
+				.map(String::trim)
+				.toArray(String[]::new);
+
+		// restrict request when URI has more than ajax_uri_max_assets_requests_allowed comma separated parameters
+		if (tokenizer.length > LC.ajax_uri_max_assets_requests_allowed.intValue()) {
+			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URI format");
+			throw new ServletException("Invalid URI format");
+		}
+
+		// filenames are case sensitive , deduplication will not work for images and IMage.
+		// these 2 will be considered as 2 different filenames. As File.exists() is case sensitive.
+		Set<String> uniqueFileNames = new HashSet<>(Arrays.asList(tokenizer));
+
+		for (String filename : uniqueFileNames) {
 			if (ZimbraLog.webclient.isDebugEnabled()) ZimbraLog.webclient.debug("DEBUG: filename " + filename);
 			String filenameExt = filename + ext;
 
@@ -674,10 +687,7 @@ public class SkinResources
 
 			for (File file : files) {
 				if (!file.exists()) {
-					out.print(commentStart);
-					out.print("Error: file doesn't exist - " + URLEncoder.encode(file.getAbsolutePath().replaceAll("^.*/webapps/", ""), "UTF-8"));
-					out.println(commentEnd);
-					out.println();
+					ZimbraLog.webclient.debug("Error: file doesn't exist - " + URLEncoder.encode(file.getAbsolutePath().replaceAll("^.*/webapps/", ""), "UTF-8"));
 					continue;
 				}
 				if (ZimbraLog.webclient.isDebugEnabled())
