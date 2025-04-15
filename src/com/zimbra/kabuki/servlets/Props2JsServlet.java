@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
@@ -161,7 +163,7 @@ public class Props2JsServlet extends HttpServlet {
         byte[] buffer = debug ? null : localeBuffers.get(uri);
 
         if (buffer == null) {
-            buffer = getBuffer(req, locale, uri);
+            buffer = getBuffer(req, locale, uri, resp);
             // do not need to compress JS because Prop2Js has been optimized
             if (uri.endsWith(COMPRESSED_EXT)) {
                 // gzip response
@@ -271,7 +273,7 @@ public class Props2JsServlet extends HttpServlet {
     }
 
     protected byte[] getBuffer(HttpServletRequest req,
-        Locale locale, String uri) throws IOException {
+        Locale locale, String uri, HttpServletResponse resp) throws IOException, ServletException {
         BufferStream bos = new BufferStream(24 * 1024);
         DataOutputStream out = new DataOutputStream(bos);
         out.writeBytes("// Locale: " + Props2Js.getCommentSafeString(locale.toString()) + '\n');
@@ -309,7 +311,9 @@ public class Props2JsServlet extends HttpServlet {
         String dirname = this.getDirPath("");
         String filenames = uri.substring(uri.lastIndexOf('/') + 1);
         String classnames = filenames.substring(0, filenames.indexOf('.'));
-        StringTokenizer tokenizer = new StringTokenizer(classnames, ",");
+        String[] tokenizer = Arrays.stream(classnames.split(","))
+                .map(String::trim)
+                .toArray(String[]::new);
 
         if (isDebugEnabled()) {
             for (List<String> basenames : basenamePatterns) {
@@ -317,8 +321,18 @@ public class Props2JsServlet extends HttpServlet {
             }
             debug("!!! basedir:   "+basedir);
         }
-        while (tokenizer.hasMoreTokens()) {
-            String classname = tokenizer.nextToken();
+
+        // restrict request when URI has more than ajax_uri_max_assets_requests_allowed comma separated parameters
+        if (tokenizer.length > LC.ajax_uri_max_assets_requests_allowed.intValue()) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URI format");
+            throw new ServletException("Invalid URI format");
+        }
+
+        // filenames are case-sensitive , deduplication will not work for images and IMage.
+        // these 2 will be considered as 2 different filenames. As File.exists() is case-sensitive.
+        Set<String> uniqueClassNames = new HashSet<>(Arrays.asList(tokenizer));
+
+        for (String classname : uniqueClassNames) {
             if (isDebugEnabled()) {
                 debug("!!! classname: "+classname);
             }
@@ -332,7 +346,7 @@ public class Props2JsServlet extends HttpServlet {
         String basedir, String dirname, String classname) throws IOException {
         String basename = basedir + classname;
 
-        out.writeBytes("// Basename: " + Props2Js.getCommentSafeString(basename) + '\n');
+        ZimbraLog.webclient.debug("// Basename: " + Props2Js.getCommentSafeString(basename) + '\n');
         for (List<String> basenames : basenamePatterns) {
             try {
                 ClassLoader parentLoader = this.getClass().getClassLoader();
@@ -361,9 +375,9 @@ public class Props2JsServlet extends HttpServlet {
                     Props2Js.convert(out, file, classname);
                 }
             } catch (MissingResourceException e) {
-                out.writeBytes("// properties for " + classname + " not found\n");
+                ZimbraLog.webclient.debug("// properties for " + classname + " not found\n");
             } catch (IOException e) {
-                out.writeBytes("// properties error for " + classname +
+                ZimbraLog.webclient.debug("// properties error for " + classname +
                     " - see server log\n");
                 error(e.getMessage());
             }
