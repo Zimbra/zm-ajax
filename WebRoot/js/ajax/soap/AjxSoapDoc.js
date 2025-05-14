@@ -58,7 +58,7 @@ function(method, namespace, namespaceId, soapURI) {
 		soapURI = AjxSoapDoc._SOAP_URI;
 	sd._soapURI = soapURI;
 
-	var useNS = d.createElementNS && !AjxEnv.isSafari;
+	var useNS = d.createElementNS;
 	var envEl = useNS ?  d.createElementNS(soapURI, "soap:Envelope") : d.createElement("soap:Envelope");
 	if (!useNS) envEl.setAttribute("xmlns:soap", soapURI);
 
@@ -169,7 +169,7 @@ AjxSoapDoc.prototype.set =
 function(name, value, parent, namespace) {
 	var	doc = this.getDoc();
 
-	var useNS = doc.createElementNS && !AjxEnv.isSafari;
+	var useNS = doc.createElementNS;
 
 	var	p = name
 		? (namespace && useNS ? doc.createElementNS(namespace, name) : doc.createElement(name))
@@ -226,7 +226,7 @@ function() {
 	if (header != null) {
 		throw new AjxSoapException("SOAP header already exists", AjxSoapException.ELEMENT_EXISTS, "AjxSoapDoc.prototype.createHeaderElement");
 	}
-	var useNS = d.createElementNS && !AjxEnv.isSafari;
+	var useNS = d.createElementNS;
 	header = useNS ? d.createElementNS(this._soapURI, "soap:Header") : d.createElement("soap:Header")
 	envEl.insertBefore(header, envEl.firstChild);
 	return header;
