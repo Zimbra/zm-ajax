@@ -31,16 +31,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletException;
@@ -311,9 +312,7 @@ public class Props2JsServlet extends HttpServlet {
         String dirname = this.getDirPath("");
         String filenames = uri.substring(uri.lastIndexOf('/') + 1);
         String classnames = filenames.substring(0, filenames.indexOf('.'));
-        String[] tokenizer = Arrays.stream(classnames.split(","))
-                .map(String::trim)
-                .toArray(String[]::new);
+        String[] requestedClassNames = classnames.split(",");
 
         if (isDebugEnabled()) {
             for (List<String> basenames : basenamePatterns) {
@@ -323,14 +322,16 @@ public class Props2JsServlet extends HttpServlet {
         }
 
         // restrict request when URI has more than ajax_uri_max_assets_requests_allowed comma separated parameters
-        if (tokenizer.length > LC.ajax_uri_max_assets_requests_allowed.intValue()) {
+        if (requestedClassNames.length > LC.ajax_uri_max_assets_requests_allowed.intValue()) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URI format");
             throw new ServletException("Invalid URI format");
         }
 
         // filenames are case-sensitive , deduplication will not work for images and IMage.
         // these 2 will be considered as 2 different filenames. As File.exists() is case-sensitive.
-        Set<String> uniqueClassNames = new HashSet<>(Arrays.asList(tokenizer));
+        Set<String> uniqueClassNames = Arrays.stream(requestedClassNames)
+                .map(String::trim)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         for (String classname : uniqueClassNames) {
             if (isDebugEnabled()) {
