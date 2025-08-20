@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import java.util.HashSet;
+import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -595,19 +595,19 @@ public class SkinResources
 		Manifest manifest = new Manifest(manifestFile, macros, client, substOverrides, requestedLocale);
 
 		// process input files
-		String[] tokenizer = Arrays.stream(filenames.split(","))
-				.map(String::trim)
-				.toArray(String[]::new);
+		String[] requestedFiles = filenames.split(",");
 
 		// restrict request when URI has more than ajax_uri_max_assets_requests_allowed comma separated parameters
-		if (tokenizer.length > LC.ajax_uri_max_assets_requests_allowed.intValue()) {
+		if (requestedFiles.length > LC.ajax_uri_max_assets_requests_allowed.intValue()) {
 			resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URI format");
 			throw new ServletException("Invalid URI format");
 		}
 
 		// filenames are case sensitive , deduplication will not work for images and IMage.
 		// these 2 will be considered as 2 different filenames. As File.exists() is case sensitive.
-		Set<String> uniqueFileNames = new HashSet<>(Arrays.asList(tokenizer));
+		Set<String> uniqueFileNames = Arrays.stream(requestedFiles)
+				.map(String::trim)
+				.collect(Collectors.toCollection(LinkedHashSet::new));
 
 		for (String filename : uniqueFileNames) {
 			if (ZimbraLog.webclient.isDebugEnabled()) ZimbraLog.webclient.debug("DEBUG: filename " + filename);
@@ -2377,5 +2377,4 @@ public class SkinResources
 		public int getHeight() { return height; }
 
 	} // class ImageInfo
-
 } // class SkinResources
