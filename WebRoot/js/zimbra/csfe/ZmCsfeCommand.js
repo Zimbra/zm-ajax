@@ -428,10 +428,6 @@ function(params) {
 		throw new ZmCsfeException(ZMsg.authRequired, ZmCsfeException.NO_AUTH_TOKEN, params.methodNameStr);
 	}
 
-	if (window.csrfToken) {
-		context.csrfToken = window.csrfToken;
-	}
-
 	AjxDebug.logSoapMessage(params);
 	DBG.dumpObj(AjxDebug.DBG1, obj);
 
@@ -545,10 +541,6 @@ function(params) {
 	}
 	else if (ZmCsfeCommand.noAuth && !params.ignoreAuthToken) {
 		throw new ZmCsfeException(ZMsg.authRequired, ZmCsfeException.NO_AUTH_TOKEN, params.methodNameStr);
-	}
-
-	if (window.csrfToken) {
-		soapDoc.set("csrfToken", window.csrfToken, context);
 	}
 
 	AjxDebug.logSoapMessage(params);
