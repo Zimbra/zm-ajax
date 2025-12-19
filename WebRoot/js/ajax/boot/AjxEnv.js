@@ -278,6 +278,9 @@ function() {
 	AjxEnv.supportsPlaceholder = false;
     AjxEnv.supportsCSS3RemUnits = false;
 
+    // ES6
+    AjxEnv.isES6supported = false;
+
 	// screen resolution - ADD MORE RESOLUTION CHECKS AS NEEDED HERE:
 	AjxEnv.is800x600orLower = screen && (screen.width <= 800 && screen.height <= 600);
     AjxEnv.is1024x768orLower = screen && (screen.width <= 1024 && screen.height <= 768);
@@ -486,6 +489,9 @@ function() {
     //HTML5
     AjxEnv.supportsHTML5File = !!( window.FileReader || AjxEnv.isChrome || AjxEnv.isSafari6up );
     AjxEnv.supportsPlaceholder 	= 'placeholder' in document.createElement('INPUT');
+
+    // ES6
+    AjxEnv.isES6supported = !!(window.Promise && window.Symbol);
 
     try {
         // IE8 doesn't support REM units
