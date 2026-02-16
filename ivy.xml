@@ -4,6 +4,10 @@
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
  <info organisation="zimbra" module="zm-ajax" status="integration">
  </info>
+	<configurations>
+		<conf name="default" visibility="public"/>
+		<conf name="test" visibility="private" extends="default"/>
+	</configurations>
  <dependencies>
 	<dependency org="ant" name="ant" rev="1.6.5"/>
 	<dependency org="org.json" name="json" rev="20070829"/>
@@ -16,9 +20,19 @@
 	<dependency org="rhino" name="js" rev="1.6R7"/>
 	<dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
 	<dependency org="gifencoder" name="gifencoder" rev="0.9" />
+	<dependency org="org.dom4j" name="dom4j" rev="2.1.1" />
+	<dependency org="com.google.guava" name="guava" rev="28.1-jre" />
 	<dependency org="zimbra" name="zm-common" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-client" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-store" rev="latest.integration" />
 	<dependency org="zimbra" name="zm-taglib" rev="latest.integration" />
-</dependencies>
+	 <dependency org="org.mockito" name="mockito-core" rev="4.11.0" conf="test->default"/>
+	 <dependency org="org.mockito" name="mockito-inline" rev="4.11.0" conf="test->default"/>
+	 <dependency org="org.hamcrest" name="hamcrest-core" rev="1.3" conf="test->default"/>
+	 <dependency org="net.bytebuddy" name="byte-buddy" rev="1.12.23" conf="test->default"/>
+	 <dependency org="net.bytebuddy" name="byte-buddy-agent" rev="1.12.23" conf="test->default"/>
+	 <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.17.2" conf="test->default"/>
+	 <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.17.2" conf="test->default"/>
+	 <dependency org="junit" name="junit" rev="4.13.2" conf="test->default"/>
+ </dependencies>
 </ivy-module>
