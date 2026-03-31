@@ -36,8 +36,8 @@ AjxClipboard = function() {
  * @returns {Boolean}   true if clipboard access is supported
  */
 AjxClipboard.isSupported = function() {
-	// clipboard.js works on all browsers except IE8 and Safari
-	return !AjxEnv.isIE8 && !(AjxEnv.isSafari && !AjxEnv.isChrome);
+	// Edge browser is included as well
+	return !AjxEnv.isIE && (AjxEnv.isSafari || AjxEnv.isChrome || AjxEnv.isFirefox);
 };
 
 /**
@@ -53,14 +53,21 @@ AjxClipboard.prototype.init = function(op, listeners) {
 	if (op && listeners.onMouseDown) {
 		op.addSelectionListener(listeners.onMouseDown.bind(null, this));
 	}
+	if (listeners.onFailure) {
+		this.customErrorListener = listeners.onFailure.bind(null, this);
+	}
 };
 
 AjxClipboard.prototype.setText = function(text) {
 	if (window.clipboard) {
-		clipboard.copy(text).then(this._completionListener, this._onError);
+		if (this.customErrorListener) {
+			clipboard.copy(text).then(this._completionListener, this.customErrorListener);
+		} else {
+			clipboard.copy(text).then(this._completionListener, this._onError);
+		}
 	}
 };
 
 AjxClipboard.prototype._onError = function(error) {
-	appCtxt.setStatusMsg(error && error.message, ZmStatusView.LEVEL_WARNING);
+	appCtxt && appCtxt.setStatusMsg(error && error.message, ZmStatusView.LEVEL_WARNING);
 };
