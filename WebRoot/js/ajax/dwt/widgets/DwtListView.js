@@ -553,7 +553,7 @@ function() {
 					var status = cell.firstChild.checked ? ZmMsg.checked : ZmMsg.unChecked;
 					body += '<td>' + status + '</td>';
 				} else {
-					body +='<td>' + cell.innerText + '</td>';
+					body +='<td>' + AjxStringUtil.htmlEncode(cell.innerText) + '</td>';
 				}
 			}
 			body += '</tr>';
