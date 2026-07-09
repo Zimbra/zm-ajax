@@ -1,24 +1,36 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <ivy-module version="2.0"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
- <info organisation="zimbra" module="zm-ajax" status="integration">
- </info>
- <dependencies>
-	<dependency org="org.apache.ant" name="ant" rev="1.10.15"/>
-	<dependency org="org.json" name="json" rev="20070829"/>
-	<dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0"/>
-	<dependency org="commons-cli" name="commons-cli" rev="1.2" />
-	<dependency org="org.eclipse.jetty.toolchain" name="jetty-schemas" rev="3.1"/>
-	<dependency org="org.apache.taglibs" name="taglibs-standard-impl" rev="1.2.1"/>
-	<dependency org="org.apache.taglibs" name="taglibs-standard-spec" rev="1.2.1"/>
-	<dependency org="com.yahoo.platform.yui" name="yuicompressor" rev="2.4.8" />
-	<dependency org="rhino" name="js" rev="1.6R7"/>
-	<dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
-	<dependency org="gifencoder" name="gifencoder" rev="0.9" />
-	<dependency org="zimbra" name="zm-common" rev="latest.integration" />
-	<dependency org="zimbra" name="zm-client" rev="latest.integration" />
-	<dependency org="zimbra" name="zm-store" rev="latest.integration" />
-	<dependency org="zimbra" name="zm-taglib" rev="latest.integration" />
-</dependencies>
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+	<info organisation="zimbra" module="zm-admin-ajax" status="integration">
+	</info>
+	<configurations>
+		<conf name="default" visibility="public"/>
+		<conf name="test" visibility="private" extends="default"/>
+	</configurations>
+	<dependencies>
+		<dependency org="org.apache.ant" name="ant" rev="1.10.15"/>
+		<dependency org="org.json" name="json" rev="20070829"/>
+		<dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0"/>
+		<dependency org="commons-cli" name="commons-cli" rev="1.2" />
+		<dependency org="org.eclipse.jetty.toolchain" name="jetty-schemas" rev="3.1"/>
+		<dependency org="org.apache.taglibs" name="taglibs-standard-impl" rev="1.2.1"/>
+		<dependency org="org.apache.taglibs" name="taglibs-standard-spec" rev="1.2.1"/>
+		<dependency org="com.yahoo.platform.yui" name="yuicompressor" rev="2.4.8" />
+		<dependency org="rhino" name="js" rev="1.6R7"/>
+		<dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
+		<dependency org="gifencoder" name="gifencoder" rev="0.9" />
+		<dependency org="zimbra" name="zm-common" rev="latest.integration" />
+		<dependency org="zimbra" name="zm-client" rev="latest.integration" />
+		<dependency org="zimbra" name="zm-store" rev="latest.integration" />
+		<dependency org="zimbra" name="zm-taglib" rev="latest.integration" />
+		<dependency org="org.mockito" name="mockito-core" rev="4.11.0" conf="test->default"/>
+		<dependency org="org.mockito" name="mockito-inline" rev="4.11.0" conf="test->default"/>
+		<dependency org="org.hamcrest" name="hamcrest-core" rev="1.3" conf="test->default"/>
+		<dependency org="net.bytebuddy" name="byte-buddy" rev="1.12.23" conf="test->default"/>
+		<dependency org="net.bytebuddy" name="byte-buddy-agent" rev="1.12.23" conf="test->default"/>
+		<dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.17.2" conf="test->default"/>
+		<dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.17.2" conf="test->default"/>
+		<dependency org="junit" name="junit" rev="4.13.2" conf="test->default"/>
+	</dependencies>
 </ivy-module>
