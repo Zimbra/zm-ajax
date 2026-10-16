@@ -42,6 +42,11 @@ public class Forward extends ZCServlet {
             }
             ServletContext sc = getServletConfig().getServletContext();
             sc.getRequestDispatcher(url).forward(req, resp);
+        } catch (SecurityException ex) {
+            ZimbraLog.webclient.warn("fu param did not match zmlocalconfig zimbra_forward_servlet_allowed_paths", ex);
+            if (!resp.isCommitted()) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            }
         } catch (Exception ex) {
             ZimbraLog.webclient.warn("exception forwarding", ex);
             if (!resp.isCommitted()) {
